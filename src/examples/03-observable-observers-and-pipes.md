@@ -89,7 +89,7 @@ observer.activate(); // 'observable'.onObserved is trigerred
 ```
 
 This time `observable` will receive the `onObserved` 'event' as soon as the *pipe*'s (Pipe/ObservableObserver) observable is observed,
-and a `onUnobserved` 'event' as soon as the *pipe*'s observable is not more observed. This ensures a proper CPU resource usage.
+and a `onUnobserved` 'event' as soon as the *pipe*'s observable is no more observed. This ensures a proper CPU resource usage.
 
 For simple Pipes which simply uses Observer and Observable (not an EventsObservable for example), we may use the `create` function like so:
 
@@ -121,7 +121,7 @@ Observables comes with a bunch of operators: they are pipes or helpers around Ob
 
 from<number>([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) // operator which converts an Iterable to an Observable
   .pipeThough(filterPipe<number>(_ => ((_ % 2) === 0))) // operator which filters incomming values
-  .pipeThough(mapPipe<number, number>(_ => (_ * 2))) // operator which filters incomming values
+  .pipeThough(mapPipe<number, number>(_ => (_ * 2))) // operator which transforms (multiplies by 2) incomming values
   .pipeTo(_ => console.log(_))
   .activate();
 ```
