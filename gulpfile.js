@@ -35,6 +35,8 @@ paths.others = [
 ];
 
 paths.package = [
+  '.npmignore',
+  '.npmrc',
   'package.json',
   'README.md',
   'LICENSE',

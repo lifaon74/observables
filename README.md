@@ -1,3 +1,9 @@
+![npm (scoped)](https://img.shields.io/npm/v/@lifaon/observables.svg)
+![npm](https://img.shields.io/npm/dm/@lifaon/observables.svg)
+![NPM](https://img.shields.io/npm/l/@lifaon/observables.svg)
+![npm type definitions](https://img.shields.io/npm/types/@lifaon/observables.svg)
+
+
 ## Observables V2 ##
 The repo tries to redefine the Observables: what are they ? what's their purpose ? how can we improve current RXJS Obervables ?
 This is unofficially related to the RXJS Observables and the [tc39 Observables proposal](https://github.com/tc39/proposal-observable).
@@ -13,6 +19,8 @@ npm i @lifaon74/observables
 Entry point: `public.js`, others may contain some private or garbage experiment code. I recommend you to use rollup to import/bundle the package,
 but you may use an already bundled version in `bundle/`.
 The minified, gzipped, esnext version is only 5K bytes !
+
+You may also use unpkg: `https://unpkg.com/@lifaon/observables`
 
 ### Motivation ###
 
