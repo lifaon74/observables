@@ -1,0 +1,108 @@
+import { IFetchObservable, TFetchObservableCastKeyValueMap, TFetchObservableKeyValueMap } from './interfaces';
+import { IPromiseObservableInternal, PromiseObservable } from '../promise-observable/implementation';
+import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
+import { IPromiseCancelToken } from '../promise-observable/promise-cancel-token/interfaces';
+import { IPromiseObservableOptions } from '../promise-observable/interfaces';
+import { INotificationsObservable } from '../../core/notifications-observable/interfaces';
+import { promisePipe } from '../../../operators/promise/promisePipe';
+
+export const FETCH_OBSERVABLE_PRIVATE = Symbol('fetch-observable-private');
+
+export interface IFetchObservablePrivate {
+  requestInfo: RequestInfo;
+  requestInit: RequestInit;
+  signal: AbortSignal | null;
+}
+
+export interface IFetchObservableInternal extends IFetchObservable, IPromiseObservableInternal<Response, Error, any> {
+  [FETCH_OBSERVABLE_PRIVATE]: IFetchObservablePrivate;
+}
+
+export function ConstructFetchObservablePrivates(observable: IFetchObservable, requestInfo: RequestInfo, requestInit: RequestInit = {}): void {
+  ConstructClassWithPrivateMembers(observable, FETCH_OBSERVABLE_PRIVATE);
+
+  if ((typeof requestInfo === 'string') || (requestInfo instanceof Request)) {
+    (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInfo = requestInfo;
+  } else {
+    throw new TypeError(`Expected string or Request as first parameter of FetchObservable's constructor.`);
+  }
+
+  if ((typeof requestInit === 'object') && (requestInit !== null)) {
+    (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInit = requestInit;
+  } else {
+    throw new TypeError(`Expected RequestInit or void as second parameter of FetchObservable's constructor.`);
+  }
+
+  (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].signal = null;
+
+  if ('AbortController' in self) {
+    // check if RequestInit has an AbortSignal
+    if (requestInit.signal instanceof AbortSignal) {
+      (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].signal = requestInit.signal;
+    } else if (
+      ((observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInfo instanceof Request)
+      && (((observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInfo as Request).signal instanceof AbortSignal)
+    ) {
+      (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].signal = ((observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInfo as Request).signal;
+    }
+  }
+}
+
+export function FetchObservablePromiseFactory(observable: IFetchObservable, token: IPromiseCancelToken): Promise<Response> {
+  let init: RequestInit = (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInit;
+
+  if ('AbortController' in self) {
+    if ((observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].signal === null) {
+      const controller: AbortController = token.toAbortController();
+      // shallow copy of RequestInit
+      init = FetchObservableCloneRequestInit(observable);
+      init.signal = controller.signal;
+    } else {
+      token.linkWithAbortSignal((observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].signal);
+    }
+  }
+
+  return fetch((observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInfo, init);
+}
+
+export function FetchObservableCloneRequestInit(observable: IFetchObservable): RequestInit {
+  const init: RequestInit = {};
+  Object.entries((observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInit).forEach(([key, value]) => {
+    (init as any)[key] = value;
+  });
+  return init;
+}
+
+
+
+export class FetchObservable extends PromiseObservable<Response, Error, any> implements IFetchObservable {
+
+  constructor(requestInfo: RequestInfo, requestInit?: RequestInit, options?: IPromiseObservableOptions) {
+    super((token: IPromiseCancelToken): Promise<Response> => {
+      return FetchObservablePromiseFactory(this, token);
+    }, options);
+    ConstructFetchObservablePrivates(this, requestInfo, requestInit);
+  }
+
+  toJSON<T>(): INotificationsObservable<TFetchObservableCastKeyValueMap<T>> {
+    return this.pipeThrough(promisePipe<Response, T, Error, any>((response: Response) => response.json()));
+  }
+
+  toText(): INotificationsObservable<TFetchObservableCastKeyValueMap<string>> {
+    return this.pipeThrough(promisePipe<Response, string, Error, any>((response: Response) => response.text()));
+  }
+
+  toArrayBuffer(): INotificationsObservable<TFetchObservableCastKeyValueMap<ArrayBuffer>> {
+    return this.pipeThrough(promisePipe<Response, ArrayBuffer, Error, any>((response: Response) => response.arrayBuffer()));
+  }
+
+  toBlob(): INotificationsObservable<TFetchObservableCastKeyValueMap<Blob>> {
+    return this.pipeThrough(promisePipe<Response, Blob, Error, any>((response: Response) => response.blob()));
+  }
+
+  toFormData(): INotificationsObservable<TFetchObservableCastKeyValueMap<FormData>> {
+    return this.pipeThrough(promisePipe<Response, FormData, Error, any>((response: Response) => response.formData()));
+  }
+
+}
+

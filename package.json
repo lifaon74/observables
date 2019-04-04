@@ -1,0 +1,53 @@
+{
+  "name": "@lifaon/observables",
+  "version": "1.0.0",
+  "description": "",
+  "main": "public.js",
+  "module": "public.js",
+  "scripts": {
+    "start": "npm run clean && gulp watch",
+    "clean": "rimraf ./dist",
+    "build.prod": "npm run clean && gulp build.prod && npm run min.esnext",
+    "babelify": "babel ./dist/bundle/public.umd.esnext.js --out-file ./dist/bundle/public.umd.es5.js --presets=@babel/preset-env",
+    "minify": "npm run min.esnext && npm run min.es5",
+    "min.esnext": "uglifyjs ./dist/bundle/public.umd.esnext.js -o ./dist/bundle/public.umd.esnext.min.js -c -m",
+    "min.es5": "uglifyjs ./dist/bundle/public.umd.es5.js -o ./dist/bundle/public.umd.es5.min.js -c -m",
+    "publish": " cd ./dist && npm publish",
+    "serve": "http-server ./dist --ssl -p 1234",
+    "serve-cors": "no-cors-proxy -p 4321 -t https://localhost:1234",
+    "toc": "markdown-toc README.md"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lifaon74/observables"
+  },
+  "author": "valentin",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.4.0",
+    "@babel/preset-env": "^7.4.2",
+    "@types/node": "latest",
+    "gulp": "^4.0.0",
+    "gulp-cached": "^1.1.1",
+    "gulp-debug": "^3.1.0",
+    "gulp-load-plugins": "^1.5.0",
+    "gulp-progeny": "^0.4.1",
+    "gulp-rename": "^1.4.0",
+    "gulp-rollup": "^2.16.2",
+    "gulp-sourcemaps": "^2.6.5",
+    "gulp-typescript": "^5.0.1",
+    "gulp-util": "latest",
+    "http-server": "^0.11.1",
+    "markdown-toc": "^1.2.0",
+    "nodemon": "^1.18.10",
+    "rimraf": "^2.6.3",
+    "rollup-plugin-node-resolve": "^3.4.0",
+    "rxjs": "^6.4.0",
+    "typescript": "^3.3.4000",
+    "typescript-tuple": "^2.2.1",
+    "uglify-es": "^3.3.9",
+    "vinyl-source-stream": "latest"
+  },
+  "dependencies": {}
+}
