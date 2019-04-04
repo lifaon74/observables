@@ -188,7 +188,7 @@ More details in the following chapters.
 
 ---
 - [CHAPTERS](./README.md)
-- [HOME](../README.md)
+- [HOME](../../README.md)
 
 
 

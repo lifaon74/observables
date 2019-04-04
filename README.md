@@ -22,7 +22,7 @@ The minified, gzipped, esnext version is only 5K bytes !
 
 You may also use unpkg: `https://unpkg.com/@lifaon/observables`
 
-[Some examples here](./examples/README.md)
+[SOME EXAMPLES HERE](./src/examples/README.md)
 
 ### Motivation ###
 
