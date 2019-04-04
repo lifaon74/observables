@@ -1,5 +1,5 @@
 import { ReadonlyList } from './misc/readonly-list/implementation';
-import { Observable, ObservableContextBase } from './core/observable/implementation';
+import { Observable } from './core/observable/implementation';
 import { Observer } from './core/observer/implementation';
 import { NotificationsObservable, NotificationsObservableContext } from './notifications/core/notifications-observable/implementation';
 import { NotificationsObserver } from './notifications/core/notifications-observer/implementation';
@@ -56,7 +56,7 @@ function testReadOnlyList() {
  * Creates an Observable emitting 'void' every 'period' milliseconds
  */
 function createTimerObservable(period: number) {
-  return new Observable<void>((context: ObservableContextBase<void>) => {
+  return new Observable<void>((context: IObservableContext<void>) => {
     let timer: any | null = null;
     return {
       // everytime an Observer wants to receive data from this Observable, this method will be called
@@ -79,7 +79,7 @@ function createTimerObservable(period: number) {
 }
 
 function createEventObservable<T extends Event>(target: EventTarget, name: string) {
-  return new Observable<Event>((context: ObservableContextBase<Event>) => {
+  return new Observable<Event>((context: IObservableContext<Event>) => {
     const listener = (event: T) => context.emit(event);
     return {
       // everytime an Observer wants to receive data from this Observable, this method will be called

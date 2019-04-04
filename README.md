@@ -22,6 +22,8 @@ The minified, gzipped, esnext version is only 5K bytes !
 
 You may also use unpkg: `https://unpkg.com/@lifaon/observables`
 
+[Some examples here](./examples/README.md)
+
 ### Motivation ###
 
 After using RXJS for a while (and a lot), I noticed some recurrent problems I faced:
@@ -152,7 +154,7 @@ const observer = listen<KeyboardEvent>(target, 'keydown')
       - [on / off](#on--off)
       - [matches](#matches)
     + [NotificationsObserver](#notificationsobserver)
-  * [EventObservable](#eventobservable)
+  * [EventsObservable](#eventobservable)
   * [PromiseObservable](#promiseobservable)
     + [PromiseCancelToken](#promisecanceltoken)
       - [cancel](#cancel)
@@ -682,8 +684,8 @@ export type KeyValueMapKeys<TKVMap> = Extract<keyof TKVMap, string>;
 export type KeyValueMapValues<TKVMap> = TKVMap[KeyValueMapKeys<TKVMap>];
 
 export type KeyValueMapGeneric = KeyValueMap<{ [key: string]: any }, any>;
-
 ```
+
 ```ts
 interface INotificationConstructor {
  // converts an Event to a Notification
@@ -771,7 +773,7 @@ Notice than the underlying created NotificationsObserver self activate.
 
 *Example:* Listening to *click* event on *window*
 ```ts
-const observable = new EventObservable<WindowEventMap>(window)
+const observable = new EventsObservable<WindowEventMap>(window)
   .on('click', (event: MouseEvent) => {
     console.log('click', event);
     observable.off('click');
@@ -783,7 +785,7 @@ window.addEventListener(window, (event: MouseEvent) => {
 }, { once: true });
 ```
 
-**INFO:** An EventObservable is provided to simplify Events listening.
+**INFO:** An EventsObservable is provided to simplify Events listening.
 
 ###### matches
 ```ts
@@ -818,7 +820,7 @@ If the notification has the same name than the Observer, the `callback` is calle
 
 *Example:* Listening to *click* and *mousemove* events on *window* (see previous example)
 ```ts
-new EventObservable<WindowEventMap>(window)
+new EventsObservable<WindowEventMap>(window)
   .observedBy(new NotificationsObserver<Record<'click', MouseEvent>>('click', (event: MouseEvent) => {
     console.log('click', event);
   }).activate())
@@ -832,7 +834,7 @@ new EventObservable<WindowEventMap>(window)
 
 ---
 
-#### EventObservable
+#### EventsObservable
 ```ts
 interface IEventsObservableKeyValueMapDefault {
   [key: string]: Event;
@@ -855,11 +857,11 @@ interface IEventsObservable<TKVMap extends TEventsObservableKeyValueMap<TKVMap>,
 }
 ```
 
-An EventObservable transfers events dispatched by an EventTarget.
+An EventsObservable transfers events dispatched by an EventTarget.
 
 *Example:* Listening to *click* event on *window*
 ```ts
-new EventObservable<WindowEventMap>(window)
+new EventsObservable<WindowEventMap>(window)
   .addListener('click', (event: MouseEvent) => {
     console.log('click', event);
   }).activate();
