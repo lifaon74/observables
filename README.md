@@ -1,5 +1,5 @@
 ## Observables V2 ##
-The repo tries to redefine the Observables: what are they ? what's their purpose ? how can we improve current RJX Obervables ?
+The repo tries to redefine the Observables: what are they ? what's their purpose ? how can we improve current RXJS Obervables ?
 This is unofficially related to the RXJS Observables and the [tc39 Observables proposal](https://github.com/tc39/proposal-observable).
 I will try to define here a better definition and implementation of them from my point of view.
 
@@ -12,7 +12,7 @@ npm i @lifaon74/observables
 
 Entry point: `public.js`, others may contain some private or garbage experiment code. I recommend you to use rollup to import/bundle the package,
 but you may use an already bundled version in `bundle/`.
-The minified, gzipped, esnext version is only 5019 bytes !
+The minified, gzipped, esnext version is only 5K bytes !
 
 ### Motivation ###
 
@@ -242,7 +242,7 @@ function createTimerObservable(period: number) {
 ```
 
 **INFO:** You're strongly encouraged to start your work as soon as one Observer register.
-And stop/clean when no more Observer is observing the Observable. You'll gain in global performance and CPU time.
+And stop/clean when no more Observer is observing the Observable. You'll gain in global performance and CPU time optimization.
 
 **AVOID:**
 ```ts
