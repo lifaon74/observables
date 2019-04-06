@@ -13,7 +13,7 @@ Before flaming, please give it a try 😉
 
 To install:
 ```text
-npm i @lifaon74/observables
+npm i @lifaon/observables --save
 ```
 
 Entry point: `public.js`, others may contain some private or garbage experiment code. I recommend you to use rollup to import/bundle the package,
