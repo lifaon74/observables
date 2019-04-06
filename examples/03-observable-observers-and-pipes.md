@@ -169,5 +169,5 @@ function filterMapPipeBetter() {
 Final words: always prefer to use "native" code instead of Observable's pipes (for RXJS too !), you'll gain in performance !
 
 ---
-- [CHAPTERS](./README.md)
-- [HOME](../../README.md)
+- [CHAPTERS](README.md)
+- [HOME](../README.md)

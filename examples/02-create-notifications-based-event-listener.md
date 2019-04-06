@@ -121,5 +121,5 @@ setTimeout(() => {
 
 
 ---
-- [CHAPTERS](./README.md)
-- [HOME](../../README.md)
+- [CHAPTERS](README.md)
+- [HOME](../README.md)

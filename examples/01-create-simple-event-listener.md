@@ -187,8 +187,8 @@ const observer = new EventsObservable<WindowEventMap>(window)
 More details in the following chapters.
 
 ---
-- [CHAPTERS](./README.md)
-- [HOME](../../README.md)
+- [CHAPTERS](README.md)
+- [HOME](../README.md)
 
 
 
