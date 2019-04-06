@@ -262,7 +262,7 @@ function promiseCancelTokenFetchExample1(): void {
           return response.json();
         }
       })
-      .then((news: INews) => {
+      .then((news: any) => {
         if (token.cancelled) {
           throw token.reason;
         } else {
