@@ -6,7 +6,7 @@ import { NotificationsObserver } from './notifications/core/notifications-observ
 import { EventsObservable } from './notifications/observables/events-observable/implementation';
 import { FetchObservable } from './notifications/observables/fetch-observable/implementation';
 import { toCancellablePromise, toPromise } from './operators/promise/toPromise';
-import { PromiseCancelError, PromiseCancelToken } from './notifications/observables/promise-observable/promise-cancel-token/implementation';
+import { PromiseCancelError, PromiseCancelReason, PromiseCancelToken } from './notifications/observables/promise-observable/promise-cancel-token/implementation';
 import { TCancellablePromiseTuple } from './notifications/observables/promise-observable/interfaces';
 import { Reason } from './misc/reason/implementation';
 import { PromiseObservable } from './notifications/observables/promise-observable/implementation';
@@ -28,6 +28,7 @@ import { INotificationsObserver } from './notifications/core/notifications-obser
 import { FunctionObservable, SourceFunctionObservable } from './observables/function-observable/implementation';
 import { Expression } from './observables/expression/implementation';
 import { $add, $equal, $string } from './operators/misc';
+import { IPromiseCancelToken } from './notifications/observables/promise-observable/promise-cancel-token/interfaces';
 
 
 function testReadOnlyList() {
@@ -251,27 +252,60 @@ function eventsObservableExample2(): void {
   }, 5000);
 }
 
+function promiseCancelTokenFetchExample1(): void {
+  function loadNews(page: number, token: IPromiseCancelToken = new PromiseCancelToken()): Promise<void> {
+    return fetch(`https://my-domain/api/news?page${page}`, { signal: token.toAbortController().signal })
+      .then((response: Response) => {
+        if (token.cancelled) {
+          throw token.reason;
+        } else {
+          return response.json();
+        }
+      })
+      .then((news: INews) => {
+        if (token.cancelled) {
+          throw token.reason;
+        } else {
+          // render news in DOM for example
+        }
+      });
+  }
+
+  let page: number = 0;
+  let token: IPromiseCancelToken;
+  document.querySelector('button')
+    .addEventListener(`click`, () => {
+      if (token !== void 0) {
+        token.cancel(new PromiseCancelReason('Manual cancel'));
+      }
+      token = new PromiseCancelToken();
+      page++;
+      loadNews(page, token)
+        .catch(PromiseCancelReason.discard);
+    });
+}
+
 /**
  * Creates a simple GET http request which loads an url and returns result as [Promise<string>, PromiseCancelToken]
  * @param url
+ * @param token - optional PromiseCancelToken, will be returned in the tuple
  */
-function createHttpRequest(url: string): TCancellablePromiseTuple<string> {
-  const token: PromiseCancelToken = new PromiseCancelToken();
+function createHttpRequest(url: string, token: IPromiseCancelToken = new PromiseCancelToken()): TCancellablePromiseTuple<string> {
   return [
     new Promise<string>((resolve, reject) => {
-      const request = new XMLHttpRequest();
-      new EventsObservable<XMLHttpRequestEventMap>(request)
-        .on('load', () => {
+      const request = new XMLHttpRequest(); // create an XMLHttpRequest
+      new EventsObservable<XMLHttpRequestEventMap>(request) // creates an EventsObservable for this request
+        .on('load', () => { // when the request is finished, resolve the promise
           resolve(request.responseText);
         })
         .on('error', () => {
           reject(new Error(`Failed to fetch data: ${request.statusText}`));
         })
         .on('abort', () => {
-          reject(token.reason || new PromiseCancelError());
+          reject(token.reason || new PromiseCancelReason());
         });
 
-      token.addListener('cancel', () => {
+      token.addListener('cancel', () => { // if the token is cancelled, abort the request
         request.abort();
       }).activate();
 
