@@ -124,6 +124,72 @@ const observer = listen<KeyboardEvent>(target, 'keydown')
   }))).activate();
 ```
 
+### Example: WOT subscription ###
+This example can be found here: https://w3c.github.io/wot-scripting-api/#example-4-consume-a-thing
+```ts
+try {
+  let subscription = wot.discover({ method: "local" }).subscribe(
+    td => {
+      let thing = wot.consume(td);
+      console.log("Thing " + thing.name + " has been consumed.");
+      let subscription = thing["temperature"].subscribe(function(value) {
+          console.log("Temperature: " + value);
+        });
+      thing.actions["startMeasurement"].invoke({ units: "Celsius" })
+        .then(() => { console.log("Temperature measurement started."); })
+        .catch(e => {
+           console.log("Error starting measurement.");
+           subscription.unsubscribe();
+         })
+    },
+    error => { console.log("Discovery error: " + error.message); },
+    () => { console.log("Discovery finished successfully");}
+  );
+} catch(error) {
+  console.log("Error: " + error.message);
+};
+```
+
+Could be written like so:
+
+```ts
+const discoverObservable = wot.discover({ method: 'local' })
+  .on('thing-description', (td: string) => {
+    const thing = wot.consume(td);
+    console.log('Thing ' + thing.name + ' has been consumed.');
+
+    const temperatureObserver = thing['temperature']
+      .pipeTo((value: any) => {
+        console.log('Temperature: ' + value);
+      }).activate();
+      
+    thing.actions['startMeasurement'].invoke({ units: 'Celsius' })
+      .then(() => {
+        console.log('Temperature measurement started.');
+      })
+      .catch(() => {
+        console.log('Error starting measurement.');
+        temperatureObserver.deactivate();
+      });
+  })
+  .on('error', (error: Error) => {
+    console.log('Discovery error: ' + error.message);
+  })
+  .on('complete', () => {
+    console.log('Discovery finished successfully');
+    while (discoverObservable.observers.length > 0) { // clear the observers
+      discoverObservable.observers.item(0).unobserve(discoverObservable);
+    }
+  })
+;
+```
+
+The main advantage is how it is easy to activate/deactivate an observed value, and clear all the resources properly.
+
+In the first example (with RXJS like Observable) we will need a reference to `thing['temperature']` and the `subscription`
+everytime we want to activate/deactivate the Observable, where with this proposal, just providing `temperatureObserver`
+would do the job.
+
 
 ### Table of contents ###
 <!-- toc -->
