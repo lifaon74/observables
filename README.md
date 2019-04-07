@@ -5,7 +5,7 @@
 
 
 ## Observables V2 ##
-The repo tries to redefine the Observables: what are they ? what's their purpose ? how can we improve current RXJS Obervables ?
+The repo tries to redefine the Observables: what are they ? what's their purpose ? how can we improve current RXJS Observables ?
 This is unofficially related to the RXJS Observables and the [tc39 Observables proposal](https://github.com/tc39/proposal-observable).
 I will try to define here a better definition and implementation of them from my point of view.
 
