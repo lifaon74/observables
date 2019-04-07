@@ -6,4 +6,8 @@
 - [04-do-an-http-request-with-observables](04-do-an-http-request-with-observables.md)
 
 ---
+
+- [wot-temperature-example](wot-temperature-example.md)
+
+---
 - [HOME](../README.md)
