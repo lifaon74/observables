@@ -620,6 +620,7 @@ function functionObservableExample1() {
     }).activate();
 
 
+
   $string`a${a}b${a}c`
     .pipeTo((value: string) => {
       console.log('str', value);
@@ -1056,7 +1057,7 @@ export function test() {
   // testPipe2();
   // testPipe3();
 
-  // functionObservableExample1();
+  functionObservableExample1();
   // expressionExample1();
 
   // logicAndExample1();

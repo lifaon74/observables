@@ -117,6 +117,7 @@ export function PipeUpdateAutoActivate<TObserver extends IObserver<any>, TObserv
   if (
     (instance as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].autoActivate
     && !(((instance as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].observer as unknown) as IObserverInternal<ObserverType<TObserver>>)[OBSERVER_PRIVATE].activated
+    // && ObservableIsObserved<ObservableType<TObservable>>((instance as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].observable)
     && ((((instance as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].observable as unknown) as IObservableInternal<ObservableType<TObservable>>)[OBSERVABLE_PRIVATE].observers.length > 0)
   ) {
     ObserverActivate<ObserverType<TObserver>, TObserver>(instance.observer);

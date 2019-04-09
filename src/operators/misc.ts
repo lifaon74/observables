@@ -7,6 +7,38 @@ import { INotificationsObserver } from '../notifications/core/notifications-obse
 import { NotificationsObserver } from '../notifications/core/notifications-observer/implementation';
 import { SourceAsyncFunctionObservable } from '../observables/async-function-observable/implementation';
 import { IPromiseCancelToken } from '../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import {IsObservable} from "../core/observable/implementation";
+import {IObservable} from "../core/observable/interfaces";
+import {Expression} from "../observables/expression/implementation";
+
+type TObservableOrValue<T> = IObservable<T> | T;
+
+export function $observable<T>(input: TObservableOrValue<T>, isConstant: boolean = false): IObservable<T> {
+  return IsObservable(input)
+    ? input
+    : (
+      isConstant
+        ? new Source<T>().emit(input as T)
+        : new Expression<T>(() => input)
+    );
+}
+
+
+type ObservableCastTuple<T extends [any, boolean][]> = {
+  [K in keyof T]: IObservable<T[K] extends [infer V, boolean] ? V : never>;
+};
+
+export function $observables<T extends ([any, boolean] | any)[]>(inputs: T): ObservableCastTuple<T> {
+  return inputs.map(_ => $observable(_)) as any;
+}
+
+// TODO infer proper type
+const myVar = $observables([[1, true]])[0];
+
+
+
+/*---------------------------*/
+
 
 type TSourceOrValue<T> = ISource<T> | T;
 

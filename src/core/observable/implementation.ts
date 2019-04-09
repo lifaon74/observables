@@ -35,14 +35,28 @@ export function ConstructObservable<T>(
   (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers = new ReadonlyList<IObserver<T>>((observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers);
 }
 
-export function IsObservable(value: any): boolean {
+export function IsObservable(value: any): value is IObservable<any> {
   return (typeof value === 'object') && (value !== null ) && value.hasOwnProperty(OBSERVABLE_PRIVATE);
 }
 
 const IS_OBSERVABLE_CONSTRUCTOR = Symbol('is-observable-constructor');
-export function IsObservableConstructor(value: any): boolean {
+export function IsObservableConstructor(value: any): value is IObservableConstructor {
   return (typeof value === 'function') && ((value === Observable) || HasFactoryWaterMark(value, IS_OBSERVABLE_CONSTRUCTOR));
 }
+
+
+export function ObservableIsFreshlyObserved<T>(observable: IObservable<T>): boolean {
+  return (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length === 1;
+}
+
+export function ObservableIsObserved<T>(observable: IObservable<T>): boolean {
+  return (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length > 0;
+}
+
+export function ObservableIsNotObserved<T>(observable: IObservable<T>): boolean {
+  return (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length === 0;
+}
+
 
 export function ObservablePipe<T, O extends IObserver<T> = IObserver<T>>(observable: IObservable<T>, observerOrCallback: O | ((value: T) => void)): O {
   let observer: O;
@@ -104,7 +118,7 @@ export function ObservableFactory<TBase extends Constructor>(superClass: TBase) 
     }
 
     get observed(): boolean {
-      return (((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length > 0);
+      return ObservableIsObserved<T>(this);
     }
 
 

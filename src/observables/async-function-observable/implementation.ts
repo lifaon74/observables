@@ -1,4 +1,7 @@
-import { IObservableInternal, OBSERVABLE_PRIVATE } from '../../core/observable/implementation';
+import {
+  IObservableInternal,
+  ObservableIsFreshlyObserved, ObservableIsNotObserved
+} from '../../core/observable/implementation';
 import { IObservable } from '../../core/observable/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IAsyncFunctionObservable, ISourceAsyncFunctionObservable, TAsyncFunctionObservableFactory, TAsyncFunctionObservableFactoryParameters, TAsyncFunctionObservableFactoryReturnType, TAsyncFunctionObservableParameters, TAsyncFunctionObservableParametersUnion, TAsyncFunctionObservableValue, TSourceAsyncFunctionObservableParameters } from './interfaces';
@@ -62,13 +65,13 @@ export function ConstructAsyncFunctionObservable<T extends TAsyncFunctionObserva
 }
 
 export function AsyncFunctionObservableOnObserved<T extends TAsyncFunctionObservableFactory>(observable: IAsyncFunctionObservable<T>): void {
-  if ((observable as IAsyncFunctionObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length === 1) {
+  if (ObservableIsFreshlyObserved<TAsyncFunctionObservableValue<T>>(observable)) {
     (observable as IAsyncFunctionObservableInternal<T>)[ASYNC_FUNCTION_OBSERVABLE_PRIVATE].argumentsObserver.activate();
   }
 }
 
 export function AsyncFunctionObservableOnUnobserved<T extends TAsyncFunctionObservableFactory>(observable: IAsyncFunctionObservable<T>): void {
-  if ((observable as IAsyncFunctionObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length === 0) {
+  if (ObservableIsNotObserved<TAsyncFunctionObservableValue<T>>(observable)) {
     (observable as IAsyncFunctionObservableInternal<T>)[ASYNC_FUNCTION_OBSERVABLE_PRIVATE].argumentsObserver.deactivate();
   }
 }

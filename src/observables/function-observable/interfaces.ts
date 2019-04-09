@@ -45,6 +45,7 @@ export interface ISourceFunctionObservable<T extends TFunctionObservableFactory>
   call(...args: TFunctionObservableFactoryParameters<T>): this;
 }
 
+// TODO verify if Array<ISource<any>> is correct
 export type SourceCastTuple<T extends any[]> = Array<ISource<any>> & {
   [K in keyof T]: ISource<T[K]>;
 };

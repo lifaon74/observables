@@ -1,4 +1,7 @@
-import { IObservableInternal, OBSERVABLE_PRIVATE } from '../../core/observable/implementation';
+import {
+  IObservableInternal,
+  ObservableIsFreshlyObserved, ObservableIsNotObserved,
+} from '../../core/observable/implementation';
 import { IObservable } from '../../core/observable/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { ValueObservable } from '../value-observable/implementation';
@@ -7,7 +10,6 @@ import { IReadonlyTuple } from '../../misc/readonly-list/interfaces';
 import { ReadonlyTuple } from '../../misc/readonly-list/implementation';
 import { IObserver } from '../../core/observer/interfaces';
 import { Observer } from '../../core/observer/public';
-import { ISource } from '../source/interfaces';
 import { IValueObservableContext } from '../value-observable/interfaces';
 
 
@@ -59,13 +61,13 @@ export function ConstructFunctionObservable<T extends TFunctionObservableFactory
 }
 
 export function FunctionObservableOnObserved<T extends TFunctionObservableFactory>(observable: IFunctionObservable<T>): void {
-  if ((observable as IFunctionObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length === 1) {
+  if (ObservableIsFreshlyObserved<TFunctionObservableValue<T>>(observable)) {
     (observable as IFunctionObservableInternal<T>)[FUNCTION_OBSERVABLE_PRIVATE].argumentsObserver.activate();
   }
 }
 
 export function FunctionObservableOnUnobserved<T extends TFunctionObservableFactory>(observable: IFunctionObservable<T>): void {
-  if ((observable as IFunctionObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length === 0) {
+  if (ObservableIsNotObserved<TFunctionObservableValue<T>>(observable)) {
     (observable as IFunctionObservableInternal<T>)[FUNCTION_OBSERVABLE_PRIVATE].argumentsObserver.deactivate();
   }
 }
@@ -119,12 +121,21 @@ export class FunctionObservable<T extends TFunctionObservableFactory> extends Va
 
 /*------------------------------*/
 
+export interface ISourceFunctionObservablePrivate<T extends TFunctionObservableFactory> extends IFunctionObservablePrivate<T> {
+  arguments: TSourceFunctionObservableParameters<T>;
+  readonlyArguments: IReadonlyTuple<TSourceFunctionObservableParameters<T>>;
+}
+
+export interface ISourceFunctionObservableInternal<T extends TFunctionObservableFactory> extends IFunctionObservableInternal<T> {
+  [FUNCTION_OBSERVABLE_PRIVATE]: ISourceFunctionObservablePrivate<T>;
+}
+
 export function SourceFunctionObservableCall<T extends TFunctionObservableFactory>(observable: ISourceFunctionObservable<T>, args: TFunctionObservableFactoryParameters<T>): void {
-  const privates: IFunctionObservablePrivate<T> = ((observable as unknown) as IFunctionObservableInternal<T>)[FUNCTION_OBSERVABLE_PRIVATE];
+  const privates: ISourceFunctionObservablePrivate<T> = ((observable as unknown) as ISourceFunctionObservableInternal<T>)[FUNCTION_OBSERVABLE_PRIVATE];
 
   privates.enableArgumentsObserver = false;
   for (let i = 0, l = privates.arguments.length; i < l ; i++) {
-    (privates.arguments[i] as ISource<any>).emit(args[i]);
+    privates.arguments[i].emit(args[i]);
     privates.values[i] = args[i];
   }
   privates.enableArgumentsObserver = true;
