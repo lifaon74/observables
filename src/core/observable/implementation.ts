@@ -1,4 +1,4 @@
-import { IObservable, IObservableContext, IObservableContextConstructor, IObservableHook, TObserverOrCallback, IObservableContextBase, TObservableConstructorArgs, IObservableConstructor, IObservableTypedConstructor } from './interfaces';
+import { IObservable, IObservableContext, IObservableContextConstructor, IObservableHook, TObserverOrCallback, IObservableContextBase, TObservableConstructorArgs, IObservableConstructor, IObservableTypedConstructor, TObservablePipeThroughResult, TObservablePipeResult, TObservableObservedByResultNonCyclic } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { ReadonlyList } from '../../misc/readonly-list/implementation';
 import { IObserver } from '../observer/interfaces';
@@ -58,10 +58,10 @@ export function ObservableIsNotObserved<T>(observable: IObservable<T>): boolean 
 }
 
 
-export function ObservablePipe<T, O extends IObserver<T> = IObserver<T>>(observable: IObservable<T>, observerOrCallback: O | ((value: T) => void)): O {
-  let observer: O;
+export function ObservablePipe<T>(observable: IObservable<T>, observerOrCallback: IObserver<any> | ((value: any) => void)): IObserver<any> {
+  let observer: IObserver<any>;
   if (typeof observerOrCallback === 'function') {
-    observer = new Observer<T>(observerOrCallback) as any;
+    observer = new Observer<T>(observerOrCallback);
   } else if ((typeof observerOrCallback === 'object') && (observerOrCallback !== null)) {
     observer = observerOrCallback;
   } else {
@@ -70,11 +70,10 @@ export function ObservablePipe<T, O extends IObserver<T> = IObserver<T>>(observa
   return observer.observe(observable);
 }
 
-export function ObservableObservedBy<T, O extends IObservable<T> = IObservable<T>>(observable: O, observers: TObserverOrCallback<T>[]): O {
+export function ObservableObservedBy<T>(observable: IObservable<T>, observers: TObserverOrCallback<T>[]): void {
   for (let i = 0, l = observers.length; i < l; i++) {
-    ObservablePipe<T, IObserver<T>>(observable, observers[i]);
+    ObservablePipe<T>(observable, observers[i]);
   }
-  return observable;
 }
 
 
@@ -122,24 +121,25 @@ export function ObservableFactory<TBase extends Constructor>(superClass: TBase) 
     }
 
 
-    pipeTo<O extends IObserver<T>>(observer: O): O;
-    pipeTo(callback: (value: T) => void): IObserver<T>;
-    pipeTo<O extends IObserver<T> = IObserver<T>>(observerOrCallback: O | ((value: T) => void)): O {
-      return ObservablePipe<T, O>(this, observerOrCallback);
+    pipeTo<O extends IObserver<any>>(observer: O): O;
+    pipeTo<C extends (value: any) => void>(callback: C): IObserver<any>;
+    pipeTo(observerOrCallback: IObserver<any> | ((value: any) => void)): IObserver<any> {
+      return ObservablePipe<T>(this, observerOrCallback);
     }
 
-    pipeThrough<O extends IObservableObserver<IObserver<T>, IObservable<any>>>(observableObserver: O): O['observable'] {
-      ObservablePipe<T, O['observer']>(this, observableObserver.observer);
-      return observableObserver.observable;
+    pipeThrough<OO extends IObservableObserver<IObserver<any>, IObservable<any>>>(observableObserver: OO): TObservablePipeThroughResult<OO, T> {
+      ObservablePipe<T>(this, observableObserver.observer);
+      return (observableObserver.observer as unknown) as TObservablePipeThroughResult<OO, T>;
     }
 
-    pipe<O extends IObservableObserver<IObserver<T>, IObservable<any>>>(observableObserver: O): O {
-      ObservablePipe<T, O['observer']>(this, observableObserver.observer);
-      return observableObserver;
+    pipe<OO extends IObservableObserver<IObserver<any>, IObservable<any>>>(observableObserver: OO): TObservablePipeResult<OO, T> {
+      ObservablePipe<T>(this, observableObserver.observer);
+      return (observableObserver as unknown) as TObservablePipeResult<OO, T>;
     }
 
-    observedBy(...observers: TObserverOrCallback<T>[]): this {
-      return ObservableObservedBy<T, this>(this, observers);
+    observedBy<O extends TObserverOrCallback<any>[]>(...observers: O): TObservableObservedByResultNonCyclic<O, T, this> {
+      ObservableObservedBy<T>(this, observers);
+      return (this as unknown) as TObservableObservedByResultNonCyclic<O, T, this>;
     }
 
 

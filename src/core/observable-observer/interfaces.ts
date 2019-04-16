@@ -19,7 +19,7 @@ export type PipeObserverType<T extends IObservableObserver<IObserver<any>, IObse
 
 export interface IPipeConstructor {
   create<TValueObserver, TValueObservable = TValueObserver>(
-    create?: (context: IPipeContext<TValueObserver, TValueObservable>) => (IPipeHook<TValueObserver, TValueObservable> | void)
+    create?: (context: IPipeContext<IObserver<TValueObserver>, IObservable<TValueObservable>>) => (IPipeHook<IObserver<TValueObserver>, IObservable<TValueObservable>> | void)
   ): IPipe<IObserver<TValueObserver>, IObservable<TValueObservable>>;
 
   // creates a Pipe
@@ -42,18 +42,20 @@ export type TObservableObserverActivateMode = 'auto' | 'manual';
 
 export type TBasePipe<TValueObserver, TValueObservable> = IPipe<IObserver<TValueObserver>, IObservable<TValueObservable>>;
 
+
+
 export interface IPipeContextConstructor {
   // creates a PipeContext
-  new<TValueObserver, TValueObservable>(instance: IPipe<IObserver<TValueObserver>, IObservable<TValueObservable>>): IPipeContext<TValueObserver, TValueObservable>;
+  new<TObserver extends IObserver<any>, TObservable extends IObservable<any>>(instance: IPipe<TObserver, TObservable>): IPipeContext<TObserver, TObservable>;
 }
 
-export interface IPipeContext<TValueObserver, TValueObservable> {
-  readonly pipe: IPipe<IObserver<TValueObserver>, IObservable<TValueObservable>>;
+export interface IPipeContext<TObserver extends IObserver<any>, TObservable extends IObservable<any>> {
+  readonly pipe: IPipe<TObserver, TObservable>;
 
-  emit(value: TValueObservable): void;
+  emit(value: ObservableType<TObservable>): void;
 }
 
-export interface IPipeHook<TValueObserver, TValueObservable> extends IObservableHook<TValueObservable> {
+export interface IPipeHook<TObserver extends IObserver<any>, TObservable extends IObservable<any>> extends IObservableHook<ObservableType<TObservable>> {
   // called when this Observer receives data.
-  onEmit?(value: TValueObserver, observable?: IObservable<TValueObservable>): void;
+  onEmit?(value: ObserverType<TObserver>, observable?: TObservable): void;
 }

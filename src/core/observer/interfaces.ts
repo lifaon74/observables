@@ -1,7 +1,40 @@
 import { IReadonlyList } from '../../misc/readonly-list/interfaces';
 import { IObservable } from '../observable/interfaces';
+import { TupleTypes, UnionToIntersection } from '../../classes/types';
+
+/** TYPES **/
+
+// for a list of Observers, if each Observer supports the types of an Observable, returns the Observable, else returns never
+export type TObserverObserveResult<TObservables extends IObservable<any>[], TObserver extends IObserver<any>> = TObserver extends IObserver<infer TReferenceObservableValue>
+  ? (
+    boolean extends TupleTypes<{
+      [key in keyof TObservables]: TObservables[key] extends IObservable<infer T>
+        ? UnionToIntersection<TReferenceObservableValue> extends UnionToIntersection<T>
+          ? string
+          : boolean
+        : boolean
+    }> ? never : TObserver
+    ) : never;
+
+export type TObserverObserveResultNonCyclic<TObservables extends IObservable<any>[], TReferenceObservableValue, TReturn> =
+  boolean extends TupleTypes<{
+    [key in keyof TObservables]: TObservables[key] extends IObservable<infer T>
+      ? UnionToIntersection<TReferenceObservableValue> extends UnionToIntersection<T>
+        ? string
+        : boolean
+      : boolean
+  }> ? never : TReturn;
+
+
+export type TObserverUnObserveResult<TObservables extends IObservable<any>[], TObserver extends IObserver<any>> = TObserverObserveResult<TObservables, TObserver>;
+export type TObserverUnObserveResultNonCyclic<TObservables extends IObservable<any>[], TReferenceObservableValue, TReturn> =TObserverObserveResultNonCyclic<TObservables, TReferenceObservableValue, TReturn>;
 
 export type TObserverConstructorArgs<T> = [(value: T, observable?: IObservable<T>) => void];
+
+// returns the type of an Observer
+export type ObserverType<T extends IObserver<any>> = T extends IObserver<infer R> ? R : never;
+
+/** INTERFACES **/
 
 export interface IObserverConstructor {
   // creates an Observer
@@ -34,14 +67,13 @@ export interface IObserver<T> {
 
 
   // observes a list of Observables
-  observe(...observables: IObservable<T>[]): this;
+  observe<O extends IObservable<T>[]>(...observables: O): TObserverObserveResultNonCyclic<O, T, this>;
 
   // stops observing a list of Observables
-  unobserve(...observables: IObservable<T>[]): this;
+  unobserve<O extends IObservable<T>[]>(...observables: O): TObserverObserveResultNonCyclic<O, T, this>;
 
   // stops observing all its Observables
   disconnect(): this;
 }
 
-// returns the type of an Observer
-export type ObserverType<T extends IObserver<any>> = T extends IObserver<infer R> ? R : never;
+
