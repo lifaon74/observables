@@ -1,31 +1,32 @@
 import { INotification } from '../notification/interfaces';
-import { IObserverInternal, Observer, } from '../../../core/observer/implementation';
+import { IObserverInternal, IObserverPrivate, Observer, OBSERVER_PRIVATE, } from '../../../core/observer/implementation';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { INotificationsObserver, TNotificationsObserverCallback } from './interfaces';
 import { INotificationsObserverLike } from './interfaces';
-import { KeyValueMapGeneric, KeyValueMapKeys } from '../interfaces';
+import { IsObject } from '../../../helpers';
 
 
 export const NOTIFICATIONS_OBSERVER_PRIVATE = Symbol('notifications-observer-private');
 
-export interface INotificationsObserverPrivate<TKVMap extends KeyValueMapGeneric> {
-  name: KeyValueMapKeys<TKVMap>;
-  callback: TNotificationsObserverCallback<TKVMap>;
+export interface INotificationsObserverPrivate<TName extends string, TValue> {
+  name: TName;
+  callback: TNotificationsObserverCallback<TValue>;
 }
 
-export interface INotificationsObserverInternal<TKVMap extends KeyValueMapGeneric> extends INotificationsObserver<TKVMap>, IObserverInternal<INotification<TKVMap>> {
-  [NOTIFICATIONS_OBSERVER_PRIVATE]: INotificationsObserverPrivate<TKVMap>;
+export interface INotificationsObserverInternal<TName extends string, TValue> extends INotificationsObserver<TName, TValue> {
+  [OBSERVER_PRIVATE]: IObserverPrivate<INotification<TName, TValue>>;
+  [NOTIFICATIONS_OBSERVER_PRIVATE]: INotificationsObserverPrivate<TName, TValue>;
 }
 
-export function ConstructNotificationsObserver<TKVMap extends KeyValueMapGeneric>(observer: INotificationsObserver<TKVMap>, name: KeyValueMapKeys<TKVMap>, callback: TNotificationsObserverCallback<TKVMap>): void {
+export function ConstructNotificationsObserver<TName extends string, TValue>(observer: INotificationsObserver<TName, TValue>, name: TName, callback: TNotificationsObserverCallback<TValue>): void {
   ConstructClassWithPrivateMembers(observer, NOTIFICATIONS_OBSERVER_PRIVATE);
-  (observer as INotificationsObserverInternal<TKVMap>)[NOTIFICATIONS_OBSERVER_PRIVATE].name = name;
-  (observer as INotificationsObserverInternal<TKVMap>)[NOTIFICATIONS_OBSERVER_PRIVATE].callback = callback.bind(observer);
+  (observer as INotificationsObserverInternal<TName, TValue>)[NOTIFICATIONS_OBSERVER_PRIVATE].name = name;
+  (observer as INotificationsObserverInternal<TName, TValue>)[NOTIFICATIONS_OBSERVER_PRIVATE].callback = callback.bind(observer);
 }
 
-export function NotificationsObserverEmit<TKVMap extends KeyValueMapGeneric>(observer: INotificationsObserver<TKVMap>, notification: INotification<TKVMap>): void {
-  if (notification.name === (observer as any)[NOTIFICATIONS_OBSERVER_PRIVATE].name) {
-    (observer as INotificationsObserverInternal<TKVMap>)[NOTIFICATIONS_OBSERVER_PRIVATE].callback(notification.value);
+export function NotificationsObserverEmit<TName extends string, TValue>(observer: INotificationsObserver<TName, TValue>, notification: INotification<TName, TValue>): void {
+  if (notification.name === (observer as INotificationsObserverInternal<TName, TValue>)[NOTIFICATIONS_OBSERVER_PRIVATE].name) {
+    (observer as INotificationsObserverInternal<TName, TValue>)[NOTIFICATIONS_OBSERVER_PRIVATE].callback(notification.value);
   }
 }
 
@@ -34,16 +35,20 @@ export function NotificationsObserverEmit<TKVMap extends KeyValueMapGeneric>(obs
  * @param value
  */
 export function IsNotificationsObserver(value: any): boolean {
-  return (typeof value === 'object')
-    && (value !== null)
-    && ('name' in value)
-    && ('callback' in value);
+  return IsObject(value)
+    && (NOTIFICATIONS_OBSERVER_PRIVATE in value);
+}
+
+export function IsNotificationsObserverLike(value: any): boolean {
+  return IsObject(value)
+    && (typeof (value as any).name === 'string')
+    && (typeof (value as any).callback === 'function');
 }
 
 
-export function ExtractObserverNameAndCallback<TKVMap extends KeyValueMapGeneric>(observer: any): INotificationsObserverLike<TKVMap> | null {
+export function ExtractObserverNameAndCallback<TName extends string, TValue>(observer: any): INotificationsObserverLike<TName, TValue> | null {
   if (NOTIFICATIONS_OBSERVER_PRIVATE in observer) {
-    return (observer as INotificationsObserverInternal<TKVMap>)[NOTIFICATIONS_OBSERVER_PRIVATE];
+    return (observer as INotificationsObserverInternal<TName, TValue>)[NOTIFICATIONS_OBSERVER_PRIVATE];
   } else if (
     (typeof observer.name === 'string')
     && (typeof observer.callback === 'function')
@@ -54,31 +59,31 @@ export function ExtractObserverNameAndCallback<TKVMap extends KeyValueMapGeneric
   }
 }
 
-export class NotificationsObserver<TKVMap extends KeyValueMapGeneric = { [key: string]: any }> extends Observer<INotification<TKVMap>> implements INotificationsObserver<TKVMap> {
+export class NotificationsObserver<TName extends string, TValue> extends Observer<INotification<TName, TValue>> implements INotificationsObserver<TName, TValue> {
 
-  constructor(name: KeyValueMapKeys<TKVMap>, callback: TNotificationsObserverCallback<TKVMap>) {
-    super((notification: INotification<TKVMap>) => {
+  constructor(name: TName, callback: TNotificationsObserverCallback<TValue>) {
+    super((notification: INotification<TName, TValue>) => {
       if (notification.name === name) {
         callback(notification.value);
       }
     });
 
-    ConstructNotificationsObserver<TKVMap>(this, name, callback);
+    ConstructNotificationsObserver<TName, TValue>(this, name, callback);
   }
 
-  get name(): KeyValueMapKeys<TKVMap> {
-    return ((this as unknown) as INotificationsObserverInternal<TKVMap>)[NOTIFICATIONS_OBSERVER_PRIVATE].name;
+  get name(): TName {
+    return ((this as unknown) as INotificationsObserverInternal<TName, TValue>)[NOTIFICATIONS_OBSERVER_PRIVATE].name;
   }
 
-  get callback(): TNotificationsObserverCallback<TKVMap> {
-    return ((this as unknown) as INotificationsObserverInternal<TKVMap>)[NOTIFICATIONS_OBSERVER_PRIVATE].callback;
+  get callback(): TNotificationsObserverCallback<TValue> {
+    return ((this as unknown) as INotificationsObserverInternal<TName, TValue>)[NOTIFICATIONS_OBSERVER_PRIVATE].callback;
   }
 
-  matches(name: string, callback?: (value: any) => void): boolean {
-    return (((this as unknown) as INotificationsObserverInternal<TKVMap>)[NOTIFICATIONS_OBSERVER_PRIVATE].name === name)
+  matches(name: string, callback?: TNotificationsObserverCallback<any>): boolean {
+    return (((this as unknown) as INotificationsObserverInternal<TName, TValue>)[NOTIFICATIONS_OBSERVER_PRIVATE].name === name)
       && (
         (callback === void 0)
-        || (((this as unknown) as INotificationsObserverInternal<TKVMap>)[NOTIFICATIONS_OBSERVER_PRIVATE].callback === callback)
+        || (((this as unknown) as INotificationsObserverInternal<TName, TValue>)[NOTIFICATIONS_OBSERVER_PRIVATE].callback === callback)
       );
   }
 }

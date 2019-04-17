@@ -1,10 +1,30 @@
 import { INotificationsObservable} from '../../core/notifications-observable/interfaces';
-import { KeyValueMap, KeyValueMapKeys } from '../../core/interfaces';
+import { KeyValueMap, KeyValueMapKeys, KeyValueMapValues } from '../../core/interfaces';
+import { Clone } from '../../../classes/types';
 
-export type EventKeyValueMap<TKVMap> = KeyValueMap<TKVMap, Event>;
-export interface IEventsObservableKeyValueMapDefault {
+export type EventKeyValueMap<TKVMap extends { [key: string]: Event } = { [key: string]: Event }> = KeyValueMap<TKVMap, Event>;
+
+export type EventsObservableKeyValueMapGeneric = {
   [key: string]: Event;
-}
+};
+
+export type TargetToEventMap = [
+  [AbortSignal, AbortSignalEventMap],
+  [Animation, AbstractWorkerEventMap]
+];
+
+export type Targets = {
+  [K in keyof TargetToEventMap]: TargetToEventMap[K] extends [infer TTarget, any] ? TTarget : never;
+}[keyof TargetToEventMap];
+
+export type CastTargetToEventMap<TRefTarget extends Targets> = {
+  [K in keyof TargetToEventMap]: TargetToEventMap[K] extends [infer TTarget, infer TKVMap]
+    ? Clone<TTarget> extends TRefTarget
+      ? TKVMap
+      : never
+    : never;
+}[keyof TargetToEventMap];
+
 
 export interface IEventsObservableConstructor {
   // new(target: AbortSignal, name?: KeyValueMapKeys<AbortSignalEventMap> | null): IEventsObservable<AbortSignalEventMap, AbortSignal>;
@@ -76,7 +96,9 @@ export interface IEventsObservableConstructor {
   // new(target: XMLHttpRequestEventTarget, name?: KeyValueMapKeys<XMLHttpRequestEventTargetEventMap> | null): IEventsObservable<XMLHttpRequestEventTargetEventMap, XMLHttpRequestEventTarget>;
   // new(target: XMLHttpRequestUpload, name?: KeyValueMapKeys<XMLHttpRequestEventTargetEventMap> | null): IEventsObservable<XMLHttpRequestEventTargetEventMap, XMLHttpRequestUpload>;
 
-  new<TKVMap extends EventKeyValueMap<TKVMap> = IEventsObservableKeyValueMapDefault, TTarget extends EventTarget = EventTarget>(target: TTarget, name?: KeyValueMapKeys<TKVMap> | null): IEventsObservable<TKVMap, TTarget>;
+  // new<TTarget extends Targets>(target: Targets): IEventsObservable<KeyValueMap<CastTargetToEventMap<TTarget>, Event>, TTarget>;
+
+  new<TKVMap extends KeyValueMap<TKVMap, Event>, TTarget extends EventTarget = EventTarget>(target: TTarget, name?: KeyValueMapKeys<TKVMap> | null): IEventsObservable<TKVMap, TTarget>;
 }
 
 /**
@@ -84,11 +106,10 @@ export interface IEventsObservableConstructor {
  * which allows to listen to the Events emitted by 'target'.
  * To force an Event's type you may provide a 'name', else the Event's type will be determined by the NotificationsObservers observing it.
  */
-export interface IEventsObservable<TKVMap extends EventKeyValueMap<TKVMap> = IEventsObservableKeyValueMapDefault, TTarget extends EventTarget = EventTarget> extends INotificationsObservable<TKVMap> {
+export interface IEventsObservable<TKVMap extends EventKeyValueMap<TKVMap>, TTarget extends EventTarget = EventTarget> extends INotificationsObservable<TKVMap> {
   // the target of the events' listener
   readonly target: TTarget;
 
   // optional name of the event to listen to
   readonly name: KeyValueMapKeys<TKVMap> | null;
 }
-

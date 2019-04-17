@@ -26,7 +26,6 @@ export function ConstructTimerObservable(observable: ITimerObservable, context: 
 
 export function TimerObservableOnObserved(observable: ITimerObservable): void {
   if ((observable as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE].timer === null) {
-    // (window as any).timers++;
     (observable as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE].timer = setInterval(() => {
       (observable as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE].context.emit(void 0);
     }, (observable as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE].period);
@@ -37,7 +36,6 @@ export function TimerObservableOnUnobserved(observable: ITimerObservable): void 
   if (!observable.observed) {
     clearInterval((observable as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE].timer);
     (observable as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE].timer = null;
-    // (window as any).timers--;
   }
 }
 

@@ -58,6 +58,8 @@ export type IsSubSet<TSet, TReferenceSet> = Clone<TSet> extends TReferenceSet
   ? true
   : false;
 
+export type IsSuperSet<TSet, TReferenceSet> = IsSubSet<TReferenceSet, TSet>;
+
 
 // export type IsSuperSet<TSet, TReferenceSet> = UnionToIntersection<TSet> extends UnionToIntersection<TReferenceSet>
 //   ? Clone<TSet> extends UnionToIntersection<TReferenceSet>
@@ -71,7 +73,16 @@ export type IsSubSet<TSet, TReferenceSet> = Clone<TSet> extends TReferenceSet
 //   ? Not<Extends<TSet, UnionToIntersection<TReferenceSet>>>
 //   : Extends<TReferenceSet, UnionToIntersection<TSet>>;
 
-export type IsSuperSet<TSet, TReferenceSet> = IsSubSet<TReferenceSet, TSet>;
+export type IsIntersecting<TSet, TReferenceSet> =
+  true extends (
+    TSet extends TReferenceSet
+      ? true
+      : TReferenceSet extends TSet
+        ? true
+        : false
+  )
+    ? true
+    : false;
 
 // const b0: IsSubSet<'a', 'a' | 'b'> = true;
 // const b1: IsSubSet<'a' | 'b', 'a' | 'b' | 'c'> = true;
@@ -90,6 +101,14 @@ export type IsSuperSet<TSet, TReferenceSet> = IsSubSet<TReferenceSet, TSet>;
 // const a6: IsSuperSet<'a' | 'b', 'a' | 'b'> = true;
 
 
+// const c0: IsIntersecting<'a' | 'b', 'a'> = true;
+// const c1: IsIntersecting<'a' | 'b', 'a' | 'c'> = true;
+// const c2: IsIntersecting<'a', 'a' | 'c'> = true;
+// const c3: IsIntersecting<'a', 'b' | 'c'> = false;
+// const c4: IsIntersecting<'b' | 'c', 'a'> = false;
+// const c5: IsIntersecting<string, 'a'> = true;
+// const c6: IsIntersecting<'a', string> = true;
+// const c7: IsIntersecting<1 | 3, number> = true;
 
 // const a: (string extends ('a' | 'b') ? true : false);
 // const a: (string extends ('a' & 'b') ? true : false); // => false

@@ -1,22 +1,25 @@
-import { KeyValueMapGeneric, KeyValueMapKeys, KeyValueMapValues } from '../interfaces';
+/** TYPES **/
+
+export type TNotificationName<N extends INotification<any, any>> = N extends INotification<infer TName, any> ? TName : never;
+export type TNotificationValue<N extends INotification<any, any>> = N extends INotification<any, infer TValue> ? TValue : never;
+
+
+/** INTERFACES **/
 
 export interface INotificationConstructor {
   // converts an Event to a Notification
-  fromEvent<N extends string = string, T extends Event = Event>(event: T): INotification<Record<N, T>>;
+  fromEvent<TName extends string = string, TEvent extends Event = Event>(event: TEvent): INotification<TName, TEvent>;
 
-  new<TKVMap extends KeyValueMapGeneric>(name: KeyValueMapKeys<TKVMap>, value?: KeyValueMapValues<TKVMap>): INotification<TKVMap>;
+  new<TName extends string, TValue>(name: TName, value?: TValue): INotification<TName, TValue>;
 }
 
 /**
  * A notification is a tuple containing a name and a value.
  *  Its purpose its to associate a key with a value to allow filtering at the end of the pipe.
  *  @Example:
- *    const notification = new Notification<Record<'click', Event>, 'click'>()
+ *    const notification = new Notification<'click', Event>()
  */
-export interface INotification<TKVMap extends KeyValueMapGeneric> {
-  readonly name: KeyValueMapKeys<TKVMap>;
-  readonly value: KeyValueMapValues<TKVMap>;
+export interface INotification<TName extends string, TValue> {
+  readonly name: TName;
+  readonly value: TValue;
 }
-
-export type TPickNotification<TKVMap, K extends keyof TKVMap> = INotification<Pick<TKVMap, K>>;
-export type TRecordNotification<K extends string, T> = INotification<{ [_K in K]: T }>;

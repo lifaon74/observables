@@ -60,14 +60,23 @@ export type TObservableObservedByResult<TObservers extends TObserverOrCallback<a
     }> ? never : TObservable
   ) : never;
 
+// export type TObservableObservedByResultNonCyclic<TObservers extends TObserverOrCallback<any>[], TReferenceObserverValue, TReturn> =
+//   false extends TupleTypes<{
+//     [key in keyof TObservers]: TObservers[key] extends IObserver<infer T>
+//       ? IsSubSet<TReferenceObserverValue, T>
+//       : TObservers[key] extends (value: infer T) => void
+//         ? IsSubSet<TReferenceObserverValue, T>
+//         : false
+//   }> ? never : TReturn;
+
 export type TObservableObservedByResultNonCyclic<TObservers extends TObserverOrCallback<any>[], TReferenceObserverValue, TReturn> =
-  false extends TupleTypes<{
+  false extends {
     [key in keyof TObservers]: TObservers[key] extends IObserver<infer T>
       ? IsSubSet<TReferenceObserverValue, T>
       : TObservers[key] extends (value: infer T) => void
         ? IsSubSet<TReferenceObserverValue, T>
         : false
-  }> ? never : TReturn;
+  }[keyof TObservers] ? never : TReturn;
 
 
 export type TObservableConstructorArgs<T> = [((context: IObservableContext<T>) => (IObservableHook<T> | void))] | [];

@@ -18,17 +18,18 @@ import { IObservable, IObservableContext } from './core/observable/interfaces';
 import { promisePipe } from './operators/promise/promisePipe';
 import { mapPipe } from './operators/pipes/mapPipe';
 import { TimerObservable } from './observables/timer-observable/implementation';
-import { AsyncSource, Source } from './observables/source/implementation';
-import { ISource } from './observables/source/interfaces';
+import { AsyncSource, Source } from './observables/distinct/source/implementation';
+import { ISource } from './observables/distinct/source/interfaces';
 import { KeyValueMap, KeyValueMapKeys, KeyValueMapValues } from './notifications/core/interfaces';
 import { INotification } from './notifications/core/notification/interfaces';
 import { from } from './operators/from';
 import { WebSocketObservableObserver } from './notifications/observables/websocket-observable/implementation';
 import { INotificationsObserver } from './notifications/core/notifications-observer/interfaces';
-import { FunctionObservable, SourceFunctionObservable } from './observables/function-observable/implementation';
-import { Expression } from './observables/expression/implementation';
-import { $add, $equal, $string } from './operators/misc';
+import { FunctionObservable } from './observables/distinct/function-observable/implementation';
+import { Expression } from './observables/distinct/expression/implementation';
+import { $add, $equal, $expression, $source, $string } from './operators/misc';
 import { IPromiseCancelToken } from './notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import { UnionToIntersection } from './classes/types';
 
 
 function testReadOnlyList() {
@@ -498,7 +499,70 @@ function observableObserverExampple1(): void {
   }
 }
 
+function typeTest() {
+  type a = 'a' | 'b';
+  type b = 'a' | 'b' | 'c';
+  type c = 'a';
+  type d = 'd';
 
+  type inter_a = 'a' & 'b';
+  type inter_b = 'a' & 'b' & 'c';
+  type inter_c = 'a';
+  type inter_d = 'd';
+
+
+  // expect B super set of A
+  function foo<A extends string, B extends string>(v: UnionToIntersection<A>): B {
+    return v as any;
+  }
+
+  const v: unknown = null;
+
+  // const k: O<a> = { a: 'a', b: 'b' };
+  // const k: (a & b) = 'b';
+  // const k: keyof { [key in a]: void };
+  // const k: T<a, b> = 'c';
+  // const k: UnionToIntersection<a> = 'a' as unknown as a;
+  // const k: keyof { a: 1, b: never };
+
+  // (a & b) extends b => true
+  // (b & a) extends b => true
+  // (a & b) extends a => true
+  // (a & b) extends c => false
+  // (a & b) extends d => false
+  // ('a' | 'b' | 'c') extends ('a' | 'b') => false
+  // ('a' | 'b' | 'c') extends ('a' | 'b' | 'c') => true
+  // ('a' & 'b' & 'c') extends ('a' & 'b') => true
+  // ('a' & 'b') extends ('a') => true
+  // ('a') extends ('a' & 'b') => false
+
+  // string extends ('a' & 'b') => false
+  // ('a' & 'b') extends string => true
+
+  // string extends ('a' | 'b') => false
+  // ('a' | 'b') extends string => true
+
+  // ('a' | 'b' | 'c') extends ('a' & 'b') => false
+  // ('a' | 'b') extends ('a' & 'b') => false
+  // ('a') extends ('a' & 'b') => false
+  // (('a' & 'b') | ('a' & 'b' & 'c')) extends ('a' & 'b') => true
+  // ('a' & 'b') extends ('a' | 'b') => true
+
+  // const k: (string extends ('a' | 'b') ? boolean : never) = null;
+  // const k: Record<a, void> & Record<b, void> = null;
+  // k.c = void 0;
+
+
+  // const r0 = foo<a, a>(v as inter_a); // valid
+  // const r1 = foo<a, b>(v as inter_b); // valid
+  // const r2 = foo<a, c>(v as inter_c); // valid
+  // const r3 = foo<a, d>(v as inter_d); // valid
+  //
+  // const ra = foo<a, a>(v as a); // valid
+  // const rb = foo<a, b>(v as b); // valid
+  // const rc = foo<a, c>(v as c); // invalid
+  // const rd = foo<a, d>(v as d); // invalid
+}
 
 function pipeExample1() {
   function map<Tin, Tout>(transform: (value: Tin) => Tout): IPipe<IObserver<Tin>, IObservable<Tout>> {
@@ -517,6 +581,8 @@ function pipeExample1() {
   }
 }
 
+// Record\<(.*), (.*)\>
+
 function pipeExample2() {
   const pipe = new Pipe(() => {
     let context: INotificationsObservableContext<{ click: [number, number] }>;
@@ -530,11 +596,41 @@ function pipeExample2() {
     };
   });
 
-  new EventsObservable<WindowEventMap>(window)
+  // type properly inferred
+  type a = 'a' | 'b';
+  type b = 'a' | 'b' | 'c';
+  type c = 'a';
+  type d = 'd';
+
+  const v: unknown = null;
+
+  (v as IObservable<a>).pipeTo(v as IObserver<a>);
+  (v as IObservable<a>).pipeTo(v as IObserver<b>);
+  (v as IObservable<a>).pipeTo(v as IObserver<c>);
+  // (v as IObservable<a>).pipeTo(v as IObserver<d>);
+
+  // const k: UnionToIntersection<c> extends UnionToIntersection<a> ? boolean : never = null;
+  // const k: UnionToIntersection<IObserver<c> extends IObserver<infer T> ? T : never> extends UnionToIntersection<a> ? IObserver<any> : never = null;
+
+  type A = { a: 1, b: 2 };
+  type B = { a: 1, b: 2, c: 3 };
+  type C = { a: 1 };
+  type D = { d: 1 };
+  const typeVar1 = (1 as unknown as INotificationsObservable<A>)
+    // .pipeTo((1 as unknown as IObserver<INotification<A>>)); // valid
+    // .pipeTo((1 as unknown as IObserver<INotification<B>>)); // valid because observer supports 'a', 'b' and 'c'
+    .pipeTo((1 as unknown as IObserver<INotification<C>>)); // invalid because observer may receive 'a' and 'b' but support only 'a'
+    // .pipeTo((1 as unknown as IObserver<INotification<D>>)); // valid
+    // .pipeTo((1 as unknown as INotificationsObserver<B>)); // valid
+    // .pipeTo((1 as unknown as INotificationsObserver<C>)); // valid
+    // .pipeTo((1 as unknown as INotificationsObserver<D>)); // invalid
+    // .pipeThrough((1 as unknown as IPipe<INotificationsObserver<C>, IObservable<number>>));
+
+  const aadd = new EventsObservable<WindowEventMap>(window)
     .pipeThrough(pipe)
-    .addListener('click', (value: [number, number]) => {
-      console.log(value);
-    }).activate();
+    // .addListener('click', (value: [number, number]) => {
+    //   console.log(value);
+    // }).activate();
 }
 
 function pipeExample3() {
@@ -596,7 +692,7 @@ function functionObservableExample1() {
   const a: ISource<number> = new Source<number>();
   const b: ISource<number> = new Source<number>();
 
-  const observable = SourceFunctionObservable.create((a: number, b: number) => {
+  const observable = FunctionObservable.create((a: number, b: number) => {
     return a + b;
   })(a, b);
 
@@ -604,14 +700,19 @@ function functionObservableExample1() {
     console.log('sum', value);
   }).activate();
 
-  observable.call(1, 2); // print 3
+  function call(v_a: number, v_b: number) {
+    a.emit(v_a);
+    b.emit(v_b);
+  }
+
+  observable.run(() => {
+    call(1, 2);
+  }); // print 3
   a.emit(5); // print 7
 
   (window as any).a = a;
   (window as any).b = b;
-  (window as any).call = (a: number, b: number) => {
-    observable.call(a, b);
-  };
+  (window as any).call = call;
 
 
   $equal(a, 1)
@@ -620,8 +721,7 @@ function functionObservableExample1() {
     }).activate();
 
 
-
-  $string`a${a}b${a}c`
+  $string`a${a}b${a}c${$expression(() => window.location.href)}`
     .pipeTo((value: string) => {
       console.log('str', value);
     }).activate();

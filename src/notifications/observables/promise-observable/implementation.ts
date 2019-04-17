@@ -18,15 +18,15 @@ export function PromiseToNotification<TFulfilled, TErrored, TCancelled>(promise:
   if (token === void 0) {
     return promise
       .then((value: TFulfilled) => {
-        return new Notification<Record<'complete', TFulfilled>>('complete', value);
+        return new Notification<'complete', TFulfilled>('complete', value);
       }, (error: TErrored) => {
-        return new Notification<Record<'error', TErrored>>('error', error);
+        return new Notification<'error', TErrored>('error', error);
       });
   } else {
     const cancelPromise = new Promise<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>((resolve) => {
       const observer = token
         .addListener('cancel', () => {
-          resolve(new Notification<Record<'cancel', TCancelled>>('cancel', token.reason));
+          resolve(new Notification<'cancel', TCancelled>('cancel', token.reason));
           observer.deactivate();
         }).activate();
     });
@@ -36,12 +36,12 @@ export function PromiseToNotification<TFulfilled, TErrored, TCancelled>(promise:
       promise
         .then((value: TFulfilled) => {
           return token.cancelled
-            ? new Notification<Record<'cancel', TCancelled>>('cancel', token.reason)
-            : new Notification<Record<'complete', TFulfilled>>('complete', value);
+            ? new Notification<'cancel', TCancelled>('cancel', token.reason)
+            : new Notification<'complete', TFulfilled>('complete', value);
         }, (error: TErrored) => {
           return token.cancelled
-            ? new Notification<Record<'cancel', TCancelled>>('cancel', token.reason)
-            : new Notification<Record<'error', TErrored>>('error', error);
+            ? new Notification<'cancel', TCancelled>('cancel', token.reason)
+            : new Notification<'error', TErrored>('error', error);
         })
     ]);
   }
