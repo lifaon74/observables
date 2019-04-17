@@ -10,6 +10,7 @@ import { IObservable } from '../observable/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IsObservable, LinkObservableAndObserver, UnLinkObservableAndObserver } from '../observable/implementation';
 import { Constructor, FactoryClass } from '../../classes/factory';
+import { IsObject } from '../../helpers';
 
 export const OBSERVER_PRIVATE = Symbol('observer-private');
 
@@ -48,7 +49,8 @@ export function ConstructObserver<T>(observer: IObserver<T>, onEmit: (value: T, 
  * @internal
  */
 export function IsObserver(value: any): boolean {
-  return (typeof value === 'object') && (value !== null ) && value.hasOwnProperty(OBSERVER_PRIVATE);
+  return IsObject(value)
+    && value.hasOwnProperty(OBSERVER_PRIVATE);
 }
 
 /**

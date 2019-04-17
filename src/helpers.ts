@@ -28,5 +28,5 @@ export function MathClosestTo(targetValue: number, ...values: number[]): number 
 }
 
 export function IsObject(value: any): value is object {
-  return (typeof value === 'object') && (value !== null );
+  return (typeof value === 'object') && (value !== null);
 }

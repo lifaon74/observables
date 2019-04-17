@@ -1,6 +1,6 @@
 import { IReadonlyList } from '../../misc/readonly-list/interfaces';
 import { IObservable } from '../observable/interfaces';
-import { TupleTypes, UnionToIntersection } from '../../classes/types';
+import { IsSubSet, TupleTypes, UnionToIntersection } from '../../classes/types';
 
 /** TYPES **/
 
@@ -16,13 +16,12 @@ export type TObserverObserveResult<TObservables extends IObservable<any>[], TObs
     }> ? never : TObserver
     ) : never;
 
+
 export type TObserverObserveResultNonCyclic<TObservables extends IObservable<any>[], TReferenceObservableValue, TReturn> =
-  boolean extends TupleTypes<{
+  false extends TupleTypes<{
     [key in keyof TObservables]: TObservables[key] extends IObservable<infer T>
-      ? UnionToIntersection<TReferenceObservableValue> extends UnionToIntersection<T>
-        ? string
-        : boolean
-      : boolean
+      ? IsSubSet<T, TReferenceObservableValue>
+      : false
   }> ? never : TReturn;
 
 

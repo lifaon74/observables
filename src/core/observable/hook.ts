@@ -1,6 +1,6 @@
 import { IObserver } from '../observer/interfaces';
-import { IObservable, IObservableContext, IObservableContextBase, IObservableHook } from './interfaces';
-import { noop } from '../../helpers';
+import { IObservable, IObservableContextBase, IObservableHook } from './interfaces';
+import { IsObject, noop } from '../../helpers';
 
 export interface IObservableHookPrivate<T> {
   onObserveHook(observer: IObserver<T>): void;
@@ -20,7 +20,7 @@ export function InitObservableHook<T>(
     const hook: IObservableHook<T> | void = create.call(observable, createContext(observable));
 
     if (hook !== void 0) {
-      if ((typeof hook === 'object') && (hook !== null)) {
+      if (IsObject(hook)) {
         if (typeof hook.onObserved === 'function') {
           privates.onObserveHook = hook.onObserved.bind(observable);
         }

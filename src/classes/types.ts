@@ -20,6 +20,9 @@ export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 // removes from T (object) the properties K (tuple)
 export type ExcludeProperties<T, K extends (keyof T)[]> = Pick<T, Exclude<keyof T, TupleTypes<K>>>;
 
+export type Clone<T> = {
+  [K in keyof T]: T[K]
+};
 
 // https://github.com/Microsoft/TypeScript/issues/9252#issuecomment-472881853
 // creates an intersection between T and U
@@ -32,6 +35,66 @@ export type SuperSet<T, U> = {
     ? (U[key] extends T[key] ? T[key] : never)
     : T[key]
 };
+
+
+
+export type Extends<A, B> = Clone<A> extends B
+  ? true
+  : false;
+
+export type Not<A> = A extends true
+  ? false
+  : true;
+
+export type And<A, B> = A extends true
+  ? Extends<B, true>
+  : false;
+
+
+
+
+
+export type IsSubSet<TSet, TReferenceSet> = Clone<TSet> extends TReferenceSet
+  ? true
+  : false;
+
+
+// export type IsSuperSet<TSet, TReferenceSet> = UnionToIntersection<TSet> extends UnionToIntersection<TReferenceSet>
+//   ? Clone<TSet> extends UnionToIntersection<TReferenceSet>
+//     ? false
+//     : true
+//   : Clone<TReferenceSet> extends UnionToIntersection<TSet>
+//     ? true
+//     : false;
+
+// export type IsSuperSet<TSet, TReferenceSet> = UnionToIntersection<TSet> extends UnionToIntersection<TReferenceSet>
+//   ? Not<Extends<TSet, UnionToIntersection<TReferenceSet>>>
+//   : Extends<TReferenceSet, UnionToIntersection<TSet>>;
+
+export type IsSuperSet<TSet, TReferenceSet> = IsSubSet<TReferenceSet, TSet>;
+
+// const b0: IsSubSet<'a', 'a' | 'b'> = true;
+// const b1: IsSubSet<'a' | 'b', 'a' | 'b' | 'c'> = true;
+// const b2: IsSubSet<'a' | 'b' | 'c', 'a' | 'b'> = false;
+// const b3: IsSubSet<'a' | 'd', 'a' | 'b'> = false;
+// const b4: IsSubSet<'a' | 'b', string> = true;
+// const b5: IsSubSet<string, 'a' | 'b'> = false;
+// const b6: IsSubSet<'a' | 'b', 'a' | 'b'> = true;
+//
+// const a0: IsSuperSet<'a' | 'b', 'a'> = true;
+// const a1: IsSuperSet<'a' | 'b' | 'c', 'a' | 'b'> = true;
+// const a2: IsSuperSet<'a' | 'b', 'a' | 'b' | 'c'> = false;
+// const a3: IsSuperSet<'a' | 'b', 'a' | 'd'> = false;
+// const a4: IsSuperSet<string, 'a' | 'b'> = true;
+// const a5: IsSuperSet<'a' | 'b', string> = false;
+// const a6: IsSuperSet<'a' | 'b', 'a' | 'b'> = true;
+
+
+
+// const a: (string extends ('a' | 'b') ? true : false);
+// const a: (string extends ('a' & 'b') ? true : false); // => false
+// const a: (('a' & 'b') extends string ? true : false); // => true
+// ('a' & 'b' & 'c') extends ('a' & 'b') => true
 
 // https://stackoverflow.com/questions/51691235/typescript-map-union-type-to-another-union-type
 // how to map a union type to another

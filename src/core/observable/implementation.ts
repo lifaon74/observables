@@ -7,6 +7,7 @@ import { IObserverInternal, Observer, OBSERVER_PRIVATE } from '../observer/imple
 import { IObservableObserver } from '../observable-observer/interfaces';
 import { InitObservableHook, IObservableHookPrivate } from './hook';
 import { Constructor, FactoryClass, HasFactoryWaterMark } from '../../classes/factory';
+import { IsObject } from '../../helpers';
 
 
 export const OBSERVABLE_PRIVATE = Symbol('observable-private');
@@ -36,7 +37,8 @@ export function ConstructObservable<T>(
 }
 
 export function IsObservable(value: any): value is IObservable<any> {
-  return (typeof value === 'object') && (value !== null ) && value.hasOwnProperty(OBSERVABLE_PRIVATE);
+  return IsObject(value)
+    && value.hasOwnProperty(OBSERVABLE_PRIVATE);
 }
 
 const IS_OBSERVABLE_CONSTRUCTOR = Symbol('is-observable-constructor');
@@ -62,7 +64,7 @@ export function ObservablePipe<T>(observable: IObservable<T>, observerOrCallback
   let observer: IObserver<any>;
   if (typeof observerOrCallback === 'function') {
     observer = new Observer<T>(observerOrCallback);
-  } else if ((typeof observerOrCallback === 'object') && (observerOrCallback !== null)) {
+  } else if (IsObject(observerOrCallback)) {
     observer = observerOrCallback;
   } else {
     throw new TypeError(`Expected Observer or function.`)

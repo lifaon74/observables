@@ -4,7 +4,7 @@ import { IObserver, ObserverType } from '../observer/interfaces';
 import { IObservableInternal, IObservablePrivate, Observable, OBSERVABLE_PRIVATE, ObservableEmitAll } from '../observable/implementation';
 import { IObserverInternal, Observer, OBSERVER_PRIVATE, ObserverActivate, ObserverDeactivate } from '../observer/implementation';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
-import { noop } from '../../helpers';
+import { IsObject, noop } from '../../helpers';
 
 
 export const PIPE_PRIVATE = Symbol('pipe-private');
@@ -29,7 +29,7 @@ export function ConstructPipe<TObserver extends IObserver<any>, TObservable exte
   if (typeof create === 'function') {
     const result: IObservableObserver<TObserver, TObservable> = create.call(instance);
 
-    if ((typeof result === 'object') && (result !== null)) {
+    if (IsObject(result)) {
 
       if (OBSERVER_PRIVATE in result.observer) {
         ((instance as unknown) as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].observer = result.observer;
@@ -144,7 +144,7 @@ export function PipeStaticCreate<TValueObserver, TValueObservable>(
     if (hook === void 0) {
       hook = {};
     }
-    if ((typeof hook === 'object') && (hook !== null)) {
+    if (IsObject(hook)) {
       const pipe = new Pipe<IObserver<TValueObserver>, IObservable<TValueObservable>>(() => {
         return {
           observer: new Observer(
