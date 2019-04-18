@@ -6,7 +6,6 @@ import {
 import { NotificationsObservable } from '../notifications/core/notifications-observable/implementation';
 import { Observable as RXObservable, Subscription as RXSubscription } from 'rxjs';
 import { ObservableClearObservers } from '../core/observable/implementation';
-import { INotification } from '../notifications/core/notification/interfaces';
 import { IOnObservableCompleteOptions, NormalizeOnObservableCompleteAction } from './helpers';
 
 export interface IRXJSObservableNotificationKeyValueMap<TValue, TError> {

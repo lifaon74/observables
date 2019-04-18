@@ -47,10 +47,13 @@ export type Not<A> = A extends true
   : true;
 
 export type And<A, B> = A extends true
-  ? Extends<B, true>
+  ? B extends true
+    ? true
+    : false
   : false;
 
 
+export type TupleToUnion<T extends any[]> = T[number];
 
 
 
@@ -59,7 +62,6 @@ export type IsSubSet<TSet, TReferenceSet> = Clone<TSet> extends TReferenceSet
   : false;
 
 export type IsSuperSet<TSet, TReferenceSet> = IsSubSet<TReferenceSet, TSet>;
-
 
 // export type IsSuperSet<TSet, TReferenceSet> = UnionToIntersection<TSet> extends UnionToIntersection<TReferenceSet>
 //   ? Clone<TSet> extends UnionToIntersection<TReferenceSet>
@@ -82,6 +84,24 @@ export type IsIntersecting<TSet, TReferenceSet> =
         : false
   )
     ? true
+    : false;
+
+
+export type IsIntersection<T> = //  extends PropertyKey
+    Clone<T> extends T
+        ? false
+        : true;
+
+export type IsUnion<T> =
+    Clone<T> extends UnionToIntersection<T>
+        ? false
+        : Not<IsIntersection<T>>;
+
+export type IsSingleton<T> =
+  Clone<T> extends T
+      ? Clone<T> extends UnionToIntersection<T>
+        ? true
+        : false
     : false;
 
 // const b0: IsSubSet<'a', 'a' | 'b'> = true;
@@ -109,6 +129,22 @@ export type IsIntersecting<TSet, TReferenceSet> =
 // const c5: IsIntersecting<string, 'a'> = true;
 // const c6: IsIntersecting<'a', string> = true;
 // const c7: IsIntersecting<1 | 3, number> = true;
+
+
+// const i0: IsIntersection<'a'> = false;
+// const i1: IsIntersection<'a' | 'b'> = false;
+// const i2: IsIntersection<'a' & 'b'> = true;
+//
+// const u0: IsUnion<'a'> = false;
+// const u1: IsUnion<'a' | 'b'> = true;
+// const u2: IsUnion<'a' & 'b'> = false;
+//
+// const s0: IsSingleton<'a'> = true;
+// const s1: IsSingleton<'a' | 'b'> = false;
+// const s2: IsSingleton<'a' & 'b'> = false;
+
+// const a: keyof ('a' & 'b');
+// const a: keyof ('a' | 'b');
 
 // const a: (string extends ('a' | 'b') ? true : false);
 // const a: (string extends ('a' & 'b') ? true : false); // => false

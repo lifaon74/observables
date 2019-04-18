@@ -1,9 +1,7 @@
 import {
-  INotificationsObservable, KeyValueMapToNotifications,
-  KeyValueMapToNotificationsGeneric
+  INotificationsObservable, KeyValueMapToNotifications
 } from '../../core/notifications-observable/interfaces';
 import { IPromiseCancelToken } from './promise-cancel-token/interfaces';
-import { INotification } from '../../core/notification/interfaces';
 
 
 /**

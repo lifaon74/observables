@@ -16,6 +16,10 @@ export interface IObservableObserver<TObserver extends IObserver<any>, TObservab
 export type PipeObservableType<T extends IObservableObserver<IObserver<any>, IObservable<any>>> = ObservableType<T['observable']>;
 export type PipeObserverType<T extends IObservableObserver<IObserver<any>, IObservable<any>>> = ObserverType<T['observer']>;
 
+export type TPipeBase<TObserverType, TObservableType> = IPipe<IObserver<TObserverType>, IObservable<TObservableType>>;
+export type TPipeContextBase<TObserverType, TObservableType> = IPipeContext<IObserver<TObserverType>, IObservable<TObservableType>>;
+export type TPipeHookbase<TObserverType, TObservableType> = IPipeHook<IObserver<TObserverType>, IObservable<TObservableType>>;
+
 
 export interface IPipeConstructor {
   create<TValueObserver, TValueObservable = TValueObserver>(
@@ -59,3 +63,4 @@ export interface IPipeHook<TObserver extends IObserver<any>, TObservable extends
   // called when this Observer receives data.
   onEmit?(value: ObserverType<TObserver>, observable?: TObservable): void;
 }
+

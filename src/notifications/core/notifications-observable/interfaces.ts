@@ -1,9 +1,13 @@
-import { IObservable, IObservableHook, IObservableContextBase, TObservablePipeToObserverResult, TObservablePipeToCallbackResult } from '../../../core/observable/interfaces';
-import { INotificationsObserver } from '../notifications-observer/interfaces';
+import {
+  IObservable, IObservableHook, IObservableContextBase, TObservablePipeToObserverResult,
+  TObservablePipeToCallbackResult, TObservablePipeThroughResult
+} from '../../../core/observable/interfaces';
+import {INotificationsObserver, INotificationsObserverLike} from '../notifications-observer/interfaces';
 import { KeyValueMapGeneric, KeyValueMapKeys, KeyValueMapValues } from '../interfaces';
 import { INotification } from '../notification/interfaces';
 import { IObserver } from '../../../core/observer/interfaces';
-import { Clone, IsIntersecting, IsSubSet, IsSuperSet } from '../../../classes/types';
+import { IsIntersecting, IsSubSet } from '../../../classes/types';
+import { IObservableObserver } from '../../../core/observable-observer/interfaces';
 
 /** TYPES **/
 
@@ -37,9 +41,9 @@ export type KeyValueMapToNotificationsObservers<TKVMap extends KeyValueMapGeneri
 export type KeyValueMapToNotificationsObserversGeneric<TKVMap extends KeyValueMapGeneric> = INotificationsObserver<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>;
 
 // // cast a KeyValueMap to an union of NotificationsObserverLike
-// type CastKeyValueMapToNotificationsObserversLike<TKVMap extends KeyValueMapGeneric, K extends KeyValueMapKeys<TKVMap>> = K extends any ? INotificationsObserverLike<K, TKVMap[K]> : never;
-// export type KeyValueMapToNotificationsObserversLike<TKVMap extends KeyValueMapGeneric> = CastKeyValueMapToNotificationsObserversLike<TKVMap, KeyValueMapKeys<TKVMap>>;
-// export type KeyValueMapToNotificationsObserversLikeGeneric<TKVMap extends KeyValueMapGeneric> = INotificationsObserverLike<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>;
+type CastKeyValueMapToNotificationsObserversLike<TKVMap extends KeyValueMapGeneric, K extends KeyValueMapKeys<TKVMap>> = K extends any ? INotificationsObserverLike<K, TKVMap[K]> : never;
+export type KeyValueMapToNotificationsObserversLike<TKVMap extends KeyValueMapGeneric> = CastKeyValueMapToNotificationsObserversLike<TKVMap, KeyValueMapKeys<TKVMap>>;
+export type KeyValueMapToNotificationsObserversLikeGeneric<TKVMap extends KeyValueMapGeneric> = INotificationsObserverLike<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>;
 
 
 /**
@@ -53,6 +57,16 @@ export type TNotificationsObservablePipeToObserverResult<TInputObserver extends 
     ? IsIntersecting<TName, KeyValueMapKeys<TKVMap>> extends true
       ? IsSubSet<TKVMap[Extract<KeyValueMapKeys<TKVMap>, TName>], TValue> extends true
         ? INotificationsObserver<TName, TValue>
+        : never
+      : never
+    : never;
+
+
+export type TNotificationsObservablePipeThroughResult<TInputObservableObserver extends IObservableObserver<INotificationsObserver<any, any>, IObservable<any>>, TKVMap extends KeyValueMapGeneric> =
+  TInputObservableObserver extends IObservableObserver<INotificationsObserver<infer TName, infer TValue>, infer TObservable>
+    ? IsIntersecting<TName, KeyValueMapKeys<TKVMap>> extends true
+      ? IsSubSet<TKVMap[Extract<KeyValueMapKeys<TKVMap>, TName>], TValue> extends true
+        ? TObservable
         : never
       : never
     : never;
@@ -84,6 +98,9 @@ export interface INotificationsObservable<TKVMap extends KeyValueMapGeneric> ext
   pipeTo<NO extends INotificationsObserver<any, any>>(observer: NO): TNotificationsObservablePipeToObserverResult<NO, TKVMap>;
   pipeTo<O extends IObserver<any>>(observer: O): TObservablePipeToObserverResult<O, KeyValueMapToNotifications<TKVMap>>;
   pipeTo<C extends (value: any) => void>(callback: C): TObservablePipeToCallbackResult<C, KeyValueMapToNotifications<TKVMap>>;
+
+  pipeThrough<OO extends IObservableObserver<INotificationsObserver<any, any>, IObservable<any>>>(observableObserver: OO): TNotificationsObservablePipeThroughResult<OO, TKVMap>;
+  pipeThrough<OO extends IObservableObserver<IObserver<any>, IObservable<any>>>(observableObserver: OO): TObservablePipeThroughResult<OO, KeyValueMapToNotifications<TKVMap>>;
 
 
   // creates a NotificationsObserver with "name" and "callback" which observes this Observable

@@ -56,12 +56,11 @@ export function toCancellablePromise<T>(observable: IObservable<TBasePromiseObse
           } else {
             _resolve(value as T);
           }
-        });
+        })
+            .observe(observable)
+            .activate();
 
-        observer.observe(observable);
-        observer.activate();
-
-        const tokenObserver: INotificationsObserver<Record<'cancel', void>> = token.addListener('cancel', () => {
+        const tokenObserver: INotificationsObserver<'cancel', void> = token.addListener('cancel', () => {
           _reject(new PromiseCancelError());
         }).activate();
       }

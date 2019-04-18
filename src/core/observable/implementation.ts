@@ -131,12 +131,12 @@ export function ObservableFactory<TBase extends Constructor>(superClass: TBase) 
 
     pipeThrough<OO extends IObservableObserver<IObserver<any>, IObservable<any>>>(observableObserver: OO): TObservablePipeThroughResult<OO, T> {
       ObservablePipe<T>(this, observableObserver.observer);
-      return (observableObserver.observer as unknown) as TObservablePipeThroughResult<OO, T>;
+      return observableObserver.observable as TObservablePipeThroughResult<OO, T>;
     }
 
     pipe<OO extends IObservableObserver<IObserver<any>, IObservable<any>>>(observableObserver: OO): TObservablePipeResult<OO, T> {
       ObservablePipe<T>(this, observableObserver.observer);
-      return (observableObserver as unknown) as TObservablePipeResult<OO, T>;
+      return observableObserver as TObservablePipeResult<OO, T>;
     }
 
     observedBy<O extends TObserverOrCallback<any>[]>(...observers: O): TObservableObservedByResultNonCyclic<O, T, this> {

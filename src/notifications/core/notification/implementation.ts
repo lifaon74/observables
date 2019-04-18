@@ -27,7 +27,6 @@ export class Notification<TName extends string, TValue> implements INotification
 
   constructor(name: TName, value?: TValue) {
     ConstructNotification<TName, TValue>(this, name, value);
-    ConstructClassWithPrivateMembers(this, NOTIFICATION_PRIVATE);
   }
 
   get name(): TName {

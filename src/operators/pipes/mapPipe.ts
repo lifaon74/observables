@@ -1,4 +1,4 @@
-import { IPipe, IPipeContext } from '../../core/observable-observer/interfaces';
+import { IPipe, TPipeContextBase } from '../../core/observable-observer/interfaces';
 import { IObservable } from '../../core/observable/interfaces';
 import { Pipe } from '../../core/observable-observer/implementation';
 import { IObserver } from '../../core/observer/interfaces';
@@ -8,7 +8,7 @@ import { IObserver } from '../../core/observer/interfaces';
  * @param transform
  */
 export function mapPipe<Tin, Tout>(transform: (value: Tin, ) => Tout): IPipe<IObserver<Tin>, IObservable<Tout>> {
-  return Pipe.create<Tin, Tout>((context: IPipeContext<Tin, Tout>) => {
+  return Pipe.create<Tin, Tout>((context: TPipeContextBase<Tin, Tout>) => {
     return {
       onEmit(value: Tin): void {
         context.emit(transform(value));

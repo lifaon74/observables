@@ -66,10 +66,10 @@ export interface IObserver<T> {
 
 
   // observes a list of Observables
-  observe<O extends IObservable<T>[]>(...observables: O): TObserverObserveResultNonCyclic<O, T, this>;
+  observe<O extends IObservable<any>[]>(...observables: O): TObserverObserveResultNonCyclic<O, T, this>;
 
   // stops observing a list of Observables
-  unobserve<O extends IObservable<T>[]>(...observables: O): TObserverObserveResultNonCyclic<O, T, this>;
+  unobserve<O extends IObservable<any>[]>(...observables: O): TObserverObserveResultNonCyclic<O, T, this>;
 
   // stops observing all its Observables
   disconnect(): this;

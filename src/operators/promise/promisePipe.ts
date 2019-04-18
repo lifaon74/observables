@@ -6,6 +6,7 @@ import { Pipe } from '../../core/observable-observer/implementation';
 import { PromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/implementation';
 import { Observer } from '../../core/observer/implementation';
 import { PromiseObservable } from '../../notifications/observables/promise-observable/implementation';
+import {INotification} from "../../notifications/core/notification/interfaces";
 
 export function promisePipe<TFulfilledIn, TFulfilledOut = TFulfilledIn, TErroredIn = Error, TErroredOut = TErroredIn, TCancelled = any>(
   onFulfilled?: (value: TFulfilledIn, token: IPromiseCancelToken) => (Promise<TFulfilledOut> | TFulfilledOut),
@@ -54,7 +55,7 @@ export function promisePipe<TFulfilledIn, TFulfilledOut = TFulfilledIn, TErrored
               token.cancel(notification.value as any);
               break;
             default:
-              throw new Error(`Invalid Notification.name '${notification.name}'. Expected 'complete', 'error', or 'cancelled'`);
+              throw new Error(`Invalid Notification.name '${(notification as INotification<string, any>).name}'. Expected 'complete', 'error', or 'cancelled'`);
           }
         }
       }),

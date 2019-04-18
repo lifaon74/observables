@@ -12,9 +12,14 @@ import { Reason } from './misc/reason/implementation';
 import { PromiseObservable } from './notifications/observables/promise-observable/implementation';
 import { IObserver } from './core/observer/interfaces';
 import { Pipe } from './core/observable-observer/implementation';
-import { INotificationsObservable, INotificationsObservableContext } from './notifications/core/notifications-observable/interfaces';
+import {
+  INotificationsObservable, INotificationsObservableContext, KeyValueMapToNotifications,
+  TNotificationsObservablePipeToObserverResult
+} from './notifications/core/notifications-observable/interfaces';
 import { IObservableObserver, IPipe, TBasePipe } from './core/observable-observer/interfaces';
-import { IObservable, IObservableContext } from './core/observable/interfaces';
+import {
+  IObservable, IObservableContext, TObservablePipeThroughResult, TObservablePipeToObserverResult
+} from './core/observable/interfaces';
 import { promisePipe } from './operators/promise/promisePipe';
 import { mapPipe } from './operators/pipes/mapPipe';
 import { TimerObservable } from './observables/timer-observable/implementation';
@@ -27,7 +32,7 @@ import { WebSocketObservableObserver } from './notifications/observables/websock
 import { INotificationsObserver } from './notifications/core/notifications-observer/interfaces';
 import { FunctionObservable } from './observables/distinct/function-observable/implementation';
 import { Expression } from './observables/distinct/expression/implementation';
-import { $add, $equal, $expression, $source, $string } from './operators/misc';
+import { $add, $equal, $expression, $source, $string, testMisc } from './operators/misc';
 import { IPromiseCancelToken } from './notifications/observables/promise-observable/promise-cancel-token/interfaces';
 import { UnionToIntersection } from './classes/types';
 
@@ -178,13 +183,13 @@ function observeNotificationsObservable(): void {
 
   // 2) use 'pipeTo' and NotificationsObserver (is strictly equal to 'addListener')
   const observer2 = createEventNotificationsObservable<WindowEventMap>(window, 'mousemove')
-    .pipeTo<INotificationsObserver<WindowEventMap>>(new NotificationsObserver<WindowEventMap>('mousemove', (event: MouseEvent) => {
+    .pipeTo<INotificationsObserver<'mousemove', MouseEvent>>(new NotificationsObserver<'mousemove', MouseEvent>('mousemove', (event: MouseEvent) => {
       console.log(`y: ${event.clientY}`);
     })).activate();
 
   // 3) use standard Observer
   const observer3 = createEventNotificationsObservable(window, 'click')
-    .pipeTo(new Observer<INotification<Record<'click', MouseEvent>>>((notification: INotification<Record<'click', MouseEvent>>) => {
+    .pipeTo(new Observer<INotification<'click', MouseEvent>>((notification: INotification<'click', MouseEvent>) => {
       if (notification.name === 'click') {
         console.log(`click => x: ${notification.value.clientX}, x: ${notification.value.clientY}`);
       }
@@ -244,7 +249,7 @@ function eventsObservableExample1(): void {
  */
 function eventsObservableExample2(): void {
   const observer = new EventsObservable(window, 'mousemove')
-    .pipeTo(new Observer((notification: INotification<Record<'mousemove', MouseEvent>>) => {
+    .pipeTo(new Observer((notification: INotification<'mousemove', MouseEvent>) => {
       console.log(`x: ${notification.value.clientX}, x: ${notification.value.clientY}`);
     })).activate();
 
@@ -350,7 +355,7 @@ function promiseCancelTokenExample1(): void {
 function promiseObservableExample1(): void {
   // creates an fetch observable from an url
   function http(url: string) {
-    return new PromiseObservable((token: PromiseCancelToken) => {
+    return new PromiseObservable<Response, Error, any>((token: PromiseCancelToken) => {
       return fetch(url, { signal: token.toAbortController().signal });
     });
   }
@@ -474,14 +479,14 @@ function observableToPromiseExample1(): void {
   const url2: string = 'https://invalid url'; // invalid  url
 
   observePromise(toPromise<Response>(new FetchObservable(url1))); // will complete
-  observePromise(toPromise(new FetchObservable(url2))); // will error
+  observePromise(toPromise<Response>(new FetchObservable(url2))); // will error
 
   const abortController: AbortController = new AbortController();
-  observePromise(toPromise(new FetchObservable(url1, { signal: abortController.signal }))); // will cancel
+  observePromise(toPromise<Response>(new FetchObservable(url1, { signal: abortController.signal }))); // will cancel
   abortController.abort();
 
   // provides PromiseCancelToken too, to detect cancellation
-  observePromise(...toCancellablePromise(new FetchObservable(url1, { signal: abortController.signal }))); // will cancel
+  observePromise(...toCancellablePromise<Response>(new FetchObservable(url1, { signal: abortController.signal }))); // will cancel
 }
 
 
@@ -581,13 +586,11 @@ function pipeExample1() {
   }
 }
 
-// Record\<(.*), (.*)\>
-
 function pipeExample2() {
   const pipe = new Pipe(() => {
     let context: INotificationsObservableContext<{ click: [number, number] }>;
     return {
-      observer: new NotificationsObserver('click', (event: MouseEvent) => {
+      observer: new NotificationsObserver<'click', MouseEvent>('click', (event: MouseEvent) => {
         context.dispatch('click', [event.clientX, event.clientX]);
       }),
       observable: new NotificationsObservable((_context: INotificationsObservableContext<{ click: [number, number] }>) => {
@@ -596,41 +599,11 @@ function pipeExample2() {
     };
   });
 
-  // type properly inferred
-  type a = 'a' | 'b';
-  type b = 'a' | 'b' | 'c';
-  type c = 'a';
-  type d = 'd';
-
-  const v: unknown = null;
-
-  (v as IObservable<a>).pipeTo(v as IObserver<a>);
-  (v as IObservable<a>).pipeTo(v as IObserver<b>);
-  (v as IObservable<a>).pipeTo(v as IObserver<c>);
-  // (v as IObservable<a>).pipeTo(v as IObserver<d>);
-
-  // const k: UnionToIntersection<c> extends UnionToIntersection<a> ? boolean : never = null;
-  // const k: UnionToIntersection<IObserver<c> extends IObserver<infer T> ? T : never> extends UnionToIntersection<a> ? IObserver<any> : never = null;
-
-  type A = { a: 1, b: 2 };
-  type B = { a: 1, b: 2, c: 3 };
-  type C = { a: 1 };
-  type D = { d: 1 };
-  const typeVar1 = (1 as unknown as INotificationsObservable<A>)
-    // .pipeTo((1 as unknown as IObserver<INotification<A>>)); // valid
-    // .pipeTo((1 as unknown as IObserver<INotification<B>>)); // valid because observer supports 'a', 'b' and 'c'
-    .pipeTo((1 as unknown as IObserver<INotification<C>>)); // invalid because observer may receive 'a' and 'b' but support only 'a'
-    // .pipeTo((1 as unknown as IObserver<INotification<D>>)); // valid
-    // .pipeTo((1 as unknown as INotificationsObserver<B>)); // valid
-    // .pipeTo((1 as unknown as INotificationsObserver<C>)); // valid
-    // .pipeTo((1 as unknown as INotificationsObserver<D>)); // invalid
-    // .pipeThrough((1 as unknown as IPipe<INotificationsObserver<C>, IObservable<number>>));
-
-  const aadd = new EventsObservable<WindowEventMap>(window)
+  new EventsObservable<WindowEventMap>(window)
     .pipeThrough(pipe)
-    // .addListener('click', (value: [number, number]) => {
-    //   console.log(value);
-    // }).activate();
+    .addListener('click', (value: [number, number]) => {
+      console.log(value);
+    }).activate();
 }
 
 function pipeExample3() {
@@ -1157,7 +1130,7 @@ export function test() {
   // testPipe2();
   // testPipe3();
 
-  functionObservableExample1();
+  // functionObservableExample1();
   // expressionExample1();
 
   // logicAndExample1();
@@ -1170,6 +1143,8 @@ export function test() {
   // testRXJSObservable();
   // testFromOperator();
   // testWebSocket();
+
+  testMisc();
 }
 
 

@@ -1,19 +1,18 @@
 import { INotificationsObservableInternal, NotificationsObservable, NotificationsObservableDispatch } from '../../../core/notifications-observable/implementation';
-import { ISwipeEvent, ISwipeEventInit, ISwipeObservable, ISwipeObservableKeyValueMap, TSwipeEventDirection } from './interfaces';
-import { IObservableHook } from '../../../../core/observable/interfaces';
-import { IObserver } from '../../../../core/observer/interfaces';
+import { ISwipeEvent, ISwipeEventInit, ISwipeObservable, ISwipeObservableKeyValueMap, TSwipeEventDirection } from './interfaces';;
 import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
 import { ExtractObserverNameAndCallback, NotificationsObserver } from '../../../core/notifications-observer/implementation';
 import { INotificationsObserver } from '../../../core/notifications-observer/interfaces';
 import { EventsObservable } from '../implementation';
 import { OBSERVABLE_PRIVATE } from '../../../../core/observable/implementation';
 import { CyclicTypedVectorArray } from '../../../../classes/cyclic/CyclicTypedVectorArray';
-import { INotification } from '../../../core/notification/interfaces';
 import {
+  KeyValueMapToNotifications,
   KeyValueMapToNotificationsObserversLikeGeneric,
-  TNotificationsObservableHook, TNotificationsObservableObserver
+  TNotificationsObservableHook
 } from '../../../core/notifications-observable/interfaces';
 import { KeyValueMapKeys, KeyValueMapValues } from '../../../core/interfaces';
+import {IObserver} from "../../../../core/observer/interfaces";
 
 
 // export abstract class Gesture {
@@ -291,7 +290,7 @@ export function SwipeObservableOnTouchEnd<TTarget extends EventTarget>(observabl
   }
 }
 
-export function HandleSwipeObservableOnObserved<TTarget extends EventTarget>(observable: ISwipeObservable<TTarget>, observer: TNotificationsObservableObserver<ISwipeObservableKeyValueMap>): void {
+export function HandleSwipeObservableOnObserved<TTarget extends EventTarget>(observable: ISwipeObservable<TTarget>, observer: IObserver<KeyValueMapToNotifications<ISwipeObservableKeyValueMap>>): void {
   const nameAndCallback: KeyValueMapToNotificationsObserversLikeGeneric<ISwipeObservableKeyValueMap> | null = ExtractObserverNameAndCallback<KeyValueMapKeys<ISwipeObservableKeyValueMap>, KeyValueMapValues<ISwipeObservableKeyValueMap>>(observer);
   if ((observer instanceof NotificationsObserver) && (nameAndCallback.name !== 'swipe')){
     throw new TypeError(`Cannot observe an SwipeObservable, with a NotificationsObserver having name '${nameAndCallback.name}'. Expected 'swipe'.`);
@@ -312,7 +311,7 @@ export class SwipeObservable<TTarget extends EventTarget = EventTarget> extends 
   constructor(target: TTarget) {
     super((): TNotificationsObservableHook<ISwipeObservableKeyValueMap> => {
       return {
-        onObserved: (observer: TNotificationsObservableObserver<ISwipeObservableKeyValueMap>) => {
+        onObserved: (observer: IObserver<KeyValueMapToNotifications<ISwipeObservableKeyValueMap>>) => {
           HandleSwipeObservableOnObserved<TTarget>(this, observer);
         },
         onUnobserved: () => {
