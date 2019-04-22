@@ -69,7 +69,7 @@ function copyOtherFiles(buildOptions) {
 }
 
 function copyPackageFiles() {
-  return gulp.src(paths.package)
+  return gulp.src(paths.package, { allowEmpty: true })
     .pipe(gulpPlugins.cached('package'))
     .pipe(gulp.dest($path.join(paths.destination)));
 }
