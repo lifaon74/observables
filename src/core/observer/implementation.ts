@@ -1,10 +1,16 @@
-import { IObserver, IObserverConstructor, TObserverConstructorArgs } from './interfaces';
+import {
+  IObserver,
+  IObserverConstructor,
+  TObserverConstructorArgs,
+  TObserverObserveResultNonCyclic, TObserverUnObserveResultNonCyclic
+} from './interfaces';
 import { IReadonlyList } from '../../misc/readonly-list/interfaces';
 import { ReadonlyList } from '../../misc/readonly-list/implementation';
 import { IObservable } from '../observable/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IsObservable, LinkObservableAndObserver, UnLinkObservableAndObserver } from '../observable/implementation';
 import { Constructor, FactoryClass } from '../../classes/factory';
+import { IsObject } from '../../helpers';
 
 export const OBSERVER_PRIVATE = Symbol('observer-private');
 
@@ -43,7 +49,8 @@ export function ConstructObserver<T>(observer: IObserver<T>, onEmit: (value: T, 
  * @internal
  */
 export function IsObserver(value: any): boolean {
-  return (typeof value === 'object') && (value !== null ) && value.hasOwnProperty(OBSERVER_PRIVATE);
+  return IsObject(value)
+    && value.hasOwnProperty(OBSERVER_PRIVATE);
 }
 
 /**
@@ -51,7 +58,7 @@ export function IsObserver(value: any): boolean {
  * @param observer
  * @exposed
  */
-export function ObserverActivate<T, O extends IObserver<T>>(observer: O): O {
+export function ObserverActivate<T>(observer: IObserver<T>): void {
   if (!((observer as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].activated) {
     ((observer as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].activated = true;
     const observables: IObservable<T>[] = ((observer as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].observables;
@@ -59,7 +66,6 @@ export function ObserverActivate<T, O extends IObserver<T>>(observer: O): O {
       LinkObservableAndObserver<T>(observables[i], observer);
     }
   }
-  return observer;
 }
 
 /**
@@ -67,7 +73,7 @@ export function ObserverActivate<T, O extends IObserver<T>>(observer: O): O {
  * @param observer
  * @exposed
  */
-export function ObserverDeactivate<T, O extends IObserver<T>>(observer: O): O {
+export function ObserverDeactivate<T>(observer: IObserver<T>): void {
   if (((observer as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].activated) {
     ((observer as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].activated = false;
     const observables: IObservable<T>[] = ((observer as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].observables;
@@ -75,7 +81,6 @@ export function ObserverDeactivate<T, O extends IObserver<T>>(observer: O): O {
       UnLinkObservableAndObserver<T>(observables[i], observer);
     }
   }
-  return observer;
 }
 
 /**
@@ -84,7 +89,7 @@ export function ObserverDeactivate<T, O extends IObserver<T>>(observer: O): O {
  * @param observables
  * @exposed
  */
-export function ObserverObserve<T, O extends IObserver<T>>(observer: O, observables: IObservable<T>[]): O {
+export function ObserverObserve<T>(observer: IObserver<T>, observables: IObservable<T>[]): void {
   for (let i = 0, l = observables.length; i < l; i++) {
     const observable: IObservable<T> = observables[i];
     if (IsObservable(observable)) {
@@ -100,8 +105,6 @@ export function ObserverObserve<T, O extends IObserver<T>>(observer: O, observab
       throw new TypeError(`Expected Observable as argument #${i + 1} of Observer.observe.`);
     }
   }
-  return observer;
-
 }
 
 
@@ -111,7 +114,7 @@ export function ObserverObserve<T, O extends IObserver<T>>(observer: O, observab
  * @param observables
  * @exposed
  */
-export function ObserverUnobserve<T, O extends IObserver<T>>(observer: O, observables: IObservable<T>[]): O {
+export function ObserverUnobserve<T>(observer: IObserver<T>, observables: IObservable<T>[]): void {
   for (let i = 0, l = observables.length; i < l; i++) {
     if (IsObservable(observables[i])) {
       ObserverUnobserveOne<T>(observer, observables[i]);
@@ -119,7 +122,6 @@ export function ObserverUnobserve<T, O extends IObserver<T>>(observer: O, observ
       throw new TypeError(`Expected Observable as argument #${i + 1} of Observer.unobserve.`);
     }
   }
-  return observer;
 }
 
 /**
@@ -184,19 +186,23 @@ export function ObserverFactory<TBase extends Constructor>(superClass: TBase) {
     }
 
     activate(): this {
-      return ObserverActivate<T, this>(this);
+      ObserverActivate<T>(this);
+      return this;
     }
 
     deactivate(): this {
-      return ObserverDeactivate<T, this>(this);
+      ObserverDeactivate<T>(this);
+      return this;
     }
 
-    observe(...observables: IObservable<T>[]): this {
-      return ObserverObserve<T, this>(this, observables);
+    observe<O extends IObservable<T>[]>(...observables: O): TObserverObserveResultNonCyclic<O, T, this> {
+      ObserverObserve<T>(this, observables);
+      return this as TObserverObserveResultNonCyclic<O, T, this>;
     }
 
-    unobserve(...observables: IObservable<T>[]): this {
-      return ObserverUnobserve<T, this>(this, observables);
+    unobserve<O extends IObservable<T>[]>(...observables: O): TObserverUnObserveResultNonCyclic<O, T, this> {
+      ObserverUnobserve<T>(this, observables);
+      return this as TObserverUnObserveResultNonCyclic<O, T, this>;
     }
 
     disconnect(): this {

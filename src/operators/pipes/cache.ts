@@ -1,4 +1,4 @@
-import { IPipe, IPipeContext } from '../../core/observable-observer/interfaces';
+import {IPipe, IPipeContext, TPipeContextBase} from '../../core/observable-observer/interfaces';
 import { IObserver } from '../../core/observer/interfaces';
 import { IObservable } from '../../core/observable/interfaces';
 import { Pipe } from '../../core/observable-observer/implementation';
@@ -9,7 +9,7 @@ export function cache<T>(cacheSize: number = 128): IPipe<IObserver<T>, IObservab
   let writeIndex: number = 0;
   const readIndexes = new WeakMap<IObserver<T>, number>();
 
-  return Pipe.create<T, T>((context: IPipeContext<T, T>) => {
+  return Pipe.create<T, T>((context: TPipeContextBase<T, T>) => {
     return {
       onEmit(value: T): void {
         cachedValues[writeIndex % cacheSize] = value;

@@ -1,3 +1,4 @@
+
 export function noop() {}
 
 export function EnumToString<T>(values: T[]): string {
@@ -24,4 +25,8 @@ export function MathClosestTo(targetValue: number, ...values: number[]): number 
     }
   }
   return closest;
+}
+
+export function IsObject(value: any): value is object {
+  return (typeof value === 'object') && (value !== null);
 }

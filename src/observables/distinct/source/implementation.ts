@@ -1,11 +1,16 @@
-import { IObservableContext } from '../../core/observable/interfaces';
+import { IObservableContext } from '../../../core/observable/interfaces';
 import { IAsyncSource, ISource } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
-import { IPromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
-import { IValueObservableInternal, VALUE_OBSERVABLE_PRIVATE, ValueObservable } from '../value-observable/implementation';
+import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
+import { IPromiseCancelToken } from '../../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import {
+  IValueObservableInternal, VALUE_OBSERVABLE_PRIVATE, ValueObservable
+} from '../value-observable/implementation';
 import { IValueObservableContext } from '../value-observable/interfaces';
 import { IAsyncValueObservableContext } from '../async-value-observable/interfaces';
-import { ASYNC_VALUE_OBSERVABLE_PRIVATE, AsyncValueObservable, IAsyncValueObservableInternal } from '../async-value-observable/implementation';
+import {
+  ASYNC_VALUE_OBSERVABLE_PRIVATE, AsyncValueObservable, IAsyncValueObservableInternal
+} from '../async-value-observable/implementation';
+import { IsObject } from '../../../helpers';
 
 
 export const SOURCE_PRIVATE = Symbol('source-private');
@@ -24,10 +29,14 @@ export function ConstructSource<T>(source: ISource<T>, context: IObservableConte
   (source as ISourceInternal<T>)[SOURCE_PRIVATE].context = context;
 }
 
+export function IsSource(value: any): value is ISource<any> {
+  return IsObject(value)
+    && value.hasOwnProperty(SOURCE_PRIVATE);
+}
+
 export function SourceEmit<T>(source: ISource<T>, value: T): void {
   (source as ISourceInternal<T>)[SOURCE_PRIVATE].context.emit(value);
 }
-
 
 
 export class Source<T> extends ValueObservable<T> implements ISource<T> {
@@ -54,9 +63,7 @@ export class Source<T> extends ValueObservable<T> implements ISource<T> {
 }
 
 
-
 /*--------------------------*/
-
 
 
 export const ASYNC_SOURCE_PRIVATE = Symbol('async-source-private');

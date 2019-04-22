@@ -99,7 +99,7 @@ export type ExtractDestinationTypes<T> = {
 /**
  * Joins many destinations: calling the result's function with an array will dispatch the values individuality for each destination.
  * @Example
- *   join([_ => console.log('0', _), _ => console.log('1', _)]).emit([0, 1]);
+ *   join([_ => console.log('0', _), _ => console.log('1', _)])([0, 1]);
  *   => '0' 0, '0' 1 (first destination will receive 0, the second will receive 1)
  *
  * @param {T} destinations

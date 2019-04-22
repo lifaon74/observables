@@ -1,8 +1,11 @@
-import { INotificationsObservable, INotificationsObservableContext} from '../notifications/core/notifications-observable/interfaces';
+import {
+  INotificationsObservable,
+  INotificationsObservableContext,
+  KeyValueMapToNotifications
+} from '../notifications/core/notifications-observable/interfaces';
 import { NotificationsObservable } from '../notifications/core/notifications-observable/implementation';
 import { Observable as RXObservable, Subscription as RXSubscription } from 'rxjs';
 import { ObservableClearObservers } from '../core/observable/implementation';
-import { INotification } from '../notifications/core/notification/interfaces';
 import { IOnObservableCompleteOptions, NormalizeOnObservableCompleteAction } from './helpers';
 
 export interface IRXJSObservableNotificationKeyValueMap<TValue, TError> {
@@ -31,7 +34,7 @@ export function fromRXJSObservable<TValue, TError>(rxObservable: RXObservable<TV
       } else {
         context.dispatch('complete');
         if ((_options.onComplete === 'clear') || (_options.onComplete === 'clear-strict')) {
-          ObservableClearObservers<INotification<IRXJSObservableNotificationKeyValueMap<TValue, TError>>>(context.observable);
+          ObservableClearObservers<KeyValueMapToNotifications<IRXJSObservableNotificationKeyValueMap<TValue, TError>>>(context.observable);
         }
       }
     };

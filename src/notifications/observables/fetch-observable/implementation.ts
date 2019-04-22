@@ -1,4 +1,4 @@
-import { IFetchObservable, TFetchObservableCastKeyValueMap, TFetchObservableKeyValueMap } from './interfaces';
+import { IFetchObservable, TFetchObservableCastKeyValueMap } from './interfaces';
 import { IPromiseObservableInternal, PromiseObservable } from '../promise-observable/implementation';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IPromiseCancelToken } from '../promise-observable/promise-cancel-token/interfaces';

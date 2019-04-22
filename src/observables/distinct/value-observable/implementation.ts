@@ -1,10 +1,11 @@
-import { AllowObservableContextBaseConstruct, IObservableContextBaseInternal, IObservableInternal, IsObservableConstructor, OBSERVABLE_CONTEXT_BASE_PRIVATE, ObservableContextBase, ObservableEmitAll, ObservableFactory } from '../../core/observable/implementation';
-import { IObservable, IObservableContext, IObservableHook } from '../../core/observable/interfaces';
-import { IObserver } from '../../core/observer/interfaces';
-import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
+import { AllowObservableContextBaseConstruct, IObservableContextBaseInternal, IObservableInternal, IsObservableConstructor, OBSERVABLE_CONTEXT_BASE_PRIVATE, ObservableContextBase, ObservableEmitAll, ObservableFactory } from '../../../core/observable/implementation';
+import { IObservable, IObservableContext, IObservableHook } from '../../../core/observable/interfaces';
+import { IObserver } from '../../../core/observer/interfaces';
+import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IValueObservable, IValueObservableConstructor, IValueObservableContext, IValueObservableContextConstructor, TValueObservableConstructorArgs } from './interfaces';
-import { Constructor, FactoryClass, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass } from '../../classes/factory';
-import { InitObservableHook, IObservableHookPrivate } from '../../core/observable/hook';
+import { Constructor, FactoryClass, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass } from '../../../classes/factory';
+import { InitObservableHook, IObservableHookPrivate } from '../../../core/observable/hook';
+import { IsObject } from '../../../helpers';
 
 export const VALUE_OBSERVABLE_PRIVATE = Symbol('value-observable-private');
 
@@ -40,7 +41,8 @@ export function ConstructValueObservable<T>(
 
 
 export function IsValueObservable(value: any): boolean {
-  return (typeof value === 'object') && (value !== null ) && value.hasOwnProperty(VALUE_OBSERVABLE_PRIVATE);
+  return IsObject(value)
+    && value.hasOwnProperty(VALUE_OBSERVABLE_PRIVATE);
 }
 
 const IS_VALUE_OBSERVABLE_CONSTRUCTOR = Symbol('is-value-observable-constructor');

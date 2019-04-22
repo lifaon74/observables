@@ -1,6 +1,7 @@
-import { INotificationsObservable} from '../../core/notifications-observable/interfaces';
+import {
+  INotificationsObservable, KeyValueMapToNotifications
+} from '../../core/notifications-observable/interfaces';
 import { IPromiseCancelToken } from './promise-cancel-token/interfaces';
-import { INotification } from '../../core/notification/interfaces';
 
 
 /**
@@ -45,6 +46,6 @@ export interface IPromiseObservableOptions {
 
 
 // export type TPromiseObserverType<T> = IObserver<INotification<TPromiseNotificationType, T>>;
-export type TPromiseObservableNotification<TFulfilled, TErrored, TCancelled> = INotification<IPromiseNotificationKeyValueMap<TFulfilled, TErrored, TCancelled>>;
+export type TPromiseObservableNotification<TFulfilled, TErrored, TCancelled> = KeyValueMapToNotifications<IPromiseNotificationKeyValueMap<TFulfilled, TErrored, TCancelled>>;
 
 export type TCancellablePromiseTuple<T> = [Promise<T>, IPromiseCancelToken];

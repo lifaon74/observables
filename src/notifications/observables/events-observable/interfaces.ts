@@ -1,10 +1,124 @@
 import { INotificationsObservable} from '../../core/notifications-observable/interfaces';
 import { KeyValueMap, KeyValueMapKeys } from '../../core/interfaces';
 
-export type EventKeyValueMap<TKVMap> = KeyValueMap<TKVMap, Event>;
-export interface IEventsObservableKeyValueMapDefault {
+export type EventKeyValueMap<TKVMap> = KeyValueMap<TKVMap, any>;
+
+export type EventsObservableKeyValueMapGeneric = {
   [key: string]: Event;
-}
+};
+
+// export type TargetToEventMap = [
+//   [AbortSignal, AbortSignalEventMap],
+//   [Animation, AbstractWorkerEventMap]
+// ];
+
+// export type Targets = {
+//   [K in keyof TargetToEventMap]: TargetToEventMap[K] extends [infer TTarget, any] ? TTarget : never;
+// }[keyof TargetToEventMap];
+
+// export type CastTargetToEventMap<TRefTarget extends Targets> = TupleTypes<{
+//   [K in keyof TargetToEventMap]: TargetToEventMap[K] extends [infer TTarget, infer TKVMap]
+//     ? TTarget extends TRefTarget
+//       ? TKVMap
+//       : never
+//     : never;
+// }>/*[keyof TargetToEventMap]*/;
+
+
+
+export type TargetToEventMap =
+    [AbortSignal, AbortSignalEventMap]
+  // | [AbstractWorker, AbstractWorkerEventMap]
+  | [Animation, AnimationEventMap]
+  | [ApplicationCache, ApplicationCacheEventMap]
+  | [AudioBufferSourceNode, AudioScheduledSourceNodeEventMap]
+  | [AudioContext, BaseAudioContextEventMap]
+  | [AudioScheduledSourceNode, AudioScheduledSourceNodeEventMap]
+  | [AudioTrackList, AudioTrackListEventMap]
+  | [AudioWorkletNode, AudioWorkletNodeEventMap]
+  | [BaseAudioContext, BaseAudioContextEventMap]
+  | [BroadcastChannel, BroadcastChannelEventMap]
+  | [ConstantSourceNode, AudioScheduledSourceNodeEventMap]
+  | [DataCue, TextTrackCueEventMap]
+  | [Document, DocumentEventMap]
+  // | [DocumentAndElementEventHandlers, DocumentAndElementEventHandlersEventMap]
+  | [Element, ElementEventMap]
+  | [FileReader, FileReaderEventMap]
+  // | [GlobalEventHandlers, GlobalEventHandlersEventMap]
+  | [HTMLElement, HTMLElementEventMap]
+  | [HTMLVideoElement, HTMLVideoElementEventMap]
+  | [IDBDatabase, IDBDatabaseEventMap]
+  | [IDBOpenDBRequest, IDBOpenDBRequestEventMap]
+  | [IDBRequest, IDBRequestEventMap]
+  | [IDBTransaction, IDBTransactionEventMap]
+  | [MediaDevices, MediaDevicesEventMap]
+  | [MediaQueryList, MediaQueryListEventMap]
+  | [MediaStream, MediaStreamEventMap]
+  | [MediaStreamTrack, MediaStreamTrackEventMap]
+  | [MessagePort, MessagePortEventMap]
+  | [Notification, NotificationEventMap]
+  | [OfflineAudioContext, OfflineAudioContextEventMap]
+  | [OscillatorNode, AudioScheduledSourceNodeEventMap]
+  | [PaymentRequest, PaymentRequestEventMap]
+  | [Performance, PerformanceEventMap]
+  | [RTCDTMFSender, RTCDTMFSenderEventMap]
+  | [RTCDataChannel, RTCDataChannelEventMap]
+  | [RTCDtlsTransport, RTCDtlsTransportEventMap]
+  | [RTCDtmfSender, RTCDtmfSenderEventMap]
+  | [RTCIceGatherer, RTCIceGathererEventMap]
+  | [RTCIceTransport, RTCIceTransportEventMap]
+  | [RTCPeerConnection, RTCPeerConnectionEventMap]
+  // | [RTCSctpTransport, RTCSctpTransportEventMap]
+  | [RTCSrtpSdesTransport, RTCSrtpSdesTransportEventMap]
+  | [SVGAElement, SVGElementEventMap]
+  | [SVGAnimateElement, SVGElementEventMap]
+  | [SVGAnimateMotionElement, SVGElementEventMap]
+  | [SVGAnimateTransformElement, SVGElementEventMap]
+  | [ScreenOrientation, ScreenOrientationEventMap]
+  | [ScriptProcessorNode, ScriptProcessorNodeEventMap]
+  | [ServiceWorker, ServiceWorkerEventMap]
+  | [ServiceWorkerContainer, ServiceWorkerContainerEventMap]
+  | [ServiceWorkerRegistration, ServiceWorkerRegistrationEventMap]
+  | [SpeechRecognition, SpeechRecognitionEventMap]
+  | [SpeechSynthesis, SpeechSynthesisEventMap]
+  | [SpeechSynthesisUtterance, SpeechSynthesisUtteranceEventMap]
+  | [TextTrack, TextTrackEventMap]
+  | [TextTrackCue, TextTrackCueEventMap]
+  | [TextTrackList, TextTrackListEventMap]
+  | [VTTCue, TextTrackCueEventMap]
+  | [VideoTrackList, VideoTrackListEventMap]
+  | [WebSocket, WebSocketEventMap]
+  | [Window, WindowEventMap]
+  // | [WindowEventHandlers, WindowEventHandlersEventMap]
+  | [Worker, WorkerEventMap]
+  | [XMLDocument, DocumentEventMap]
+  | [XMLHttpRequest, XMLHttpRequestEventMap]
+  | [XMLHttpRequestEventTarget, XMLHttpRequestEventTargetEventMap]
+  | [XMLHttpRequestUpload, XMLHttpRequestEventTargetEventMap]
+;
+
+export type Targets<A = TargetToEventMap> =
+  A extends [infer TTarget, any]
+    ? TTarget
+    : never;
+
+
+// export type CastTargetToEventMap<TRefTarget extends Targets> = TargetToEventMap extends [infer TTarget, infer TKVMap]
+//   // ? TKVMap
+//   ? TRefTarget extends Clone<TTarget>
+//     ? TKVMap
+//     : never
+//   : never;
+
+// export type CastTargetToEventMap<TRefTarget extends Targets> =
+//     TRefTarget extends TargetToEventMap[0]
+//     ? TargetToEventMap[1]
+//     : never;
+
+export type CastTargetToEventMap<TRefTarget extends Targets, A = TargetToEventMap> =
+  A extends [TRefTarget, infer TKVMap]
+    ? TKVMap
+    : never;
 
 export interface IEventsObservableConstructor {
   // new(target: AbortSignal, name?: KeyValueMapKeys<AbortSignalEventMap> | null): IEventsObservable<AbortSignalEventMap, AbortSignal>;
@@ -76,15 +190,18 @@ export interface IEventsObservableConstructor {
   // new(target: XMLHttpRequestEventTarget, name?: KeyValueMapKeys<XMLHttpRequestEventTargetEventMap> | null): IEventsObservable<XMLHttpRequestEventTargetEventMap, XMLHttpRequestEventTarget>;
   // new(target: XMLHttpRequestUpload, name?: KeyValueMapKeys<XMLHttpRequestEventTargetEventMap> | null): IEventsObservable<XMLHttpRequestEventTargetEventMap, XMLHttpRequestUpload>;
 
-  new<TKVMap extends EventKeyValueMap<TKVMap> = IEventsObservableKeyValueMapDefault, TTarget extends EventTarget = EventTarget>(target: TTarget, name?: KeyValueMapKeys<TKVMap> | null): IEventsObservable<TKVMap, TTarget>;
+  new<TTarget extends Targets>(target: TTarget): IEventsObservable<CastTargetToEventMap<TTarget>, TTarget>;
+  new<TKVMap extends KeyValueMap<TKVMap, Event>, TTarget extends EventTarget = EventTarget>(target: TTarget, name?: KeyValueMapKeys<TKVMap> | null): IEventsObservable<TKVMap, TTarget>;
 }
+
+
 
 /**
  * An EventsObservable is a wrapper around a NotificationsObservable,
  * which allows to listen to the Events emitted by 'target'.
  * To force an Event's type you may provide a 'name', else the Event's type will be determined by the NotificationsObservers observing it.
  */
-export interface IEventsObservable<TKVMap extends EventKeyValueMap<TKVMap> = IEventsObservableKeyValueMapDefault, TTarget extends EventTarget = EventTarget> extends INotificationsObservable<TKVMap> {
+export interface IEventsObservable<TKVMap extends EventKeyValueMap<TKVMap>, TTarget extends EventTarget = EventTarget> extends INotificationsObservable<TKVMap> {
   // the target of the events' listener
   readonly target: TTarget;
 
@@ -92,3 +209,12 @@ export interface IEventsObservable<TKVMap extends EventKeyValueMap<TKVMap> = IEv
   readonly name: KeyValueMapKeys<TKVMap> | null;
 }
 
+// const a: IEventsObservableConstructor = null;
+// new a(window)
+//   .on('load', () => {
+//   })
+//   .on('a', () => {
+//   });
+
+// const b: IEventsObservable<AbortSignalEventMap & AbstractWorkerEventMap> = null;
+// const b: IEventsObservable<never> = null;

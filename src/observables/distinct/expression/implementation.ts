@@ -1,14 +1,17 @@
-import { IObservableContext } from '../../core/observable/interfaces';
+import { IObservableContext } from '../../../core/observable/interfaces';
 import { IExpression } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
+import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IValueObservableInternal, ValueObservable } from '../value-observable/implementation';
+import { IsObject } from '../../../helpers';
 
 
 export const EXPRESSION_PRIVATE = Symbol('expression-private');
 
 export interface IExpressionPrivate<T> {
   context: IObservableContext<T>;
+
   factory(): T;
+
   requestIdleTimer: any;
   // timer: any;
 }
@@ -18,13 +21,19 @@ export interface IExpressionInternal<T> extends IExpression<T>, IValueObservable
 }
 
 
-export function ConstructExpression<T>(expression: IExpression<T>, context: IObservableContext<T>, factory:() => T): void {
+export function ConstructExpression<T>(expression: IExpression<T>, context: IObservableContext<T>, factory: () => T): void {
   ConstructClassWithPrivateMembers(expression, EXPRESSION_PRIVATE);
 
   (expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].context = context;
   (expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].factory = factory;
   (expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].requestIdleTimer = null;
   // (expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].timer = null;
+}
+
+
+export function IsExpression(value: any): value is IExpression<any> {
+  return IsObject(value)
+    && value.hasOwnProperty(EXPRESSION_PRIVATE);
 }
 
 // let expressionCount: number = 0;
@@ -58,7 +67,6 @@ export function ExpressionUpdate<T>(expression: IExpression<T>): void {
     ExpressionUpdate<T>(expression);
   }, 1000);*/
 }
-
 
 
 export class Expression<T> extends ValueObservable<T> implements IExpression<T> {

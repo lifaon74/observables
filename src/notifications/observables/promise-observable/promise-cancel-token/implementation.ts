@@ -32,7 +32,7 @@ export function PromiseCancelTokenCancel(token: IPromiseCancelToken, reason: any
   if (!(token as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].cancelled) {
     (token as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].cancelled = true;
     (token as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].reason = reason;
-    ObservableEmitAll<INotification<Record<'cancel', any>>>(token, new CancelNotification(reason));
+    ObservableEmitAll<INotification<'cancel', any>>(token, new CancelNotification(reason));
   }
 }
 
@@ -59,7 +59,7 @@ export function PromiseCancelTokenLinkWithAbortController(token: IPromiseCancelT
       tokenCancelListener.deactivate();
     };
 
-    const tokenCancelListener: INotificationsObserver<Record<'cancel', any>> = token.addListener('cancel', () => {
+    const tokenCancelListener: INotificationsObserver<'cancel', any> = token.addListener('cancel', () => {
       // PromiseCancelToken has been cancelled first
       clear();
       controller.abort();
@@ -152,7 +152,7 @@ export class PromiseCancelToken extends NotificationsObservable<IPromiseCancelTo
 
 
 
-export class PromiseCancelTokenObserver extends NotificationsObserver<Record<'cancel', any>> {
+export class PromiseCancelTokenObserver extends NotificationsObserver<'cancel', any> {
   constructor(callback: (value: any) => void) {
     super('cancel', callback);
   }
@@ -161,7 +161,7 @@ export class PromiseCancelTokenObserver extends NotificationsObserver<Record<'ca
 /**
  * Simple wrapper around a Notification of type 'cancel'
  */
-export class CancelNotification extends Notification<Record<'cancel', any>> {
+export class CancelNotification extends Notification<'cancel', any> {
   constructor(reason?: any) {
     super('cancel', reason);
   }

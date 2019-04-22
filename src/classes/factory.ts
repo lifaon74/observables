@@ -1,3 +1,5 @@
+import { TupleToIntersection } from "./types";
+
 export interface Constructor<Instance = any, Args extends any[] = any[]> extends Function {
   new(...args: Args): Instance;
 }
@@ -247,12 +249,6 @@ export function ClassToFactory<TSource extends (new(...args: any[]) => any) = Ob
 
 
 
-// converts a tuple type (ex: [number, string]) to an union of types => 'number' | 'string'
-type TupleTypes<T> = { [P in keyof T]: T[P] } extends { [key: number]: infer V } ? V : never; // type A = TupleTypes<[1, "hello", true]>; // === 1 | "hello" | true
-// converts an union of types to an intersection of these types
-type UnionToIntersection<U> = (U extends any ? ((k: U) => void) : never) extends ((k: infer I) => void) ? I : never;
-// converts a tuple type to an intersections of these types
-type TupleToIntersection<T> = UnionToIntersection<TupleTypes<T>>;
 
 // converts a tuple of construct types (ex: [Constructor<A>, Constructor<B>]) to a tuple of instances types
 export type InstancesTypes<T extends (new (...args: any[]) => any)[]> = {
@@ -263,24 +259,6 @@ export type InstancesTypes<T extends (new (...args: any[]) => any)[]> = {
 export type ConstructorsParameters<T extends (new (...args: any[]) => any)[]> = {
   [P in keyof T] : T[P] extends new (...args: infer P) => any ? P : never;
 }
-
-// removes from T (object) the properties K (union)
-export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
-
-// removes from T (object) the properties K (tuple)
-export type ExcludeProperties<T, K extends (keyof T)[]> = Pick<T, Exclude<keyof T, TupleTypes<K>>>;
-
-// https://github.com/Microsoft/TypeScript/issues/9252#issuecomment-472881853
-// creates an intersection between T and U
-export type Subset<T, U> = {
-  [key in keyof T]: key extends keyof U ? T[key] : never
-};
-
-export type SuperSet<T, U> = {
-  [key in keyof T]: key extends keyof U
-    ? (U[key] extends T[key] ? T[key] : never)
-    : T[key]
-};
 
 // exclude the constructor from T
 export type ExcludeConstructor<T> = {

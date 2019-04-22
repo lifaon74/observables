@@ -12,23 +12,29 @@ import { Reason } from './misc/reason/implementation';
 import { PromiseObservable } from './notifications/observables/promise-observable/implementation';
 import { IObserver } from './core/observer/interfaces';
 import { Pipe } from './core/observable-observer/implementation';
-import { INotificationsObservable, INotificationsObservableContext } from './notifications/core/notifications-observable/interfaces';
+import {
+  INotificationsObservable, INotificationsObservableContext, KeyValueMapToNotifications,
+  TNotificationsObservablePipeToObserverResult
+} from './notifications/core/notifications-observable/interfaces';
 import { IObservableObserver, IPipe, TBasePipe } from './core/observable-observer/interfaces';
-import { IObservable, IObservableContext } from './core/observable/interfaces';
+import {
+  IObservable, IObservableContext, TObservablePipeThroughResult, TObservablePipeToObserverResult
+} from './core/observable/interfaces';
 import { promisePipe } from './operators/promise/promisePipe';
 import { mapPipe } from './operators/pipes/mapPipe';
 import { TimerObservable } from './observables/timer-observable/implementation';
-import { AsyncSource, Source } from './observables/source/implementation';
-import { ISource } from './observables/source/interfaces';
+import { AsyncSource, Source } from './observables/distinct/source/implementation';
+import { ISource } from './observables/distinct/source/interfaces';
 import { KeyValueMap, KeyValueMapKeys, KeyValueMapValues } from './notifications/core/interfaces';
 import { INotification } from './notifications/core/notification/interfaces';
 import { from } from './operators/from';
 import { WebSocketObservableObserver } from './notifications/observables/websocket-observable/implementation';
 import { INotificationsObserver } from './notifications/core/notifications-observer/interfaces';
-import { FunctionObservable, SourceFunctionObservable } from './observables/function-observable/implementation';
-import { Expression } from './observables/expression/implementation';
-import { $add, $equal, $string } from './operators/misc';
+import { FunctionObservable } from './observables/distinct/function-observable/implementation';
+import { Expression } from './observables/distinct/expression/implementation';
+import { $add, $equal, $expression, $source, $string, testMisc } from './operators/misc';
 import { IPromiseCancelToken } from './notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import { UnionToIntersection } from './classes/types';
 
 
 function testReadOnlyList() {
@@ -177,13 +183,13 @@ function observeNotificationsObservable(): void {
 
   // 2) use 'pipeTo' and NotificationsObserver (is strictly equal to 'addListener')
   const observer2 = createEventNotificationsObservable<WindowEventMap>(window, 'mousemove')
-    .pipeTo<INotificationsObserver<WindowEventMap>>(new NotificationsObserver<WindowEventMap>('mousemove', (event: MouseEvent) => {
+    .pipeTo<INotificationsObserver<'mousemove', MouseEvent>>(new NotificationsObserver<'mousemove', MouseEvent>('mousemove', (event: MouseEvent) => {
       console.log(`y: ${event.clientY}`);
     })).activate();
 
   // 3) use standard Observer
   const observer3 = createEventNotificationsObservable(window, 'click')
-    .pipeTo(new Observer<INotification<Record<'click', MouseEvent>>>((notification: INotification<Record<'click', MouseEvent>>) => {
+    .pipeTo(new Observer<INotification<'click', MouseEvent>>((notification: INotification<'click', MouseEvent>) => {
       if (notification.name === 'click') {
         console.log(`click => x: ${notification.value.clientX}, x: ${notification.value.clientY}`);
       }
@@ -243,7 +249,7 @@ function eventsObservableExample1(): void {
  */
 function eventsObservableExample2(): void {
   const observer = new EventsObservable(window, 'mousemove')
-    .pipeTo(new Observer((notification: INotification<Record<'mousemove', MouseEvent>>) => {
+    .pipeTo(new Observer((notification: INotification<'mousemove', MouseEvent>) => {
       console.log(`x: ${notification.value.clientX}, x: ${notification.value.clientY}`);
     })).activate();
 
@@ -349,7 +355,7 @@ function promiseCancelTokenExample1(): void {
 function promiseObservableExample1(): void {
   // creates an fetch observable from an url
   function http(url: string) {
-    return new PromiseObservable((token: PromiseCancelToken) => {
+    return new PromiseObservable<Response, Error, any>((token: PromiseCancelToken) => {
       return fetch(url, { signal: token.toAbortController().signal });
     });
   }
@@ -473,14 +479,14 @@ function observableToPromiseExample1(): void {
   const url2: string = 'https://invalid url'; // invalid  url
 
   observePromise(toPromise<Response>(new FetchObservable(url1))); // will complete
-  observePromise(toPromise(new FetchObservable(url2))); // will error
+  observePromise(toPromise<Response>(new FetchObservable(url2))); // will error
 
   const abortController: AbortController = new AbortController();
-  observePromise(toPromise(new FetchObservable(url1, { signal: abortController.signal }))); // will cancel
+  observePromise(toPromise<Response>(new FetchObservable(url1, { signal: abortController.signal }))); // will cancel
   abortController.abort();
 
   // provides PromiseCancelToken too, to detect cancellation
-  observePromise(...toCancellablePromise(new FetchObservable(url1, { signal: abortController.signal }))); // will cancel
+  observePromise(...toCancellablePromise<Response>(new FetchObservable(url1, { signal: abortController.signal }))); // will cancel
 }
 
 
@@ -498,7 +504,70 @@ function observableObserverExampple1(): void {
   }
 }
 
+function typeTest() {
+  type a = 'a' | 'b';
+  type b = 'a' | 'b' | 'c';
+  type c = 'a';
+  type d = 'd';
 
+  type inter_a = 'a' & 'b';
+  type inter_b = 'a' & 'b' & 'c';
+  type inter_c = 'a';
+  type inter_d = 'd';
+
+
+  // expect B super set of A
+  function foo<A extends string, B extends string>(v: UnionToIntersection<A>): B {
+    return v as any;
+  }
+
+  const v: unknown = null;
+
+  // const k: O<a> = { a: 'a', b: 'b' };
+  // const k: (a & b) = 'b';
+  // const k: keyof { [key in a]: void };
+  // const k: T<a, b> = 'c';
+  // const k: UnionToIntersection<a> = 'a' as unknown as a;
+  // const k: keyof { a: 1, b: never };
+
+  // (a & b) extends b => true
+  // (b & a) extends b => true
+  // (a & b) extends a => true
+  // (a & b) extends c => false
+  // (a & b) extends d => false
+  // ('a' | 'b' | 'c') extends ('a' | 'b') => false
+  // ('a' | 'b' | 'c') extends ('a' | 'b' | 'c') => true
+  // ('a' & 'b' & 'c') extends ('a' & 'b') => true
+  // ('a' & 'b') extends ('a') => true
+  // ('a') extends ('a' & 'b') => false
+
+  // string extends ('a' & 'b') => false
+  // ('a' & 'b') extends string => true
+
+  // string extends ('a' | 'b') => false
+  // ('a' | 'b') extends string => true
+
+  // ('a' | 'b' | 'c') extends ('a' & 'b') => false
+  // ('a' | 'b') extends ('a' & 'b') => false
+  // ('a') extends ('a' & 'b') => false
+  // (('a' & 'b') | ('a' & 'b' & 'c')) extends ('a' & 'b') => true
+  // ('a' & 'b') extends ('a' | 'b') => true
+
+  // const k: (string extends ('a' | 'b') ? boolean : never) = null;
+  // const k: Record<a, void> & Record<b, void> = null;
+  // k.c = void 0;
+
+
+  // const r0 = foo<a, a>(v as inter_a); // valid
+  // const r1 = foo<a, b>(v as inter_b); // valid
+  // const r2 = foo<a, c>(v as inter_c); // valid
+  // const r3 = foo<a, d>(v as inter_d); // valid
+  //
+  // const ra = foo<a, a>(v as a); // valid
+  // const rb = foo<a, b>(v as b); // valid
+  // const rc = foo<a, c>(v as c); // invalid
+  // const rd = foo<a, d>(v as d); // invalid
+}
 
 function pipeExample1() {
   function map<Tin, Tout>(transform: (value: Tin) => Tout): IPipe<IObserver<Tin>, IObservable<Tout>> {
@@ -521,7 +590,7 @@ function pipeExample2() {
   const pipe = new Pipe(() => {
     let context: INotificationsObservableContext<{ click: [number, number] }>;
     return {
-      observer: new NotificationsObserver('click', (event: MouseEvent) => {
+      observer: new NotificationsObserver<'click', MouseEvent>('click', (event: MouseEvent) => {
         context.dispatch('click', [event.clientX, event.clientX]);
       }),
       observable: new NotificationsObservable((_context: INotificationsObservableContext<{ click: [number, number] }>) => {
@@ -596,7 +665,7 @@ function functionObservableExample1() {
   const a: ISource<number> = new Source<number>();
   const b: ISource<number> = new Source<number>();
 
-  const observable = SourceFunctionObservable.create((a: number, b: number) => {
+  const observable = FunctionObservable.create((a: number, b: number) => {
     return a + b;
   })(a, b);
 
@@ -604,14 +673,19 @@ function functionObservableExample1() {
     console.log('sum', value);
   }).activate();
 
-  observable.call(1, 2); // print 3
+  function call(v_a: number, v_b: number) {
+    a.emit(v_a);
+    b.emit(v_b);
+  }
+
+  observable.run(() => {
+    call(1, 2);
+  }); // print 3
   a.emit(5); // print 7
 
   (window as any).a = a;
   (window as any).b = b;
-  (window as any).call = (a: number, b: number) => {
-    observable.call(a, b);
-  };
+  (window as any).call = call;
 
 
   $equal(a, 1)
@@ -620,8 +694,7 @@ function functionObservableExample1() {
     }).activate();
 
 
-
-  $string`a${a}b${a}c`
+  $string`a${a}b${a}c${$expression(() => window.location.href)}`
     .pipeTo((value: string) => {
       console.log('str', value);
     }).activate();
@@ -1057,7 +1130,7 @@ export function test() {
   // testPipe2();
   // testPipe3();
 
-  functionObservableExample1();
+  // functionObservableExample1();
   // expressionExample1();
 
   // logicAndExample1();
@@ -1070,6 +1143,8 @@ export function test() {
   // testRXJSObservable();
   // testFromOperator();
   // testWebSocket();
+
+  testMisc();
 }
 
 

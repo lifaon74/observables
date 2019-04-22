@@ -9,15 +9,8 @@ A Notification is simply an object with a name and an optional value.
 We may create one like this:
 
 ```ts
-const notification = new Notification<Record<'click', MouseEvent>>('click', new MouseEvent('click')); // best
-// or
-const notification = new Notification<WindowEventMap>('click', new MouseEvent('click'));
-// or (lazy typed), where 'KeyValueMapGeneric' is kind of '{ [key: string]: any }'
-const notification = new Notification<KeyValueMapGeneric>('click', new MouseEvent('click')); // avoid
+const notification = new Notification<'click', MouseEvent>('click', new MouseEvent('click'));
 ```
-
-**INFO:** Notifications are strongly typed, they require a type which is a key-value map (abbreviated KVMap) where
-the keys are the valid names; and the associated value, the Notification's value type.
 
 Because Notifications and Events are similar, we can create a Notification from an Event using:
 ```ts
@@ -37,7 +30,7 @@ More details are available on the [home page](../README.md##notifications).
 function createEventNotificationsObservable<TKVMap extends KeyValueMap<TKVMap, Event>>(target: EventTarget, name: KeyValueMapKeys<TKVMap>): INotificationsObservable<TKVMap> {
   return new NotificationsObservable<TKVMap>((context: INotificationsObservableContext<TKVMap>) => {
     const listener = (event: KeyValueMapValues<TKVMap>) => {
-      context.dispatch(event.type as KeyValueMapKeys<TKVMap>, event); // use dispatch intead of emit
+      context.dispatch(event.type as KeyValueMapKeys<TKVMap>, event); // use dispatch instead of emit
       // we may write 'context.emit(Notification.fromEvent<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>(event));' intead
     };
     return {
@@ -57,7 +50,7 @@ function createEventNotificationsObservable<TKVMap extends KeyValueMap<TKVMap, E
 ```
 
 A NotificationsObservable is constructed just like an Observable.
-The `INotificationsObservableContext` is extremely similar to the IObservableContext, but provides a `dispatch<K extends keyof TKVMap>(name: K, value?: TKVMap[K]): void;` function too.
+The `INotificationsObservableContext` is extremely similar to the IObservableContext, but provides a `dispatch<K extends KeyValueMapKeys<TKVMap>>(name: K, value?: TKVMap[K]): void;` function too.
 
 
 ### 2) Observe the NotificationsObservable
@@ -74,13 +67,13 @@ const observer1 = createEventNotificationsObservable<WindowEventMap>(window, 'mo
 
 // 2) use 'pipeTo' and NotificationsObserver (is strictly equal to 'addListener')
 const observer2 = createEventNotificationsObservable<WindowEventMap>(window, 'mousemove')
-  .pipeTo<INotificationsObserver<WindowEventMap>>(new NotificationsObserver<WindowEventMap>('mousemove', (event: MouseEvent) => {
+  .pipeTo<INotificationsObserver<'mousemove', MouseEvent>>(new NotificationsObserver<'mousemove', MouseEvent>('mousemove', (event: MouseEvent) => {
     console.log(`y: ${event.clientY}`);
   })).activate();
 
 // 3) use standard Observer
 const observer3 = createEventNotificationsObservable(window, 'click')
-  .pipeTo(new Observer<INotification<Record<'click', MouseEvent>>>((notification: INotification<Record<'click', MouseEvent>>) => {
+  .pipeTo(new Observer<INotification<'click', MouseEvent>>((notification: INotification<'click', MouseEvent>) => {
     if (notification.name === 'click') {
       console.log(`click => x: ${notification.value.clientX}, x: ${notification.value.clientY}`);
     }

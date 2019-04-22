@@ -1,9 +1,6 @@
-import { IObservable, IObservableConstructor, IObservableContext } from '../../core/observable/interfaces';
-import { IPromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
-import { KeyValueMapGeneric } from '../../notifications/core/interfaces';
-import { INotification } from '../../notifications/core/notification/interfaces';
-import { INotificationsObservable } from '../../notifications/core/notifications-observable/interfaces';
-import { IValueObservable, IValueObservableConstructor } from '../value-observable/interfaces';
+import { IObservable, IObservableConstructor } from '../../../core/observable/interfaces';
+import { IPromiseCancelToken } from '../../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import { IValueObservable } from '../value-observable/interfaces';
 
 
 export interface ISourceConstructor {

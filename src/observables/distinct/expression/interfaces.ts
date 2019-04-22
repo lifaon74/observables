@@ -1,4 +1,4 @@
-import { IObservableConstructor } from '../../core/observable/interfaces';
+import { IObservableConstructor } from '../../../core/observable/interfaces';
 import { IValueObservable } from '../value-observable/interfaces';
 
 export interface IExpressionConstructor extends IObservableConstructor {

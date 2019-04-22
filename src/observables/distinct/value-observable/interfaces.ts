@@ -1,4 +1,4 @@
-import { IObservable, IObservableConstructor, IObservableContext, IObservableHook } from '../../core/observable/interfaces';
+import { IObservable, IObservableConstructor, IObservableContext, IObservableHook } from '../../../core/observable/interfaces';
 
 
 export type TValueObservableConstructorArgs<T> = [(context: IValueObservableContext<T>) => (IObservableHook<T> | void)] | [];

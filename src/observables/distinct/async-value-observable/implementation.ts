@@ -1,14 +1,15 @@
-import { AllowObservableContextBaseConstruct, IObservableContextBaseInternal, OBSERVABLE_CONTEXT_BASE_PRIVATE, ObservableContextBase, ObservableFactory } from '../../core/observable/implementation';
-import { IObservableHook } from '../../core/observable/interfaces';
-import { IObserver } from '../../core/observer/interfaces';
-import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
+import { AllowObservableContextBaseConstruct, IObservableContextBaseInternal, OBSERVABLE_CONTEXT_BASE_PRIVATE, ObservableContextBase, ObservableFactory } from '../../../core/observable/implementation';
+import { IObservableHook } from '../../../core/observable/interfaces';
+import { IObserver } from '../../../core/observer/interfaces';
+import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IAsyncValueObservable, IAsyncValueObservableConstructor, IAsyncValueObservableContext, IAsyncValueObservableContextConstructor, TAsyncValueObservableConstructorArgs } from './interfaces';
-import { Constructor, FactoryClass, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass } from '../../classes/factory';
-import { IPromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import { Constructor, FactoryClass, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass } from '../../../classes/factory';
+import { IPromiseCancelToken } from '../../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
 import { IValueObservable, IValueObservableContext } from '../value-observable/interfaces';
 import { IsValueObservableConstructor, IValueObservableInternal, ValueObservableFactory, } from '../value-observable/implementation';
-import { InitObservableHook, IObservableHookPrivate } from '../../core/observable/hook';
-import { PromiseCancelReason, PromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/implementation';
+import { InitObservableHook, IObservableHookPrivate } from '../../../core/observable/hook';
+import { PromiseCancelReason, PromiseCancelToken } from '../../../notifications/observables/promise-observable/promise-cancel-token/implementation';
+import { IsObject } from '../../../helpers';
 
 
 export const ASYNC_VALUE_OBSERVABLE_PRIVATE = Symbol('async-value-observable-private');
@@ -42,7 +43,8 @@ export function ConstructAsyncValueObservable<T>(
 }
 
 export function IsAsyncValueObservable(value: any): boolean {
-  return (typeof value === 'object') && (value !== null ) && value.hasOwnProperty(ASYNC_VALUE_OBSERVABLE_PRIVATE);
+  return IsObject(value)
+    && value.hasOwnProperty(ASYNC_VALUE_OBSERVABLE_PRIVATE);
 }
 
 const IS_ASYNC_VALUE_OBSERVABLE_CONSTRUCTOR = Symbol('is-async-value-observable-constructor');

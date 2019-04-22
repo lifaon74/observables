@@ -95,7 +95,7 @@ For simple Pipes which simply uses Observer and Observable (not an EventsObserva
 
 ```ts
 function filter<T>(filter: (value: T) => boolean): IPipe<IObserver<T>, IObservable<T>> {
-  return Pipe.create<T, T>((context: IPipeContext<T, T>) => {
+  return Pipe.create<T, T>((context: TPipeContextBase<T, T>) => {
     return {
       onEmit(value: T): void {
         if (filter(value)) {
