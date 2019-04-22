@@ -245,21 +245,25 @@ interface IObservable<T> {
   readonly observed: boolean;
 
   // observes this Observable with "observer"
-  pipeTo<O extends IObserver<T>>(observer: O): O;
+  pipeTo<O extends IObserver<any>>(observer: O): TObservablePipeToObserverResult<O, T>; // returns the observer
+
   // creates an Observable from "callback" and observes this Observable with it
-  pipeTo(callback: (value: T) => void): IObserver<T>;
+  pipeTo<C extends (value: any) => void>(callback: C): TObservablePipeToCallbackResult<C, T>; // returns the observer
 
   // observes this Observable with "observableObserver.observer" and return the Observable
-  pipeThrough<O extends IObservableObserver<IObserver<T>, IObservable<any>>>(observableObserver: O): O['observable'];
+  pipeThrough<OO extends IObservableObserver<IObserver<any>, IObservable<any>>>(observableObserver: OO): TObservablePipeThroughResult<OO, T>; // returns the observer of the observableObserver
 
   // observes this Observable with "observableObserver.observer" and return the observableObserver
-  pipe<O extends IObservableObserver<IObserver<T>, IObservable<any>>>(observableObserver: O): O;
-  
+  pipe<OO extends IObservableObserver<IObserver<any>, IObservable<any>>>(observableObserver: OO): TObservablePipeResult<OO, T>; // returns the observableObserver
+
   // like "pipeTo" but returns this instead
-  observedBy(...observers: TObserverOrCallback<T>[]): this;
+  observedBy<O extends TObserverOrCallback<any>[]>(...observers: O): TObservableObservedByResultNonCyclic<O, T, this>; // returns this
 }
 
 type TObserverOrCallback<T> = IObserver<T> | ((value: T) => void);
+
+// INFO: don't bother about the TObservablePipeToObserverResult, TObservablePipeToCallbackResult, etc...
+// they're just there to ensure the Observer supports a superset of T
 ```
 
 ```ts
@@ -334,8 +338,8 @@ function createTimerObservable(period: number) {
 
 ##### pipeTo
 ```ts
-pipeTo<O extends IObserver<T>>(observer: O): O;
-pipeTo(callback: (value: T) => void): IObserver<T>;
+pipeTo<O extends IObserver<any>>(observer: O): TObservablePipeToObserverResult<O, T>; // returns this observer
+pipeTo<C extends (value: any) => void>(callback: C): TObservablePipeToCallbackResult<C, T>; // returns an observer from callback
 ```
 The piped Observer will observe the Observable. It is returned by the function.
 It simply does `observer.observe(this)`.
@@ -356,7 +360,7 @@ This ensure simple and chainable calls.
 
 ##### pipeThrough
 ```ts
-pipeThrough<O extends IObservableObserver<IObserver<T>, IObservable<any>>>(observableObserver: O): O['observable'];
+pipeThrough<OO extends IObservableObserver<IObserver<any>, IObservable<any>>>(observableObserver: OO): TObservablePipeThroughResult<OO, T>; // returns the observer of the observableObserver
 ```
 
 This function is used to pipe an ObservableObserver.
@@ -382,7 +386,7 @@ More details on ObservableObserver bellow.
 
 ##### pipe
 ```ts
-pipe<O extends IObservableObserver<IObserver<T>, IObservable<any>>>(observableObserver: O): O;
+pipe<OO extends IObservableObserver<IObserver<any>, IObservable<any>>>(observableObserver: OO): TObservablePipeResult<OO, T>; // returns the observableObserver
 ```
 
 This function is used to pipe an ObservableObserver just like `pipeThrough`.
@@ -407,7 +411,7 @@ More details on ObservableObserver bellow.
 
 ##### observedBy
 ```ts
-observedBy(...observers: TObserverOrCallback<T>[]): this;
+observedBy<O extends TObserverOrCallback<any>[]>(...observers: O): TObservableObservedByResultNonCyclic<O, T, this>; // returns this
 ```
 Tells all the *observers* to observe this Observable.
 
@@ -442,10 +446,10 @@ interface IObserver<T> {
 
 
   // observes a list of Observables
-  observe(...observables: IObservable<T>[]): this;
+  observe<O extends IObservable<any>[]>(...observables: O): TObserverObserveResultNonCyclic<O, T, this>; // returns this
 
   // stops observing a list of Observables
-  unobserve(...observables: IObservable<T>[]): this;
+  unobserve<O extends IObservable<any>[]>(...observables: O): TObserverObserveResultNonCyclic<O, T, this>; // returns this
 
   // stops observing all its Observables
   disconnect(): this;
@@ -493,10 +497,10 @@ for (let i = 0; i < 10; i++) {
 readonly observables: IReadonlyList<IObservable<T>>;
 readonly observing: boolean;
 
-observe(...observables: IObservable<T>[]): this;
-unobserve(...observables: IObservable<T>[]): this;
-
+observe<O extends IObservable<any>[]>(...observables: O): TObserverObserveResultNonCyclic<O, T, this>; // returns this
+unobserve<O extends IObservable<any>[]>(...observables: O): TObserverObserveResultNonCyclic<O, T, this>; // returns this
 ```
+
 `observe` appends `observables` to the list of this Observer's observables.
 `unobserve` removes `observables` from the list of this Observer's observables.
 More explanations with *activate/deactivate*.
@@ -597,7 +601,7 @@ function map<Tin, Tout>(transform: (value: Tin) => Tout): IObservableObserver<IO
 ```ts
 interface IPipeConstructor {
   create<TValueObserver, TValueObservable = TValueObserver>(
-    create?: (context: IPipeContext<TValueObserver, TValueObservable>) => (IPipeHook<TValueObserver, TValueObservable> | void)
+    create?: (context: IPipeContext<IObserver<TValueObserver>, IObservable<TValueObservable>>) => (IPipeHook<IObserver<TValueObserver>, IObservable<TValueObservable>> | void)
   ): IPipe<IObserver<TValueObserver>, IObservable<TValueObservable>>;
 
   // creates a Pipe
@@ -617,15 +621,15 @@ type TObservableObserverActivateMode = 'auto' | 'manual';
 ```
 
 ```ts
-interface IPipeContext<TValueObserver, TValueObservable> {
-  readonly pipe: IPipe<IObserver<TValueObserver>, IObservable<TValueObservable>>;
+interface IPipeContext<TObserver extends IObserver<any>, TObservable extends IObservable<any>> {
+  readonly pipe: IPipe<TObserver, TObservable>;
 
-  emit(value: TValueObservable): void;
+  emit(value: ObservableType<TObservable>): void;
 }
 
-interface IPipeHook<TValueObserver, TValueObservable> extends IObservableHook<TValueObservable> {
+interface IPipeHook<TObserver extends IObserver<any>, TObservable extends IObservable<any>> extends IObservableHook<ObservableType<TObservable>> {
   // called when this Observer receives data.
-  onEmit?(value: TValueObserver): void;
+  onEmit?(value: ObserverType<TObserver>, observable?: TObservable): void;
 }
 ```
 
@@ -687,7 +691,7 @@ The self activation/deactivation allows a better CPU usage and freeing of resour
 ##### create (static)
 ```ts
 create<TValueObserver, TValueObservable = TValueObserver>(
-  create?: (context: IPipeContext<TValueObserver, TValueObservable>) => (IPipeHook<TValueObserver, TValueObservable> | void)
+  create?: (context: IPipeContext<IObserver<TValueObserver>, IObservable<TValueObservable>>) => (IPipeHook<IObserver<TValueObserver>, IObservable<TValueObservable>> | void)
 ): IPipe<IObserver<TValueObserver>, IObservable<TValueObservable>>;
 ```
 
@@ -741,28 +745,19 @@ Notifications (also called *events* sometimes) are one frequent and common usage
 A Notification is simply an object with a name and an optional value.
 It serves as instructing about an update of a state or about an event.
 
-```ts
-export type KeyValueMap<TKVMap, T> = {
-  [K in KeyValueMapKeys<TKVMap>]: T;
-};
-
-export type KeyValueMapKeys<TKVMap> = Extract<keyof TKVMap, string>;
-export type KeyValueMapValues<TKVMap> = TKVMap[KeyValueMapKeys<TKVMap>];
-
-export type KeyValueMapGeneric = KeyValueMap<{ [key: string]: any }, any>;
-```
 
 ```ts
 interface INotificationConstructor {
- // converts an Event to a Notification
- fromEvent<N extends string = string, T extends Event = Event>(event: T): INotification<Record<N, T>>;
+  // converts an Event to a Notification
+  fromEvent<TName extends string = string, TEvent extends Event = Event>(event: TEvent): INotification<TName, TEvent>;
 
- new<TKVMap extends KeyValueMapGeneric>(name: KeyValueMapKeys<TKVMap>, value?: KeyValueMapValues<TKVMap>): INotification<TKVMap>;
+  new<TName extends string, TValue>(name: TName, value?: TValue): INotification<TName, TValue>;
 }
 
-interface INotification<TKVMap extends KeyValueMapGeneric> {
-  readonly name: KeyValueMapKeys<TKVMap>;
-  readonly value: KeyValueMapValues<TKVMap>;
+
+interface INotification<TName extends string, TValue> {
+  readonly name: TName;
+  readonly value: TValue;
 }
 ```
 
@@ -771,33 +766,64 @@ We may use Observables to emit Notifications and Observers to filter them by nam
 
 
 ##### NotificationsObservable
+
+***KeyValueMap***
+
+First you need to know that NotificationsObservable are typed with a `KeyValueMap`.
+It's simply an interface where the keys are the notifications' name, and the values, the associated value's type for this name.
+
+```ts
+type KeyValueMap<TKVMap, T> = {
+  [K in KeyValueMapKeys<TKVMap>]: T;
+};
+
+type KeyValueMapKeys<TKVMap> = Extract<keyof TKVMap, string>;
+type KeyValueMapValues<TKVMap> = TKVMap[KeyValueMapKeys<TKVMap>];
+
+type KeyValueMapGeneric = KeyValueMap<{ [key: string]: any }, any>;
+```
+
+As an example:
+```ts
+interface MyEvents {
+  'error': Error,
+  'complete': any,
+}
+// may emit INotifications<'error', Error> | INotifications<'complete', any>
+```
+
+It is widely used with events listener for example, and supports existing KeyValueMap like `WindowEventMap`.
+
+***NotificationsObservable***
+
 ```ts
 interface INotificationsObservableConstructor {
-  new<TKVMap extends KeyValueMapGeneric>(create?: (context: INotificationsObservableContext<TKVMap>) => (IObservableHook<INotification<TKVMap>> | void)): INotificationsObservable<TKVMap>;
+  new<TKVMap extends KeyValueMapGeneric>(create?: (context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)): INotificationsObservable<TKVMap>;
 }
 
-interface INotificationsObservable<TKVMap extends KeyValueMapGeneric> extends IObservable<INotification<TKVMap>> {
+interface INotificationsObservable<TKVMap extends KeyValueMapGeneric> extends IObservable<KeyValueMapToNotifications<TKVMap>> {
   // creates a NotificationsObserver with "name" and "callback" which observes this Observable
-  addListener<K extends keyof TKVMap>(name: K, callback: (value: TKVMap[K]) => void): INotificationsObserver<Pick<TKVMap, K>>;
+  addListener<K extends KeyValueMapKeys<TKVMap>>(name: K, callback: (value: TKVMap[K]) => void): INotificationsObserver<K, TKVMap[K]>;
 
   // removes the Observable's NotificationsObservers matching "name" and "callback"
-  removeListener<K extends keyof TKVMap>(name: K, callback?: (value: TKVMap[K]) => void): void;
+  removeListener<K extends KeyValueMapKeys<TKVMap>>(name: K, callback?: (value: TKVMap[K]) => void): void;
 
   // like "addListener" but returns "this"
-  on<K extends keyof TKVMap>(name: K, callback: (value: TKVMap[K]) => void): this;
+  on<K extends KeyValueMapKeys<TKVMap>>(name: K, callback: (value: TKVMap[K]) => void): this;
 
   // like "removeListener" but returns "this"
-  off<K extends keyof TKVMap>(name: K, callback?: (value: TKVMap[K]) => void): this;
+  off<K extends KeyValueMapKeys<TKVMap>>(name: K, callback?: (value: TKVMap[K]) => void): this;
 
   // returns the list of observed NotificationsObserver matching "name" and "callback"
-  matches(name: string, callback?: (value: any) => void): IterableIterator<INotificationsObserver<TKVMap>>;
+  matches(name: string, callback?: (value: any) => void): IterableIterator<KeyValueMapToNotificationsObservers<TKVMap>>;
 }
 ```
 
 ```ts
-interface INotificationsObservableContext<TKVMap extends KeyValueMapGeneric> extends IObservableContext<INotification<TKVMap>> {
+interface INotificationsObservableContext<TKVMap extends KeyValueMapGeneric> extends IObservableContextBase<KeyValueMapToNotifications<TKVMap>> {
   readonly observable: INotificationsObservable<TKVMap>;
-  dispatch<K extends keyof TKVMap>(name: K, value?: TKVMap[K]): void;
+  emit(value: KeyValueMapToNotifications<TKVMap>): void;
+  dispatch<K extends KeyValueMapKeys<TKVMap>>(name: K, value?: TKVMap[K]): void;
 }
 ```
 
@@ -807,23 +833,23 @@ Moreover, it exposes some useful methods as shortcuts, and it is particularly ef
 
 ###### Construct
 ```ts
-new<TKVMap extends TKeyValueMap>(create?: (context: INotificationsObservableContext<TKVMap>) => (IObservableHook<TKVNotification<TKVMap>> | void)): INotificationsObservable<TKVMap>;
+new<TKVMap extends KeyValueMapGeneric>(create?: (context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)): INotificationsObservable<TKVMap>;
 ```
 The constructor is the same as the one for an Observable, but `context` is slightly different:
-it implements a `dispatch<K extends keyof TKVMap>(name: K, value?: TKVMap[K]): void` function which simply emits a Notification composed of `name` and `value`.
+it implements a `dispatch<K extends KeyValueMapKeys<TKVMap>>(name: K, value?: TKVMap[K]): void;` function which simply emits a Notification composed of `name` and `value`.
 
 
 ###### addListener
 ```ts
-addListener<K extends keyof TKVMap>(name: K, callback: (value: TKVMap[K]) => void): INotificationsObserver<Pick<TKVMap, K>>;
+addListener<K extends KeyValueMapKeys<TKVMap>>(name: K, callback: (value: TKVMap[K]) => void): INotificationsObserver<K, TKVMap[K]>;
 ```
 Creates a NotificationsObserver with `name` and `callback` which observes this Observable.
-Equivalent to: `return new NotificationsObserver<Pick<TKVMap, K>>(name, callback).observe(this);`
+Equivalent to: `return new NotificationsObserver<K, TKVMap[K]>(name, callback).observe(this);`
 
 
 ###### removeListener
 ```ts
-removeListener<K extends keyof TKVMap>(name: K, callback?: (value: TKVMap[K]) => void): void;
+removeListener<K extends KeyValueMapKeys<TKVMap>>(name: K, callback?: (value: TKVMap[K]) => void): void;
 ```
 Removes all NotificationsObservers matching `name` and `callback` from this Observable.
 If `callback` is omitted, removes all NotificationsObservers matching `name`.
@@ -831,8 +857,8 @@ If `callback` is omitted, removes all NotificationsObservers matching `name`.
 
 ###### on / off
 ```ts
-on<K extends keyof TKVMap>(name: K, callback: (value: TKVMap[K]) => void): this;
-off<K extends keyof TKVMap>(name: K, callback?: (value: TKVMap[K]) => void): this;
+on<K extends KeyValueMapKeys<TKVMap>>(name: K, callback: (value: TKVMap[K]) => void): this;
+off<K extends KeyValueMapKeys<TKVMap>>(name: K, callback?: (value: TKVMap[K]) => void): this;
 ```
 Just like `addListener` and `removeListener` but returns `this` instead.
 Notice than the underlying created NotificationsObserver self activate.
@@ -855,7 +881,7 @@ window.addEventListener(window, (event: MouseEvent) => {
 
 ###### matches
 ```ts
-matches(name: string, callback?: (value: any) => void): IterableIterator<TKVNotificationsObserver<TKVMap>>
+matches(name: string, callback?: (value: any) => void): IterableIterator<KeyValueMapToNotificationsObservers<TKVMap>>;
 ```
 Returns an iterator which iterates over the list of NotificationsObservers matching `name` and `callback`.
 If `callback` is omitted, returns all NotificationsObservers matching `name`.
@@ -863,22 +889,24 @@ If `callback` is omitted, returns all NotificationsObservers matching `name`.
 
 ##### NotificationsObserver
 ```ts
-interface INotificationsObserverConstructor {
-  new<TKVMap extends KeyValueMapGeneric>(name: KeyValueMapKeys<TKVMap>, callback: TNotificationsObserverCallback<TKVMap>): INotificationsObserver<TKVMap>;
+interface INotificationsObserverLike<TName extends string, TValue> {
+  name: TName;
+  callback: TNotificationsObserverCallback<TValue>;
 }
 
-interface INotificationsObserver<TKVMap extends KeyValueMapGeneric> extends IObserver<INotification<TKVMap>> {
+interface INotificationsObserverConstructor {
+  new<TName extends string, TValue>(name: TName, callback: TNotificationsObserverCallback<TValue>): INotificationsObserver<TName, TValue>;
+}
+
+interface INotificationsObserver<TName extends string, TValue> extends IObserver<INotification<string, any>>, INotificationsObserverLike<TName, TValue> {
   // the name to filter incoming notifications
-  readonly name: KeyValueMapKeys<TKVMap>;
+  readonly name: TName;
   // the callback to call when notification passes the "name" filter
-  readonly callback: TNotificationsObserverCallback<TKVMap>;
+  readonly callback: TNotificationsObserverCallback<TValue>;
 
   // returns true if "name" and "callback" are the same than this Observer's name and callback
-  matches(name: string, callback?: (value: any) => void): boolean;
+  matches(name: string, callback?: TNotificationsObserverCallback<any>): boolean;
 }
-
-type TNotificationsObserverCallback<TKVMap extends KeyValueMapGeneric> = (value: KeyValueMapValues<TKVMap>) => void;
-
 ```
 
 A NotificationsObserver is a Observer which filters its incoming values (`INotification<N, T>`) by name:
@@ -887,10 +915,10 @@ If the notification has the same name than the Observer, the `callback` is calle
 *Example:* Listening to *click* and *mousemove* events on *window* (see previous example)
 ```ts
 new EventsObservable<WindowEventMap>(window)
-  .observedBy(new NotificationsObserver<Record<'click', MouseEvent>>('click', (event: MouseEvent) => {
+  .observedBy(new NotificationsObserver<'click', MouseEvent>('click', (event: MouseEvent) => {
     console.log('click', event);
   }).activate())
-  .observedBy(new NotificationsObserver<Record<'mousemove', MouseEvent>>('mousemove', (event: MouseEvent) => {
+  .observedBy(new NotificationsObserver<'mousemove', MouseEvent>('mousemove', (event: MouseEvent) => {
       console.log('mousemove', event.clientX, event.clientY);
   }).activate())
   ;
@@ -902,24 +930,22 @@ new EventsObservable<WindowEventMap>(window)
 
 #### EventsObservable
 ```ts
-interface IEventsObservableKeyValueMapDefault {
-  [key: string]: Event;
-}
+type EventKeyValueMap<TKVMap> = KeyValueMap<TKVMap, any>;
 
-type TEventsObservableKeyValueMap<TKVMap = IEventsObservableKeyValueMapDefault> = {
-  [P in keyof TKVMap]: Event;
+type EventsObservableKeyValueMapGeneric = {
+  [key: string]: Event;
 };
 
 interface IEventsObservableConstructor {
-  new<TKVMap extends TEventsObservableKeyValueMap<TKVMap>, TTarget extends EventTarget = EventTarget>(target: TTarget, name?: TKVMapKeys<TKVMap> | null): IEventsObservable<TKVMap, TTarget>;
+  new<TKVMap extends KeyValueMap<TKVMap, Event>, TTarget extends EventTarget = EventTarget>(target: TTarget, name?: KeyValueMapKeys<TKVMap> | null): IEventsObservable<TKVMap, TTarget>;
 }
 
-interface IEventsObservable<TKVMap extends TEventsObservableKeyValueMap<TKVMap>, TTarget extends EventTarget = EventTarget> extends INotificationsObservable<TKVMap> {
+interface IEventsObservable<TKVMap extends EventKeyValueMap<TKVMap>, TTarget extends EventTarget = EventTarget> extends INotificationsObservable<TKVMap> {
   // the target of the events' listener
   readonly target: TTarget;
 
   // optional name of the event to listen to
-  readonly name: TKVMapKeys<TKVMap> | null;
+  readonly name: KeyValueMapKeys<TKVMap> | null;
 }
 ```
 
@@ -936,7 +962,7 @@ new EventsObservable<WindowEventMap>(window)
 *Example:* Listening to an uniq type of event
 ```ts
 const observer = new EventsObservable<WindowEventMap>(window, 'mousemove')
-  .pipeTo(new Observer<INotification<Record<'mousemove', MouseEvent>>>((notification: INotification<Record<'mousemove', MouseEvent>>) => {
+  .pipeTo(new Observer<INotification<'mousemove', MouseEvent>>((notification: INotification<'mousemove', MouseEvent>) => {
     console.log(`x: ${notification.value.clientX}, x: ${notification.value.clientY}`);
   })).activate();
   // INFO: cannot be observed by a NotificationsObservable with 'click' as name for example

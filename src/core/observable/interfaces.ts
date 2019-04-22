@@ -107,19 +107,19 @@ export interface IObservable<T> {
   readonly observed: boolean;
 
   // observes this Observable with "observer"
-  pipeTo<O extends IObserver<any>>(observer: O): TObservablePipeToObserverResult<O, T>;
+  pipeTo<O extends IObserver<any>>(observer: O): TObservablePipeToObserverResult<O, T>; // returns the observer
 
   // creates an Observable from "callback" and observes this Observable with it
-  pipeTo<C extends (value: any) => void>(callback: C): TObservablePipeToCallbackResult<C, T>;
+  pipeTo<C extends (value: any) => void>(callback: C): TObservablePipeToCallbackResult<C, T>; // returns the observer
 
   // observes this Observable with "observableObserver.observer" and return the Observable
-  pipeThrough<OO extends IObservableObserver<IObserver<any>, IObservable<any>>>(observableObserver: OO): TObservablePipeThroughResult<OO, T>;
+  pipeThrough<OO extends IObservableObserver<IObserver<any>, IObservable<any>>>(observableObserver: OO): TObservablePipeThroughResult<OO, T>; // returns the observer of the observableObserver
 
   // observes this Observable with "observableObserver.observer" and return the observableObserver
-  pipe<OO extends IObservableObserver<IObserver<any>, IObservable<any>>>(observableObserver: OO): TObservablePipeResult<OO, T>;
+  pipe<OO extends IObservableObserver<IObserver<any>, IObservable<any>>>(observableObserver: OO): TObservablePipeResult<OO, T>; // returns the observableObserver
 
   // like "pipeTo" but returns this instead
-  observedBy<O extends TObserverOrCallback<any>[]>(...observers: O): TObservableObservedByResultNonCyclic<O, T, this>;
+  observedBy<O extends TObserverOrCallback<any>[]>(...observers: O): TObservableObservedByResultNonCyclic<O, T, this>; // returns this
 }
 
 export type TObserverOrCallback<T> = IObserver<T> | ((value: T) => void);
