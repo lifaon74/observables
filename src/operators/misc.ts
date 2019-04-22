@@ -4,10 +4,9 @@ import {
   IFunctionObservable,
   TFunctionObservableFactory, TFunctionObservableFactoryParameters,
 } from '../observables/distinct/function-observable/interfaces';
-import { IsObservable, Observable } from '../core/observable/implementation';
-import { IObservable, ObservableType } from '../core/observable/interfaces';
+import { IsObservable } from '../core/observable/implementation';
+import { IObservable } from '../core/observable/interfaces';
 import { Expression, IsExpression } from '../observables/distinct/expression/implementation';
-import { Any } from '../classes/types';
 import { IExpression } from '../observables/distinct/expression/interfaces';
 import { ISource } from '../observables/distinct/source/interfaces';
 import {
@@ -17,7 +16,7 @@ import {
 } from '../observables/distinct/async-function-observable/interfaces';
 import { AsyncFunctionObservable } from '../observables/distinct/async-function-observable/implementation';
 import {
-  IPromiseObservable, IPromiseObservableOptions
+  IPromiseObservable,
 } from '../notifications/observables/promise-observable/interfaces';
 import { toValueObservable } from './promise/toValueObservable';
 import { IPromiseCancelToken } from '../notifications/observables/promise-observable/promise-cancel-token/interfaces';
@@ -27,7 +26,6 @@ import { Pipe } from '../core/observable-observer/implementation';
 import { Observer } from '../core/observer/public';
 import { PromiseObservable } from '../notifications/observables/promise-observable/implementation';
 import { toPromise } from './promise/toPromise';
-import { FetchObservable } from '../notifications/observables/fetch-observable/implementation';
 
 export type TObservableOrValue<T> = IObservable<T> | T;
 export type TSourceOrValue<T> = ISource<T> | T;

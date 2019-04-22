@@ -13,7 +13,6 @@ export interface IExpressionPrivate<T> {
   factory(): T;
 
   requestIdleTimer: any;
-  // timer: any;
 }
 
 export interface IExpressionInternal<T> extends IExpression<T>, IValueObservableInternal<T> {
@@ -27,7 +26,6 @@ export function ConstructExpression<T>(expression: IExpression<T>, context: IObs
   (expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].context = context;
   (expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].factory = factory;
   (expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].requestIdleTimer = null;
-  // (expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].timer = null;
 }
 
 
@@ -36,11 +34,9 @@ export function IsExpression(value: any): value is IExpression<any> {
     && value.hasOwnProperty(EXPRESSION_PRIVATE);
 }
 
-// let expressionCount: number = 0;
+
 export function ExpressionOnObserved<T>(expression: IExpression<T>): void {
   if ((expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].requestIdleTimer === null) {
-    // expressionCount++;
-    // console.log('start expression', expressionCount);
     ExpressionUpdate<T>(expression);
   }
 }
@@ -48,10 +44,7 @@ export function ExpressionOnObserved<T>(expression: IExpression<T>): void {
 export function ExpressionOnUnobserved<T>(expression: IExpression<T>): void {
   if (!expression.observed) {
     (window as any).cancelIdleCallback((expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].requestIdleTimer);
-    // window.clearTimeout((expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].timer);
     (expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].requestIdleTimer = null;
-    // expressionCount--;
-    // console.log('end expression', expressionCount);
   }
 }
 
@@ -59,13 +52,8 @@ export function ExpressionOnUnobserved<T>(expression: IExpression<T>): void {
 export function ExpressionUpdate<T>(expression: IExpression<T>): void {
   (expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].context.emit((expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].factory());
   (expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].requestIdleTimer = (window as any).requestIdleCallback(() => {
-    // (window as any).cancelIdleCallback((expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].requestIdleTimer);
     ExpressionUpdate<T>(expression);
   });
-  /*(expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].timer = setTimeout(() => {
-    clearTimeout((expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].timer);
-    ExpressionUpdate<T>(expression);
-  }, 1000);*/
 }
 
 
