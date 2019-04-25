@@ -21,7 +21,7 @@ export interface IPromiseCancelTokenInternal extends IPromiseCancelToken, INotif
 }
 
 
-export function ConstructPromiseCancelTokenPrivates(token: IPromiseCancelToken): void {
+export function ConstructPromiseCancelToken(token: IPromiseCancelToken): void {
   ConstructClassWithPrivateMembers(token, PROMISE_CANCEL_TOKEN_PRIVATE);
   (token as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].cancelled = false;
   (token as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].reason = void 0;
@@ -132,7 +132,7 @@ export class PromiseCancelToken extends NotificationsObservable<IPromiseCancelTo
 
   constructor() {
     super();
-    ConstructPromiseCancelTokenPrivates(this);
+    ConstructPromiseCancelToken(this);
   }
 
   get cancelled(): boolean {
