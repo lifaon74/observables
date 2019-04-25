@@ -48,7 +48,7 @@ export function ConstructObserver<T>(observer: IObserver<T>, onEmit: (value: T, 
  * @param value
  * @internal
  */
-export function IsObserver(value: any): boolean {
+export function IsObserver(value: any): value is IObserver<any> {
   return IsObject(value)
     && value.hasOwnProperty(OBSERVER_PRIVATE);
 }

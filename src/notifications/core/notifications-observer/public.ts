@@ -1,2 +1,2 @@
 export * from './interfaces';
-export { NotificationsObserver } from './implementation';
+export { NotificationsObserver, IsNotificationsObserver } from './implementation';
