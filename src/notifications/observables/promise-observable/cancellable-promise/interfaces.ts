@@ -33,6 +33,7 @@ export interface ICancellablePromiseConstructor {
 }
 
 export interface ICancellablePromise<T> extends Promise<T> {
-
+  readonly promise: Promise<T>;
+  readonly token: IPromiseCancelToken;
 }
 
