@@ -1,5 +1,5 @@
 import { INotification } from '../notification/interfaces';
-import { IObserverInternal, IObserverPrivate, Observer, OBSERVER_PRIVATE, } from '../../../core/observer/implementation';
+import { IObserverPrivate, Observer, OBSERVER_PRIVATE, } from '../../../core/observer/implementation';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { INotificationsObserver, TNotificationsObserverCallback } from './interfaces';
 import { INotificationsObserverLike } from './interfaces';
@@ -34,12 +34,12 @@ export function NotificationsObserverEmit<TName extends string, TValue>(observer
  * Returns true if 'value' is a NotificationsObserver
  * @param value
  */
-export function IsNotificationsObserver(value: any): boolean {
+export function IsNotificationsObserver(value: any): value is INotificationsObserver<string, any> {
   return IsObject(value)
     && (NOTIFICATIONS_OBSERVER_PRIVATE in value);
 }
 
-export function IsNotificationsObserverLike(value: any): boolean {
+export function IsNotificationsObserverLike(value: any): value is INotificationsObserverLike<string, any> {
   return IsObject(value)
     && (typeof (value as any).name === 'string')
     && (typeof (value as any).callback === 'function');

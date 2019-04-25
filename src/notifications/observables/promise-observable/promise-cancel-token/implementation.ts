@@ -7,6 +7,7 @@ import { ObservableEmitAll } from '../../../../core/observable/implementation';
 import { NotificationsObserver } from '../../../core/notifications-observer/implementation';
 import { Reason } from '../../../../misc/reason/implementation';
 import { INotification } from '../../../core/notification/interfaces';
+import { IsObject } from '../../../../helpers';
 
 
 export const PROMISE_CANCEL_TOKEN_PRIVATE = Symbol('promise-cancel-token-private');
@@ -27,6 +28,10 @@ export function ConstructPromiseCancelToken(token: IPromiseCancelToken): void {
   (token as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].reason = void 0;
 }
 
+export function IsPromiseCancelToken(value: any): value is IPromiseCancelToken {
+  return IsObject(value)
+    && (PROMISE_CANCEL_TOKEN_PRIVATE in value);
+}
 
 export function PromiseCancelTokenCancel(token: IPromiseCancelToken, reason: any = void 0): void {
   if (!(token as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].cancelled) {

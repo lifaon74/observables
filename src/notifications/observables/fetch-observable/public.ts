@@ -1,2 +1,2 @@
 export * from './interfaces';
-export { FetchObservable } from './implementation';
+export { FetchObservable, IsFetchObservable } from './implementation';

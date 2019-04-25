@@ -1,2 +1,2 @@
 export * from './interfaces';
-export { Reason } from './implementation';
+export { Reason, IsReason } from './implementation';

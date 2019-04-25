@@ -9,6 +9,7 @@ import {
   TNotificationsObservableHook,
 } from '../../core/notifications-observable/interfaces';
 import {IObserver} from "../../../core/observer/interfaces";
+import { IsObject } from '../../../helpers';
 
 
 export const EVENTS_OBSERVABLE_PRIVATE = Symbol('events-observable-private');
@@ -23,11 +24,16 @@ export interface IEventsObservableInternal<TKVMap extends EventKeyValueMap<TKVMa
   [EVENTS_OBSERVABLE_PRIVATE]: IEventsObservablePrivate<TKVMap, TTarget>;
 }
 
-export function ConstructEventsObservablePrivates<TKVMap extends EventKeyValueMap<TKVMap>, TTarget extends EventTarget>(observable: IEventsObservable<TKVMap, TTarget>, target: TTarget, name: KeyValueMapKeys<TKVMap> | null): void {
+export function ConstructEventsObservable<TKVMap extends EventKeyValueMap<TKVMap>, TTarget extends EventTarget>(observable: IEventsObservable<TKVMap, TTarget>, target: TTarget, name: KeyValueMapKeys<TKVMap> | null): void {
   ConstructClassWithPrivateMembers(observable, EVENTS_OBSERVABLE_PRIVATE);
   (observable as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].target = target;
   (observable as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].name = name;
   (observable as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].observerListenerMap = new WeakMap<KeyValueMapToNotifications<TKVMap>, (event: KeyValueMapValues<TKVMap>) => void>();
+}
+
+export function IsEventsObservable(value: any): value is IEventsObservable<any> {
+  return IsObject(value)
+    && (EVENTS_OBSERVABLE_PRIVATE in value);
 }
 
 
@@ -105,7 +111,7 @@ export class EventsObservable<TKVMap extends EventKeyValueMap<TKVMap>, TTarget e
         }
       }
     });
-    ConstructEventsObservablePrivates<TKVMap, TTarget>(this, target, name);
+    ConstructEventsObservable<TKVMap, TTarget>(this, target, name);
   }
 
   get target(): TTarget {

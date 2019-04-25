@@ -1,5 +1,6 @@
 import { ConstructClassWithPrivateMembers } from '../helpers/ClassWithPrivateMembers';
 import { IReadonlyList, IReadonlyTuple, TupleTypes } from './interfaces';
+import { IsObject } from '../../helpers';
 
 export const READONLY_TUPLE_PRIVATE = Symbol('readonly-tuple-private');
 
@@ -11,15 +12,26 @@ export interface IReadonlyTupleInternal<T extends any[]> {
   [READONLY_TUPLE_PRIVATE]: IReadonlyTuplePrivate<T>;
 }
 
+
+export function ConstructReadonlyTuple<T extends any[]>(instance: IReadonlyTuple<T>, tuple: T): void {
+  ConstructClassWithPrivateMembers(this, READONLY_TUPLE_PRIVATE);
+  if (Array.isArray(tuple)) {
+    ((this as unknown) as IReadonlyTupleInternal<T>)[READONLY_TUPLE_PRIVATE].items = tuple;
+  } else {
+    throw new TypeError(`Expected array as tuple`)
+  }
+}
+
+export function IsReadonlyTuple(value: any): value is IReadonlyTuple<any> {
+  return IsObject(value)
+    && value.hasOwnProperty(READONLY_TUPLE_PRIVATE);
+}
+
+
 export class ReadonlyTuple<T extends any[]> implements IReadonlyTuple<T> {
 
   constructor(tuple: T) {
-    ConstructClassWithPrivateMembers(this, READONLY_TUPLE_PRIVATE);
-    if (Array.isArray(tuple)) {
-      ((this as unknown) as IReadonlyTupleInternal<T>)[READONLY_TUPLE_PRIVATE].items = tuple;
-    } else {
-      throw new TypeError(`Expected array as tuple`)
-    }
+    ConstructReadonlyTuple<T>(this, tuple);
   }
 
   get length(): number {
@@ -66,10 +78,18 @@ export class ReadonlyTuple<T extends any[]> implements IReadonlyTuple<T> {
   }
 }
 
+
+
 /*----------------------------------*/
 
 
 export interface IReadonlyListInternal<T> extends IReadonlyTupleInternal<T[]> {
+}
+
+export function IsReadonlyList(value: any): value is IReadonlyList<any> {
+  return IsObject(value)
+    // && value.hasOwnProperty(READONLY_LIST_PRIVATE);
+    && (value instanceof ReadonlyList);
 }
 
 export class ReadonlyList<T> extends ReadonlyTuple<T[]> implements IReadonlyList<T> {

@@ -7,6 +7,7 @@ import { IObservableHook } from '../../../core/observable/interfaces';
 import { IObserver } from '../../../core/observer/interfaces';
 import { PromiseCancelToken } from './promise-cancel-token/implementation';
 import { Reason } from '../../../misc/reason/implementation';
+import { IsObject } from '../../../helpers';
 
 
 /**
@@ -65,7 +66,7 @@ export interface IPromiseObservableInternal<TFulfilled, TErrored, TCancelled> ex
 }
 
 
-export function ConstructPromiseObservablePrivates<TFulfilled, TErrored, TCancelled>(
+export function ConstructPromiseObservable<TFulfilled, TErrored, TCancelled>(
   observable: IPromiseObservable<TFulfilled, TErrored, TCancelled>,
   promiseFactory: (token: IPromiseCancelToken) => Promise<TFulfilled>,
   options: IPromiseObservableOptions = {}
@@ -99,6 +100,11 @@ export function ConstructPromiseObservablePrivates<TFulfilled, TErrored, TCancel
     IObserver<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>,
     TCancellablePromiseTuple<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>
   >();
+}
+
+export function IsPromiseObservable(value: any): value is IPromiseObservable<any, any, any> {
+  return IsObject(value)
+    && value.hasOwnProperty(PROMISE_OBSERVABLE_PRIVATE);
 }
 
 export function PromiseObservableClearCachedPromise<TFulfilled, TErrored, TCancelled>(observable: IPromiseObservable<TFulfilled, TErrored, TCancelled>): void {
@@ -181,7 +187,7 @@ export class PromiseObservable<TFulfilled, TErrored, TCancelled> extends Notific
         }
       }
     });
-    ConstructPromiseObservablePrivates<TFulfilled, TErrored, TCancelled>(this, promiseFactory, options);
+    ConstructPromiseObservable<TFulfilled, TErrored, TCancelled>(this, promiseFactory, options);
   }
 
   clearCachedPromise(): void {

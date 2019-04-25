@@ -40,7 +40,7 @@ export function ConstructValueObservable<T>(
 }
 
 
-export function IsValueObservable(value: any): boolean {
+export function IsValueObservable(value: any): value is IValueObservable<any> {
   return IsObject(value)
     && value.hasOwnProperty(VALUE_OBSERVABLE_PRIVATE);
 }

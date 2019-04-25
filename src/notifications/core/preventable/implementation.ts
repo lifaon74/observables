@@ -1,5 +1,6 @@
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IBasicPreventable, IPreventable } from './interfaces';
+import { IsObject } from '../../../helpers';
 
 export const PREVENTABLE_PRIVATE = Symbol('preventable-private');
 
@@ -16,6 +17,10 @@ export function ConstructPreventable<N extends string>(preventable: IPreventable
   (preventable as IPreventableInternal<N>)[PREVENTABLE_PRIVATE].prevented = new Set<N>();
 }
 
+export function IsPreventable(value: any): value is IPreventable<string> {
+  return IsObject(value)
+    && (PREVENTABLE_PRIVATE in value);
+}
 
 
 export class Preventable<N extends string> implements IPreventable<N> {

@@ -275,6 +275,7 @@ export function $fetch<T>(requestInfo: TObservableOrValue<RequestInfo>, requestI
 }
 
 export function _fetch<T>(token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit: RequestInit): Promise<T> {
+  // TODO token as signal
   return fetch(requestInfo, requestInit)
     .then<T>((response: Response) =>{
       if (token.cancelled) {
@@ -284,23 +285,6 @@ export function _fetch<T>(token: IPromiseCancelToken, requestInfo: RequestInfo, 
       }
     });
 }
-
-
-// TODO
-
-export function $translate(key: TObservableOrValue<string>, params: TObservableOrValue<any>): IAsyncFunctionObservable<typeof translate> {
-  return new AsyncFunctionObservable(translate, [$observable(key), $observable(params)]);
-}
-
-// function translate2(key: string, params: any): Promise<string> {
-//   return Promise.resolve('translated-' + key);
-// }
-
-function translate(token: IPromiseCancelToken, key: string, params: any): Promise<string> {
-  return Promise.resolve('translated-' + key);
-}
-
-
 
 
 

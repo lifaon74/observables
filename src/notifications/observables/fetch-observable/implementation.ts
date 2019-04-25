@@ -5,6 +5,7 @@ import { IPromiseCancelToken } from '../promise-observable/promise-cancel-token/
 import { IPromiseObservableOptions } from '../promise-observable/interfaces';
 import { INotificationsObservable } from '../../core/notifications-observable/interfaces';
 import { promisePipe } from '../../../operators/promise/promisePipe';
+import { IsObject } from '../../../helpers';
 
 export const FETCH_OBSERVABLE_PRIVATE = Symbol('fetch-observable-private');
 
@@ -18,7 +19,7 @@ export interface IFetchObservableInternal extends IFetchObservable, IPromiseObse
   [FETCH_OBSERVABLE_PRIVATE]: IFetchObservablePrivate;
 }
 
-export function ConstructFetchObservablePrivates(observable: IFetchObservable, requestInfo: RequestInfo, requestInit: RequestInit = {}): void {
+export function ConstructFetchObservable(observable: IFetchObservable, requestInfo: RequestInfo, requestInit: RequestInit = {}): void {
   ConstructClassWithPrivateMembers(observable, FETCH_OBSERVABLE_PRIVATE);
 
   if ((typeof requestInfo === 'string') || (requestInfo instanceof Request)) {
@@ -46,6 +47,11 @@ export function ConstructFetchObservablePrivates(observable: IFetchObservable, r
       (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].signal = ((observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInfo as Request).signal;
     }
   }
+}
+
+export function IsFetchObservable(value: any): value is IFetchObservable {
+  return IsObject(value)
+    && (FETCH_OBSERVABLE_PRIVATE in value);
 }
 
 export function FetchObservablePromiseFactory(observable: IFetchObservable, token: IPromiseCancelToken): Promise<Response> {
@@ -81,7 +87,7 @@ export class FetchObservable extends PromiseObservable<Response, Error, any> imp
     super((token: IPromiseCancelToken): Promise<Response> => {
       return FetchObservablePromiseFactory(this, token);
     }, options);
-    ConstructFetchObservablePrivates(this, requestInfo, requestInit);
+    ConstructFetchObservable(this, requestInfo, requestInit);
   }
 
   toJSON<T>(): INotificationsObservable<TFetchObservableCastKeyValueMap<T>> {

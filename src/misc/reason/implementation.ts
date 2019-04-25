@@ -1,5 +1,6 @@
 import { IReason } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../helpers/ClassWithPrivateMembers';
+import { IsObject } from '../../helpers';
 
 
 export const REASON_PRIVATE = Symbol('reason-private');
@@ -11,6 +12,11 @@ export interface IReasonPrivate<T> {
 
 export interface ReasonInternal<T> extends IReason<T> {
   [REASON_PRIVATE]: IReasonPrivate<T>;
+}
+
+export function IsReason(value: any): value is IReason<any> {
+  return IsObject(value)
+    && value.hasOwnProperty(REASON_PRIVATE);
 }
 
 export class Reason<T = undefined> implements IReason<T>{
