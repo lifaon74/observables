@@ -1,6 +1,6 @@
 import {
   IObservable, IObservableHook, IObservableContextBase, TObservablePipeToObserverResult,
-  TObservablePipeToCallbackResult, TObservablePipeThroughResult
+  TObservablePipeToCallbackResult, TObservablePipeThroughResult, TObserverOrCallback, TObservableObservedByResultNonCyclic
 } from '../../../core/observable/interfaces';
 import {INotificationsObserver, INotificationsObserverLike} from '../notifications-observer/interfaces';
 import { KeyValueMapGeneric, KeyValueMapKeys, KeyValueMapValues } from '../interfaces';
@@ -117,6 +117,10 @@ export interface INotificationsObservable<TKVMap extends KeyValueMapGeneric> ext
 
   // returns the list of observed NotificationsObserver matching "name" and "callback"
   matches(name: string, callback?: (value: any) => void): IterableIterator<KeyValueMapToNotificationsObservers<TKVMap>>;
+}
+
+export interface IBaseNotificationsObservable<TName extends string, TValue> extends INotificationsObservable<Record<TName, TValue>> {
+  observedBy<O extends TObserverOrCallback<any>[]>(...observers: O): TObservableObservedByResultNonCyclic<O, KeyValueMapToNotifications<Record<TName, TValue>>, this>; // returns this
 }
 
 

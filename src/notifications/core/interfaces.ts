@@ -13,9 +13,17 @@
 //       [K in Extract<keyof TKVMap, string>]: T;
 //     };
 
-export type KeyValueMap<TKVMap, T> ={
+export type KeyValueMap<TKVMap, T> = {
     [K in Extract<keyof TKVMap, string>]: T;
 };
+
+// export type KVMap<TKVMap, T> = {
+//     [K in Extract<keyof TKVMap, string>]: T;
+// };
+
+export type KeyValueMapConstraint<TKVMap, T> = KeyValueMap<TKVMap, any> extends TKVMap
+  ? KeyValueMap<TKVMap, T>
+  : never;
 
 export type KeyValueMapKeys<TKVMap> = TKVMap extends never ? never : Extract<keyof TKVMap, string>;
 export type KeyValueMapValues<TKVMap> = TKVMap extends never ? never : TKVMap[KeyValueMapKeys<TKVMap>];

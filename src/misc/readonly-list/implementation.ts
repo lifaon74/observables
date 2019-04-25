@@ -8,15 +8,15 @@ export interface IReadonlyTuplePrivate<T extends any[]> {
   items: T;
 }
 
-export interface IReadonlyTupleInternal<T extends any[]> {
+export interface IReadonlyTupleInternal<T extends any[]> extends IReadonlyTuple<T> {
   [READONLY_TUPLE_PRIVATE]: IReadonlyTuplePrivate<T>;
 }
 
 
 export function ConstructReadonlyTuple<T extends any[]>(instance: IReadonlyTuple<T>, tuple: T): void {
-  ConstructClassWithPrivateMembers(this, READONLY_TUPLE_PRIVATE);
+  ConstructClassWithPrivateMembers(instance, READONLY_TUPLE_PRIVATE);
   if (Array.isArray(tuple)) {
-    ((this as unknown) as IReadonlyTupleInternal<T>)[READONLY_TUPLE_PRIVATE].items = tuple;
+    (instance as IReadonlyTupleInternal<T>)[READONLY_TUPLE_PRIVATE].items = tuple;
   } else {
     throw new TypeError(`Expected array as tuple`)
   }
