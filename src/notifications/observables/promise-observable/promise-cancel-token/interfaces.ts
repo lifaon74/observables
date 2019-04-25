@@ -44,8 +44,10 @@ export interface IPromiseCancelToken extends INotificationsObservable<IPromiseCa
 
   /**
    * Wraps a callback with this Token:
-   *  If the token is cancelled, returns a Promise rejected with the Token's reason
-   *  Else, returns a Promise resolved with the callback's return
+   *  Returns a function similar to 'callback':
+   *    Has the same parameters than 'callback'
+   *    If the token is cancelled, returns a Promise rejected with the Token's reason
+   *    Else, returns a Promise resolved with the callback's return
    */
   wrap<CB extends (...args: any[]) => any>(callback: CB): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>>>;
 }
