@@ -1,2 +1,2 @@
 export * from './interfaces';
-export { CancellablePromise } from './implementation';
+export { CancellablePromise, IsCancellablePromise } from './implementation';
