@@ -35,6 +35,7 @@ import { Expression } from './observables/distinct/expression/implementation';
 import { $add, $equal, $expression, $source, $string, testMisc } from './operators/misc';
 import { IPromiseCancelToken } from './notifications/observables/promise-observable/promise-cancel-token/interfaces';
 import { UnionToIntersection } from './classes/types';
+import { EventKeyValueMapConstraint } from './notifications/observables/events-observable/interfaces';
 
 
 function testReadOnlyList() {
@@ -129,7 +130,7 @@ function observeTimerObservable(): void {
  * @param target
  * @param name
  */
-function createEventNotificationsObservable<TKVMap extends KeyValueMap<TKVMap, Event>>(target: EventTarget, name: KeyValueMapKeys<TKVMap>): INotificationsObservable<TKVMap> {
+function createEventNotificationsObservable<TKVMap extends EventKeyValueMapConstraint<TKVMap>>(target: EventTarget, name: KeyValueMapKeys<TKVMap>): INotificationsObservable<TKVMap> {
   return new NotificationsObservable<TKVMap>((context: NotificationsObservableContext<TKVMap>) => {
     const listener = (event: KeyValueMapValues<TKVMap>) => {
       context.dispatch(event.type as KeyValueMapKeys<TKVMap>, event);
