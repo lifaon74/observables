@@ -2,7 +2,7 @@ import { Notification } from '../../../core/notification/implementation'
 import { INotificationsObservableInternal, NotificationsObservable } from '../../../core/notifications-observable/implementation';
 import { INotificationsObserver } from '../../../core/notifications-observer/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
-import { IPromiseCancelToken, IPromiseCancelTokenKeyValueMap } from './interfaces';
+import { IPromiseCancelToken, IPromiseCancelTokenKeyValueMap, TPromiseType } from './interfaces';
 import { ObservableEmitAll } from '../../../../core/observable/implementation';
 import { NotificationsObserver } from '../../../core/notifications-observer/implementation';
 import { Reason } from '../../../../misc/reason/implementation';
@@ -114,6 +114,19 @@ export function PromiseCancelTokenLinkWithAbortSignal(token: IPromiseCancelToken
 }
 
 
+export function PromiseCancelTokenWrap<CB extends (...args: any[]) => any>(token: PromiseCancelToken, callback: CB): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>>> {
+  type T = TPromiseType<ReturnType<CB>>;
+  return function(...args: Parameters<CB>): Promise<T> {
+    return new Promise<T>((resolve: any, reject: any) => {
+      if (token.cancelled) {
+        reject(token.reason);
+      } else {
+        resolve(callback.apply(this, args));
+      }
+    });
+  };
+}
+
 
 export class PromiseCancelToken extends NotificationsObservable<IPromiseCancelTokenKeyValueMap> implements IPromiseCancelToken {
 
@@ -147,6 +160,10 @@ export class PromiseCancelToken extends NotificationsObservable<IPromiseCancelTo
 
   linkWithAbortSignal(signal: AbortSignal): () => void {
     return PromiseCancelTokenLinkWithAbortSignal(this, signal);
+  }
+
+  wrap<CB extends (...args: any[]) => any>(callback: CB): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>>> {
+    return PromiseCancelTokenWrap<CB>(this, callback);
   }
 }
 

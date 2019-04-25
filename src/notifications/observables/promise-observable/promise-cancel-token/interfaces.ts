@@ -1,5 +1,11 @@
 import { INotificationsObservable } from '../../../core/notifications-observable/interfaces';
 
+export type TPromiseType<P> = P extends Promise<infer T>
+  ? T extends Promise<any>
+    ? never
+    : T
+  : P;
+
 export interface IPromiseCancelTokenConstructor {
   new(): IPromiseCancelToken;
 }
@@ -35,4 +41,11 @@ export interface IPromiseCancelToken extends INotificationsObservable<IPromiseCa
    *  WARN: cannot cancel a AbortSignal if the Token is cancelled, prefer using linkWithAbortController instead
    */
   linkWithAbortSignal(signal: AbortSignal): () => void;
+
+  /**
+   * Wraps a callback with this Token:
+   *  If the token is cancelled, returns a Promise rejected with the Token's reason
+   *  Else, returns a Promise resolved with the callback's return
+   */
+  wrap<CB extends (...args: any[]) => any>(callback: CB): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>>>;
 }
