@@ -126,7 +126,16 @@ export type CastTargetToEventMap<TRefTarget extends Targets, A = TargetToEventMa
     : never;
 
 
-
+// export type IEventsObservableConstructorForKnownTargets = TargetToEventMap extends [infer TTarget, infer TKVMap] ? {
+//   new(target: TTarget): IEventsObservable<TKVMap, TTarget>;
+// } : never;
+//
+// export interface C extends IEventsObservableConstructorForKnownTargets {
+//
+// }
+//
+// const t: C;
+// const f = new t(window);
 
 export interface IEventsObservableConstructor {
   // new(target: AbortSignal, name?: KeyValueMapKeys<AbortSignalEventMap> | null): IEventsObservable<AbortSignalEventMap, AbortSignal>;
@@ -202,6 +211,7 @@ export interface IEventsObservableConstructor {
   // new<TTarget>(target: TTarget): IEventsObservable<CastTargetToEventMap<TTarget>, TTarget>;
   // new<TTarget extends object>(target: TTarget): IEventsObservable<Record<Extract<keyof TTarget, string>, any>, TTarget>;
   // new<TTarget extends Targets>(target: TTarget): IEventsObservable<AbortSignalEventMap & WindowEventMap, TTarget>;
+  // new<A extends TargetToEventMap>(target: A[0]): IEventsObservable<A[1], A[0]>;
   new<TKVMap extends EventKeyValueMapConstraint<TKVMap>, TTarget extends EventTarget = EventTarget>(target: TTarget, name?: KeyValueMapKeys<TKVMap> | null): IEventsObservable<TKVMap, TTarget>;
 }
 
