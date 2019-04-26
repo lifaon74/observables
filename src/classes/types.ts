@@ -104,6 +104,24 @@ export type IsSingleton<T> =
         : false
     : false;
 
+export type IsType<TargetType, T> =
+  false extends (
+      TargetType extends T
+        ? T extends TargetType
+          ? true
+          : false
+        : false
+      )
+    ? false
+    : true;
+
+
+const y0: IsType<string, any> = false;
+const y1: IsType<string, 'a'> = false;
+const y2: IsType<string , string> = true;
+const y3: IsType<string , 'a' | string> = true;
+const y4: IsType<string , 'a' | 'b'> = false;
+
 // const b0: IsSubSet<'a', 'a' | 'b'> = true;
 // const b1: IsSubSet<'a' | 'b', 'a' | 'b' | 'c'> = true;
 // const b2: IsSubSet<'a' | 'b' | 'c', 'a' | 'b'> = false;
@@ -142,6 +160,12 @@ export type IsSingleton<T> =
 // const s0: IsSingleton<'a'> = true;
 // const s1: IsSingleton<'a' | 'b'> = false;
 // const s2: IsSingleton<'a' & 'b'> = false;
+
+// const z0: IsType<any, any> = true;
+// const z1: IsType<any, 'a'> = false;
+// const z2: IsType<any, 'a' | any> = true;
+
+
 
 // const a: keyof ('a' & 'b');
 // const a: keyof ('a' | 'b');

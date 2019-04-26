@@ -6,7 +6,9 @@ import { IBaseNotificationsObservable, INotificationsObservableContext, KeyValue
 import { Observer } from '../core/observer/implementation';
 import { NotificationsObservable } from '../notifications/core/notifications-observable/implementation';
 import { IObservable } from '../core/observable/interfaces';
-import { KeyValueMapGenericConstraint, KeyValueMapKeys, KeyValueMapValues } from '../notifications/core/interfaces';
+import {
+  KeyValueMapGenericConstraint, KeyValueMapKeys, KeyValueMapValues, KVRecord
+} from '../notifications/core/interfaces';
 
 
 
@@ -25,7 +27,7 @@ export function aggregateNotificationNames<Tin extends string, TValue>(inNames: 
 }
 
 export function mapNotificationNames<TKVMapIn extends KeyValueMapGenericConstraint<TKVMapIn>, TKeyOut extends string>(inNames: KeyValueMapKeys<TKVMapIn>[], outName: TKeyOut): IPipe<IObserver<KeyValueMapToNotifications<TKVMapIn>>, IBaseNotificationsObservable<TKeyOut, KeyValueMapValues<TKVMapIn>>> { // Record<TKeyOut, KeyValueMapValues<TKVMapIn>>
-  type TKVOut = Record<Extract<TKeyOut, string>, KeyValueMapValues<TKVMapIn>>;
+  type TKVOut = KVRecord<TKeyOut, KeyValueMapValues<TKVMapIn>>;
 
   Object.freeze(inNames);
   return new Pipe<IObserver<KeyValueMapToNotifications<TKVMapIn>>, IBaseNotificationsObservable<TKeyOut, KeyValueMapValues<TKVMapIn>>>(() => {

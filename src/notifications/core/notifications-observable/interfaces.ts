@@ -3,7 +3,7 @@ import {
   TObservablePipeToCallbackResult, TObservablePipeThroughResult, TObserverOrCallback, TObservableObservedByResultNonCyclic
 } from '../../../core/observable/interfaces';
 import {INotificationsObserver, INotificationsObserverLike} from '../notifications-observer/interfaces';
-import { KeyValueMapGenericConstraint, KeyValueMapKeys, KeyValueMapValues } from '../interfaces';
+import { KeyValueMapGenericConstraint, KeyValueMapKeys, KeyValueMapValues, KVRecord } from '../interfaces';
 import { INotification } from '../notification/interfaces';
 import { IObserver } from '../../../core/observer/interfaces';
 import { IsIntersecting, IsSubSet } from '../../../classes/types';
@@ -119,8 +119,8 @@ export interface INotificationsObservable<TKVMap extends KeyValueMapGenericConst
   matches(name: string, callback?: (value: any) => void): IterableIterator<KeyValueMapToNotificationsObservers<TKVMap>>;
 }
 
-export interface IBaseNotificationsObservable<TName extends string, TValue> extends INotificationsObservable<Record<Extract<TName, string>, TValue>> {
-  observedBy<O extends TObserverOrCallback<any>[]>(...observers: O): TObservableObservedByResultNonCyclic<O, KeyValueMapToNotifications<Record<Extract<TName, string>, TValue>>, this>; // returns this
+export interface IBaseNotificationsObservable<TName extends string, TValue> extends INotificationsObservable<KVRecord<TName, TValue>> {
+  observedBy<O extends TObserverOrCallback<any>[]>(...observers: O): TObservableObservedByResultNonCyclic<O, KeyValueMapToNotifications<KVRecord<TName, TValue>>, this>; // returns this
 }
 
 

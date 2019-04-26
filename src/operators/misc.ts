@@ -343,7 +343,9 @@ export async function testMisc(): Promise<void> {
   }
 
   function assertObservableEmits(observable: IObservable<any>, values: any[], timeout?: number): Promise<void> {
-    return toPromise(observable.pipeThrough(assertPipe(values, timeout)));
+    return toPromise<void>(
+      observable.pipeThrough(assertPipe(values, timeout))
+    );
   }
 
   function assertFunctionObservableEmits(valuesToEmit: any[], observable: IFunctionObservable<any>, values: any[], timeout?: number): Promise<void> {

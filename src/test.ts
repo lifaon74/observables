@@ -132,8 +132,8 @@ function observeTimerObservable(): void {
  */
 function createEventNotificationsObservable<TKVMap extends EventKeyValueMapConstraint<TKVMap>>(target: EventTarget, name: KeyValueMapKeys<TKVMap>): INotificationsObservable<TKVMap> {
   return new NotificationsObservable<TKVMap>((context: NotificationsObservableContext<TKVMap>) => {
-    const listener = (event: KeyValueMapValues<TKVMap>) => {
-      context.dispatch(event.type as KeyValueMapKeys<TKVMap>, event);
+    const listener = (event: Event) => {
+      context.dispatch(event.type as KeyValueMapKeys<TKVMap>, event as KeyValueMapValues<TKVMap>);
     };
     return {
       onObserved() {

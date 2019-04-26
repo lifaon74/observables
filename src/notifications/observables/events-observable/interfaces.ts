@@ -3,11 +3,14 @@ import {
   KeyValueMapConstraint, KeyValueMapKeys
 } from '../../core/interfaces';
 
-export type EventKeyValueMapConstraint<TKVMap> = KeyValueMapConstraint<TKVMap, Event>;
 
 export type EventsObservableKeyValueMapGeneric = {
   [key: string]: Event;
 };
+
+export type EventKeyValueMapConstraint<TKVMap extends object> = KeyValueMapConstraint<TKVMap, EventsObservableKeyValueMapGeneric>;
+
+
 
 export interface PureEventTarget {
   addEventListener(type: string, listener: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions): void;
@@ -94,8 +97,10 @@ export type Targets<A = TargetToEventMap> =
 
 export type PredefinedEventsObservables<A = TargetToEventMap> = A extends [infer TTarget, infer TKVMap]
   ? TTarget extends PureEventTarget
-    ? TKVMap extends EventKeyValueMapConstraint<TKVMap>
-      ? IEventsObservable<TKVMap, TTarget>
+    ? TKVMap extends object
+      ? TKVMap extends EventKeyValueMapConstraint<TKVMap>
+        ? IEventsObservable<TKVMap, TTarget>
+        : never
       : never
     : never
   : never;
