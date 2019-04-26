@@ -3,7 +3,7 @@ import {
   TObservablePipeToCallbackResult, TObservablePipeThroughResult, TObserverOrCallback, TObservableObservedByResultNonCyclic
 } from '../../../core/observable/interfaces';
 import {INotificationsObserver, INotificationsObserverLike} from '../notifications-observer/interfaces';
-import { KeyValueMapConstraint, KeyValueMapGenericConstraint, KeyValueMapKeys, KeyValueMapValues } from '../interfaces';
+import { KeyValueMapGenericConstraint, KeyValueMapKeys, KeyValueMapValues } from '../interfaces';
 import { INotification } from '../notification/interfaces';
 import { IObserver } from '../../../core/observer/interfaces';
 import { IsIntersecting, IsSubSet } from '../../../classes/types';
