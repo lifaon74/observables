@@ -6,10 +6,10 @@ This example show you how to create a simple Observable which listen incoming ev
 
 **WARN:** Remember, this is just an example, you should use the `EventsObservable` instead.
 
-### 1) Create the Observable
+### 1) Create an Observable emitting events
 
-First, we'll create a function which takes an EventTarget (ex: `window`), and an event's type (ex: `'click''`),
-and return an Observable:
+First, we'll create a function which takes an EventTarget (ex: `window`) and an event's type (ex: `'click'`) as input,
+and returns an Observable:
 
 ```ts
 function createEventObservable<T extends Event>(target: EventTarget, name: string): Observable<T> {
@@ -19,7 +19,7 @@ function createEventObservable<T extends Event>(target: EventTarget, name: strin
 const observable = createEventObservable<MouseEvent>(window, 'click');
 ```
 
-The when constructing an Observable, we provide a function which give us access to a context:
+When constructing an Observable, we just have to provide a function giving us an access to a context:
 ```ts
 // construct an Observable which emits only data of type 'Event'
 new Observable<Event>((context: IObservableContext<Event>) => {
@@ -27,9 +27,9 @@ new Observable<Event>((context: IObservableContext<Event>) => {
 });
 ```
 
-The context provides a `emit` function which... emits data though the Observable, and an `observable` attribute referencing the current Observable.
+The `context` has a `emit` function used to... emit data though the Observable, and has an attribute called `observable` referencing this current Observable.
 
-This 'create' function may return an ObservableHook which is simply an object with 2 optional methods:
+This 'create' function (the one provided to the Observable) may return an ObservableHook which is simply an object with 2 optional methods:
 ```ts
 interface IObservableHook<T> {
   onObserved?(observer: IObserver<T>): void;
@@ -37,10 +37,10 @@ interface IObservableHook<T> {
 }
 ```
 
-The function `onObserved` will be called everytime an Observer is activated and observes this Observable.
+The function `onObserved` is called everytime an Observer is activated and observes this Observable.
 The function `onUnobserved` is similar but is called when an Observer is deactivated or stops observing this Observable.
 
-Put together it gives us the default code to create an Observable:
+Put together it gives us this default code to create an Observable:
 ```ts
 new Observable<Event>((context: IObservableContext<Event>) => {
   return {
@@ -54,7 +54,7 @@ new Observable<Event>((context: IObservableContext<Event>) => {
 });
 ```
 
-We'll use `addEventListener` and `removeEventListener` to listen/stop listen events dispatched by `target` (EventTarget).
+We'll use `addEventListener` and `removeEventListener` to listen/stop listening events dispatched by `target` (EventTarget).
 
 The event listener callback is simply a function which will receive an Event and emit this event though the Observable:
 ```ts
@@ -65,6 +65,7 @@ We'll use the hook to start and stop the event listener:
  - When the first Observer observes the Observable, we call once `addEventListener`.
  - When no more Observers observe the Observable, we call `removeEventListener`.
 
+This ensures we won't uselessly listen to events that we don't want to observe anymore or immediately.
 
 All together it gives us:
 ```ts
@@ -87,18 +88,21 @@ function createEventObservable<T extends Event>(target: EventTarget, name: strin
 }
 ```
 
-### 2) Observe the Observable
-Now we have a function able to listen to Events with an Observable, we may want to react to these Events.
+### 2) Observe this Observable
+Now, we have a function able to listen and emit Events through an Observable.
+The next step is to react to these Events.
 
-To create an Observer, we simply need to provide a callback function:
+To create an Observer, we simply provide a callback function:
 ```ts
-const observer = new Observer<Event>((event: Event) => { // receives the emitted events 
+const observer = new Observer<Event>((event: Event) => {
   console.log('receive', event);
 });
 ```
-Then we may observe an Observable though: `observer.observe(observable)`.
+This callback receives the emitted Events where we can do whatever we need with them.
 
-By default, an observer is into a *deactivated* state, so we need to `activate` it.
+After this, we need to observe the Observable though: `observer.observe(observable)`.
+
+**And remember**, by default, an Observer is into a *deactivated* state, so we need to `activate` it if we want to receive data.
 
 With our freshly previously created function it gives us:
 ```ts
@@ -146,7 +150,7 @@ const observer = createEventObservable<MouseEvent>(window, 'click')
 ```
 
  
-### Full code
+### Complete code
 
 ```ts
 function createEventObservable<T extends Event>(target: EventTarget, name: string): Observable<T> {
@@ -175,7 +179,7 @@ const observer = createEventObservable<MouseEvent>(window, 'click')
 
 ### Using EventsObservable
 
-For simplicity, we may (and probably should) use EventsObservable instead of our previous function.
+For simplicity and security, we should use EventsObservable instead of our previous function.
 
 ```ts
 const observer = new EventsObservable<WindowEventMap>(window)
@@ -184,7 +188,7 @@ const observer = new EventsObservable<WindowEventMap>(window)
   }).activate();
 ```
 
-More details in the following chapters.
+More details on this in the following chapters.
 
 ---
 - [CHAPTERS](README.md)
