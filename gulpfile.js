@@ -116,19 +116,44 @@ function watch() {
 
 function buildProd() {
   return gulp.parallel(
-    buildAndBundle({
-      ts: {
-        module: 'es6',
-        target: 'esnext',
-        declaration: true,
-      },
-      rollup: {
-        main: 'public.js',
-        format: 'umd',
-        name: 'Observables',
-        outputPostFix: 'umd.esnext'
-      }
-    }),
+    gulp.series(
+      build({
+        ts: {
+          module: 'es6',
+          target: 'esnext',
+          declaration: true,
+        }
+      }),
+      bundle({
+        rollup: {
+          main: 'public.js',
+          format: 'umd',
+          name: 'Observables',
+          outputPostFix: 'umd.esnext'
+        }
+      }),
+      bundle({
+        rollup: {
+          main: 'core/public.js',
+          format: 'umd',
+          name: 'Observables',
+          outputPostFix: 'core.umd.esnext'
+        }
+      })
+    ),
+    // buildAndBundle({
+    //   ts: {
+    //     module: 'es6',
+    //     target: 'esnext',
+    //     declaration: true,
+    //   },
+    //   rollup: {
+    //     main: 'public.js',
+    //     format: 'umd',
+    //     name: 'Observables',
+    //     outputPostFix: 'umd.esnext'
+    //   }
+    // }),
     copyPackageFiles
   );
 }

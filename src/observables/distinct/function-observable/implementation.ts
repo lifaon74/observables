@@ -5,14 +5,17 @@ import {
 import { IObservable } from '../../../core/observable/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { ValueObservable } from '../value-observable/implementation';
-import { IFunctionObservable, TFunctionObservableFactory, TFunctionObservableFactoryParameters, TFunctionObservableParameters, TFunctionObservableParametersUnion, TFunctionObservableValue } from './interfaces';
+import {
+  IFunctionObservable, TFunctionObservableFactory, TFunctionObservableFactoryParameters, TFunctionObservableParameters,
+  TFunctionObservableParametersUnion, TFunctionObservableValue
+} from './interfaces';
 import { IReadonlyTuple } from '../../../misc/readonly-list/interfaces';
 import { ReadonlyTuple } from '../../../misc/readonly-list/implementation';
 import { IObserver } from '../../../core/observer/interfaces';
 import { Observer } from '../../../core/observer/public';
 import { IValueObservableContext } from '../value-observable/interfaces';
-import { IsSource } from "../source/implementation";
-import { ISource } from "../source/interfaces";
+import { IsSource } from '../source/implementation';
+import { ISource } from '../source/interfaces';
 
 
 export const FUNCTION_OBSERVABLE_PRIVATE = Symbol('function-observable-private');
@@ -47,7 +50,7 @@ export function ConstructFunctionObservable<T extends TFunctionObservableFactory
     privates.arguments
   );
 
-  privates.values = Array.from({ length: privates.arguments.length }, () => void 0) as TFunctionObservableFactoryParameters<T> ;
+  privates.values = Array.from({ length: privates.arguments.length }, () => void 0) as TFunctionObservableFactoryParameters<T>;
 
   privates.argumentsObserver = new Observer<TFunctionObservableParametersUnion<T>>((value: TFunctionObservableParametersUnion<T>, argObservable: IObservable<TFunctionObservableParametersUnion<T>>) => {
     FunctionObservableSetObservableValue<T>(observable, argObservable, value);
@@ -106,14 +109,14 @@ export function SourceFunctionObservableCall<T extends TFunctionObservableFactor
   const privates: IFunctionObservablePrivate<T> = ((observable as unknown) as IFunctionObservableInternal<T>)[FUNCTION_OBSERVABLE_PRIVATE];
   const length: number = privates.arguments.length;
 
-  for (let i = 0; i < length ; i++) {
+  for (let i = 0; i < length; i++) {
     if (!IsSource(privates.arguments[i])) {
-      throw new TypeError(`Expected Source at FunctionObservable[${i}]`);
+      throw new TypeError(`Expected Source at FunctionObservable[${ i }]`);
     }
   }
 
   privates.enableArgumentsObserver = false;
-  for (let i = 0; i < length ; i++) {
+  for (let i = 0; i < length; i++) {
     (privates.arguments[i] as unknown as ISource<any>).emit(args[i]);
     (privates.values as any[])[i] = args[i];
   }
@@ -121,6 +124,8 @@ export function SourceFunctionObservableCall<T extends TFunctionObservableFactor
 
   FunctionObservableCallFactory<T>(observable);
 }
+
+// INFO think about a pause/resume instead of a run
 
 
 export class FunctionObservable<T extends TFunctionObservableFactory> extends ValueObservable<TFunctionObservableValue<T>> implements IFunctionObservable<T> {

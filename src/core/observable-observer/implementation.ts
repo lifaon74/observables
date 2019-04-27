@@ -64,6 +64,10 @@ export function ConstructPipe<TObserver extends IObserver<any>, TObservable exte
   }
 }
 
+export function IsPipe(value: any): value is IPipe<any, any> {
+  return IsObject(value)
+    && value.hasOwnProperty(PIPE_PRIVATE);
+}
 
 export function PipeActivate<TObserver extends IObserver<any>, TObservable extends IObservable<any>>(instance: IPipe<TObserver, TObservable>, mode: TObservableObserverActivateMode): void {
   switch (mode) {

@@ -1,17 +1,56 @@
-import { IPreventable } from './interfaces';
+import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
+import { IBasicPreventable, IPreventable } from './interfaces';
+import { IsObject } from '../../../helpers';
 
-export class Preventable<N extends string = 'default'> implements IPreventable<N> {
-  protected _prevented: Set<N>;
+export const PREVENTABLE_PRIVATE = Symbol('preventable-private');
+
+export interface IPreventablePrivate<N extends string> {
+  prevented: Set<N>;
+}
+
+export interface IPreventableInternal<N extends string> extends IPreventable<N> {
+  [PREVENTABLE_PRIVATE]: IPreventablePrivate<N>;
+}
+
+export function ConstructPreventable<N extends string>(preventable: IPreventable<N>): void {
+  ConstructClassWithPrivateMembers(preventable, PREVENTABLE_PRIVATE);
+  (preventable as IPreventableInternal<N>)[PREVENTABLE_PRIVATE].prevented = new Set<N>();
+}
+
+export function IsPreventable(value: any): value is IPreventable<string> {
+  return IsObject(value)
+    && (PREVENTABLE_PRIVATE in value);
+}
+
+
+export class Preventable<N extends string> implements IPreventable<N> {
 
   constructor() {
-    this._prevented = new Set<N>();
+    ConstructPreventable<N>(this);
   }
 
-  isPrevented(name: N = ('default' as N)): boolean {
-    return this._prevented.has(name);
+  isPrevented(name: N): boolean {
+    return ((this as unknown) as IPreventableInternal<N>)[PREVENTABLE_PRIVATE].prevented.has(name);
   }
 
-  prevent(name: N = ('default' as N)): void {
-    this._prevented.add(name);
+  prevent(name: N): this {
+    ((this as unknown) as IPreventableInternal<N>)[PREVENTABLE_PRIVATE].prevented.add(name);
+    return this;
+  }
+}
+
+
+export class BasicPreventable extends Preventable<'default'> implements IBasicPreventable {
+
+  constructor() {
+    super();
+  }
+
+  isPrevented(): boolean {
+    return super.isPrevented('default');
+  }
+
+  prevent(): this {
+    return super.prevent('default');
   }
 }

@@ -11,7 +11,7 @@ One goal of the Observables is to allow chaining. Something similar to the array
 
 For this, we may use an ObservableObserver.
 
-An ObservableObserver is not a class, it is simply an interface describing an object which have two properties:
+An ObservableObserver is not a class, it is simply an interface describing an object with two properties:
 
 ```ts
 interface IObservableObserver<TObserver extends IObserver<any>, TObservable extends IObservable<any>>  {
@@ -20,14 +20,14 @@ interface IObservableObserver<TObserver extends IObserver<any>, TObservable exte
 }
 ```
 
-We may compare it to a [DuplexStream](https://nodejs.org/api/stream.html#stream_class_stream_duplex) for nodejs
+We may compare it with a [DuplexStream](https://nodejs.org/api/stream.html#stream_class_stream_duplex) for nodejs
 or the pipeThough argument of the [w3c stream API](https://streams.spec.whatwg.org/#rs-pipe-through).
 
-It is used only into the `pipeThough` and the `pipe` function of the Observable or as an IO (ex: WebSockets which emit and receive data).
-
+It is mainly into the `pipeThough` and the `pipe` function of the Observable or as an IO (ex: WebSockets which emit and receive data).
 
 ---
-We may create a basic "filter" ObservableObserver like this:
+
+As an example, we may create a basic "filter" ObservableObserver like this:
 
 ```ts
 function filter<T>(filter: (value: T) => boolean): IObservableObserver<IObserver<T>, IObservable<T>> {
@@ -55,13 +55,13 @@ const observer = observable
 observer.activate();
 ```
 
-**INFO:** As you can see, there is a downside of this function: the *onObserved* and *onUnobserved* are not transferred to `observable`.
+**INFO:** As you may see, there is a downside of this function: the *onObserved* and *onUnobserved* are not transferred to `observable`.
 That's why Pipes exist.
 
 
 # Pipe ?
 
-A Pipe is a class which implements the ObservableObserver interface and self activate/deactivate.
+A Pipe is a class implementing the ObservableObserver interface which self activate/deactivate.
 
 ```ts
 function filter<T>(filter: (value: T) => boolean): IPipe<IObserver<T>, IObservable<T>> {
@@ -84,14 +84,16 @@ function filter<T>(filter: (value: T) => boolean): IPipe<IObserver<T>, IObservab
 const observer = observable
   .pipeThough(filter(_ => ((_ % 2) === 0)))
   .pipeTo(_ => console.log(_));
-// note than 'observable'.onObserved was not trigerred because 'observer' is not activated
+// note than 'observable'.onObserved was not trigerred because 'observer' is not activated yet
 observer.activate(); // 'observable'.onObserved is trigerred
 ```
 
-This time `observable` will receive the `onObserved` 'event' as soon as the *pipe*'s (Pipe/ObservableObserver) observable is observed,
+This time `observable` will receive the `onObserved` 'event' as soon as the *pipe*'s (Pipe) observable is observed,
 and a `onUnobserved` 'event' as soon as the *pipe*'s observable is no more observed. This ensures a proper CPU resource usage.
 
-For simple Pipes which simply uses Observer and Observable (not an EventsObservable for example), we may use the `create` function like so:
+**INFO:** Pipes should always be used when you need to pipe (transform, filter, whatever) data from an observable to another.
+
+Simple Pipes using only Observer and Observable (not an EventsObservable for example) may be created using the `create` function. Like this:
 
 ```ts
 function filter<T>(filter: (value: T) => boolean): IPipe<IObserver<T>, IObservable<T>> {
@@ -109,7 +111,7 @@ function filter<T>(filter: (value: T) => boolean): IPipe<IObserver<T>, IObservab
 
 # How to reproduce the first example with array ?
 
-Observables comes with a bunch of operators: they are pipes or helpers around Observables and Observers, and are located into `./operators/public.ts`.
+Observables comes with a bunch of operators: they are pipes or helpers around Observables/Observers, and are located into `./operators`.
 
 ```ts
 /*
@@ -119,9 +121,9 @@ Observables comes with a bunch of operators: they are pipes or helpers around Ob
   .forEach(_ => console.log(_));
 */
 
-from<number>([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) // operator which converts an Iterable to an Observable
-  .pipeThough(filterPipe<number>(_ => ((_ % 2) === 0))) // operator which filters incomming values
-  .pipeThough(mapPipe<number, number>(_ => (_ * 2))) // operator which transforms (multiplies by 2) incomming values
+from<number>([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) // converts an Iterable to an Observable
+  .pipeThough(filterPipe<number>(_ => ((_ % 2) === 0))) // filters incomming values
+  .pipeThough(mapPipe<number, number>(_ => (_ * 2))) // transforms incomming values (multiplied by 2)
   .pipeTo(_ => console.log(_))
   .activate();
 ```
@@ -130,8 +132,9 @@ from<number>([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) // operator which converts an Itera
 Using `filterPipe` or `mapPipe`, and in a general manner any ObservableObserver without thinking of the side effects
 (just like RXJS is doing in most of the cases) is a bad behaviour !
 
-Why ? Because you're basically using complex classes and structures (well optimized, but it doesnt matter) instead of a simple `if` and transform.
-You add more complexity, and CPU execution time, where things should be simpler.
+Why ? Because you're basically using complex classes and structures (well optimized, but it doesnt matter) instead of a simple `if` and transform in some cases.
+Such an usage add more complexity layers, meaning longer CPU execution time, where things should be simpler:
+*it's an computationally inefficient manner to use the pipes*, where [cpu budget is a thing](https://www.google.com/search?q=js%20cpu%20budget) (ex: [The cost of javascript](https://medium.com/@addyosmani/the-cost-of-javascript-in-2018-7d8950fbb5d4))
 
 A better implementation would be:
 
@@ -144,8 +147,10 @@ from<number>([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
   })
 ```
 
-The only acceptable case of using Pipe: when you already have an Observable (ex: coming from a tier lib),
-want to apply some workflow to it and return another Observable. Something like:
+**Remember this simple rule:** the only acceptable case using Pipe is when you already have an Observable (ex: coming from a tier lib, from an function argument, ...),
+want to apply some operations from the incoming data and return another Observable.
+
+Something like:
 ```ts
 function filterMapPipe() {
   return filterPipe<number>(_ => ((_ % 2) === 0))
@@ -166,7 +171,8 @@ function filterMapPipeBetter() {
 }
 ```
 
-Final words: always prefer to use "native" code instead of Observable's pipes (for RXJS too !), you'll gain in performance !
+*Final words:* always prefer to use "native" code instead of Observable's pipes (for RXJS too !), you'll gain in overall performance !
+Its not because their are bad optimized, but because simple native code is always faster !
 
 ---
 - [CHAPTERS](README.md)

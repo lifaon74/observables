@@ -1,6 +1,6 @@
 {
   "name": "@lifaon/observables",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "description": "Better observables for everyone",
   "main": "public.js",
   "module": "public.js",
@@ -8,12 +8,12 @@
   "scripts": {
     "start": "npm run clean && gulp watch",
     "clean": "rimraf ./dist",
-    "build.prod": "npm run clean && gulp build.prod && npm run min.esnext",
+    "build.prod": "npm run clean && gulp build.prod && npm run minify",
     "babelify": "babel ./dist/bundle/public.umd.esnext.js --out-file ./dist/bundle/public.umd.es5.js --presets=@babel/preset-env",
-    "minify": "npm run min.esnext && npm run min.es5",
+    "minify": "npm run min.esnext && npm run min.core",
     "min.esnext": "uglifyjs ./dist/bundle/public.umd.esnext.js -o ./dist/bundle/public.umd.esnext.min.js -c -m",
-    "min.es5": "uglifyjs ./dist/bundle/public.umd.es5.js -o ./dist/bundle/public.umd.es5.min.js -c -m",
-    "publish": "cd ./dist && npm publish --access=public",
+    "min.core": "uglifyjs ./dist/bundle/public.core.umd.esnext.js -o ./dist/bundle/public.core.umd.esnext.min.js -c -m",
+    "publish.prod": "cd ./dist && npm publish --access=public",
     "serve": "http-server ./dist --ssl -p 1234",
     "serve-cors": "no-cors-proxy -p 4321 -t https://localhost:1234",
     "toc": "markdown-toc README.md"

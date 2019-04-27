@@ -1,34 +1,26 @@
 import { INotificationsObservable} from '../../core/notifications-observable/interfaces';
-import { KeyValueMap, KeyValueMapKeys } from '../../core/interfaces';
+import {
+  KeyValueMapConstraint, KeyValueMapKeys
+} from '../../core/interfaces';
 
-export type EventKeyValueMap<TKVMap> = KeyValueMap<TKVMap, any>;
 
 export type EventsObservableKeyValueMapGeneric = {
   [key: string]: Event;
 };
 
-// export type TargetToEventMap = [
-//   [AbortSignal, AbortSignalEventMap],
-//   [Animation, AbstractWorkerEventMap]
-// ];
+export type EventKeyValueMapConstraint<TKVMap extends object> = KeyValueMapConstraint<TKVMap, EventsObservableKeyValueMapGeneric>;
 
-// export type Targets = {
-//   [K in keyof TargetToEventMap]: TargetToEventMap[K] extends [infer TTarget, any] ? TTarget : never;
-// }[keyof TargetToEventMap];
 
-// export type CastTargetToEventMap<TRefTarget extends Targets> = TupleTypes<{
-//   [K in keyof TargetToEventMap]: TargetToEventMap[K] extends [infer TTarget, infer TKVMap]
-//     ? TTarget extends TRefTarget
-//       ? TKVMap
-//       : never
-//     : never;
-// }>/*[keyof TargetToEventMap]*/;
 
+export interface PureEventTarget {
+  addEventListener(type: string, listener: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions): void;
+  removeEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: EventListenerOptions | boolean): void;
+}
 
 
 export type TargetToEventMap =
     [AbortSignal, AbortSignalEventMap]
-  // | [AbstractWorker, AbstractWorkerEventMap]
+  | [AbstractWorker, AbstractWorkerEventMap] // -
   | [Animation, AnimationEventMap]
   | [ApplicationCache, ApplicationCacheEventMap]
   | [AudioBufferSourceNode, AudioScheduledSourceNodeEventMap]
@@ -41,10 +33,10 @@ export type TargetToEventMap =
   | [ConstantSourceNode, AudioScheduledSourceNodeEventMap]
   | [DataCue, TextTrackCueEventMap]
   | [Document, DocumentEventMap]
-  // | [DocumentAndElementEventHandlers, DocumentAndElementEventHandlersEventMap]
+  | [DocumentAndElementEventHandlers, DocumentAndElementEventHandlersEventMap] // -
   | [Element, ElementEventMap]
   | [FileReader, FileReaderEventMap]
-  // | [GlobalEventHandlers, GlobalEventHandlersEventMap]
+  | [GlobalEventHandlers, GlobalEventHandlersEventMap] // -
   | [HTMLElement, HTMLElementEventMap]
   | [HTMLVideoElement, HTMLVideoElementEventMap]
   | [IDBDatabase, IDBDatabaseEventMap]
@@ -68,7 +60,7 @@ export type TargetToEventMap =
   | [RTCIceGatherer, RTCIceGathererEventMap]
   | [RTCIceTransport, RTCIceTransportEventMap]
   | [RTCPeerConnection, RTCPeerConnectionEventMap]
-  // | [RTCSctpTransport, RTCSctpTransportEventMap]
+  | [RTCSctpTransport, RTCSctpTransportEventMap] // -
   | [RTCSrtpSdesTransport, RTCSrtpSdesTransportEventMap]
   | [SVGAElement, SVGElementEventMap]
   | [SVGAnimateElement, SVGElementEventMap]
@@ -89,7 +81,7 @@ export type TargetToEventMap =
   | [VideoTrackList, VideoTrackListEventMap]
   | [WebSocket, WebSocketEventMap]
   | [Window, WindowEventMap]
-  // | [WindowEventHandlers, WindowEventHandlersEventMap]
+  | [WindowEventHandlers, WindowEventHandlersEventMap] // -
   | [Worker, WorkerEventMap]
   | [XMLDocument, DocumentEventMap]
   | [XMLHttpRequest, XMLHttpRequestEventMap]
@@ -103,22 +95,26 @@ export type Targets<A = TargetToEventMap> =
     : never;
 
 
-// export type CastTargetToEventMap<TRefTarget extends Targets> = TargetToEventMap extends [infer TTarget, infer TKVMap]
-//   // ? TKVMap
-//   ? TRefTarget extends Clone<TTarget>
-//     ? TKVMap
-//     : never
-//   : never;
+export type PredefinedEventsObservables<A = TargetToEventMap> = A extends [infer TTarget, infer TKVMap]
+  ? TTarget extends PureEventTarget
+    ? TKVMap extends object
+      ? TKVMap extends EventKeyValueMapConstraint<TKVMap>
+        ? IEventsObservable<TKVMap, TTarget>
+        : never
+      : never
+    : never
+  : never;
 
-// export type CastTargetToEventMap<TRefTarget extends Targets> =
-//     TRefTarget extends TargetToEventMap[0]
-//     ? TargetToEventMap[1]
-//     : never;
+export type CastTargetToEventsObservable<T extends Targets> = Extract<PredefinedEventsObservables, IEventsObservable<any, T>>;
 
-export type CastTargetToEventMap<TRefTarget extends Targets, A = TargetToEventMap> =
-  A extends [TRefTarget, infer TKVMap]
-    ? TKVMap
-    : never;
+// interface A {
+//   // new<T extends EventTarget>(target: T): Cast;
+//   new<T extends EventTarget>(target: T): CastTargetToEventsObservable<T>;
+// }
+//
+// const _a: A = null;
+// const __a = new _a(window);
+
 
 export interface IEventsObservableConstructor {
   // new(target: AbortSignal, name?: KeyValueMapKeys<AbortSignalEventMap> | null): IEventsObservable<AbortSignalEventMap, AbortSignal>;
@@ -190,8 +186,8 @@ export interface IEventsObservableConstructor {
   // new(target: XMLHttpRequestEventTarget, name?: KeyValueMapKeys<XMLHttpRequestEventTargetEventMap> | null): IEventsObservable<XMLHttpRequestEventTargetEventMap, XMLHttpRequestEventTarget>;
   // new(target: XMLHttpRequestUpload, name?: KeyValueMapKeys<XMLHttpRequestEventTargetEventMap> | null): IEventsObservable<XMLHttpRequestEventTargetEventMap, XMLHttpRequestUpload>;
 
-  new<TTarget extends Targets>(target: TTarget): IEventsObservable<CastTargetToEventMap<TTarget>, TTarget>;
-  new<TKVMap extends KeyValueMap<TKVMap, Event>, TTarget extends EventTarget = EventTarget>(target: TTarget, name?: KeyValueMapKeys<TKVMap> | null): IEventsObservable<TKVMap, TTarget>;
+  new<TTarget extends Targets>(target: TTarget): CastTargetToEventsObservable<TTarget>;
+  new<TKVMap extends EventKeyValueMapConstraint<TKVMap>, TTarget extends PureEventTarget = PureEventTarget>(target: TTarget, name?: KeyValueMapKeys<TKVMap> | null): IEventsObservable<TKVMap, TTarget>;
 }
 
 
@@ -201,7 +197,7 @@ export interface IEventsObservableConstructor {
  * which allows to listen to the Events emitted by 'target'.
  * To force an Event's type you may provide a 'name', else the Event's type will be determined by the NotificationsObservers observing it.
  */
-export interface IEventsObservable<TKVMap extends EventKeyValueMap<TKVMap>, TTarget extends EventTarget = EventTarget> extends INotificationsObservable<TKVMap> {
+export interface IEventsObservable<TKVMap extends EventKeyValueMapConstraint<TKVMap>, TTarget extends PureEventTarget = PureEventTarget> extends INotificationsObservable<TKVMap> {
   // the target of the events' listener
   readonly target: TTarget;
 
@@ -210,11 +206,15 @@ export interface IEventsObservable<TKVMap extends EventKeyValueMap<TKVMap>, TTar
 }
 
 // const a: IEventsObservableConstructor = null;
-// new a(window)
+// const b = new a(window);
+//
+// new a(new FileReader())
 //   .on('load', () => {
 //   })
-//   .on('a', () => {
+//   .on('resize', () => {
 //   });
 
+// const b: IEventsObservable<AbortSignalEventMap> = null;
 // const b: IEventsObservable<AbortSignalEventMap & AbstractWorkerEventMap> = null;
+// const b: IEventsObservable<{ a: 1 }> = null;
 // const b: IEventsObservable<never> = null;

@@ -1,2 +1,2 @@
 export * from './interfaces';
-export { ReadonlyList } from './implementation';
+export { ReadonlyTuple, IsReadonlyTuple, ReadonlyList, IsReadonlyList } from './implementation';

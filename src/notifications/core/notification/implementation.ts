@@ -1,5 +1,6 @@
 import { INotification } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
+import { IsObject } from '../../../helpers';
 
 
 export const NOTIFICATION_PRIVATE = Symbol('notification-private');
@@ -17,6 +18,11 @@ export function ConstructNotification<TName extends string, TValue>(notification
   ConstructClassWithPrivateMembers(notification, NOTIFICATION_PRIVATE);
   (notification as INotificationInternal<TName, TValue>)[NOTIFICATION_PRIVATE].name = name;
   (notification as INotificationInternal<TName, TValue>)[NOTIFICATION_PRIVATE].value = value;
+}
+
+export function IsNotification(value: any): value is INotification<string, any> {
+  return IsObject(value)
+    && value.hasOwnProperty(NOTIFICATION_PRIVATE);
 }
 
 export class Notification<TName extends string, TValue> implements INotification<TName, TValue> {

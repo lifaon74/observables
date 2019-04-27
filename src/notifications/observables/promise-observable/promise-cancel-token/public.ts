@@ -3,5 +3,6 @@ export {
   PromiseCancelToken,
   PromiseCancelTokenObserver,
   CancelNotification,
-  PromiseCancelError
+  PromiseCancelError,
+  IsPromiseCancelToken
 } from './implementation';

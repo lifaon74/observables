@@ -1,9 +1,9 @@
 import {
   IObservable, IObservableHook, IObservableContextBase, TObservablePipeToObserverResult,
-  TObservablePipeToCallbackResult, TObservablePipeThroughResult
+  TObservablePipeToCallbackResult, TObservablePipeThroughResult, TObserverOrCallback, TObservableObservedByResultNonCyclic
 } from '../../../core/observable/interfaces';
 import {INotificationsObserver, INotificationsObserverLike} from '../notifications-observer/interfaces';
-import { KeyValueMapGeneric, KeyValueMapKeys, KeyValueMapValues } from '../interfaces';
+import { KeyValueMapGenericConstraint, KeyValueMapKeys, KeyValueMapValues, KVRecord } from '../interfaces';
 import { INotification } from '../notification/interfaces';
 import { IObserver } from '../../../core/observer/interfaces';
 import { IsIntersecting, IsSubSet } from '../../../classes/types';
@@ -11,7 +11,7 @@ import { IObservableObserver } from '../../../core/observable-observer/interface
 
 /** TYPES **/
 
-// export type KeyValueMapToNotifications<TKVMap extends KeyValueMapGeneric> = {
+// export type KeyValueMapToNotifications<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> = {
 //   [key in KeyValueMapKeys<TKVMap>]: INotification<key, TKVMap[key]>;
 // } extends { [key: string]: infer V } ? V : never;
 
@@ -22,8 +22,8 @@ import { IObservableObserver } from '../../../core/observable-observer/interface
  *  KeyValueMapToNotifications<{a: 1, b: 2}>
  *    => INotification<'a', 1> | INotification<'b', 2>
  */
-type CastKeyValueMapToNotifications<TKVMap extends KeyValueMapGeneric, K extends KeyValueMapKeys<TKVMap>> = K extends any ? INotification<K, TKVMap[K]> : never;
-export type KeyValueMapToNotifications<TKVMap extends KeyValueMapGeneric> = CastKeyValueMapToNotifications<TKVMap, KeyValueMapKeys<TKVMap>>;
+type CastKeyValueMapToNotifications<TKVMap extends KeyValueMapGenericConstraint<TKVMap>, K extends KeyValueMapKeys<TKVMap>> = K extends any ? INotification<K, TKVMap[K]> : never;
+export type KeyValueMapToNotifications<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> = CastKeyValueMapToNotifications<TKVMap, KeyValueMapKeys<TKVMap>>;
 
 /**
  * Cast a KeyValueMap to a Notification where:
@@ -33,17 +33,17 @@ export type KeyValueMapToNotifications<TKVMap extends KeyValueMapGeneric> = Cast
  *  KeyValueMapToNotificationsGeneric<{a: 1, b: 2}>
  *    => INotification<'a' | 'b', 1 | 2>
  */
-export type KeyValueMapToNotificationsGeneric<TKVMap extends KeyValueMapGeneric> = INotification<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>;
+export type KeyValueMapToNotificationsGeneric<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> = INotification<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>;
 
 // cast a KeyValueMap to an union of NotificationsObserver
-type CastKeyValueMapToNotificationsObservers<TKVMap extends KeyValueMapGeneric, K extends KeyValueMapKeys<TKVMap>> = K extends any ? INotificationsObserver<K, TKVMap[K]> : never;
-export type KeyValueMapToNotificationsObservers<TKVMap extends KeyValueMapGeneric> = CastKeyValueMapToNotificationsObservers<TKVMap, KeyValueMapKeys<TKVMap>>;
-export type KeyValueMapToNotificationsObserversGeneric<TKVMap extends KeyValueMapGeneric> = INotificationsObserver<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>;
+type CastKeyValueMapToNotificationsObservers<TKVMap extends KeyValueMapGenericConstraint<TKVMap>, K extends KeyValueMapKeys<TKVMap>> = K extends any ? INotificationsObserver<K, TKVMap[K]> : never;
+export type KeyValueMapToNotificationsObservers<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> = CastKeyValueMapToNotificationsObservers<TKVMap, KeyValueMapKeys<TKVMap>>;
+export type KeyValueMapToNotificationsObserversGeneric<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> = INotificationsObserver<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>;
 
 // // cast a KeyValueMap to an union of NotificationsObserverLike
-type CastKeyValueMapToNotificationsObserversLike<TKVMap extends KeyValueMapGeneric, K extends KeyValueMapKeys<TKVMap>> = K extends any ? INotificationsObserverLike<K, TKVMap[K]> : never;
-export type KeyValueMapToNotificationsObserversLike<TKVMap extends KeyValueMapGeneric> = CastKeyValueMapToNotificationsObserversLike<TKVMap, KeyValueMapKeys<TKVMap>>;
-export type KeyValueMapToNotificationsObserversLikeGeneric<TKVMap extends KeyValueMapGeneric> = INotificationsObserverLike<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>;
+type CastKeyValueMapToNotificationsObserversLike<TKVMap extends KeyValueMapGenericConstraint<TKVMap>, K extends KeyValueMapKeys<TKVMap>> = K extends any ? INotificationsObserverLike<K, TKVMap[K]> : never;
+export type KeyValueMapToNotificationsObserversLike<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> = CastKeyValueMapToNotificationsObserversLike<TKVMap, KeyValueMapKeys<TKVMap>>;
+export type KeyValueMapToNotificationsObserversLikeGeneric<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> = INotificationsObserverLike<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>;
 
 
 /**
@@ -52,7 +52,7 @@ export type KeyValueMapToNotificationsObserversLikeGeneric<TKVMap extends KeyVal
  *  - the NotificationsObserver's value is a superset of TKVMap[name] (the union of the possible values from 'name')
  *    -> the NotificationsObserver must support at least all the values that its observable may emit
  */
-export type TNotificationsObservablePipeToObserverResult<TInputObserver extends INotificationsObserver<string, any>, TKVMap extends KeyValueMapGeneric> =
+export type TNotificationsObservablePipeToObserverResult<TInputObserver extends INotificationsObserver<string, any>, TKVMap extends KeyValueMapGenericConstraint<TKVMap>> =
   TInputObserver extends INotificationsObserver<infer TName, infer TValue>
     ? IsIntersecting<TName, KeyValueMapKeys<TKVMap>> extends true
       ? IsSubSet<TKVMap[Extract<KeyValueMapKeys<TKVMap>, TName>], TValue> extends true
@@ -62,7 +62,7 @@ export type TNotificationsObservablePipeToObserverResult<TInputObserver extends 
     : never;
 
 
-export type TNotificationsObservablePipeThroughResult<TInputObservableObserver extends IObservableObserver<INotificationsObserver<any, any>, IObservable<any>>, TKVMap extends KeyValueMapGeneric> =
+export type TNotificationsObservablePipeThroughResult<TInputObservableObserver extends IObservableObserver<INotificationsObserver<any, any>, IObservable<any>>, TKVMap extends KeyValueMapGenericConstraint<TKVMap>> =
   TInputObservableObserver extends IObservableObserver<INotificationsObserver<infer TName, infer TValue>, infer TObservable>
     ? IsIntersecting<TName, KeyValueMapKeys<TKVMap>> extends true
       ? IsSubSet<TKVMap[Extract<KeyValueMapKeys<TKVMap>, TName>], TValue> extends true
@@ -72,19 +72,19 @@ export type TNotificationsObservablePipeThroughResult<TInputObservableObserver e
     : never;
 
 
-export type TNotificationsObservableHook<TKVMap extends KeyValueMapGeneric> = IObservableHook<KeyValueMapToNotifications<TKVMap>>;
+export type TNotificationsObservableHook<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> = IObservableHook<KeyValueMapToNotifications<TKVMap>>;
 
 
-export type TNotificationsObservableConstructorArgs<TKVMap extends KeyValueMapGeneric> = [(context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)] | [];
+export type TNotificationsObservableConstructorArgs<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> = [(context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)] | [];
 
 
 /** INTERFACES **/
 
 export interface INotificationsObservableConstructor {
-  new<TKVMap extends KeyValueMapGeneric>(create?: (context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)): INotificationsObservable<TKVMap>;
+  new<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(create?: (context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)): INotificationsObservable<TKVMap>;
 }
 
-export interface INotificationsObservableTypedConstructor<TKVMap extends KeyValueMapGeneric> {
+export interface INotificationsObservableTypedConstructor<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> {
   new(create?: (context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)): INotificationsObservable<TKVMap>;
 }
 
@@ -93,7 +93,7 @@ export interface INotificationsObservableTypedConstructor<TKVMap extends KeyValu
  * A NotificationsObservable is an Observable emitting some Notifications.
  * It provides some shortcut functions to create Observers.
  */
-export interface INotificationsObservable<TKVMap extends KeyValueMapGeneric> extends IObservable<KeyValueMapToNotifications<TKVMap>> {
+export interface INotificationsObservable<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> extends IObservable<KeyValueMapToNotifications<TKVMap>> {
 
   pipeTo<NO extends INotificationsObserver<any, any>>(observer: NO): TNotificationsObservablePipeToObserverResult<NO, TKVMap>;
   pipeTo<O extends IObserver<any>>(observer: O): TObservablePipeToObserverResult<O, KeyValueMapToNotifications<TKVMap>>;
@@ -119,14 +119,18 @@ export interface INotificationsObservable<TKVMap extends KeyValueMapGeneric> ext
   matches(name: string, callback?: (value: any) => void): IterableIterator<KeyValueMapToNotificationsObservers<TKVMap>>;
 }
 
+export interface IBaseNotificationsObservable<TName extends string, TValue> extends INotificationsObservable<KVRecord<TName, TValue>> {
+  observedBy<O extends TObserverOrCallback<any>[]>(...observers: O): TObservableObservedByResultNonCyclic<O, KeyValueMapToNotifications<KVRecord<TName, TValue>>, this>; // returns this
+}
+
 
 
 export interface INotificationsObservableContextConstructor {
   // creates a NotificationsObservableContext
-  new<TKVMap extends KeyValueMapGeneric>(observable: INotificationsObservable<TKVMap>): INotificationsObservableContext<TKVMap>;
+  new<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(observable: INotificationsObservable<TKVMap>): INotificationsObservableContext<TKVMap>;
 }
 
-export interface INotificationsObservableContext<TKVMap extends KeyValueMapGeneric> extends IObservableContextBase<KeyValueMapToNotifications<TKVMap>> {
+export interface INotificationsObservableContext<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> extends IObservableContextBase<KeyValueMapToNotifications<TKVMap>> {
   readonly observable: INotificationsObservable<TKVMap>;
   emit(value: KeyValueMapToNotifications<TKVMap>): void;
   dispatch<K extends KeyValueMapKeys<TKVMap>>(name: K, value?: TKVMap[K]): void;

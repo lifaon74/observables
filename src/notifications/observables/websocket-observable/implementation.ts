@@ -33,7 +33,7 @@ export interface IWebSocketObservableObserverInternal extends IWebSocketObservab
   [WEBSOCKET_OBSERVABLE_OBSERVER_PRIVATE]: IWebSocketObservableObserverPrivate;
 }
 
-export function ConstructWebSocketObservableObserverPrivates(
+export function ConstructWebSocketObservableObserver(
   observableObserver: IWebSocketObservableObserver,
   context: INotificationsObservableContext<IWebSocketObservableObserverValueMap>,
   url: string,
@@ -221,7 +221,7 @@ export class WebSocketObservableObserver extends ActivableFactory<INotifications
     }], (_context: INotificationsObservableContext<IWebSocketObservableObserverValueMap>) => {
       context = _context;
     });
-    ConstructWebSocketObservableObserverPrivates(this, context, url, options);
+    ConstructWebSocketObservableObserver(this, context, url, options);
   }
 
   get in(): IObservable<TWebSocketData> {

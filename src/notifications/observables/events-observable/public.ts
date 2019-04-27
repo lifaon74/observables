@@ -1,2 +1,2 @@
 export * from './interfaces';
-export { EventsObservable } from './implementation';
+export { EventsObservable, IsEventsObservable } from './implementation';

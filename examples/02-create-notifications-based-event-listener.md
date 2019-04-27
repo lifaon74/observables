@@ -1,7 +1,7 @@
 # How to create a notifications based event listener ?
 
-In the first chapter, we saw ho to emits Events though an Observable.
-Now we'll try to do the same but we'll emit Notifications instead of Events.
+In the first chapter, we saw how to emit Events though an Observable.
+Now we'll try to do the same but we will emit Notifications instead of Events.
 
 ### Notification ?
 A Notification is simply an object with a name and an optional value.
@@ -17,20 +17,21 @@ Because Notifications and Events are similar, we can create a Notification from 
 const notification = Notification.fromEvent<'click', MouseEvent>(new MouseEvent('click'));
 ```
 
-A NotificationsObservable is an Observable which emits Notifications, and provides some useful methods to observe it.
-A NotificationsObserver is an Observer which receives Notifications only matching its name.
+A NotificationsObservable is an Observable which emit Notifications, and provides some useful shortcut methods.
 
-More details are available on the [home page](../README.md##notifications).
+And, a NotificationsObserver is an Observer which receives Notifications only matching its name.
+
+More details are available on the [home page](../README.md#notifications).
 
 
-### 1) Create the NotificationsObservable
+### 1) Create a NotificationsObservable
 
 ```ts
 // strongly typed, so we need to provides a KVMap where values are Events
-function createEventNotificationsObservable<TKVMap extends KeyValueMap<TKVMap, Event>>(target: EventTarget, name: KeyValueMapKeys<TKVMap>): INotificationsObservable<TKVMap> {
-  return new NotificationsObservable<TKVMap>((context: INotificationsObservableContext<TKVMap>) => {
-    const listener = (event: KeyValueMapValues<TKVMap>) => {
-      context.dispatch(event.type as KeyValueMapKeys<TKVMap>, event); // use dispatch instead of emit
+function createEventNotificationsObservable<TKVMap extends EventKeyValueMapConstraint<TKVMap>>(target: EventTarget, name: KeyValueMapKeys<TKVMap>): INotificationsObservable<TKVMap> {
+  return new NotificationsObservable<TKVMap>((context: NotificationsObservableContext<TKVMap>) => {
+    const listener = (event: Event) => {
+      context.dispatch(event.type as KeyValueMapKeys<TKVMap>, event as KeyValueMapValues<TKVMap>); // use dispatch instead of emit
       // we may write 'context.emit(Notification.fromEvent<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>(event));' intead
     };
     return {
@@ -53,7 +54,7 @@ A NotificationsObservable is constructed just like an Observable.
 The `INotificationsObservableContext` is extremely similar to the IObservableContext, but provides a `dispatch<K extends KeyValueMapKeys<TKVMap>>(name: K, value?: TKVMap[K]): void;` function too.
 
 
-### 2) Observe the NotificationsObservable
+### 2) Observe this NotificationsObservable
 
 ```ts
 // creates a Observables listening some mouse events on window
@@ -87,12 +88,14 @@ const observable = createEventNotificationsObservable(window, 'mousedown')
   .on('mousedown', (event: MouseEvent) => { // great way to chain listeners
     console.log(`mousedown => y: ${event.clientY}`);
   }); // INFO: the observers are automatically activated with 'on'
+  // note that if we use 'on' we need to deactivate the observers though observable.observes when releasing some resources !
 ```
 
 
 ### Using EventsObservable
 
-Our function is pretty cool, but a built in Observable already exists for this: `EventsObservable`
+Our function is pretty cool, but a built in Observable already exists for this: `EventsObservable`.
+It's more convenient and safer.
 
 ```ts
 const observable = new EventsObservable<WindowEventMap>(window)
@@ -105,9 +108,11 @@ const observable = new EventsObservable<WindowEventMap>(window)
 
 // after 5s, stops observing the observable
 setTimeout(() => {
-  let observer: IObserver<any> | null;
-  while ((observer = observable.observers.item(0)) !== null) {
-    observer.unobserve();
+  // don't for loop because if we remove the first observer,
+  // the observers' array is shifted on the left (second become first, etc...)
+  // instead we just have to continuously remove the first element until the array is empty
+  while (observable.observers.length > 0) {
+    observable.observers.item(0).unobserve();
   }
 }, 5000);
 ```

@@ -3,6 +3,7 @@ import { periodTime } from '../../classes/pure-pipes';
 import { Observable } from '../../core/observable/implementation';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IDOMChangeObservable } from './interfaces';
+import { IsObject } from '../../helpers';
 
 
 export const DOM_CHANGE_PRIVATE = Symbol('dom-change-private');
@@ -16,7 +17,7 @@ export interface IDOMChangeInternal extends IDOMChangeObservable {
 }
 
 
-export function ConstructDOMChange(observable: IDOMChangeObservable, context: IObservableContext<void>): void {
+export function ConstructDOMChangeObservable(observable: IDOMChangeObservable, context: IObservableContext<void>): void {
   ConstructClassWithPrivateMembers(observable, DOM_CHANGE_PRIVATE);
 
   (observable as IDOMChangeInternal)[DOM_CHANGE_PRIVATE].observer = new MutationObserver(periodTime(() => {
@@ -24,6 +25,11 @@ export function ConstructDOMChange(observable: IDOMChangeObservable, context: IO
   }, 300));
 }
 
+
+export function IsDOMChangeObservable(value: any): value is IDOMChangeObservable {
+  return IsObject(value)
+    && value.hasOwnProperty(DOM_CHANGE_PRIVATE);
+}
 
 export function DOMChangeObservableOnObserved(observable: DOMChangeObservable): void {
   if (observable.observers.length === 1) {
@@ -55,6 +61,6 @@ export class DOMChangeObservable extends Observable<void> implements IDOMChangeO
         }
       };
     });
-    ConstructDOMChange(this, context);
+    ConstructDOMChangeObservable(this, context);
   }
 }

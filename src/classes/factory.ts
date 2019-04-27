@@ -1,4 +1,4 @@
-import { TupleToIntersection } from "./types";
+import { TupleToIntersection } from './types';
 
 export interface Constructor<Instance = any, Args extends any[] = any[]> extends Function {
   new(...args: Args): Instance;
@@ -9,7 +9,6 @@ export interface AbstractClass<Instance = any> extends Function {
 }
 
 export type ClassType<Instance = any> = AbstractClass<Instance> | Constructor<Instance>;
-
 
 
 /**
@@ -186,7 +185,7 @@ export function ClassToFactory<TSource extends (new(...args: any[]) => any) = Ob
                   _this = this;
                 }
                 mode = 'function';
-              } catch(e) {
+              } catch (e) {
                 // construct the class though Reflect
                 _this = Reflect.construct(source, args);
                 mode = 'class';
@@ -246,18 +245,14 @@ export function ClassToFactory<TSource extends (new(...args: any[]) => any) = Ob
 }
 
 
-
-
-
-
 // converts a tuple of construct types (ex: [Constructor<A>, Constructor<B>]) to a tuple of instances types
 export type InstancesTypes<T extends (new (...args: any[]) => any)[]> = {
-  [P in keyof T] : T[P] extends new (...args: any[]) => infer R ? R : never;
+  [P in keyof T]: T[P] extends new (...args: any[]) => infer R ? R : never;
 }
 
 // converts a tuple of construct types (ex: [Constructor<A>, Constructor<B>]) to a tuple of their parameters
 export type ConstructorsParameters<T extends (new (...args: any[]) => any)[]> = {
-  [P in keyof T] : T[P] extends new (...args: infer P) => any ? P : never;
+  [P in keyof T]: T[P] extends new (...args: infer P) => any ? P : never;
 }
 
 // exclude the constructor from T
@@ -281,8 +276,9 @@ type TAbstractToConstructible<T extends Function> = T extends { prototype: infer
 type TClassFactory<TSource extends new(...args: any[]) => any> = <TBase extends new(...args: any[]) => any>(superClass: TBase) => TMixin<[TSource, TBase]>;
 
 
-
-export type TFactoryClass<TClass extends (new(...args: any[]) => any), TArgs extends any[], TSuperClass extends (new(...args: any[]) => any) = TClass> = ExcludeConstructor<TClass> & {
+export type TFactoryClass<TClass extends (new(...args: any[]) => any), TArgs extends any[], TSuperClass extends (new(...args: any[]) => any) = TClass> =
+  ExcludeConstructor<TClass>
+  & {
   new(args: TArgs, ...superArgs: ConstructorParameters<TClass>): InstanceType<TClass>;
 };
 
@@ -322,6 +318,7 @@ export function GetSetSuperArgsFunction(isFactoryClass: boolean): (args: any[], 
 
 
 const IS_FACTORY_CLASS = Symbol('is-factory-class');
+
 export function IsFactoryClass(_class: (new(...args: any[]) => any)): boolean {
   return (IS_FACTORY_CLASS in _class);
 }

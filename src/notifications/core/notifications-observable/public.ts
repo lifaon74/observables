@@ -1,3 +1,3 @@
 export * from './interfaces';
-export { NotificationsObservable } from './implementation';
-export { INotificationsObserverLike } from '../notifications-observer/interfaces';
+export { NotificationsObservable, IsNotificationsObservable } from './implementation';
+

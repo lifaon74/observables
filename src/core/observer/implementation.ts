@@ -26,15 +26,11 @@ export interface IObserverInternal<T> extends IObserver<T> {
 }
 
 
-export function ConstructObserverPrivates<T>(observer: IObserver<T>): void {
+export function ConstructObserver<T>(observer: IObserver<T>, onEmit: (value: T, observable?: IObservable<T>) => void): void {
   ConstructClassWithPrivateMembers(observer, OBSERVER_PRIVATE);
   (observer as IObserverInternal<T>)[OBSERVER_PRIVATE].activated = false;
   (observer as IObserverInternal<T>)[OBSERVER_PRIVATE].observables = [];
   (observer as IObserverInternal<T>)[OBSERVER_PRIVATE].readOnlyObservables = new ReadonlyList<IObservable<T>>((observer as IObserverInternal<T>)[OBSERVER_PRIVATE].observables);
-}
-
-export function ConstructObserver<T>(observer: IObserver<T>, onEmit: (value: T, observable?: IObservable<T>) => void): void {
-  ConstructObserverPrivates<T>(observer);
 
   if (typeof onEmit === 'function') {
     (observer as IObserverInternal<T>)[OBSERVER_PRIVATE].onEmit = onEmit.bind(observer);
@@ -48,7 +44,7 @@ export function ConstructObserver<T>(observer: IObserver<T>, onEmit: (value: T, 
  * @param value
  * @internal
  */
-export function IsObserver(value: any): boolean {
+export function IsObserver(value: any): value is IObserver<any> {
   return IsObject(value)
     && value.hasOwnProperty(OBSERVER_PRIVATE);
 }

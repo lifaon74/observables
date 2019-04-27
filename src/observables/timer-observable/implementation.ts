@@ -2,6 +2,7 @@ import { ITimerObservable } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { Observable } from '../../core/observable/implementation';
 import { IObservableContext } from '../../core/observable/interfaces';
+import { IsObject } from '../../helpers';
 
 
 export const TIMER_OBSERVABLE_PRIVATE = Symbol('timer-observable-private');
@@ -22,6 +23,11 @@ export function ConstructTimerObservable(observable: ITimerObservable, context: 
   (observable as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE].context = context;
   (observable as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE].period = period;
   (observable as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE].timer = null;
+}
+
+export function IsTimerObservable(value: any): value is ITimerObservable {
+  return IsObject(value)
+    && value.hasOwnProperty(TIMER_OBSERVABLE_PRIVATE);
 }
 
 export function TimerObservableOnObserved(observable: ITimerObservable): void {

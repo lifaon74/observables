@@ -2,11 +2,12 @@ import { Notification } from '../../../core/notification/implementation'
 import { INotificationsObservableInternal, NotificationsObservable } from '../../../core/notifications-observable/implementation';
 import { INotificationsObserver } from '../../../core/notifications-observer/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
-import { IPromiseCancelToken, IPromiseCancelTokenKeyValueMap } from './interfaces';
+import { IPromiseCancelToken, IPromiseCancelTokenKeyValueMap, TPromiseType } from './interfaces';
 import { ObservableEmitAll } from '../../../../core/observable/implementation';
 import { NotificationsObserver } from '../../../core/notifications-observer/implementation';
 import { Reason } from '../../../../misc/reason/implementation';
 import { INotification } from '../../../core/notification/interfaces';
+import { IsObject } from '../../../../helpers';
 
 
 export const PROMISE_CANCEL_TOKEN_PRIVATE = Symbol('promise-cancel-token-private');
@@ -21,12 +22,16 @@ export interface IPromiseCancelTokenInternal extends IPromiseCancelToken, INotif
 }
 
 
-export function ConstructPromiseCancelTokenPrivates(token: IPromiseCancelToken): void {
+export function ConstructPromiseCancelToken(token: IPromiseCancelToken): void {
   ConstructClassWithPrivateMembers(token, PROMISE_CANCEL_TOKEN_PRIVATE);
   (token as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].cancelled = false;
   (token as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].reason = void 0;
 }
 
+export function IsPromiseCancelToken(value: any): value is IPromiseCancelToken {
+  return IsObject(value)
+    && (PROMISE_CANCEL_TOKEN_PRIVATE in value);
+}
 
 export function PromiseCancelTokenCancel(token: IPromiseCancelToken, reason: any = void 0): void {
   if (!(token as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].cancelled) {
@@ -114,12 +119,25 @@ export function PromiseCancelTokenLinkWithAbortSignal(token: IPromiseCancelToken
 }
 
 
+export function PromiseCancelTokenWrap<CB extends (...args: any[]) => any>(token: PromiseCancelToken, callback: CB): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>>> {
+  type T = TPromiseType<ReturnType<CB>>;
+  return function(...args: Parameters<CB>): Promise<T> {
+    return new Promise<T>((resolve: any, reject: any) => {
+      if (token.cancelled) {
+        reject(token.reason);
+      } else {
+        resolve(callback.apply(this, args));
+      }
+    });
+  };
+}
+
 
 export class PromiseCancelToken extends NotificationsObservable<IPromiseCancelTokenKeyValueMap> implements IPromiseCancelToken {
 
   constructor() {
     super();
-    ConstructPromiseCancelTokenPrivates(this);
+    ConstructPromiseCancelToken(this);
   }
 
   get cancelled(): boolean {
@@ -147,6 +165,10 @@ export class PromiseCancelToken extends NotificationsObservable<IPromiseCancelTo
 
   linkWithAbortSignal(signal: AbortSignal): () => void {
     return PromiseCancelTokenLinkWithAbortSignal(this, signal);
+  }
+
+  wrap<CB extends (...args: any[]) => any>(callback: CB): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>>> {
+    return PromiseCancelTokenWrap<CB>(this, callback);
   }
 }
 

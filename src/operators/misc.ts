@@ -4,10 +4,9 @@ import {
   IFunctionObservable,
   TFunctionObservableFactory, TFunctionObservableFactoryParameters,
 } from '../observables/distinct/function-observable/interfaces';
-import { IsObservable, Observable } from '../core/observable/implementation';
-import { IObservable, ObservableType } from '../core/observable/interfaces';
+import { IsObservable } from '../core/observable/implementation';
+import { IObservable } from '../core/observable/interfaces';
 import { Expression, IsExpression } from '../observables/distinct/expression/implementation';
-import { Any } from '../classes/types';
 import { IExpression } from '../observables/distinct/expression/interfaces';
 import { ISource } from '../observables/distinct/source/interfaces';
 import {
@@ -17,7 +16,7 @@ import {
 } from '../observables/distinct/async-function-observable/interfaces';
 import { AsyncFunctionObservable } from '../observables/distinct/async-function-observable/implementation';
 import {
-  IPromiseObservable, IPromiseObservableOptions
+  IPromiseObservable,
 } from '../notifications/observables/promise-observable/interfaces';
 import { toValueObservable } from './promise/toValueObservable';
 import { IPromiseCancelToken } from '../notifications/observables/promise-observable/promise-cancel-token/interfaces';
@@ -27,7 +26,6 @@ import { Pipe } from '../core/observable-observer/implementation';
 import { Observer } from '../core/observer/public';
 import { PromiseObservable } from '../notifications/observables/promise-observable/implementation';
 import { toPromise } from './promise/toPromise';
-import { FetchObservable } from '../notifications/observables/fetch-observable/implementation';
 
 export type TObservableOrValue<T> = IObservable<T> | T;
 export type TSourceOrValue<T> = ISource<T> | T;
@@ -277,6 +275,7 @@ export function $fetch<T>(requestInfo: TObservableOrValue<RequestInfo>, requestI
 }
 
 export function _fetch<T>(token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit: RequestInit): Promise<T> {
+  // TODO token as signal
   return fetch(requestInfo, requestInit)
     .then<T>((response: Response) =>{
       if (token.cancelled) {
@@ -286,23 +285,6 @@ export function _fetch<T>(token: IPromiseCancelToken, requestInfo: RequestInfo, 
       }
     });
 }
-
-
-// TODO
-
-export function $translate(key: TObservableOrValue<string>, params: TObservableOrValue<any>): IAsyncFunctionObservable<typeof translate> {
-  return new AsyncFunctionObservable(translate, [$observable(key), $observable(params)]);
-}
-
-// function translate2(key: string, params: any): Promise<string> {
-//   return Promise.resolve('translated-' + key);
-// }
-
-function translate(token: IPromiseCancelToken, key: string, params: any): Promise<string> {
-  return Promise.resolve('translated-' + key);
-}
-
-
 
 
 
@@ -361,7 +343,9 @@ export async function testMisc(): Promise<void> {
   }
 
   function assertObservableEmits(observable: IObservable<any>, values: any[], timeout?: number): Promise<void> {
-    return toPromise(observable.pipeThrough(assertPipe(values, timeout)));
+    return toPromise<void>(
+      observable.pipeThrough(assertPipe(values, timeout))
+    );
   }
 
   function assertFunctionObservableEmits(valuesToEmit: any[], observable: IFunctionObservable<any>, values: any[], timeout?: number): Promise<void> {

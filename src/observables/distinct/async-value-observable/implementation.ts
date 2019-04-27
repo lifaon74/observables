@@ -42,7 +42,7 @@ export function ConstructAsyncValueObservable<T>(
   (observable as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].token = null;
 }
 
-export function IsAsyncValueObservable(value: any): boolean {
+export function IsAsyncValueObservable(value: any): value is IAsyncValueObservable<any> {
   return IsObject(value)
     && value.hasOwnProperty(ASYNC_VALUE_OBSERVABLE_PRIVATE);
 }
