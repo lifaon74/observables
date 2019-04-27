@@ -1,18 +1,5 @@
-import { IPromiseCancelToken, TPromiseType } from '../promise-cancel-token/interfaces';
-
-
-/** TYPES **/
-
-export type TPromiseOrValue<T> = T | PromiseLike<T>;
-export type TPromiseCreateCallback<T> = (resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void) => void;
-
-
-export type TPromiseOrValueTupleToValueTuple<TTuple extends TPromiseOrValue<any>[]> = {
-  [K in keyof TTuple]: TPromiseType<TTuple[K]>;
-};
-
-export type TPromiseOrValueTupleToValueUnion<TTuple extends TPromiseOrValue<any>[]> = TPromiseOrValueTupleToValueTuple<TTuple>[Extract<keyof TTuple, number>];
-
+import { IPromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import { TPromiseCreateCallback, TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion } from '../interfaces';
 
 /** INTERFACES **/
 
@@ -38,12 +25,12 @@ export interface ICancellablePromise<T> extends Promise<T> {
   readonly token: IPromiseCancelToken;
 
   then<TResult1 = T, TResult2 = never>(
-    onFulfilled?: ((value: T, token: IPromiseCancelToken) => TResult1 | PromiseLike<TResult1>) | undefined | null,
-    onRejected?: ((reason: any, token: IPromiseCancelToken) => TResult2 | PromiseLike<TResult2>) | undefined | null
+    onFulfilled?: ((value: T, token: IPromiseCancelToken) => TPromiseOrValue<TResult1>) | undefined | null,
+    onRejected?: ((reason: any, token: IPromiseCancelToken) => TPromiseOrValue<TResult2>) | undefined | null
   ): ICancellablePromise<TResult1 | TResult2>;
 
   catch<TResult = never>(
-    onRejected?: ((reason: any, token: IPromiseCancelToken) => TResult | PromiseLike<TResult>) | undefined | null
+    onRejected?: ((reason: any, token: IPromiseCancelToken) => TPromiseOrValue<TResult>) | undefined | null
   ): ICancellablePromise<T | TResult>;
 
   finally(onFinally?: ((token: IPromiseCancelToken) => void) | undefined | null): ICancellablePromise<T>;
