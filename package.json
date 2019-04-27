@@ -13,7 +13,7 @@
     "minify": "npm run min.esnext && npm run min.core",
     "min.esnext": "uglifyjs ./dist/bundle/public.umd.esnext.js -o ./dist/bundle/public.umd.esnext.min.js -c -m",
     "min.core": "uglifyjs ./dist/bundle/public.core.umd.esnext.js -o ./dist/bundle/public.core.umd.esnext.min.js -c -m",
-    "publish": "cd ./dist && npm publish --access=public",
+    "publish.prod": "cd ./dist && npm publish --access=public",
     "serve": "http-server ./dist --ssl -p 1234",
     "serve-cors": "no-cors-proxy -p 4321 -t https://localhost:1234",
     "toc": "markdown-toc README.md"
