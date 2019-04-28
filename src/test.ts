@@ -36,8 +36,6 @@ import { $add, $equal, $expression, $source, $string, testMisc } from './operato
 import { IPromiseCancelToken } from './notifications/observables/promise-observable/promise-cancel-token/interfaces';
 import { UnionToIntersection } from './classes/types';
 import { EventKeyValueMapConstraint } from './notifications/observables/events-observable/interfaces';
-import { testDeferredPromise } from './promises/defered-promise/implementation';
-
 
 function testReadOnlyList() {
   const list = new ReadonlyList<number>([0, 1, 2, 3]);
@@ -1147,7 +1145,6 @@ export function test() {
   // testWebSocket();
 
   // testMisc();
-  testDeferredPromise();
 }
 
 

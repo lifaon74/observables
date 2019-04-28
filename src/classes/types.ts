@@ -63,6 +63,12 @@ export type IsSubSet<TSet, TReferenceSet> = Clone<TSet> extends TReferenceSet
 
 export type IsSuperSet<TSet, TReferenceSet> = IsSubSet<TReferenceSet, TSet>;
 
+export type IsEqualSet<TSet1, TSet2> = Clone<TSet1> extends TSet2
+  ? Clone<TSet2> extends TSet1
+    ? true
+    : false
+  : false;
+
 // export type IsSuperSet<TSet, TReferenceSet> = UnionToIntersection<TSet> extends UnionToIntersection<TReferenceSet>
 //   ? Clone<TSet> extends UnionToIntersection<TReferenceSet>
 //     ? false

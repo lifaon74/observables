@@ -1,10 +1,5 @@
 import { INotificationsObservable } from '../../../core/notifications-observable/interfaces';
-
-export type TPromiseType<P> = P extends Promise<infer T>
-  ? T extends Promise<any>
-    ? never
-    : T
-  : P;
+import { TPromiseType } from '../../../../promises/interfaces';
 
 export interface IPromiseCancelTokenConstructor {
   new(): IPromiseCancelToken;

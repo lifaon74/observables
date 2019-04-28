@@ -1,4 +1,9 @@
-import { TPromiseType } from '../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+
+export type TPromiseType<P> = P extends Promise<infer T>
+  ? T extends Promise<any>
+    ? never
+    : T
+  : P;
 
 export type TPromiseOrValue<T> = T | PromiseLike<T>;
 

@@ -1,39 +1,22 @@
 import { TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion } from '../interfaces';
-import { IObserver } from '../../core/observer/interfaces';
 import { IsSubSet } from '../../classes/types';
-import { TObserverOrCallback } from '../../core/observable/interfaces';
 
 /** TYPES **/
 
 export type TPromiseStatus = 'fulfilled' | 'rejected' | 'pending';
 
-// export type TDeferredPromiseRaceReturn<TTuple extends TPromiseOrValue<any>[], TReference, TReturn> =
-//   TReference extends any[]
-//     ? false extends {
-//       [key in keyof TTuple]: TTuple[key] extends Promise<infer T>
-//       ? IsSubSet<TReference, T>
-//       : IsSubSet<TReference, TTuple[key]>
-//     }[keyof TTuple] ? never : TReturn
-//     : never
-//   ;
-
-
 export type TDeferredPromiseRaceReturn<TTuple extends TPromiseOrValue<any>[], TReference, TReturn> =
   true extends {
     [key in keyof TTuple]: TTuple[key] extends Promise<infer T>
-      ? IsSubSet<TReference, T>
-      : IsSubSet<TReference, TTuple[key]>
+      ? IsSubSet<T, TReference>
+      : IsSubSet<TTuple[key], TReference>
   }[keyof TTuple] ? TReturn : never;
 
 
 export type TDeferredPromiseAllReturn<TTuple extends TPromiseOrValue<any>[], TReference, TReturn> =
-  TReference extends (infer V)[]
-   ? true extends {
-      [key in keyof TTuple]: TTuple[key] extends Promise<infer T>
-        ? IsSubSet<V, T>
-        : IsSubSet<V, TTuple[key]>
-    }[keyof TTuple] ? TReturn : never
-  : never;
+  TPromiseOrValueTupleToValueTuple<TTuple> extends TReference
+    ? TReturn
+    : never;
 
 
 /** INTERFACES **/
@@ -86,11 +69,16 @@ export interface IDeferredPromise<T> extends Promise<T> {
 
 }
 
-const v: unknown = null;
-
-// TODO continue to infer types
-const a = (v as IDeferredPromise<1>).race(v as [1, 2]).then;
-const a = (v as IDeferredPromise<1>).race(v as [2]).then; // should fail
-const a = (v as IDeferredPromise<1>).all(v as [1, 2]).then; // should fail because its not an array
-const a = (v as IDeferredPromise<[1]>).all(v as [1, 2]).then;
-const a = (v as IDeferredPromise<[1, 3]>).all(v as [1, 2]).then; // should fail
+// const v: unknown = null;
+//
+// const a = (v as IDeferredPromise<1>).race(v as [1, 2]).then;
+// const a = (v as IDeferredPromise<1>).race(v as [2]).then; // should fail
+// const a = (v as IDeferredPromise<number>).race(v as [2]).then;
+// const a = (v as IDeferredPromise<1>).race(v as number[]).then; // should fail
+//
+// const a = (v as IDeferredPromise<1>).all(v as [1, 2]).then; // should fail because its not an array
+// const a = (v as IDeferredPromise<[1, 2]>).all(v as [1, 2]).then;
+// const a = (v as IDeferredPromise<[1, 2]>).all(v as [Promise<1>, 2]).then;
+// const a = (v as IDeferredPromise<[1, 2, 3]>).all(v as [Promise<1>, 2]).then; // should fail
+// const a = (v as IDeferredPromise<number[]>).all(v as [Promise<1>, 2]).then;
+// const a = (v as IDeferredPromise<[1, 3]>).all(v as [1, 2]).then; // should fail

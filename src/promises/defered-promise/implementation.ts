@@ -1,10 +1,9 @@
-import { IPromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
 import {
-  IDeferredPromise, TPromiseStatus
+  IDeferredPromise, TDeferredPromiseAllReturn, TDeferredPromiseRaceReturn, TPromiseStatus
 } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject, noop } from '../../helpers';
-import { TPromiseCreateCallback, TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion } from '../interfaces';
+import { TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion } from '../interfaces';
 
 
 export const DEFERRED_PROMISE_PRIVATE = Symbol('deferred-promise-private');
@@ -119,7 +118,6 @@ export function DeferredPromiseThen<T, TResult1 = T, TResult2 = never>(
   onFulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
   onRejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null
 ): IDeferredPromise<TResult1 | TResult2> {
-
   return new DeferredPromise<TResult1 | TResult2>((deferred: DeferredPromise<TResult1 | TResult2>) => {
     (instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].promise
       .then((result: T) => {
@@ -248,16 +246,14 @@ export class DeferredPromise<T> implements IDeferredPromise<T> {
     return this;
   }
 
-  // TODO proper typing
-  race<TTuple extends TPromiseOrValue<any>[]>(values: TTuple): this {
+  race<TTuple extends TPromiseOrValue<any>[]>(values: TTuple): TDeferredPromiseRaceReturn<TTuple, T, this> {
     DeferredPromiseRace<T>(this, values);
-    return this;
+    return this as TDeferredPromiseRaceReturn<TTuple, T, this>;
   }
 
-  // TODO proper typing
-  all<TTuple extends TPromiseOrValue<any>[]>(values: TTuple): this {
+  all<TTuple extends TPromiseOrValue<any>[]>(values: TTuple): TDeferredPromiseAllReturn<TTuple, T, this> {
     DeferredPromiseAll<T>(this, values);
-    return this;
+    return this as TDeferredPromiseAllReturn<TTuple, T, this>;
   }
 
 
@@ -280,22 +276,16 @@ export class DeferredPromise<T> implements IDeferredPromise<T> {
 }
 
 
-export function testDeferredPromise() {
-  // const a = DeferredPromise.resolve(1)
-  //   .then((value: number) => {
-  //     console.log('1', value);
-  //     token.cancel('cancelled');
-  //     return value * 2;
-  //   })
-  //   .then((value: number) => {
-  //     console.log('2', value);
-  //   });
-  //
-  // const b = DeferredPromise.all([Promise.resolve({ a: 1 }), { b: 1 }, 'a'])
-  //   .then((values) => {
-  //     console.log('values', values);
-  //   });
-  //
-  // console.log(a);
-  // debugger;
-}
+// export function testDeferredPromise() {
+//   const a = new DeferredPromise();
+//   a
+//     .then((value: number) => {
+//       console.log('1', value);
+//       return value * 2;
+//     })
+//     .then((value: number) => {
+//       console.log('2', value);
+//     });
+//
+//   a.resolve(1);
+// }
