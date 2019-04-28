@@ -23,11 +23,12 @@ import { IPromiseCancelToken } from '../notifications/observables/promise-observ
 import { IPipe } from '../core/observable-observer/interfaces';
 import { IObserver } from '../core/observer/interfaces';
 import { Pipe } from '../core/observable-observer/implementation';
-import { Observer } from '../core/observer/public';
+import { IsObserver, Observer } from '../core/observer/public';
 import { PromiseObservable } from '../notifications/observables/promise-observable/implementation';
 import { toPromise } from './promise/toPromise';
 
 export type TObservableOrValue<T> = IObservable<T> | T;
+export type TObserverOrCallback<T> = IObserver<T> | ((value: T) => void);
 export type TSourceOrValue<T> = ISource<T> | T;
 export type TExpressionOrFunction<T> = IExpression<T> | (() => T);
 
@@ -69,6 +70,12 @@ export function $observable<T>(input: TObservableOrValue<T>): IObservable<T> {
     : new Source<T>().emit(input as T);
 }
 
+export function $observer<T>(input: TObserverOrCallback<T>): IObserver<T> {
+  return IsObserver(input)
+    ? input
+    : new Observer<T>(input as (value: T) => void);
+}
+
 // export function $observables<T extends ([any, boolean] | Any)[]>(...inputs: T): CastToObservablesTuple<T> {
 export function $observables<T extends any[]>(...inputs: T): CastToObservables<T> {
   return inputs.map(_ => $observable(_)) as any;
@@ -94,6 +101,8 @@ export function $expression<T>(input: TExpressionOrFunction<T>): IExpression<T> 
     throw new TypeError(`Expected Expression or function as input`);
   }
 }
+
+
 
 
 
