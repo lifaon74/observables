@@ -1144,7 +1144,7 @@ export function test() {
   // testFromOperator();
   // testWebSocket();
 
-  // testMisc();
+  testMisc();
 }
 
 

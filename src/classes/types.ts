@@ -53,8 +53,62 @@ export type And<A, B> = A extends true
   : false;
 
 
+
+export type TObject = { [key in any]: any };
+
+// https://github.com/Microsoft/TypeScript/issues/26223
+
+export type IsEmptyTuple<T extends any[]> = T[number] extends never ? true : false;
+
+// const a1: IsEmptyTuple<[]> = true;
+// const a2: IsEmptyTuple<[1]> = false;
+
+/**
+ * Creates a union from the types of an Array or tuple
+ */
 export type TupleToUnion<T extends any[]> = T[number];
 
+/**
+ * Returns the length of an array or tuple
+ */
+export type TupleLength<T extends any[]> = T['length'];
+
+/**
+ * Returns all but the first item's type in a tuple/array
+ */
+export type TupleShift<T extends any[]> =
+  ((...args: T) => any) extends ((head: any, ...tail: infer R) => any) ? R : never;
+
+/**
+ * Returns the given tuple/array with the item type prepended to it
+ */
+export type TupleUnshift<List extends any[], Item> =
+  ((first: Item, ...rest: List) => any) extends ((...list: infer R) => any) ? R : never;
+
+
+// export type TuplePush<T extends any[], Item> =
+//   ((...args: T, last: Item) => any) extends ((head: any, ...tail: infer R) => any) ? R : never;
+
+export type TupleEquals<T, S> =
+  [T] extends [S] ? (
+    [S] extends [T] ? true : false
+    ) : false;
+
+export type CreateRange<N, T extends number[] = []> = {
+  0: T,
+  1: CreateRange<N, TupleUnshift<T, TupleLength<T>>>,
+}[TupleEquals<TupleLength<TupleShift<T>>, N> extends true ? 0 : 1];
+
+// const a: TupleShift<[1, 2]>;
+// const a: TupleUnshift<[1, 2], 3>;
+
+/**
+ * Tests if two types are equal
+ */
+type Equals<T, S> =
+  [T] extends [S] ? (
+    [S] extends [T] ? true : false
+    ) : false;
 
 
 export type IsSubSet<TSet, TReferenceSet> = Clone<TSet> extends TReferenceSet
