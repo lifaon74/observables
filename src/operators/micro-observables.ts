@@ -123,23 +123,6 @@ function testMicoObservables() {
         undo();
       };
     };
-
-    // let count: number = 0;
-    // let timer: null | any = null;
-    // return (observer: MObserver<void>) => {
-    //   count++;
-    //   if (timer === null) {
-    //     timer = setInterval(observer, period);
-    //   }
-    //
-    //   return () => {
-    //     count++;
-    //     if (count === 0) {
-    //       clearInterval(timer);
-    //       timer = null;
-    //     }
-    //   };
-    // };
   }
 
 
@@ -190,6 +173,29 @@ function testMicoObservables() {
     return a + b;
   }
 
+  function $listen<E extends Event>(target: EventTarget, name: string): MObservable<E> {
+    const [pipe, emit] = $source<E>();
+
+    let count: number = 0;
+    let listener = (event: E) => {
+      emit(event);
+    };
+    return (observer: MObserver<E>) => {
+      const undo: MUndo = pipe(observer);
+      count++;
+      if (count === 1) {
+        target.addEventListener(name, listener);
+      }
+
+      return () => {
+        count--;
+        if (count === 0) {
+          target.removeEventListener(name, listener);
+        }
+        undo();
+      };
+    };
+  }
 
   function log<T>(title: string): MObserver<T> {
     return (v: T) => {
