@@ -1,8 +1,8 @@
 import { FunctionObservable } from '../observables/distinct/function-observable/implementation';
 import { IsSource, Source } from '../observables/distinct/source/implementation';
 import {
-  IFunctionObservable,
-  TFunctionObservableFactory, TFunctionObservableFactoryParameters,
+  IFunctionObservable, ObservableCastTuple,
+  TFunctionObservableFactory, TFunctionObservableFactoryParameters, TFunctionObservableParameters, TFunctionObservableValue,
 } from '../observables/distinct/function-observable/interfaces';
 import { IsObservable, Observable } from '../core/observable/implementation';
 import { IObservable, IObservableContext } from '../core/observable/interfaces';
@@ -29,9 +29,10 @@ import { toPromise } from './promise/toPromise';
 import { assertFunctionObservableEmits, assertObservableEmits } from '../classes/asserts';
 import { isObservable } from 'rxjs';
 import { IsObject } from '../helpers';
-import { Clone, TObject, TupleShift } from '../classes/types';
+import { Clone, TObject, TupleArray, TupleShift } from '../classes/types';
 import { generatePathOfType, PathOf } from '../classes/path-of';
 import { distinctPipe } from './pipes/distinctPipe';
+import { TupleTypes } from '../misc/readonly-list/interfaces';
 
 export type TObservableOrValue<T> = IObservable<T> | T;
 export type TObservableOrValueToValueType<T extends TObservableOrValue<any>> = T extends IObservable<infer R> ? R : T;
@@ -424,126 +425,10 @@ async function test$property(): Promise<void> {
   // observableObject.emit(ValueToDeepSource<any>({ a1: { b1: 'a1-b1-v3' }}).value); // doesnt work
 }
 
-function testAny() {
 
-  type Ref<T> = () => T;
-
-  function $const<T>(value: T): Ref<T> {
-    return (): T => value;
-  }
-
-  function $let<T>(value: T): [Ref<T>, (value: T) => void] { // read, write
-    return [
-      (): T => value,
-      (_value: T) => (value = _value)
-    ];
-  }
-
-  function $add(a: Ref<number>, b: Ref<number>): Ref<number> {
-    return (): number => (a() + b());
-  }
-
-  function $minus(a: Ref<number>, b: Ref<number>): Ref<number> {
-    return (): number => (a() - b());
-  }
-
-
-
-  function $add$(...values: Ref<number>[]): Ref<number> {
-    return (): number => {
-      let sum: number = 0;
-      for (let i = 0, l = values.length; i < l; i++) {
-        sum += values[i]();
-      }
-      return sum;
-    };
-  }
-
-
-  const a = $const(1);
-  const b = $const(2);
-  const sum = $add(a, b);
-
-  console.log(a(), b(), sum());
-}
-
-function testAny2() {
-
-  type Ref<T> = (cb: (value: T) => void) => () => void; // kind of Observer function
-
-  // function $const<T>(value: T): Ref<T> {
-  //   return (): T => value;
-  // }
-  //
-  function $const<T>(value: T): Ref<T> {
-    return (cb: (value: T) => void) => {
-      cb(value);
-      return () => { };
-    };
-  }
-
-  function $let<T>(value: T): [Ref<T>, (value: T) => void] { // read, write
-    const cbs: Set<(value: T) => void> = new Set<(value: T) => void>();
-    return [
-      (cb: (value: T) => void) => {
-        if (!cbs.has(cb)) {
-          cbs.add(cb);
-          cb(value);
-        }
-        return () => {
-          cbs.delete(cb);
-        };
-      },
-      (_value: T) => {
-        value = _value;
-        for (const cb of cbs.values()) {
-          cb(value);
-        }
-      }
-    ];
-  }
-
-  function $add(a: Ref<number>, b: Ref<number>): Ref<number> {
-    return (cb: (value: number) => void) => {
-      let _a: number = 0, _b: number = 0;
-      function sum() {
-        cb(_a + _b);
-      }
-
-      const __a = a(_ => {
-        _a = _;
-        sum();
-      });
-
-      const __b = b(_ => {
-        _b = _;
-        sum();
-      });
-
-      return () => {
-        __a();
-        __b();
-      };
-    };
-  }
-
-
-
-  const [a, _a] = $let(1);
-  const [b, _b] = $let(2);
-  const sum = $add(a, b);
-
-  sum(_ => console.log(_));
-
-  _a(4);
-}
 
 export async function testMisc(): Promise<void> {
   // await test$property();
-
-  // testAny();
-  testAny2();
-  throw 'end';
 
   await assertObservableEmits(
     new Source<any>().emit(1),
