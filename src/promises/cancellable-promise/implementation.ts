@@ -200,6 +200,15 @@ export function CancellablePromiseFastCancelled<T>(
 }
 
 
+export function CancellablePromiseOf<T>(promiseOrCallback: Promise<T> | TPromiseCreateCallback<T>, token?: IPromiseCancelToken): ICancellablePromise<T> {
+  return (
+    IsCancellablePromise(promiseOrCallback)
+    && (promiseOrCallback.token === token)
+  )
+    ? promiseOrCallback
+    : new CancellablePromise<T>(promiseOrCallback, token);
+}
+
 export class CancellablePromise<T> implements ICancellablePromise<T> {
 
   static resolve(): CancellablePromise<void>;
@@ -226,6 +235,9 @@ export class CancellablePromise<T> implements ICancellablePromise<T> {
     return new CancellablePromise<TPromiseOrValueTupleToValueTuple<TTuple>>(Promise.all(values) as any, token);
   }
 
+  static of<T>(promiseOrCallback: Promise<T> | TPromiseCreateCallback<T>, token?: IPromiseCancelToken): ICancellablePromise<T> {
+    return CancellablePromiseOf<T>(promiseOrCallback, token);
+  }
 
   constructor(promiseOrCallback: Promise<T> | TPromiseCreateCallback<T>, token?: IPromiseCancelToken) {
     ConstructCancellablePromise(this, promiseOrCallback, token);

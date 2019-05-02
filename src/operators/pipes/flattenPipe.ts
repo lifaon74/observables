@@ -5,14 +5,13 @@ import { IObserver } from '../../core/observer/interfaces';
 
 /**
  * ObservableObserver:
- *  - when a value is received, the pipe transmits it only if `filter(value)` returns true
- * @param filter
+ *  - when a array of values is received, the pipe iterates over this array and transmits each value individually
  */
-export function filterPipe<T>(filter: (value: T) => boolean): IPipe<IObserver<T>, IObservable<T>> {
-  return Pipe.create<T, T>((context: TPipeContextBase<T, T>) => {
+export function flattenPipe<T>(): IPipe<IObserver<T[]>, IObservable<T>> {
+  return Pipe.create<T[], T>((context: TPipeContextBase<T[], T>) => {
     return {
-      onEmit(value: T): void {
-        if (filter(value)) {
+      onEmit(values: T[]): void {
+        for (const value of values) {
           context.emit(value);
         }
       }

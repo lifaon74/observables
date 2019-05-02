@@ -1,11 +1,11 @@
 import { FunctionObservable } from '../observables/distinct/function-observable/implementation';
 import { IsSource, Source } from '../observables/distinct/source/implementation';
 import {
-  IFunctionObservable, ObservableCastTuple,
-  TFunctionObservableFactory, TFunctionObservableFactoryParameters, TFunctionObservableParameters, TFunctionObservableValue,
+  IFunctionObservable,
+  TFunctionObservableFactory, TFunctionObservableFactoryParameters,
 } from '../observables/distinct/function-observable/interfaces';
-import { IsObservable, Observable } from '../core/observable/implementation';
-import { IObservable, IObservableContext } from '../core/observable/interfaces';
+import { IsObservable } from '../core/observable/implementation';
+import { IObservable } from '../core/observable/interfaces';
 import { Expression, IsExpression } from '../observables/distinct/expression/implementation';
 import { IExpression } from '../observables/distinct/expression/interfaces';
 import { ISource } from '../observables/distinct/source/interfaces';
@@ -18,21 +18,18 @@ import { AsyncFunctionObservable } from '../observables/distinct/async-function-
 import {
   IPromiseObservable,
 } from '../notifications/observables/promise-observable/interfaces';
-import { toValueObservable } from './promise/toValueObservable';
+import { toValueObservable } from './to/toValueObservable';
 import { IPromiseCancelToken } from '../notifications/observables/promise-observable/promise-cancel-token/interfaces';
-import { IPipe, IPipeContext, TPipeBase, TPipeContextBase } from '../core/observable-observer/interfaces';
-import { IObserver, ObserverType } from '../core/observer/interfaces';
+import { TPipeBase, TPipeContextBase } from '../core/observable-observer/interfaces';
+import { IObserver } from '../core/observer/interfaces';
 import { Pipe } from '../core/observable-observer/implementation';
 import { IsObserver, Observer } from '../core/observer/public';
-import { PromiseObservable } from '../notifications/observables/promise-observable/implementation';
-import { toPromise } from './promise/toPromise';
 import { assertFunctionObservableEmits, assertObservableEmits } from '../classes/asserts';
-import { isObservable } from 'rxjs';
 import { IsObject } from '../helpers';
-import { Clone, TObject, TupleArray, TupleShift } from '../classes/types';
-import { generatePathOfType, PathOf } from '../classes/path-of';
+import {
+  LinkPromiseCancelTokenWithFetchArguments
+} from '../notifications/observables/fetch-observable/implementation';
 import { distinctPipe } from './pipes/distinctPipe';
-import { TupleTypes } from '../misc/readonly-list/interfaces';
 
 export type TObservableOrValue<T> = IObservable<T> | T;
 export type TObservableOrValueToValueType<T extends TObservableOrValue<any>> = T extends IObservable<infer R> ? R : T;
@@ -287,13 +284,13 @@ export function $string(parts: TemplateStringsArray | string[], ...args: TObserv
 }
 
 
-export function $fetch<T>(requestInfo: TObservableOrValue<RequestInfo>, requestInit?: TObservableOrValue<RequestInit>): IAsyncFunctionObservable<(token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit: RequestInit) => Promise<T>> {
-  return new AsyncFunctionObservable<(token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit: RequestInit) => Promise<T>>(_fetch, [$observable(requestInfo), $observable(requestInit)]);
+type TFetchFunction<T> = (token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit: RequestInit) => Promise<T>;
+export function $fetch<T>(requestInfo: TObservableOrValue<RequestInfo>, requestInit?: TObservableOrValue<RequestInit>): IAsyncFunctionObservable<TFetchFunction<T>> {
+  return new AsyncFunctionObservable<TFetchFunction<T>>(_fetch, [$observable(requestInfo), $observable(requestInit)]);
 }
 
 export function _fetch<T>(token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit: RequestInit): Promise<T> {
-  // TODO token as signal
-  return fetch(requestInfo, requestInit)
+  return fetch(requestInfo, LinkPromiseCancelTokenWithFetchArguments(token, requestInfo, requestInit))
     .then<T>((response: Response) =>{
       if (token.cancelled) {
         throw token.reason;
@@ -379,7 +376,7 @@ export function ValueToDeepSource<T>(input: TObservableOrValue<T>): TValueToDeep
     const keys: PropertyKey[] = (Object.keys(input) as PropertyKey[]).concat(Object.getOwnPropertySymbols(input));
     const output: any = {};
     for (let i = 0, l = keys.length; i < l; i++) {
-      output[keys[i]] = new Source<any>().emit(ValueToDeepSource<any>((input as any)[keys[i]]));
+      output[keys[i]] = ValueToDeepSource<any>((input as any)[keys[i]]);
     }
     return new Source<any>().emit(output) as any;
   } else {
@@ -389,13 +386,23 @@ export function ValueToDeepSource<T>(input: TObservableOrValue<T>): TValueToDeep
 
 
 async function test$property(): Promise<void> {
+  // type OBJECT = {
+  //   a1: {
+  //     b1: 'a1-b1',
+  //     b2: {
+  //       c1: 'a1-b2-c1'
+  //     }
+  //   }
+  // };
+
   type OBJECT = {
-    a1: {
-      b1: 'a1-b1',
-      b2: {
-        c1: 'a1-b2-c1'
+    a1?: {
+      b1?: string,
+      b2?: {
+        c1?: string
       }
     }
+    a?: string
   };
 
   const object: OBJECT = {
@@ -412,7 +419,7 @@ async function test$property(): Promise<void> {
   //
   const a = $property<string>(observableObject, 'a1', 'b1')
   // const a = $property<string>(observableObject.a1, 'b1')
-    // .pipeThrough(distinctPipe<string>())
+  //   .pipeThrough(distinctPipe<string>())
     .pipeTo((value: string) => {
       console.warn('changed', value);
     }).activate();
@@ -420,15 +427,16 @@ async function test$property(): Promise<void> {
   /**
    * LIMITS: emitted values are not reflected on the object
    */
-  // observableObject.value.a1.emit({ b1: 'a1-b1-v2' });
-  // observableObject.emit({ a: 'a' });
-  // observableObject.emit(ValueToDeepSource<any>({ a1: { b1: 'a1-b1-v3' }}).value); // doesnt work
+  observableObject.value.a1.emit(ValueToDeepSource({ b1: 'a1-b1-v2' }).value);
+  observableObject.emit(ValueToDeepSource({ a: 'a' }).value);
+  observableObject.emit(ValueToDeepSource({ a1: { b1: 'a1-b1-v3' }}).value);
+  console.log(observableObject.value.a1.value.b1.value);
 }
 
 
 
 export async function testMisc(): Promise<void> {
-  // await test$property();
+  await test$property();
 
   await assertObservableEmits(
     new Source<any>().emit(1),

@@ -324,14 +324,16 @@ export function IsFactoryClass(_class: (new(...args: any[]) => any)): boolean {
 }
 
 export function FactoryClass<TClass extends (new(...args: any[]) => any)>(_class: TClass) {
-  return <TArgs extends any[]>(name: string, waterMark?: symbol) => {
+  return <TArgs extends any[]>(name: string, waterMarks: symbol[] = []) => {
     Object.defineProperty(_class, IS_FACTORY_CLASS, {
       value: null,
     });
     SetClassName(_class, name);
-    if (waterMark !== void 0) {
-      SetFactoryWaterMark(_class, waterMark);
+
+    for (let i = 0, l = waterMarks.length; i < l; i++) {
+      SetFactoryWaterMark(_class, waterMarks[i]);
     }
+    
     return _class as TFactoryClass<TClass, TArgs>;
   };
 }

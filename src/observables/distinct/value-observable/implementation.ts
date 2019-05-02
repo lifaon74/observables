@@ -1,4 +1,9 @@
-import { AllowObservableContextBaseConstruct, IObservableContextBaseInternal, IObservableInternal, IsObservableConstructor, OBSERVABLE_CONTEXT_BASE_PRIVATE, ObservableContextBase, ObservableEmitAll, ObservableFactory } from '../../../core/observable/implementation';
+import {
+  AllowObservableContextBaseConstruct, IObservableContextBaseInternal, IObservableInternal,
+  IS_OBSERVABLE_LIKE_CONSTRUCTOR, IsObservableLikeConstructor, OBSERVABLE_CONTEXT_BASE_PRIVATE,
+  ObservableContextBase,
+  ObservableEmitAll, ObservableFactory
+} from '../../../core/observable/implementation';
 import { IObservable, IObservableContext, IObservableHook } from '../../../core/observable/interfaces';
 import { IObserver } from '../../../core/observer/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
@@ -108,7 +113,7 @@ export function ValueObservableEmit<T>(observable: IValueObservable<T>, value: T
 
 export function ValueObservableFactory<TBase extends Constructor<IObservable<any>>>(superClass: TBase) {
   type T = any;
-  if (!IsObservableConstructor(superClass)) {
+  if (!IsObservableLikeConstructor(superClass)) {
     throw new TypeError(`Expected Observables' constructor as superClass`);
   }
   const setSuperArgs = GetSetSuperArgsFunction(IsFactoryClass(superClass));
@@ -132,7 +137,7 @@ export function ValueObservableFactory<TBase extends Constructor<IObservable<any
       ]));
       ConstructValueObservable<T>(this, context, create);
     }
-  })<TValueObservableConstructorArgs<T>>('ValueObservable', IS_VALUE_OBSERVABLE_CONSTRUCTOR);
+  })<TValueObservableConstructorArgs<T>>('ValueObservable', [IS_VALUE_OBSERVABLE_CONSTRUCTOR, IS_OBSERVABLE_LIKE_CONSTRUCTOR]);
 }
 
 
@@ -171,7 +176,6 @@ export class ValueObservableContext<T> extends ObservableContextBase<T> implemen
   emit(value: T): void {
     ValueObservableContextEmit<T>(this, value);
   }
-
 }
 
 

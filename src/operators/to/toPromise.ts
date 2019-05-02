@@ -16,7 +16,7 @@ export type TValueOrNotificationType<T> = T | TBasePromiseObservableNotification
  * @param observable
  * @return a tuple: The Promise, and a PromiseCancelToken.
  */
-export function toCancellablePromise<T>(observable: IObservable<TBasePromiseObservableNotification<T>> | IObservable<T>): TCancellablePromiseTuple<T> {
+export function toCancellablePromiseTuple<T>(observable: IObservable<TBasePromiseObservableNotification<T>> | IObservable<T>): TCancellablePromiseTuple<T> {
   const token: IPromiseCancelToken = new PromiseCancelToken();
   return [
     new Promise<T>((resolve: any, reject: any) => {
@@ -70,5 +70,5 @@ export function toCancellablePromise<T>(observable: IObservable<TBasePromiseObse
 }
 
 export function toPromise<T>(observable: IObservable<TBasePromiseObservableNotification<T>> | IObservable<T>): Promise<T> {
-  return toCancellablePromise<T>(observable)[0];
+  return toCancellablePromiseTuple<T>(observable)[0];
 }

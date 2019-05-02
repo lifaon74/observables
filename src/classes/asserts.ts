@@ -5,7 +5,7 @@ import { Pipe } from '../core/observable-observer/implementation';
 import { Observer } from '../core/observer/implementation';
 import { PromiseObservable } from '../notifications/observables/promise-observable/implementation';
 import { IObservable } from '../core/observable/interfaces';
-import { toPromise } from '../operators/promise/toPromise';
+import { toPromise } from '../operators/to/toPromise';
 import { IFunctionObservable } from '../observables/distinct/function-observable/interfaces';
 import { ISource } from '../observables/distinct/source/interfaces';
 
@@ -78,3 +78,18 @@ export function assertFunctionObservableEmits(valuesToEmit: any[], observable: I
 }
 
 
+export function testFails(cb: () => void): boolean {
+  try {
+    cb();
+    return false;
+  } catch (e) {
+    return true;
+  }
+}
+
+export function assertFails(cb: () => void): void {
+  if (!testFails(cb)) {
+    console.log(cb.toString());
+    throw new Error(`Expected to fail`);
+  }
+}

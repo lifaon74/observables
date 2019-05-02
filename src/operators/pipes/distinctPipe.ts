@@ -4,7 +4,8 @@ import { Pipe } from '../../core/observable-observer/implementation';
 import { IObserver } from '../../core/observer/interfaces';
 
 /**
- * Creates an ObservableObserver emitting only distinct values coming from its observer.
+ * ObservableObserver:
+ *  - when a value is received, the pipe transmits it only if the value is different than the previous one (meaning all emitted values are distinct)
  * @param previousValue
  */
 export function distinctPipe<T>(previousValue: T | undefined = void 0): IPipe<IObserver<T>, IObservable<T>> {

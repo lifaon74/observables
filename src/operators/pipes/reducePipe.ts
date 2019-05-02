@@ -5,16 +5,16 @@ import { IObserver } from '../../core/observer/interfaces';
 
 /**
  * ObservableObserver:
- *  - when a value is received, the pipe transmits it only if `filter(value)` returns true
- * @param filter
+ *  - when a value is received, the pipe calls the reducer function and emits the result
+ * @param reducer
+ * @param previousValue
  */
-export function filterPipe<T>(filter: (value: T) => boolean): IPipe<IObserver<T>, IObservable<T>> {
+export function reducePipe<T>(reducer: (previousValue: T, value: T) => T, previousValue: T = void 0): IPipe<IObserver<T>, IObservable<T>> {
   return Pipe.create<T, T>((context: TPipeContextBase<T, T>) => {
     return {
       onEmit(value: T): void {
-        if (filter(value)) {
-          context.emit(value);
-        }
+        previousValue = reducer(previousValue, value);
+        context.emit(previousValue);
       }
     };
   });

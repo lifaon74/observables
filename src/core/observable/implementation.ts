@@ -46,6 +46,11 @@ export function IsObservableConstructor(value: any): value is IObservableConstru
   return (typeof value === 'function') && ((value === Observable) || HasFactoryWaterMark(value, IS_OBSERVABLE_CONSTRUCTOR));
 }
 
+export const IS_OBSERVABLE_LIKE_CONSTRUCTOR = Symbol('is-observable-constructor');
+export function IsObservableLikeConstructor(value: any): value is IObservableConstructor {
+  return (typeof value === 'function') && ((value === Observable) || HasFactoryWaterMark(value, IS_OBSERVABLE_LIKE_CONSTRUCTOR));
+}
+
 
 export function ObservableIsFreshlyObserved<T>(observable: IObservable<T>): boolean {
   return (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length === 1;
@@ -145,7 +150,7 @@ export function ObservableFactory<TBase extends Constructor>(superClass: TBase) 
     }
 
 
-  })<TObservableConstructorArgs<T>>('Observable', IS_OBSERVABLE_CONSTRUCTOR);
+  })<TObservableConstructorArgs<T>>('Observable', [IS_OBSERVABLE_CONSTRUCTOR, IS_OBSERVABLE_LIKE_CONSTRUCTOR]);
 }
 
 export const Observable: IObservableConstructor = class Observable extends ObservableFactory<ObjectConstructor>(Object) {

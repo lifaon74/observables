@@ -8,6 +8,7 @@ import { IObserver } from '../../../core/observer/interfaces';
 import { PromiseCancelToken } from './promise-cancel-token/implementation';
 import { Reason } from '../../../misc/reason/implementation';
 import { IsObject } from '../../../helpers';
+import { INotificationsObserver } from '../../core/notifications-observer/interfaces';
 
 
 /**
@@ -114,7 +115,7 @@ export function PromiseObservableClearCachedPromise<TFulfilled, TErrored, TCance
 }
 
 
-export function HandlePromiseObservableOnObserved<TFulfilled, TErrored, TCancelled>(observable: IPromiseObservable<TFulfilled, TErrored, TCancelled>, observer: IObserver<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>): void {
+export function PromiseObservableOnObserved<TFulfilled, TErrored, TCancelled>(observable: IPromiseObservable<TFulfilled, TErrored, TCancelled>, observer: IObserver<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>): void {
   type TInternal = IPromiseObservableInternal<TFulfilled, TErrored, TCancelled>;
   const clear: IPromiseObservableClearOptions = (observable as TInternal)[PROMISE_OBSERVABLE_PRIVATE].clear;
 
@@ -156,7 +157,7 @@ export function HandlePromiseObservableOnObserved<TFulfilled, TErrored, TCancell
     });
 }
 
-export function HandlePromiseObservableOnUnobserved<TFulfilled, TErrored, TCancelled>(observable: IPromiseObservable<TFulfilled, TErrored, TCancelled>, observer: IObserver<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>): void {
+export function PromiseObservableOnUnobserved<TFulfilled, TErrored, TCancelled>(observable: IPromiseObservable<TFulfilled, TErrored, TCancelled>, observer: IObserver<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>): void {
   type TInternal = IPromiseObservableInternal<TFulfilled, TErrored, TCancelled>;
 
   if (
@@ -174,16 +175,33 @@ export function HandlePromiseObservableOnUnobserved<TFulfilled, TErrored, TCance
 }
 
 
+export function PromiseObservableFromPromise<TFulfilled, TErrored, TCancelled>(promise: Promise<TFulfilled>, token?: IPromiseCancelToken, options?: IPromiseObservableOptions): IPromiseObservable<TFulfilled, TErrored, TCancelled> {
+  return new PromiseObservable<TFulfilled, TErrored, TCancelled>((_token: IPromiseCancelToken) => {
+    const tokenObserver: INotificationsObserver<'cancel', any> = token.addListener('cancel', (reason: any) => {
+      _token.cancel(reason);
+    }).activate();
+
+    return promise
+      .finally(() => {
+        tokenObserver.deactivate();
+      });
+  }, options);
+}
+
 export class PromiseObservable<TFulfilled, TErrored, TCancelled> extends NotificationsObservable<IPromiseNotificationKeyValueMap<TFulfilled, TErrored, TCancelled>> implements IPromiseObservable<TFulfilled, TErrored, TCancelled> {
+
+  static fromPromise<TFulfilled, TErrored, TCancelled>(promise: Promise<TFulfilled>, token?: IPromiseCancelToken, options?: IPromiseObservableOptions): IPromiseObservable<TFulfilled, TErrored, TCancelled> {
+    return PromiseObservableFromPromise<TFulfilled, TErrored, TCancelled>(promise, token, options);
+  }
 
   constructor(promiseFactory: (token: IPromiseCancelToken) => Promise<TFulfilled>, options: IPromiseObservableOptions = {}) {
     super((): IObservableHook<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>> => {
       return {
         onObserved: (observer: IObserver<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>) => {
-          HandlePromiseObservableOnObserved<TFulfilled, TErrored, TCancelled>(this, observer);
+          PromiseObservableOnObserved<TFulfilled, TErrored, TCancelled>(this, observer);
         },
         onUnobserved: (observer: IObserver<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>) => {
-          HandlePromiseObservableOnUnobserved<TFulfilled, TErrored, TCancelled>(this, observer);
+          PromiseObservableOnUnobserved<TFulfilled, TErrored, TCancelled>(this, observer);
         }
       }
     });

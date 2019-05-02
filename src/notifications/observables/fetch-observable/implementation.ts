@@ -4,7 +4,7 @@ import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWit
 import { IPromiseCancelToken } from '../promise-observable/promise-cancel-token/interfaces';
 import { IPromiseObservableOptions } from '../promise-observable/interfaces';
 import { INotificationsObservable } from '../../core/notifications-observable/interfaces';
-import { promisePipe } from '../../../operators/promise/promisePipe';
+import { promisePipe } from '../../../operators/pipes/promisePipe';
 import { IsObject } from '../../../helpers';
 
 export const FETCH_OBSERVABLE_PRIVATE = Symbol('fetch-observable-private');
@@ -34,19 +34,7 @@ export function ConstructFetchObservable(observable: IFetchObservable, requestIn
     throw new TypeError(`Expected RequestInit or void as second parameter of FetchObservable's constructor.`);
   }
 
-  (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].signal = null;
-
-  if ('AbortController' in self) {
-    // check if RequestInit has an AbortSignal
-    if (requestInit.signal instanceof AbortSignal) {
-      (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].signal = requestInit.signal;
-    } else if (
-      ((observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInfo instanceof Request)
-      && (((observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInfo as Request).signal instanceof AbortSignal)
-    ) {
-      (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].signal = ((observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInfo as Request).signal;
-    }
-  }
+  (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].signal = ExtractSignalFromFetchArguments(requestInfo, requestInit);
 }
 
 export function IsFetchObservable(value: any): value is IFetchObservable {
@@ -54,6 +42,69 @@ export function IsFetchObservable(value: any): value is IFetchObservable {
     && (FETCH_OBSERVABLE_PRIVATE in value);
 }
 
+/**
+ * HELPERS - public
+ */
+
+/**
+ * Returns the linked AbortSignal (if exists) of a fetch request
+ * @param requestInfo
+ * @param requestInit
+ */
+export function ExtractSignalFromFetchArguments(requestInfo: RequestInfo, requestInit: RequestInit = {}): AbortSignal | null {
+  if ('AbortController' in self) {
+    if (requestInit.signal instanceof AbortSignal) {
+      return requestInit.signal;
+    } else if (
+      (requestInfo instanceof Request)
+      && (requestInfo.signal instanceof AbortSignal)
+    ) {
+      return requestInfo.signal;
+    } else {
+      return null;
+    }
+  } else {
+    return null;
+  }
+}
+
+/**
+ * Links a PromiseCancelToken with the fetch arguments.
+ * Returns the modified RequestInit
+ * @param token
+ * @param requestInfo
+ * @param requestInit
+ */
+export function LinkPromiseCancelTokenWithFetchArguments(token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit?: RequestInit): RequestInit {
+  if ('AbortController' in self) {
+    const signal: AbortSignal | null = ExtractSignalFromFetchArguments(requestInfo, requestInit);
+    if (signal === null) {
+      const controller: AbortController = token.toAbortController();
+      // shallow copy of RequestInit
+      requestInit = (requestInit === void 0) ? {} : Object.assign({}, requestInit);
+      requestInit.signal = controller.signal;
+    } else {
+      token.linkWithAbortSignal(signal);
+    }
+  }
+  return requestInit;
+}
+
+/**
+ * Just like the previous functions, but simplifies fetch calls:
+ *  fetch(...LinkPromiseCancelTokenWithFetchArgumentsSpread(token, requestInfo, requestInit))
+ * @param token
+ * @param requestInfo
+ * @param requestInit
+ */
+export function LinkPromiseCancelTokenWithFetchArgumentsSpread(token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit?: RequestInit): [RequestInfo, RequestInit]  {
+  return [requestInfo, LinkPromiseCancelTokenWithFetchArguments(token, requestInfo, requestInit)];
+}
+
+
+/**
+ * IMPLEMENTATION
+ */
 export function FetchObservablePromiseFactory(observable: IFetchObservable, token: IPromiseCancelToken): Promise<Response> {
   let init: RequestInit = (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInit;
 
@@ -61,7 +112,7 @@ export function FetchObservablePromiseFactory(observable: IFetchObservable, toke
     if ((observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].signal === null) {
       const controller: AbortController = token.toAbortController();
       // shallow copy of RequestInit
-      init = FetchObservableCloneRequestInit(observable);
+      init = Object.assign({}, (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInit);
       init.signal = controller.signal;
     } else {
       token.linkWithAbortSignal((observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].signal);
@@ -69,14 +120,6 @@ export function FetchObservablePromiseFactory(observable: IFetchObservable, toke
   }
 
   return fetch((observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInfo, init);
-}
-
-export function FetchObservableCloneRequestInit(observable: IFetchObservable): RequestInit {
-  const init: RequestInit = {};
-  Object.entries((observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInit).forEach(([key, value]) => {
-    (init as any)[key] = value;
-  });
-  return init;
 }
 
 

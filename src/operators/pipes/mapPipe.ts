@@ -4,7 +4,8 @@ import { Pipe } from '../../core/observable-observer/implementation';
 import { IObserver } from '../../core/observer/interfaces';
 
 /**
- * Creates an ObservableObserver which maps the values it receives from the type Tin to Tout though "transform"
+ * ObservableObserver:
+ *  - when a value is received, the pipe transforms this value with  "transform" and emits the result.
  * @param transform
  */
 export function mapPipe<Tin, Tout>(transform: (value: Tin) => Tout): IPipe<IObserver<Tin>, IObservable<Tout>> {

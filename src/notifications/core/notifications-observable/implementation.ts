@@ -8,7 +8,12 @@ import {
   TNotificationsObservableHook,
   KeyValueMapToNotifications, KeyValueMapToNotificationsObservers,
 } from './interfaces';
-import { AllowObservableContextBaseConstruct, IObservableContextBaseInternal, IObservablePrivate, IsObservableConstructor, OBSERVABLE_CONTEXT_BASE_PRIVATE, OBSERVABLE_PRIVATE, ObservableContextBase, ObservableFactory } from '../../../core/observable/implementation';
+import {
+  AllowObservableContextBaseConstruct, IObservableContextBaseInternal, IObservablePrivate,
+  IS_OBSERVABLE_LIKE_CONSTRUCTOR,
+  IsObservableLikeConstructor, OBSERVABLE_CONTEXT_BASE_PRIVATE, OBSERVABLE_PRIVATE, ObservableContextBase,
+  ObservableFactory
+} from '../../../core/observable/implementation';
 import { IObservable, IObservableContext } from '../../../core/observable/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { INotificationsObserver } from '../notifications-observer/interfaces';
@@ -196,7 +201,7 @@ export function NotificationsObservableFactory<TBase extends Constructor<IObserv
   // type TKVMap = never; // dirty hack
   type TKVMap = { [key: string]: any };
   // type TKVMap = KeyValueMapGeneric;
-  if (!IsObservableConstructor(superClass)) {
+  if (!IsObservableLikeConstructor(superClass)) {
     throw new TypeError(`Expected Observables' constructor as superClass`);
   }
   const setSuperArgs = GetSetSuperArgsFunction(IsFactoryClass(superClass));
@@ -244,7 +249,7 @@ export function NotificationsObservableFactory<TBase extends Constructor<IObserv
       return NotificationsObservableMatches<TKVMap>(this, name, callback);
     }
 
-  })<TNotificationsObservableConstructorArgs<TKVMap>>('NotificationsObservable', IS_NOTIFICATIONS_OBSERVABLE_CONSTRUCTOR);
+  })<TNotificationsObservableConstructorArgs<TKVMap>>('NotificationsObservable', [IS_NOTIFICATIONS_OBSERVABLE_CONSTRUCTOR, IS_OBSERVABLE_LIKE_CONSTRUCTOR]);
 }
 
 export const NotificationsObservable: INotificationsObservableConstructor = class NotificationsObservable extends NotificationsObservableFactory(ObservableFactory<ObjectConstructor>(Object)) {

@@ -1,4 +1,7 @@
-import { AllowObservableContextBaseConstruct, IObservableContextBaseInternal, OBSERVABLE_CONTEXT_BASE_PRIVATE, ObservableContextBase, ObservableFactory } from '../../../core/observable/implementation';
+import {
+  AllowObservableContextBaseConstruct, IObservableContextBaseInternal, IS_OBSERVABLE_LIKE_CONSTRUCTOR,
+  OBSERVABLE_CONTEXT_BASE_PRIVATE, ObservableContextBase, ObservableFactory
+} from '../../../core/observable/implementation';
 import { IObservableHook } from '../../../core/observable/interfaces';
 import { IObserver } from '../../../core/observer/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
@@ -113,7 +116,7 @@ export function AsyncValueObservableFactory<TBase extends Constructor<IValueObse
       ]));
       ConstructAsyncValueObservable<T>(this, context, create);
     }
-  })<TAsyncValueObservableConstructorArgs<T>>('AsyncValueObservable', IS_ASYNC_VALUE_OBSERVABLE_CONSTRUCTOR);
+  })<TAsyncValueObservableConstructorArgs<T>>('AsyncValueObservable', [IS_ASYNC_VALUE_OBSERVABLE_CONSTRUCTOR, IS_OBSERVABLE_LIKE_CONSTRUCTOR]);
 }
 
 

@@ -14,6 +14,8 @@ export interface IAsyncFunctionObservable<T extends TAsyncFunctionObservableFact
   readonly factory: T;
   readonly arguments: IReadonlyTuple<TAsyncFunctionObservableParameters<T>>;
 
+  pause(): void;
+  resume(): Promise<void>;
   run(callback: (this: this) => void): Promise<this>;
 }
 

@@ -15,6 +15,8 @@ export interface IFunctionObservable<T extends TFunctionObservableFactory> exten
   readonly factory: T;
   readonly arguments: IReadonlyTuple<TFunctionObservableParameters<T>>;
 
+  pause(): void;
+  resume(): void;
   run(callback: (this: this) => void): this;
 }
 

@@ -19,6 +19,10 @@ import { IPromiseCancelToken } from '../../../notifications/observables/promise-
 import {
   PromiseCancelReason, PromiseCancelToken
 } from '../../../notifications/observables/promise-observable/promise-cancel-token/implementation';
+import {
+  FUNCTION_OBSERVABLE_PRIVATE,
+  IFunctionObservableInternal
+} from '../function-observable/implementation';
 
 
 export const ASYNC_FUNCTION_OBSERVABLE_PRIVATE = Symbol('async-function-observable-private');
@@ -29,8 +33,9 @@ export interface IAsyncFunctionObservablePrivate<T extends TAsyncFunctionObserva
   arguments: TAsyncFunctionObservableParameters<T>;
   readonlyArguments: IReadonlyTuple<TAsyncFunctionObservableParameters<T>>;
   argumentsObserver: IObserver<TAsyncFunctionObservableParametersUnion<T>>;
+  argumentsObserverCount: number;
+  argumentsObserverPauseCount: number;
   values: TAsyncFunctionObservableFactoryParameters<T>;
-  enableArgumentsObserver: boolean;
 }
 
 export interface IAsyncFunctionObservableInternal<T extends TAsyncFunctionObservableFactory> extends IAsyncFunctionObservable<T>, IObservableInternal<TAsyncFunctionObservableValue<T>> {
@@ -57,13 +62,14 @@ export function ConstructAsyncFunctionObservable<T extends TAsyncFunctionObserva
 
   privates.argumentsObserver = new Observer<TAsyncFunctionObservableParametersUnion<T>>((value: TAsyncFunctionObservableParametersUnion<T>, argObservable: IObservable<TAsyncFunctionObservableParametersUnion<T>>) => {
     AsyncFunctionObservableSetObservableValue<T>(observable, argObservable, value);
-    if (privates.enableArgumentsObserver) {
+    if (privates.argumentsObserverPauseCount === -1) {
       AsyncFunctionObservableCallFactory<T>(observable)
         .catch(PromiseCancelReason.discard);
     }
   }).observe(...Array.from(new Set(privates.arguments))); // ensure we observe it only once
 
-  privates.enableArgumentsObserver = true;
+  privates.argumentsObserverCount = 0;
+  privates.argumentsObserverPauseCount = -1;
 }
 
 export function AsyncFunctionObservableOnObserved<T extends TAsyncFunctionObservableFactory>(observable: IAsyncFunctionObservable<T>): void {
@@ -96,17 +102,29 @@ export function AsyncFunctionObservableCallFactory<T extends TAsyncFunctionObser
   return (observable as IAsyncFunctionObservableInternal<T>)[ASYNC_FUNCTION_OBSERVABLE_PRIVATE].context.emit(promise, token);
 }
 
-export function AsyncFunctionObservableRun<T extends TAsyncFunctionObservableFactory>(observable: IAsyncFunctionObservable<T>, callback: () => void): Promise<void> {
-  const privates: IAsyncFunctionObservablePrivate<T> = ((observable as unknown) as IAsyncFunctionObservableInternal<T>)[ASYNC_FUNCTION_OBSERVABLE_PRIVATE];
+export function AsyncFunctionObservablePause<T extends TAsyncFunctionObservableFactory>(observable: IAsyncFunctionObservable<T>): void {
+  ((observable as unknown) as IAsyncFunctionObservableInternal<T>)[ASYNC_FUNCTION_OBSERVABLE_PRIVATE].argumentsObserverPauseCount = ((observable as unknown) as IAsyncFunctionObservableInternal<T>)[ASYNC_FUNCTION_OBSERVABLE_PRIVATE].argumentsObserverCount;
+}
 
-  privates.enableArgumentsObserver = false;
-  try {
-    callback.call(observable);
-  } finally {
-    privates.enableArgumentsObserver = true;
+export function AsyncFunctionObservableResume<T extends TAsyncFunctionObservableFactory>(observable: IAsyncFunctionObservable<T>): Promise<void> {
+  const argumentsObserverPauseCount: number = ((observable as unknown) as IFunctionObservableInternal<T>)[FUNCTION_OBSERVABLE_PRIVATE].argumentsObserverPauseCount;
+  ((observable as unknown) as IFunctionObservableInternal<T>)[FUNCTION_OBSERVABLE_PRIVATE].argumentsObserverPauseCount = -1;
+  if (((observable as unknown) as IFunctionObservableInternal<T>)[FUNCTION_OBSERVABLE_PRIVATE].argumentsObserverCount == argumentsObserverPauseCount) {
+    return Promise.resolve();
+  } else {
+    return AsyncFunctionObservableCallFactory<T>(observable);
   }
+}
 
-  return AsyncFunctionObservableCallFactory<T>(observable);
+
+export function AsyncFunctionObservableRun<T extends TAsyncFunctionObservableFactory>(observable: IAsyncFunctionObservable<T>, callback: () => void): Promise<void> {
+  AsyncFunctionObservablePause<T>(observable);
+  return new Promise<void>((resolve: any) => {
+    resolve(callback.call(observable));
+  })
+    .finally(() => {
+      return AsyncFunctionObservableResume<T>(observable);
+    });
 }
 
 
@@ -140,6 +158,14 @@ export class AsyncFunctionObservable<T extends TAsyncFunctionObservableFactory> 
 
   get arguments(): IReadonlyTuple<TAsyncFunctionObservableParameters<T>> {
     return ((this as unknown) as IAsyncFunctionObservableInternal<T>)[ASYNC_FUNCTION_OBSERVABLE_PRIVATE].readonlyArguments;
+  }
+
+  pause(): void {
+    AsyncFunctionObservablePause<T>(this);
+  }
+
+  resume(): Promise<void> {
+    return AsyncFunctionObservableResume<T>(this);
   }
 
   run(callback: (this: this) => void): Promise<this> {
