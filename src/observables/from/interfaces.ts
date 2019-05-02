@@ -23,7 +23,7 @@ export type TFromObservableConstructorArgs<T> = [(context: IFromObservableContex
 
 
 export interface IFromObservableConstructor {
-  new<T>(create?: (context: IFromObservableContext<T>) => void, onComplete?: TFromObservableCompleteAction): IFromObservable<T>;
+  new<T>(create?: (context: IFromObservableContext<T>) => (IObservableHook<T> | void), onComplete?: TFromObservableCompleteAction): IFromObservable<T>;
 }
 
 export interface IFromObservableBase {
@@ -33,6 +33,8 @@ export interface IFromObservableBase {
 export interface IFromObservable<T> extends IFromObservableBase, IObservable<T> {
 }
 
+
+/*---------------------------*/
 
 export interface IFromObservableContextConstructor {
   new<T>(observable: IObservable<T>): IFromObservableContext<T>;

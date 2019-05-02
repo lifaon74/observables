@@ -41,6 +41,7 @@ import { assertFails, assertObservableEmits } from './classes/asserts';
 import { FromIterableObservable } from './observables/from/iterable/implementation';
 import { noop } from './helpers';
 import { fromRXJSObservable } from './operators/fromRXJSObservable';
+import { FromRXJSObservable } from './observables/from/rxjs/public';
 
 function testReadOnlyList() {
   const list = new ReadonlyList<number>([0, 1, 2, 3]);
@@ -728,15 +729,26 @@ function expressionExample1() {
 
 
 async function testFromIterableObservable() {
+  const values1 = new FromIterableObservable([0, 1, 2, 3]);
+
   await assertObservableEmits(
-    new FromIterableObservable([0, 1, 2, 3]),
+    values1,
     [0, 1, 2, 3]
   );
 
-  const values = new FromIterableObservable([0, 1, 2, 3]);
-  values.pipeTo(noop).activate();
-  assertFails(() =>  values.pipeTo(noop).activate());
+  assertFails(() =>  values1.pipeTo(noop).activate());
 
+  const values2 = new FromIterableObservable([0, 1, 2, 3][Symbol.iterator](), 'cache');
+
+  await assertObservableEmits(
+    values2,
+    [0, 1, 2, 3]
+  );
+
+  await assertObservableEmits(
+    values2,
+    [0, 1, 2, 3]
+  );
 }
 
 async function testReducePipe() {
@@ -820,7 +832,7 @@ async function testFromRXJSObservable() {
     map((x: number) => x  / 2)
   );
 
-  const observable = fromRXJSObservable<number, undefined>(rxObservable);
+  const observable = new FromRXJSObservable<number, undefined>(rxObservable);
   const observer = observable
     .addListener<'next'>('next', (value: number) =>{
       console.log(value);
