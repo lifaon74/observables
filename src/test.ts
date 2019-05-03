@@ -1,37 +1,39 @@
 import { ReadonlyList } from './misc/readonly-list/implementation';
 import { Observable } from './core/observable/implementation';
 import { Observer } from './core/observer/implementation';
-import { NotificationsObservable, NotificationsObservableContext } from './notifications/core/notifications-observable/implementation';
+import {
+  NotificationsObservable, NotificationsObservableContext
+} from './notifications/core/notifications-observable/implementation';
 import { NotificationsObserver } from './notifications/core/notifications-observer/implementation';
 import { EventsObservable } from './notifications/observables/events-observable/implementation';
 import { FetchObservable } from './notifications/observables/fetch-observable/implementation';
 import { toCancellablePromiseTuple, toPromise } from './operators/to/toPromise';
-import { PromiseCancelError, PromiseCancelReason, PromiseCancelToken } from './notifications/observables/promise-observable/promise-cancel-token/implementation';
+import {
+  PromiseCancelReason, PromiseCancelToken
+} from './notifications/observables/promise-observable/promise-cancel-token/implementation';
 import { TCancellablePromiseTuple } from './notifications/observables/promise-observable/interfaces';
 import { Reason } from './misc/reason/implementation';
 import { PromiseObservable } from './notifications/observables/promise-observable/implementation';
 import { IObserver } from './core/observer/interfaces';
 import { Pipe } from './core/observable-observer/implementation';
 import {
-  INotificationsObservable, INotificationsObservableContext, KeyValueMapToNotifications,
-  TNotificationsObservablePipeToObserverResult
+  INotificationsObservable, INotificationsObservableContext
 } from './notifications/core/notifications-observable/interfaces';
-import { IObservableObserver, IPipe, TBasePipe } from './core/observable-observer/interfaces';
-import {
-  IObservable, IObservableContext, ObservableType, TObservablePipeThroughResult, TObservablePipeToObserverResult
-} from './core/observable/interfaces';
+import { IObservableObserver, IPipe } from './core/observable-observer/interfaces';
+import { IObservable, IObservableContext } from './core/observable/interfaces';
 import { promisePipe } from './operators/pipes/promisePipe';
 import { mapPipe } from './operators/pipes/mapPipe';
 import { TimerObservable } from './observables/timer-observable/implementation';
 import { AsyncSource, Source } from './observables/distinct/source/implementation';
 import { ISource } from './observables/distinct/source/interfaces';
-import { KeyValueMap, KeyValueMapKeys, KeyValueMapValues } from './notifications/core/interfaces';
+import { KeyValueMapKeys, KeyValueMapValues } from './notifications/core/interfaces';
 import { INotification } from './notifications/core/notification/interfaces';
+import { Notification } from './notifications/core/notification/implementation';
 import { WebSocketObservableObserver } from './notifications/observables/websocket-observable/implementation';
 import { INotificationsObserver } from './notifications/core/notifications-observer/interfaces';
 import { FunctionObservable } from './observables/distinct/function-observable/implementation';
 import { Expression } from './observables/distinct/expression/implementation';
-import { $add, $equal, $expression, $source, $string, testMisc } from './operators/misc';
+import { $equal, $expression, $string } from './operators/misc';
 import { IPromiseCancelToken } from './notifications/observables/promise-observable/promise-cancel-token/interfaces';
 import { UnionToIntersection } from './classes/types';
 import { EventKeyValueMapConstraint } from './notifications/observables/events-observable/interfaces';
@@ -40,8 +42,7 @@ import { flattenPipe } from './operators/pipes/flattenPipe';
 import { assertFails, assertObservableEmits } from './classes/asserts';
 import { FromIterableObservable } from './observables/from/iterable/implementation';
 import { noop } from './helpers';
-import { fromRXJSObservable } from './operators/fromRXJSObservable';
-import { FromRXJSObservable } from './observables/from/rxjs/public';
+import { FromRXJSObservable } from './observables/from/rxjs/implementation';
 
 function testReadOnlyList() {
   const list = new ReadonlyList<number>([0, 1, 2, 3]);
@@ -827,22 +828,40 @@ async function testFromRXJSObservable() {
 
   const { range, operators: { map, filter }} = rxjs;
 
+  const notifications = [
+    new Notification('next', 0),
+    new Notification('next', 1),
+    new Notification('next', 2),
+    new Notification('next', 3),
+    new Notification('complete'),
+  ];
+
   const rxObservable = range(0, 7).pipe(
     filter((x: number) => x % 2 === 0),
     map((x: number) => x  / 2)
+  ); // 0, 1, 2, 3
+
+  const values1 = new FromRXJSObservable<number, undefined>(rxObservable);
+
+  await assertObservableEmits(
+    values1,
+    notifications
   );
 
-  const observable = new FromRXJSObservable<number, undefined>(rxObservable);
-  const observer = observable
-    .addListener<'next'>('next', (value: number) =>{
-      console.log(value);
-    }).activate();
+  assertFails(() =>  values1.pipeTo(noop).activate());
 
-  // setTimeout(() => {
-  //   observer.observe(observable as IObservable<INotification<Record<'next', number>>>).activate();
-  //   // new NotificationsObserver<Record<'next', number>>('next', () => {}).observe(observable /*as IObservable<INotification<'next', number>>*/).activate();
-  // }, 500);
-  // console.log(rxjs);
+  const values2 = new FromRXJSObservable<number, undefined>(rxObservable, 'cache');
+
+  await assertObservableEmits(
+    values2,
+    notifications
+  );
+
+  await assertObservableEmits(
+    values2,
+    notifications
+  );
+
 }
 
 
@@ -907,8 +926,9 @@ export async function test() {
   await testReducePipe();
   await testFlattenPipe();
 
-  // testWebSocket();
   await testFromRXJSObservable();
+
+  // testWebSocket();
   // testMisc();
 }
 

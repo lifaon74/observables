@@ -1,16 +1,16 @@
 import {
-  IFromRXJSObservable, IFromRXJSObservableConstructor, IFromRXJSObservableNotificationKeyValueMap,
+  IFromRXJSObservable, IFromRXJSObservableConstructor,
   INotificationsFromObservable,
   TFromRXJSObservableConstructorArgs, TFromRXJSObservableNotifications
 } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../../helpers';
 import {
-  IFromObservable, IFromObservableContext, TFromObservableCompleteAction
+  IFromObservableContext, TFromObservableCompleteAction
 } from '../interfaces';
-import { ObservableClearObservers, ObservableFactory } from '../../../core/observable/implementation';
+import { ObservableFactory } from '../../../core/observable/implementation';
 import {
-  FROM_OBSERVABLE_PRIVATE, FromObservableFactory, IFromObservableInternal, IFromObservablePrivate,
+  FROM_OBSERVABLE_PRIVATE, FromObservableFactory, IFromObservablePrivate,
   IsFromObservableConstructor
 } from '../implementation';
 import {
@@ -23,8 +23,6 @@ import {
 import {
   Notification
 } from '../../../notifications/core/notification/implementation';
-import { KeyValueMapToNotifications } from '../../../notifications/core/notifications-observable/interfaces';
-import { IRXJSObservableNotificationKeyValueMap } from '../../../operators/fromRXJSObservable';
 
 
 export const FROM_RXJS_OBSERVABLE_PRIVATE = Symbol('from-rxjs-observable-private');
@@ -69,29 +67,37 @@ export function FromRXJSObservableOnObserved<TValue, TError>(observable: IFromRX
 
     const privates: IFromRXJSObservablePrivate<TValue, TError> = (observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_RXJS_OBSERVABLE_PRIVATE];
 
-    const onComplete = () => {
-      if (privates.rxSubscription === null) { // still initializing
-        setTimeout(onComplete, 0);
-      } else {
-        privates.context.emit(new Notification<'complete', void>('complete'));
-        privates.context.complete();
-      }
-    };
-
     privates.rxSubscription = privates.rxObservable
       .subscribe(
-      (value: TValue) => {
-        privates.context.emit(new Notification<'next', TValue>('next', value));
-      },
-      (error: TError) => {
-        privates.context.emit(new Notification<'error', TError>('error', error));
-      }, onComplete);
+        (value: TValue) => {
+          privates.context.emit(new Notification<'next', TValue>('next', value));
+        },
+        (error: TError) => {
+          privates.context.emit(new Notification<'error', TError>('error', error));
+        },
+        () => {
+          privates.context.emit(new Notification<'complete', void>('complete'));
+          privates.context.complete();
+        });
   }
 }
 
 export function FromRXJSObservableOnUnobserved<TValue, TError>(observable: IFromRXJSObservable<TValue, TError>): void {
   if ((observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_OBSERVABLE_PRIVATE].state === 'emitting') {
     if (!(observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_RXJS_OBSERVABLE_PRIVATE].context.observable.observed) {
+      FromRXJSObservableUnsubscribe<TValue, TError>(observable);
+    }
+  }
+}
+
+export function FromRXJSObservableUnsubscribe<TValue, TError>(observable: IFromRXJSObservable<TValue, TError>, count: number = 1): void {
+  if (count >= 0) {
+    if ((observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_RXJS_OBSERVABLE_PRIVATE].rxSubscription === null) { // may append if rxObservable is complete before rxSubscription is set
+      // in this case, delay the executing until rxSubscription exists
+      setTimeout(() => {
+        FromRXJSObservableUnsubscribe<TValue, TError>(observable, count - 1);
+      }, 0);
+    } else {
       (observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_RXJS_OBSERVABLE_PRIVATE].rxSubscription.unsubscribe();
       (observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_RXJS_OBSERVABLE_PRIVATE].rxSubscription = null;
     }

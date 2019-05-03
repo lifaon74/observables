@@ -22,4 +22,6 @@ export interface INotificationConstructor {
 export interface INotification<TName extends string, TValue> {
   readonly name: TName;
   readonly value: TValue;
+
+  toJSON(): INotification<TName, TValue>;
 }
