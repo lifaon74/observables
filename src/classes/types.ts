@@ -57,37 +57,120 @@ export type And<A, B> = A extends true
 export type TObject = { [key in any]: any };
 
 // https://github.com/Microsoft/TypeScript/issues/26223
+// https://github.com/ksxnodemodules/typescript-tuple/blob/master/lib/utils.ts
 
-export type IsEmptyTuple<T extends any[]> = T[number] extends never ? true : false;
+
+export type IsEmptyTuple<Tuple extends any[]> = Tuple extends [] ? true : false;
 
 // const a1: IsEmptyTuple<[]> = true;
 // const a2: IsEmptyTuple<[1]> = false;
 
 /**
+ * Returns 'Finite' if the tuple is Finite, else returns 'Infinite'
+ */
+export type TupleIsFinite<Tuple extends any[], Finite, Infinite> = {
+  empty: Finite
+  nonEmpty: ((...list: Tuple) => any) extends ((first: infer First, ...rest: infer Rest) => any)
+    ? TupleIsFinite<Rest, Finite, Infinite>
+    : never
+  infinite: Infinite
+}[
+  Tuple extends []
+    ? 'empty'
+    : Tuple extends (infer Item)[]
+    ? Item[] extends Tuple
+      ? 'infinite'
+      : 'nonEmpty'
+    : never
+  ];
+
+// const a1: IsFinite<[], true, false> = true;
+// const a2: IsFinite<any[], true, false>  = false;
+
+/**
  * Creates a union from the types of an Array or tuple
  */
-export type TupleToUnion<T extends any[]> = T[number];
+export type TupleToUnion<Tuple extends any[]> = Tuple[number];
 
 /**
  * Returns the length of an array or tuple
  */
-export type TupleLength<T extends any[]> = T['length'];
+export type TupleLength<Tuple extends any[]> = Tuple['length'];
 
 /**
  * Returns all but the first item's type in a tuple/array
  */
-export type TupleShift<T extends any[]> =
-  ((...args: T) => any) extends ((head: any, ...tail: infer R) => any) ? R : never;
+export type TupleShift<Tuple extends any[]> =
+  ((...list: Tuple) => any) extends ((first: any, ...rest: infer R) => any) ? R : never;
 
 /**
  * Returns the given tuple/array with the item type prepended to it
  */
-export type TupleUnshift<List extends any[], Item> =
-  ((first: Item, ...rest: List) => any) extends ((...list: infer R) => any) ? R : never;
+export type TupleUnshift<Tuple extends any[], Item> =
+  ((first: Item, ...rest: Tuple) => any) extends ((...list: infer R) => any) ? R : never;
+
+/**
+ * Reverses items of a tuple
+ */
+export type TupleReverse<Tuple extends any[], Prefix extends any[] = []> = {
+  empty: Prefix,
+  nonEmpty: ((...list: Tuple) => any) extends ((first: infer First, ...rest: infer Rest) => any)
+    ? TupleReverse<Rest, TupleUnshift<Prefix, First>>
+    : never
+  infinite: Array<any> & {
+    ERROR: 'Cannot reverse an infinite tuple'
+    CODENAME: 'InfiniteTuple'
+  }
+}[
+  // Tuple extends [any, ...any[]]
+  //   ? TupleIsFinite<Tuple, 'nonEmpty', 'infinite'>
+  //   : 'empty'
+  Tuple extends []
+    ? 'empty'
+    : TupleIsFinite<Tuple, 'nonEmpty', 'infinite'>
+  ];
+
+// const a: TupleReverse<[1, 2]>;
+// const a: TupleReverse<[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]>;
+// const a: TupleReverse<any[]>;
+
+// export type TuplePush<T extends any[], Item> = T & {
+//   [K in Extract<T['length'], number>]: Item;
+// };
+
+// export type TuplePush<T extends any[], Item, R = CreateRange<T['length']>> = {
+//   [K in keyof R]: T[Extract<keyof T, K>];
+// };
+
+export type TuplePush<Tuple extends any[], Item> = TupleReverse<TupleUnshift<TupleReverse<Tuple>, Item>>
+
+// const a: TuplePush<[1, 2], 3>;
+
+export type TupleConcat<Left extends any[], Right extends any[]> = {
+  emptyLeft: Right
+  singleLeft: Left extends [infer Item]
+    ? TupleUnshift<Right, Item>
+    : never
+  multiLeft: ((...list: TupleReverse<Left>) => any) extends ((first: infer LeftLast, ...rest: infer ReversedLeftRest) => any)
+    ? TupleConcat<TupleReverse<ReversedLeftRest>, TupleUnshift<Right, LeftLast>>
+    : never
+  infiniteLeft: Array<any> & {
+    ERROR: 'Left is not finite',
+    CODENAME: 'InfiniteLeft' & 'Infinite'
+  }
+}[
+  Left extends [] ? 'emptyLeft' :
+    Left extends [any] ? 'singleLeft' :
+      TupleIsFinite<Left, 'multiLeft', 'infiniteLeft'>
+  ];
 
 
-// export type TuplePush<T extends any[], Item> =
-//   ((...args: T, last: Item) => any) extends ((head: any, ...tail: infer R) => any) ? R : never;
+// const a: TupleConcat<[1, 2], [3, 4]>;
+// const a: TupleReverse<[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]>;
+// const a: TupleReverse<any[]>;
+
+
+
 
 export type TupleEquals<T, S> =
   [T] extends [S] ? (
@@ -99,8 +182,36 @@ export type CreateRange<N, T extends number[] = []> = {
   1: CreateRange<N, TupleUnshift<T, TupleLength<T>>>,
 }[TupleEquals<TupleLength<TupleShift<T>>, N> extends true ? 0 : 1];
 
+
+export type TupleFirst<Tuple extends any[], Default = never> =
+  Tuple extends [any, ...any[]] ? Tuple[0] : Default
+
+export type TupleLast<Tuple extends any[], Default = never> = {
+  empty: Default
+  single: Tuple extends [infer Item] ? Item : never
+  multi: ((...list: Tuple) => any) extends ((first: any, ...rest: infer Next) => any) ? TupleLast<Next> : Default
+  infinite: Tuple extends (infer Item)[] ? Item : never
+}[
+  Tuple extends [] ? 'empty' :
+    Tuple extends [any] ? 'single' :
+      Tuple extends (infer Item)[]
+        ? Item[] extends Tuple ? 'infinite'
+        : 'multi'
+        : never
+  ]
+
+
+
 // const a: TupleShift<[1, 2]>;
 // const a: TupleUnshift<[1, 2], 3>;
+// const a: TupleLast<[1, 2]>;
+
+// const a: TuplePush<[1, 2], 3>;
+// const b = a[6];
+// a[1] = 5;
+
+// const a: CreateRange<10>;
+
 
 /**
  * Tests if two types are equal

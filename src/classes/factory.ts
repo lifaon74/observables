@@ -1,4 +1,5 @@
-import { TupleToIntersection } from './types';
+import { TupleConcat, TupleToIntersection } from './types';
+import { SetInstanceOf } from './instanceof';
 
 export interface Constructor<Instance = any, Args extends any[] = any[]> extends Function {
   new(...args: Args): Instance;
@@ -11,289 +12,146 @@ export interface AbstractClass<Instance = any> extends Function {
 export type ClassType<Instance = any> = AbstractClass<Instance> | Constructor<Instance>;
 
 
-/**
- * Returns all descriptors following prototype inheritance for a target (must be a prototype)
- * @param target
- */
-function * GetPropertyDescriptors(target: Object): IterableIterator<[any, PropertyDescriptor]> {
-  const _keys: Set<any> = new Set<any>();
-
-  while (target && (target !== Object.prototype)) {
-    const keys: any[] = Object.getOwnPropertyNames(target).concat(Object.getOwnPropertySymbols(target) as any);
-    for (const key of keys) {
-      if (!_keys.has(key)) {
-        yield [key, Object.getOwnPropertyDescriptor(target, key)];
-        _keys.add(key);
-      }
-    }
-    target = Object.getPrototypeOf(target);
-  }
-}
-
-/**
- * Copies  deeply the prototype of 'source' into the prototype of 'destination'
- * @param source
- * @param destination
- */
-function CopyPrototype(source: Function, destination: Function): void {
-  const iterator: IterableIterator<[any, PropertyDescriptor]> = GetPropertyDescriptors(source.prototype);
-  let result: IteratorResult<[any, PropertyDescriptor]>;
-  while (!(result = iterator.next()).done) {
-    if (result.value[0] !== 'constructor') {
-      Object.defineProperty(destination.prototype, result.value[0], result.value[1]);
-    }
-  }
-}
-
-/**
- * Copies all own properties of 'source' into 'destination'
- * @param source
- * @param destination
- */
-function CopyOwmProperties(source: Function, destination: Function): void {
-  const keys: any[] = Object.getOwnPropertyNames(source).concat(Object.getOwnPropertySymbols(source) as any);
-  for (const key of keys) {
-    if (!(key in Function)) {
-      Object.defineProperty(destination, key, Object.getOwnPropertyDescriptor(source, key));
-    }
-  }
-}
-
-const INSTANCE_OF_SYMBOL = Symbol('instanceof');
-
-/**
- * Updates Symbol.hasInstance of source in such a way than 'destination' will become an instanceof 'source'
- * @param source
- * @param destination
- */
-export function SetInstanceOf(source: Function, destination: Function): void {
-  const hasInstance = (Symbol.hasInstance in source)
-    ? source[Symbol.hasInstance].bind(source)
-    : (() => false);
-
-  Object.defineProperty(source, Symbol.hasInstance, {
-    value: (instance: any) => {
-      return (instance instanceof destination) || hasInstance(instance);
-    }
-  });
-
-  if (!(INSTANCE_OF_SYMBOL in destination)) {
-    Object.defineProperty(destination, INSTANCE_OF_SYMBOL, {
-      value: new Set<Function>(),
-    });
-  }
-
-  (destination as any)[INSTANCE_OF_SYMBOL].set(source);
-}
-
-export function IsInstanceOf(instance: Function, _class: Function): void {
-  return (instance instanceof _class) || (
-    (instance.constructor && (INSTANCE_OF_SYMBOL in instance.constructor))
-      ? (instance.constructor as any)[INSTANCE_OF_SYMBOL].has(_class)
-      : false
-  );
-}
-
-/**
- * Makes 'destination' a copy of 'source' (and is instanceof source)
- * @param source
- * @param destination
- */
-function CopyClass(source: Function, destination: Function) {
-  CopyPrototype(source, destination);
-  CopyOwmProperties(source, destination);
-  SetInstanceOf(source, destination);
-}
-
-/**
- * Generates a descriptor where its value/get/set are bound to instance[key]
- * It means that the 'this' for instance[key] will be 'instance'
- * @param instance
- * @param key
- * @param descriptor
- */
-function BindDescriptor(instance: any, key: any, descriptor: PropertyDescriptor): PropertyDescriptor {
-  const _descriptor: PropertyDescriptor = {};
-  _descriptor.configurable = descriptor.configurable;
-  _descriptor.enumerable = descriptor.enumerable;
-
-  if (typeof descriptor.value !== 'undefined') {
-    let cachedFunction: Function;
-    let cachedBoundFunction: Function;
-    _descriptor.get = () => {
-      if (typeof instance[key] === 'function') {
-        if (cachedFunction !== instance[key]) {
-          cachedFunction = instance[key];
-          cachedBoundFunction = cachedFunction.bind(instance);
-        }
-        return cachedBoundFunction;
-      } else {
-        return instance[key];
-      }
-    };
-    if (descriptor.writable) {
-      _descriptor.set = (value: any) => {
-        instance[key] = value;
-      };
-    }
-  } else if (typeof descriptor.get === 'function') {
-    _descriptor.get = descriptor.get.bind(instance);
-  } else if (typeof descriptor.set === 'function') {
-    _descriptor.set = descriptor.set.bind(instance);
-  }
-  return _descriptor;
-}
-
-export function SetClassName<TClass extends (new(...args: any[]) => any)>(_class: TClass, name: string): TClass {
-  Object.defineProperty(_class, 'name', {
-    configurable: true,
-    enumerable: false,
-    value: name,
-    writable: false,
-  });
-  return _class;
-}
-
-/**
- * Tries to convert (does the best) a class to a class factory.
- * @param source
- */
-export function ClassToFactory<TSource extends (new(...args: any[]) => any) = ObjectConstructor>(source: TSource) {
-  return <TBase extends (new(...args: any[]) => any) = ObjectConstructor>(superClass: TBase = Object as any, mode: 'function' | 'class' | 'auto' = 'auto') => {
-    let _class;
-    if (superClass === Object as any) {
-      _class = class extends (source as any) {
-        constructor(args: any[]) {
-          super(...args);
-        }
-      };
-    } else {
-      _class = class extends superClass {
-        /*constructor(args: any[], ...superArgs: any[][]) {
-          super(...superArgs);*/
-        constructor(...args: any[]) {
-          super(...args.slice(1));
-          args = args[0];
-
-          let _this: any;
-          switch (mode) {
-            case 'auto':
-              try {
-                // try to construct the class through a function call
-                _this = (source as Function).apply(this, args);
-                if (_this === void 0) {
-                  _this = this;
-                }
-                mode = 'function';
-              } catch (e) {
-                // construct the class though Reflect
-                _this = Reflect.construct(source, args);
-                mode = 'class';
-              }
-              break;
-            case 'function':
-              _this = (source as Function).apply(this, args);
-              if (_this === void 0) {
-                _this = this;
-              }
-              break;
-            case 'class':
-              _this = Reflect.construct(source, args);
-              break;
-          }
-
-
-          if (this !== _this) { // a super class may return a different this
-            // (Mixin as any).registerThis(this, _this);
-
-            // 1) reflect _this.constructor.prototype to this
-            const iterator: IterableIterator<[any, PropertyDescriptor]> = GetPropertyDescriptors(Object.getPrototypeOf(_this));
-            let result: IteratorResult<[any, PropertyDescriptor]>;
-            while (!(result = iterator.next()).done) {
-              const key: any = result.value[0];
-              if (key !== 'constructor') {
-                Object.defineProperty(this, key, BindDescriptor(_this, key, result.value[1]));
-              }
-            }
-
-            // 2) reflect all own properties of _this to this
-            const keys: any[] = Object.getOwnPropertyNames(_this).concat(Object.getOwnPropertySymbols(_this) as any);
-            for (const key of keys) {
-              if (key in this) {
-                console.warn(`Crossing properties !`);
-              }
-
-              Object.defineProperty(this, key, BindDescriptor(_this, key, Object.getOwnPropertyDescriptor(_this, key)));
-            }
-
-            // prevents new properties to be added on _this
-            Object.seal(_this);
-          }
-        }
-      };
-
-      CopyClass(source, _class);
-    }
-
-    SetClassName(_class, source.name);
-
-    return _class as ExcludeConstructor<TSource & TBase> & {
-      new(args: ConstructorParameters<TSource>, ...superArgs: ConstructorParameters<TBase>): (InstanceType<TSource> & InstanceType<TBase>);
-    };
-  };
-
-}
-
-
-// converts a tuple of construct types (ex: [Constructor<A>, Constructor<B>]) to a tuple of instances types
-export type InstancesTypes<T extends (new (...args: any[]) => any)[]> = {
-  [P in keyof T]: T[P] extends new (...args: any[]) => infer R ? R : never;
-}
-
-// converts a tuple of construct types (ex: [Constructor<A>, Constructor<B>]) to a tuple of their parameters
-export type ConstructorsParameters<T extends (new (...args: any[]) => any)[]> = {
-  [P in keyof T]: T[P] extends new (...args: infer P) => any ? P : never;
-}
+export type TFactory = <TBase extends Constructor>(superClass: TBase) => TBase;
 
 // exclude the constructor from T
 export type ExcludeConstructor<T> = {
   [P in keyof T]: T[P] extends new(...args: any[]) => any ? never : T[P];
 };
 
-// excludes all constructors for the tuples
+// removes all constructors of a tuple
 export type ExcludeConstructors<T extends any[]> = {
-  [P in keyof T]: ExcludeConstructor<T[P]>;
-};
-
-// creates a class which is the intersection of many classes
-export type TMixin<T extends (new (...args: any[]) => any)[]> = TupleToIntersection<ExcludeConstructors<T>> & {
-  new(...args: ConstructorsParameters<T>): TupleToIntersection<InstancesTypes<T>>;
-};
-
-type TAbstractToConstructible<T extends Function> = T extends { prototype: infer P } ? new(...args: any[]) => P : never;
-
-// function which creates a class extending another
-type TClassFactory<TSource extends new(...args: any[]) => any> = <TBase extends new(...args: any[]) => any>(superClass: TBase) => TMixin<[TSource, TBase]>;
-
-
-export type TFactoryClass<TClass extends (new(...args: any[]) => any), TArgs extends any[], TSuperClass extends (new(...args: any[]) => any) = TClass> =
-  ExcludeConstructor<TClass>
-  & {
-  new(args: TArgs, ...superArgs: ConstructorParameters<TClass>): InstanceType<TClass>;
+  [P in Extract<keyof T, number>]: ExcludeConstructor<T[P]>;
 };
 
 
-export function SetFactoryWaterMark<TClass extends (new(...args: any[]) => any)>(_class: TClass, waterMark: symbol): TClass {
-  Object.defineProperty(_class, waterMark, {
+// converts a tuple of constructor types (ex: [Constructor<A>, Constructor<B>]) to a tuple of instances types
+export type InstancesTypes<T extends (new (...args: any[]) => any)[]> = {
+  [P in Extract<keyof T, number>]: T[P] extends new (...args: any[]) => infer R ? R : never;
+}
+
+// converts a tuple of constructor types (ex: [Constructor<A>, Constructor<B>]) to a tuple of their parameters
+export type ConstructorsParameters<T extends (new (...args: any[]) => any)[]> = {
+  [P in keyof T]: T[P] extends new (...args: infer P) => any ? P : never;
+}
+
+
+// returns a tuple where types are the expected factories types
+export type TMakeFactoryFactories<TSuperClasses extends (new (...args: any[]) => any)[]> = {
+  [P in keyof TSuperClasses]: TSuperClasses[P] extends (new (...args: any[]) => infer R)
+    ? (superClass: any) => new(ownArgs: any[], ...args: any[]) => R
+    : never;
+}
+
+export type TMakeFactorySuperInstance<TSuperClasses extends Constructor[]> = TupleToIntersection<InstancesTypes<TSuperClasses>>;
+export type TMakeFactoryInstance<TChildClass extends Constructor, TSuperClasses extends Constructor[], TBase extends Constructor> = InstanceType<TBase> & TMakeFactorySuperInstance<TSuperClasses> & InstanceType<TChildClass>;
+export type TMakeFactorySuperStatic<TSuperClasses extends Constructor[]> = TupleToIntersection<ExcludeConstructors<TSuperClasses>>;
+export type TMakeFactoryStatic<TChildClass extends Constructor, TSuperClasses extends Constructor[], TBase extends Constructor> = ExcludeConstructor<TBase> & TMakeFactorySuperStatic<TSuperClasses> & ExcludeConstructor<TChildClass>;
+export type TMakeFactoryCreateSuperClass<TSuperClasses extends Constructor[]> =
+  TSuperClasses extends []
+    ? new(...args: any) => any
+    : TMakeFactorySuperStatic<TSuperClasses> & {
+      new(...args: any): TMakeFactorySuperInstance<TSuperClasses>;
+    };
+
+export type TMakeFactoryClass<TChildClass extends Constructor, TSuperClasses extends Constructor[], TBase extends Constructor> = TMakeFactoryStatic<TBase, TSuperClasses, TChildClass> & {
+  new(ownArgs: ConstructorParameters<TChildClass>, ...args: TupleConcat<ConstructorsParameters<TSuperClasses>, ConstructorParameters<TBase>>): TMakeFactoryInstance<TChildClass, TSuperClasses, TBase>;
+};
+
+
+export interface IMakeFactoryOptions {
+  name?: string; // force a name for this class
+  instanceOf?: ClassType; // force instanceof for this class
+  waterMarks?: symbol[]; // uniq symbol to identify the class type
+}
+
+/**
+ * Creates a new class from :
+ *  - a base class
+ *  - some other factories
+ *  - a child class
+ *  => child extends factories extends base
+ * @param create
+ * @param factories
+ * @param superClass
+ * @param options
+ */
+export function MakeFactory<TChildClass extends Constructor, TSuperClasses extends Constructor[], TBase extends Constructor>(
+  create: (superClass: TMakeFactoryCreateSuperClass<TSuperClasses>) => TMakeFactoryCreateSuperClass<TSuperClasses>,
+  factories: TMakeFactoryFactories<TSuperClasses>,
+  superClass: TBase,
+  options: IMakeFactoryOptions = {}
+) {
+  let _superClass: any = superClass;
+  for (let i = factories.length - 1; i >= 0; i--) {
+    _superClass = factories[i](_superClass);
+  }
+
+  const _class: TMakeFactoryClass<TChildClass, TSuperClasses, TBase> = create(_superClass) as TMakeFactoryClass<TChildClass, TSuperClasses, TBase>;
+
+  Object.defineProperty(_class, IS_FACTORY_CLASS, {
     value: null,
   });
+
+  if (typeof options.name === 'string') {
+    Object.defineProperty(_class, 'name', {
+      configurable: true,
+      enumerable: false,
+      value: options.name,
+      writable: false,
+    });
+  }
+
+  if (Array.isArray(options.waterMarks)) {
+    for (let i = 0, l = options.waterMarks.length; i < l; i++) {
+      Object.defineProperty(_class, options.waterMarks[i], {
+        value: null,
+      });
+    }
+  }
+
+  if (options.instanceOf !== void 0) {
+    SetInstanceOf(options.instanceOf, _class);
+  }
+
   return _class;
 }
 
-export function HasFactoryWaterMark(_class: (new(...args: any[]) => any), waterMark: symbol): boolean {
-  return (waterMark in _class);
+
+/**
+ * Returns true if class has the specified watermark
+ * @param _class
+ * @param waterMark
+ * @param direct
+ */
+export function HasFactoryWaterMark(_class: (new(...args: any[]) => any), waterMark: symbol, direct: boolean = true): boolean {
+  return direct
+    ? _class.hasOwnProperty(waterMark)
+    : (waterMark in _class);
 }
 
+
+const IS_FACTORY_CLASS = Symbol('is-factory-class');
+
+/**
+ * Returns true if class has been build with MakeFactory
+ * @param _class
+ * @param direct
+ */
+export function IsFactoryClass(_class: (new(...args: any[]) => any), direct: boolean = true): boolean {
+  // return (IS_FACTORY_CLASS in _class);
+  return direct
+    ? _class.hasOwnProperty(IS_FACTORY_CLASS)
+    : (IS_FACTORY_CLASS in _class);
+}
+
+
+/**
+ * Replace incoming args for the super class by superArgs in the context of a Factory class
+ * @param args - list of remaining args from the constructor that should be passed to 'super'
+ * @param superArgs - list of overloaded args to pass to the child
+ * @constructor
+ */
 export function SetSuperArgsForFactoryClass(args: any[], superArgs: any[]): any[] {
   if (Array.isArray(args[0])) {
     args[0] = superArgs;
@@ -303,6 +161,11 @@ export function SetSuperArgsForFactoryClass(args: any[], superArgs: any[]): any[
   }
 }
 
+/**
+ * Same as previous but class is a standard class instead
+ * @param args
+ * @param superArgs
+ */
 export function SetSuperArgsForStandardClass(args: any[], superArgs: any[]): any[] {
   for (let i = 0, l = superArgs.length; i < l; i++) {
     args[i] = superArgs[i];
@@ -310,33 +173,115 @@ export function SetSuperArgsForStandardClass(args: any[], superArgs: any[]): any
   return args;
 }
 
-export function GetSetSuperArgsFunction(isFactoryClass: boolean): (args: any[], superArgs: any[]) => any[] {
+export type TSetSuperArgs = (args: any[], superArgs: any[]) => any[];
+export function GetSetSuperArgsFunction(isFactoryClass: boolean): TSetSuperArgs {
   return isFactoryClass
     ? SetSuperArgsForFactoryClass
     : SetSuperArgsForStandardClass;
 }
 
 
-const IS_FACTORY_CLASS = Symbol('is-factory-class');
 
-export function IsFactoryClass(_class: (new(...args: any[]) => any)): boolean {
-  return (IS_FACTORY_CLASS in _class);
+/*------------------------------------*/
+
+export interface IA {
+  a: string;
 }
 
-export function FactoryClass<TClass extends (new(...args: any[]) => any)>(_class: TClass) {
-  return <TArgs extends any[]>(name: string, waterMarks: symbol[] = []) => {
-    Object.defineProperty(_class, IS_FACTORY_CLASS, {
-      value: null,
-    });
-    SetClassName(_class, name);
-
-    for (let i = 0, l = waterMarks.length; i < l; i++) {
-      SetFactoryWaterMark(_class, waterMarks[i]);
-    }
-    
-    return _class as TFactoryClass<TClass, TArgs>;
-  };
+export interface IAConstructor extends Function {
+  new(a: string): IA;
 }
 
 
+export interface IB {
+  b: number;
+}
+
+export interface IBConstructor extends Function {
+  new(b: number): IB;
+}
+
+
+export interface IC {
+  c: null;
+}
+
+export interface ICConstructor extends Function {
+  new(c: null): IC;
+}
+
+export function FactoryA<TBase extends Constructor>(superClass: TBase) {
+  return MakeFactory<IAConstructor, [], TBase>((superClass) => {
+    return class A extends superClass implements IA {
+      static staticA: string = 'static-a';
+      a: string;
+      constructor(...args: any[]) {
+        const [a] = args[0];
+        super(...args.slice(1));
+        this.a = a;
+      }
+    };
+  }, [], superClass);
+}
+
+
+export function FactoryB<TBase extends Constructor>(superClass: TBase) {
+  return MakeFactory<IBConstructor, [], TBase>((superClass) => {
+    return class B extends superClass implements IB {
+      b: number;
+      constructor(...args: any[]) {
+        const [b] = args[0];
+        super(...args.slice(1));
+        this.b = b;
+      }
+    };
+  }, [], superClass);
+}
+
+
+export function FactoryC<TBase extends Constructor>(superClass: TBase) {
+  function factory<TBase extends Constructor<IA>>(superClass: TBase) {
+    return class C extends superClass {
+      c: null;
+      constructor(...args: any[]) {
+        const [c] = args[0];
+        super(...args.slice(1));
+        this.c = c;
+        console.log(this.a);
+      }
+    };
+  }
+  return MakeFactory<ICConstructor, [IAConstructor, IBConstructor], TBase>(factory, [FactoryA, FactoryB], superClass);
+}
+
+
+class D {
+  d1: number;
+  d2: string;
+  constructor(d1: number, d2: string) {
+    this.d1 = d1;
+    this.d2 = d2;
+  }
+}
+
+// const z: TFactoryResult<typeof  FactoryA>;
+// const zz = new z();
+// zz.
+
+// const a: TupleToIntersection<[InstanceType<IAConstructor>, InstanceType<IBConstructor>]>;
+// const fac = MakeFactory(D, [FactoryA, FactoryB]);
+const A = FactoryA(D);
+const C = FactoryC(D);
+
+
+export function testFactoryV2() {
+  const a = new A(['a'], 1, '2');
+  console.log(a);
+
+  const c = new C([null], ['a'], [2], 1, '2');
+  console.log(c);
+}
+
+// const C = Factory(D);
+// const c = new C(['p'], [1], 1, 'f');
 

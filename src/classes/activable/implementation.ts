@@ -1,5 +1,5 @@
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
-import { Constructor, FactoryClass } from '../factory';
+import { Constructor, MakeFactory } from '../factory';
 import { IActivable, IActivableConstructor, IActivableHook, TActivableConstructorArgs, TActivableState } from './interfaces';
 
 
@@ -85,10 +85,8 @@ export function ActivableSetState(activable: IActivable, state: TActivableState)
   }
 }
 
-
-
-export function ActivableFactory<TBase extends Constructor>(superClass: TBase) {
-  return FactoryClass(class Activable extends superClass implements IActivable {
+function PureActivableFactory<TBase extends Constructor>(superClass: TBase) {
+  return class Activable extends superClass implements IActivable {
     constructor(...args: any[]) {
       const [hook]: TActivableConstructorArgs = args[0];
       super(...args.slice(1));
@@ -112,10 +110,16 @@ export function ActivableFactory<TBase extends Constructor>(superClass: TBase) {
       return ActivableDeactivate(this);
     }
 
-  })<TActivableConstructorArgs>('Activable');
+  };
 }
 
-export const Activable: IActivableConstructor = class Activable extends ActivableFactory<ObjectConstructor>(Object) {
+export let Activable: IActivableConstructor;
+
+export function ActivableFactory<TBase extends Constructor>(superClass: TBase) {
+  return MakeFactory<IActivableConstructor, [], TBase>(PureActivableFactory, [], superClass, { name: 'Activable', instanceOf: Activable });
+}
+
+Activable = class Activable extends ActivableFactory<ObjectConstructor>(Object) {
   constructor(hook: IActivableHook) {
     super([hook]);
   }

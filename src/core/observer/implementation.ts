@@ -9,8 +9,10 @@ import { ReadonlyList } from '../../misc/readonly-list/implementation';
 import { IObservable } from '../observable/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IsObservable, LinkObservableAndObserver, UnLinkObservableAndObserver } from '../observable/implementation';
-import { Constructor, FactoryClass } from '../../classes/factory';
+import { Constructor, MakeFactory } from '../../classes/factory';
 import { IsObject } from '../../helpers';
+import { IActivableConstructor } from '../../classes/activable/interfaces';
+import { Activable } from '../../classes/activable/implementation';
 
 export const OBSERVER_PRIVATE = Symbol('observer-private');
 
@@ -154,9 +156,10 @@ export function ObserverUnobserveAll<T, O extends IObserver<T>>(observer: O): O 
 }
 
 
-export function ObserverFactory<TBase extends Constructor>(superClass: TBase) {
+function PureObserverFactory<TBase extends Constructor>(superClass: TBase) {
   type T = any;
-  return FactoryClass(class Observer extends superClass implements IObserver<T> {
+
+  return class Observer extends superClass implements IObserver<T> {
     constructor(...args: any[]) {
       const [onEmit]: TObserverConstructorArgs<T> = args[0];
       super(...args.slice(1));
@@ -205,11 +208,20 @@ export function ObserverFactory<TBase extends Constructor>(superClass: TBase) {
       return ObserverUnobserveAll<T, this>(this);
     }
 
-  })<TObserverConstructorArgs<T>>('Observer');
+  }
 }
 
-export const Observer: IObserverConstructor = class Observer extends ObserverFactory<ObjectConstructor>(Object) {
+export let Observer: IObserverConstructor;
+
+export function ObserverFactory<TBase extends Constructor>(superClass: TBase) {
+  return MakeFactory<IObserverConstructor, [], TBase>(PureObserverFactory, [], superClass, {
+    name: 'Observer',
+    instanceOf: Observer,
+  });
+}
+
+Observer = class Observer extends ObserverFactory<ObjectConstructor>(Object) {
   constructor(onEmit: (value: any, observable?: IObservable<any>) => void) {
     super([onEmit]);
   }
-};
+} as IObserverConstructor;

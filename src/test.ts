@@ -43,6 +43,7 @@ import { assertFails, assertObservableEmits } from './classes/asserts';
 import { FromIterableObservable } from './observables/from/iterable/implementation';
 import { noop } from './helpers';
 import { FromRXJSObservable } from './observables/from/rxjs/implementation';
+import { Activable } from './classes/activable/implementation';
 
 function testReadOnlyList() {
   const list = new ReadonlyList<number>([0, 1, 2, 3]);
@@ -900,6 +901,17 @@ export function testWebSocket() {
   }, 5000);
 }
 
+export function testActivable() {
+  const a = new Activable({
+    async activate(): Promise<void> {
+    },
+    async deactivate(): Promise<void> {
+    }
+  });
+
+  console.log(a);
+}
+
 export async function test() {
   // testReadOnlyList();
 
@@ -922,14 +934,16 @@ export async function test() {
   // functionObservableExample1();
   // expressionExample1();
 
-  await testFromIterableObservable();
-  await testReducePipe();
-  await testFlattenPipe();
-
-  await testFromRXJSObservable();
+  // await testFromIterableObservable();
+  // await testReducePipe();
+  // await testFlattenPipe();
+  //
+  // await testFromRXJSObservable();
 
   // testWebSocket();
   // testMisc();
+  // testFactoryV2();
+  testActivable();
 }
 
 
