@@ -6,21 +6,21 @@ import { IDOMChangeObservable } from './interfaces';
 import { IsObject } from '../../helpers';
 
 
-export const DOM_CHANGE_PRIVATE = Symbol('dom-change-private');
+export const DOM_CHANGE_OBSERVABLE_PRIVATE = Symbol('dom-change-observable-private');
 
-export interface IDOMChangePrivate {
+export interface IDOMChangeObservablePrivate {
   observer: MutationObserver;
 }
 
-export interface IDOMChangeInternal extends IDOMChangeObservable {
-  [DOM_CHANGE_PRIVATE]: IDOMChangePrivate;
+export interface IDOMChangeObservableInternal extends IDOMChangeObservable {
+  [DOM_CHANGE_OBSERVABLE_PRIVATE]: IDOMChangeObservablePrivate;
 }
 
 
 export function ConstructDOMChangeObservable(observable: IDOMChangeObservable, context: IObservableContext<void>): void {
-  ConstructClassWithPrivateMembers(observable, DOM_CHANGE_PRIVATE);
+  ConstructClassWithPrivateMembers(observable, DOM_CHANGE_OBSERVABLE_PRIVATE);
 
-  (observable as IDOMChangeInternal)[DOM_CHANGE_PRIVATE].observer = new MutationObserver(periodTime(() => {
+  (observable as IDOMChangeObservableInternal)[DOM_CHANGE_OBSERVABLE_PRIVATE].observer = new MutationObserver(periodTime(() => {
     context.emit();
   }, 300));
 }
@@ -28,21 +28,21 @@ export function ConstructDOMChangeObservable(observable: IDOMChangeObservable, c
 
 export function IsDOMChangeObservable(value: any): value is IDOMChangeObservable {
   return IsObject(value)
-    && value.hasOwnProperty(DOM_CHANGE_PRIVATE);
+    && value.hasOwnProperty(DOM_CHANGE_OBSERVABLE_PRIVATE);
 }
 
-export function DOMChangeObservableOnObserved(observable: DOMChangeObservable): void {
+export function DOMChangeObservableOnObserved(observable: IDOMChangeObservable): void {
   if (observable.observers.length === 1) {
-    (observable as IDOMChangeInternal)[DOM_CHANGE_PRIVATE].observer.observe(document, {
+    (observable as IDOMChangeObservableInternal)[DOM_CHANGE_OBSERVABLE_PRIVATE].observer.observe(document, {
       childList: true,
       subtree: true
     });
   }
 }
 
-export function DOMChangeObservableOnUnobserved(observable: DOMChangeObservable): void {
+export function DOMChangeObservableOnUnobserved(observable: IDOMChangeObservable): void {
   if (!observable.observed) {
-    (observable as IDOMChangeInternal)[DOM_CHANGE_PRIVATE].observer.disconnect();
+    (observable as IDOMChangeObservableInternal)[DOM_CHANGE_OBSERVABLE_PRIVATE].observer.disconnect();
   }
 }
 

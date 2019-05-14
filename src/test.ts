@@ -1,42 +1,49 @@
 import { ReadonlyList } from './misc/readonly-list/implementation';
 import { Observable } from './core/observable/implementation';
 import { Observer } from './core/observer/implementation';
-import { NotificationsObservable, NotificationsObservableContext } from './notifications/core/notifications-observable/implementation';
+import {
+  NotificationsObservable, NotificationsObservableContext
+} from './notifications/core/notifications-observable/implementation';
 import { NotificationsObserver } from './notifications/core/notifications-observer/implementation';
 import { EventsObservable } from './notifications/observables/events-observable/implementation';
 import { FetchObservable } from './notifications/observables/fetch-observable/implementation';
-import { toCancellablePromise, toPromise } from './operators/promise/toPromise';
-import { PromiseCancelError, PromiseCancelReason, PromiseCancelToken } from './notifications/observables/promise-observable/promise-cancel-token/implementation';
+import { toCancellablePromiseTuple, toPromise } from './operators/to/toPromise';
+import {
+  PromiseCancelReason, PromiseCancelToken
+} from './notifications/observables/promise-observable/promise-cancel-token/implementation';
 import { TCancellablePromiseTuple } from './notifications/observables/promise-observable/interfaces';
 import { Reason } from './misc/reason/implementation';
 import { PromiseObservable } from './notifications/observables/promise-observable/implementation';
 import { IObserver } from './core/observer/interfaces';
 import { Pipe } from './core/observable-observer/implementation';
 import {
-  INotificationsObservable, INotificationsObservableContext, KeyValueMapToNotifications,
-  TNotificationsObservablePipeToObserverResult
+  INotificationsObservable, INotificationsObservableContext
 } from './notifications/core/notifications-observable/interfaces';
-import { IObservableObserver, IPipe, TBasePipe } from './core/observable-observer/interfaces';
-import {
-  IObservable, IObservableContext, TObservablePipeThroughResult, TObservablePipeToObserverResult
-} from './core/observable/interfaces';
-import { promisePipe } from './operators/promise/promisePipe';
+import { IObservableObserver, IPipe } from './core/observable-observer/interfaces';
+import { IObservable, IObservableContext } from './core/observable/interfaces';
+import { promisePipe } from './operators/pipes/promisePipe';
 import { mapPipe } from './operators/pipes/mapPipe';
 import { TimerObservable } from './observables/timer-observable/implementation';
 import { AsyncSource, Source } from './observables/distinct/source/implementation';
 import { ISource } from './observables/distinct/source/interfaces';
-import { KeyValueMap, KeyValueMapKeys, KeyValueMapValues } from './notifications/core/interfaces';
+import { KeyValueMapKeys, KeyValueMapValues } from './notifications/core/interfaces';
 import { INotification } from './notifications/core/notification/interfaces';
-import { from } from './operators/from';
-import { WebSocketObservableObserver } from './notifications/observables/websocket-observable/implementation';
+import { Notification } from './notifications/core/notification/implementation';
+import { WebSocketIO } from './notifications/observables/websocket-observable/implementation';
 import { INotificationsObserver } from './notifications/core/notifications-observer/interfaces';
 import { FunctionObservable } from './observables/distinct/function-observable/implementation';
 import { Expression } from './observables/distinct/expression/implementation';
-import { $add, $equal, $expression, $source, $string, testMisc } from './operators/misc';
+import { $equal, $expression, $string } from './operators/misc';
 import { IPromiseCancelToken } from './notifications/observables/promise-observable/promise-cancel-token/interfaces';
 import { UnionToIntersection } from './classes/types';
 import { EventKeyValueMapConstraint } from './notifications/observables/events-observable/interfaces';
-
+import { reducePipe } from './operators/pipes/reducePipe';
+import { flattenPipe } from './operators/pipes/flattenPipe';
+import { assertFails, assertObservableEmits } from './classes/asserts';
+import { FromIterableObservable } from './observables/from/iterable/implementation';
+import { noop } from './helpers';
+import { FromRXJSObservable } from './observables/from/rxjs/implementation';
+import { testPerformances } from './test-performances';
 
 function testReadOnlyList() {
   const list = new ReadonlyList<number>([0, 1, 2, 3]);
@@ -487,7 +494,7 @@ function observableToPromiseExample1(): void {
   abortController.abort();
 
   // provides PromiseCancelToken too, to detect cancellation
-  observePromise(...toCancellablePromise<Response>(new FetchObservable(url1, { signal: abortController.signal }))); // will cancel
+  observePromise(...toCancellablePromiseTuple<Response>(new FetchObservable(url1, { signal: abortController.signal }))); // will cancel
 }
 
 
@@ -722,184 +729,50 @@ function expressionExample1() {
 }
 
 
-// function logicAndExample1() {
-//   const sources: ISource<boolean>[] = Array.from({ length: 3 }, () => new Source<boolean>().emit(false));
-//   new LogicAndObservable(sources)
-//     .pipeTo((value: boolean) => {
-//       console.log('and:', value);
-//     }).activate(); // print false
-//
-//
-//   sources.forEach(_ => _.emit(true)); // print true
-//   sources[sources.length - 1].emit(true); // nothing to print
-//   sources[sources.length - 1].emit(false); // print false
-// }
-//
-// function logicOrExample1() {
-//   const sources: ISource<boolean>[] = Array.from({ length: 3 }, () => new Source<boolean>().emit(false));
-//   new LogicOrObservable(sources)
-//     .pipeTo((value: boolean) => {
-//       console.log('or:', value);
-//     }).activate(); // print false
-//
-//
-//   sources[sources.length - 1].emit(true); // print true
-//   sources[sources.length - 1].emit(false); // nothing to print
-//   sources.forEach(_ => _.emit(false)); // print false
-// }
-//
-// function logicExample1() {
-//   // (a || b) && !(c && d)
-//   const sources: ISource<boolean>[] = Array.from({ length: 4 }, () => new Source<boolean>().emit(false));
-//   let _value: boolean;
-//   and(or(sources[0], sources[1]), not(and(sources[2], sources[3])))
-//     .pipeTo((value: boolean) => {
-//       console.log(`(${sources[0].value} || ${sources[1].value}) && !(${sources[2].value} && ${sources[3].value}):`, value);
-//       _value = value;
-//     }).activate(); // print false
-//
-//
-//   function set(values: boolean[]) {
-//     console.warn('set:', ...values);
-//
-//     for (let i = 0; i < values.length; i++) {
-//       sources[i].emit(values[i]);
-//     }
-//
-//     const expected: boolean = (sources[0].value || sources[1].value) && !(sources[2].value && sources[3].value);
-//     if (_value !== expected) {
-//       console.error('expected: ' + _value);
-//     }
-//   }
-//
-//   const values: boolean[] = sources.map(_ => _.value);
-//
-//   for (let i = 0; i < values.length; i++) {
-//     values[i] = false;
-//     set(values);
-//     values[i] = true;
-//     set(values);
-//   }
-//
-//   (window as any).set = set;
-// }
-//
-//
-// function arithmeticExample1() {
-//   const sources: ISource<number>[] = Array.from({ length: 4 }, (v, k) => new Source<number>().emit(k));
-//   new ArithmeticAddObservable(sources)
-//     .pipeTo((value: number) => {
-//       console.log('add:', value);
-//     }).activate(); // print 6
-// }
-//
-// function testLogicOperators() {
-//
-//   // a.b.c
-//
-//   function $prop<T>(observable: IObservable<object | T>, ...propertyNames: (string | number | symbol)[]): IObservable<T> {
-//
-//     if (propertyNames.length === 0) {
-//       return observable as any;
-//     } else {
-//       type TValue = object | T;
-//       const propertyName: (string | number | symbol) = propertyNames.shift();
-//
-//       return $prop<T>(new Observable<TValue>((context: IObservableContext<TValue>) => {
-//         const valueObserver = new Observer((value: TValue) => {
-//           context.emit(value);
-//         });
-//
-//         const objectObserver = new Observer<object>((object: object) => {
-//           const value: any = (object as any)[propertyName];
-//           if (value instanceof Observable) {
-//             valueObserver.disconnect();
-//             valueObserver.observe(value);
-//           } else {
-//             valueObserver.emit(value);
-//           }
-//         }).observe(observable as IObservable<object>);
-//
-//         return {
-//           onObserved(): void {
-//             if (context.observable.observers.length === 1) {
-//               objectObserver.activate();
-//               valueObserver.activate();
-//             }
-//           },
-//           onUnobserved(): void {
-//             if (!context.observable.observed) {
-//               objectObserver.deactivate();
-//               valueObserver.deactivate();
-//             }
-//           },
-//         };
-//       }), ...propertyNames);
-//     }
-//
-//   }
-//
-//   const pipes: TBasePipe<boolean, boolean>[] = Array.from({ length: 10 }, () => {
-//     return Pipe.create();
-//   });
-//
-//   const observables = pipes.map(_ => _.observable);
-//   const observers = pipes.map(_ => _.observer);
-//
-//   /*$and(...observables)
-//     .pipeTo((value: boolean) => {
-//       console.log('and', value);
-//     }).activate();
-//
-//   $or(...observables)
-//     .pipeTo((value: boolean) => {
-//       console.log('or', value);
-//     }).activate();*/
-//
-//   /*const _and = $$and();
-//   _and.observer.observe(...observables);
-//   _and.observable.pipeTo((value: boolean) => {
-//       console.log('and', value);
-//     }).activate();
-//
-//   for (const observer of observers) {
-//     observer.emit(true);
-//   }
-//
-//   (window as any).observers = observers;*/
-//
-//
-//   const a = new TimerObservable(1000)
-//     .pipeThrough(
-//       mapPipe<void, object>(() => {
-//         return {
-//           b: new TimerObservable(500)
-//             .pipeThrough(
-//               mapPipe<void, object>(() => {
-//                 return {
-//                   c: new TimerObservable(250)
-//                     .pipeThrough(mapPipe<void, number>(() => Math.random()))
-//                 };
-//               })
-//             ),
-//           b2: true
-//         };
-//       })
-//     );
-//
-//   $prop<number>($prop<object>(a, 'b'), 'c')
-//   // $prop<number>(a, 'b2')
-//     .pipeTo((value: number) => {
-//       console.log(value);
-//     }).activate();
-// }
+
+async function testFromIterableObservable() {
+  const values1 = new FromIterableObservable([0, 1, 2, 3]);
+
+  await assertObservableEmits(
+    values1,
+    [0, 1, 2, 3]
+  );
+
+  assertFails(() =>  values1.pipeTo(noop).activate());
+
+  const values2 = new FromIterableObservable([0, 1, 2, 3][Symbol.iterator](), 'cache');
+
+  await assertObservableEmits(
+    values2,
+    [0, 1, 2, 3]
+  );
+
+  await assertObservableEmits(
+    values2,
+    [0, 1, 2, 3]
+  );
+}
+
+async function testReducePipe() {
+  await assertObservableEmits(
+    new FromIterableObservable([0, 1, 2, 3])
+      .pipeThrough(reducePipe<number>((a, b) => (a + b), 0)),
+    [0, 1, 3, 6]
+  );
+}
+
+async function testFlattenPipe() {
+  await assertObservableEmits(
+    new FromIterableObservable([[0, 1], [2, 3]])
+      .pipeThrough(flattenPipe<number>()),
+    [0, 1, 2, 3]
+  );
+}
 
 
 
 
-
-
-async function testRXJSObservable() {
+async function testFromRXJSObservable() {
   function loadScript(src: string): Promise<void> {
     return new Promise((resolve: any, reject: any) => {
       const script: HTMLScriptElement = document.createElement('script');
@@ -956,127 +829,48 @@ async function testRXJSObservable() {
 
   const { range, operators: { map, filter }} = rxjs;
 
-  const rxObservable = range(1, 20).pipe(
-    filter((x: number) => x % 2 === 1),
-    map((x: number) => x + x)
+  const notifications = [
+    new Notification('next', 0),
+    new Notification('next', 1),
+    new Notification('next', 2),
+    new Notification('next', 3),
+    new Notification('complete'),
+  ];
+
+  const rxObservable = range(0, 7).pipe(
+    filter((x: number) => x % 2 === 0),
+    map((x: number) => x  / 2)
+  ); // 0, 1, 2, 3
+
+  const values1 = new FromRXJSObservable<number, undefined>(rxObservable);
+
+  await assertObservableEmits(
+    values1,
+    notifications
   );
 
-  // const observable = fromRXJSObservable<number, undefined>(rxObservable);
-  // const observer = observable
-  //   .addListener<'next'>('next', (value: number) =>{
-  //     console.log(value);
-  //   }).activate();
-  //
-  //
-  // setTimeout(() => {
-  //   observer.observe(observable as IObservable<INotification<Record<'next', number>>>).activate();
-  //   // new NotificationsObserver<Record<'next', number>>('next', () => {}).observe(observable /*as IObservable<INotification<'next', number>>*/).activate();
-  // }, 500);
-  // console.log(rxjs);
+  assertFails(() =>  values1.pipeTo(noop).activate());
+
+  const values2 = new FromRXJSObservable<number, undefined>(rxObservable, 'cache');
+
+  await assertObservableEmits(
+    values2,
+    notifications
+  );
+
+  await assertObservableEmits(
+    values2,
+    notifications
+  );
+
 }
-
-function testFromOperator() {
-  from([0, 1, 2, 3])
-    .pipeTo((v: number) => {
-      console.log(v);
-    }).activate();
-}
-
-
-/*function testPipe1() {
-  class A extends Observable<any> {
-    public a:number;
-  }
-
-  class B extends Observer<any> {
-    public b:number;
-  }
-
-  const AB = CreateObservableObserver(B, A);
-  const ab = new AB(() => {
-    let _context: any;
-    return [[(value: any) => {
-      _context.emit(value * 2);
-    }], [(context) => {
-      _context = context;
-      return {};
-    }]];
-  });
-
-  ab.b = 10;
-
-  ab.pipeTo((value) => {
-    console.log('value', value);
-  }).activate();
-
-  ab.emit(4);
-}
-
-function testPipe2() {
-  // ObservableObserver which converts mouse clicks to [x, y] tuple
-  class MouseClickPipe extends CreateObservableObserver<INotificationsObserverTypedConstructor<'click', MouseEvent>, IObservableTypedConstructor<[number, number]>>(NotificationsObserver, Observable) {
-    constructor() {
-      super(() => {
-        let _context: IObservableContext<[number, number]>;
-        return [['click', (value: MouseEvent) => {
-          _context.emit([value.clientX, value.clientY]);
-        }], [(context: IObservableContext<[number, number]>) => {
-          _context = context;
-        }]];
-      });
-    }
-  }
-
-  new EventsObservable(window)
-    .pipeTo(new MouseClickPipe())
-    .pipeTo(new Observer<[number, number]>((value) => {
-      console.log(value);
-    })).activate()
-}
-
-function testPipe3() {
-  class RandomPipe extends ObservableObserver<void, number> {
-    constructor(start: number = 0, end: number = 2) {
-      super((context: IObservableContext<number>) => {
-        return {
-          onEmit(): void {
-            context.emit(Math.floor(Math.random() * (end - start) + start));
-          }
-        }
-      });
-    }
-  }
-
-  class DistinctPipe<T> extends ObservableObserver<T, T> {
-    constructor() {
-      super((context: IObservableContext<T>) => {
-        let _value: T = void 0;
-        return {
-          onEmit(value: T): void {
-            if (value !=_value) {
-              _value = value;
-              context.emit(value);
-            }
-          }
-        }
-      });
-    }
-  }
-
-  new TimerObservable(200)
-    .pipeTo(new RandomPipe())
-    .pipeTo(new DistinctPipe<number>())
-    .pipeTo((value: number) => {
-      console.log(value);
-    }).activate();
-}*/
 
 
 export function testWebSocket() {
 
   // wss://echo.websocket.org
 
-  const ws = new WebSocketObservableObserver('wss://echo.websocket.org');
+  const ws = new WebSocketIO('wss://echo.websocket.org');
   ws.in.pipeTo((value: any) => {
     console.log('in:', value);
   }).activate();
@@ -1085,9 +879,17 @@ export function testWebSocket() {
     .pipe(mapPipe<void, string>(() => `value-${Math.random()}`)).observable
     .pipeTo(ws.out);
 
+  const clear = () => {
+    ws.deactivate()
+      .then(() => {
+        Array.from(ws.observers).forEach(_ => _.disconnect());
+      });
+  };
+
   ws.on('activate', () => {
-    console.log('ws activate');
+    console.timeEnd('ws activate');
     emitter.activate();
+    setTimeout(clear, 5000);
   });
 
   ws.on('error', (error: Error) => {
@@ -1099,15 +901,35 @@ export function testWebSocket() {
     emitter.deactivate();
   });
 
+  console.time('ws activate');
   ws.activate();
-
-  setTimeout(() => {
-    ws.deactivate();
-    Array.from(ws.observers).forEach(_ => _.disconnect());
-  }, 5000);
 }
 
-export function test() {
+export function testInstanceof() {
+  const a = new NotificationsObservable();
+  if (!(a instanceof Observable)) {
+    throw new Error(`!(a instanceof Observable)`)
+  }
+
+  const b = new EventsObservable(window);
+  if (!(b instanceof Observable)) {
+    throw new Error(`!(b instanceof Observable)`)
+  }
+
+  const c = new Source();
+  if (!(c instanceof Observable)) {
+    throw new Error(`!(c instanceof Observable)`)
+  }
+
+  const d = new WebSocketIO('');
+  if (!(d instanceof Observable)) {
+    throw new Error(`!(d instanceof Observable)`)
+  }
+}
+
+
+
+export async function test() {
   // testReadOnlyList();
 
   // timerObservableExample1();
@@ -1123,29 +945,23 @@ export function test() {
   // pipeExample2();
   // pipeExample3();
 
-
   // testSource();
   // testAsyncSource();
-
-  // testPipe1();
-  // testPipe2();
-  // testPipe3();
 
   // functionObservableExample1();
   // expressionExample1();
 
-  // logicAndExample1();
-  // logicOrExample1();
-  // logicExample1();
+  // await testFromIterableObservable();
+  // await testReducePipe();
+  // await testFlattenPipe();
+  //
+  // await testFromRXJSObservable();
 
-  // arithmeticExample1();
-  // testLogicOperators();
-  // testAsyncSource();
-  // testRXJSObservable();
-  // testFromOperator();
-  // testWebSocket();
-
-  testMisc();
+  testWebSocket();
+  // testMisc();
+  // testFactoryV2();
+  // testInstanceof();
+  // testPerformances();
 }
 
 

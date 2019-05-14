@@ -1,8 +1,7 @@
 import { FunctionObservable } from '../observables/distinct/function-observable/implementation';
 import { IsSource, Source } from '../observables/distinct/source/implementation';
 import {
-  IFunctionObservable,
-  TFunctionObservableFactory, TFunctionObservableFactoryParameters,
+  IFunctionObservable, TFunctionObservableFactory, TFunctionObservableFactoryParameters,
 } from '../observables/distinct/function-observable/interfaces';
 import { IsObservable } from '../core/observable/implementation';
 import { IObservable } from '../core/observable/interfaces';
@@ -10,24 +9,23 @@ import { Expression, IsExpression } from '../observables/distinct/expression/imp
 import { IExpression } from '../observables/distinct/expression/interfaces';
 import { ISource } from '../observables/distinct/source/interfaces';
 import {
-  IAsyncFunctionObservable,
-  TAsyncFunctionObservableFactory,
-  TAsyncFunctionObservableFactoryParameters
+  IAsyncFunctionObservable, TAsyncFunctionObservableFactory, TAsyncFunctionObservableFactoryParameters
 } from '../observables/distinct/async-function-observable/interfaces';
 import { AsyncFunctionObservable } from '../observables/distinct/async-function-observable/implementation';
-import {
-  IPromiseObservable,
-} from '../notifications/observables/promise-observable/interfaces';
-import { toValueObservable } from './promise/toValueObservable';
+import { IPromiseObservable, } from '../notifications/observables/promise-observable/interfaces';
+import { toValueObservable } from './to/toValueObservable';
 import { IPromiseCancelToken } from '../notifications/observables/promise-observable/promise-cancel-token/interfaces';
-import { IPipe } from '../core/observable-observer/interfaces';
+import { TPipeBase, TPipeContextBase } from '../core/observable-observer/interfaces';
 import { IObserver } from '../core/observer/interfaces';
 import { Pipe } from '../core/observable-observer/implementation';
-import { Observer } from '../core/observer/public';
-import { PromiseObservable } from '../notifications/observables/promise-observable/implementation';
-import { toPromise } from './promise/toPromise';
+import { IsObserver, Observer } from '../core/observer/public';
+import { assertFunctionObservableEmits, assertObservableEmits } from '../classes/asserts';
+import { IsObject } from '../helpers';
+import { LinkPromiseCancelTokenWithFetchArguments } from '../notifications/observables/fetch-observable/implementation';
 
 export type TObservableOrValue<T> = IObservable<T> | T;
+export type TObservableOrValueToValueType<T extends TObservableOrValue<any>> = T extends IObservable<infer R> ? R : T;
+export type TObserverOrCallback<T> = IObserver<T> | ((value: T) => void);
 export type TSourceOrValue<T> = ISource<T> | T;
 export type TExpressionOrFunction<T> = IExpression<T> | (() => T);
 
@@ -69,6 +67,12 @@ export function $observable<T>(input: TObservableOrValue<T>): IObservable<T> {
     : new Source<T>().emit(input as T);
 }
 
+export function $observer<T>(input: TObserverOrCallback<T>): IObserver<T> {
+  return IsObserver(input)
+    ? input
+    : new Observer<T>(input as (value: T) => void);
+}
+
 // export function $observables<T extends ([any, boolean] | Any)[]>(...inputs: T): CastToObservablesTuple<T> {
 export function $observables<T extends any[]>(...inputs: T): CastToObservables<T> {
   return inputs.map(_ => $observable(_)) as any;
@@ -94,6 +98,8 @@ export function $expression<T>(input: TExpressionOrFunction<T>): IExpression<T> 
     throw new TypeError(`Expected Expression or function as input`);
   }
 }
+
+
 
 
 
@@ -270,13 +276,13 @@ export function $string(parts: TemplateStringsArray | string[], ...args: TObserv
 }
 
 
-export function $fetch<T>(requestInfo: TObservableOrValue<RequestInfo>, requestInit?: TObservableOrValue<RequestInit>): IAsyncFunctionObservable<(token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit: RequestInit) => Promise<T>> {
-  return new AsyncFunctionObservable<(token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit: RequestInit) => Promise<T>>(_fetch, [$observable(requestInfo), $observable(requestInit)]);
+type TFetchFunction<T> = (token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit: RequestInit) => Promise<T>;
+export function $fetch<T>(requestInfo: TObservableOrValue<RequestInfo>, requestInit?: TObservableOrValue<RequestInit>): IAsyncFunctionObservable<TFetchFunction<T>> {
+  return new AsyncFunctionObservable<TFetchFunction<T>>(_fetch, [$observable(requestInfo), $observable(requestInit)]);
 }
 
 export function _fetch<T>(token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit: RequestInit): Promise<T> {
-  // TODO token as signal
-  return fetch(requestInfo, requestInit)
+  return fetch(requestInfo, LinkPromiseCancelTokenWithFetchArguments(token, requestInfo, requestInit))
     .then<T>((response: Response) =>{
       if (token.cancelled) {
         throw token.reason;
@@ -289,78 +295,140 @@ export function _fetch<T>(token: IPromiseCancelToken, requestInfo: RequestInfo, 
 
 
 
-export async function testMisc(): Promise<void> {
+/*** EXPERIMENTAL ***/
 
-  function eq(a: any, b: any) {
-    return (a === b)
-    || (Number.isNaN(a) && Number.isNaN(b))
-    || (JSON.stringify(a) === JSON.stringify(b));
-  }
+export function $property<TOutput>(input: TObservableOrValue<any>, ...propertyNames: PropertyKey[]): IObservable<TOutput> {
+  const observable: IObservable<any> = IsObservable(input)
+    ? input
+    : new Source<any>().emit(input);
 
-  function observableAssert(values: any[], timeout: number = 100, equalFunction: (a: any, b: any) => boolean = eq): [(value: any) => void, Promise<void>] {
-    let index: number = 0;
-    let resolve: any;
-    let reject: any;
+  if (propertyNames.length === 0) {
+    return observable;
+  } else {
+    const propertyName: PropertyKey = propertyNames[0];
 
-    return [
-      (value: any) => {
-        if (index < values.length) {
-          if (equalFunction(value, values[index])) {
-            index++;
-          } else {
-            reject(new Error(`Received value ${value} (#${index}), expected ${values[index]}`));
-          }
-        } else {
-          reject(new Error(`Received more than ${index} values`));
-        }
-      },
-      Promise.race([
-        new Promise<void>((resolve: any) => {
-          setTimeout(() => {
-            if (index === values.length) {
-              resolve();
-            } else {
-              reject(new Error(`Timeout reached without receiving enough values`));
-            }
-          }, timeout);
-        }),
-        new Promise<void>((_resolve: any, _reject: any) => {
-          resolve = _resolve;
-          reject = _reject;
-        })
-      ])
-    ];
-  }
-
-  function assertPipe(values: any[], timeout?: number): IPipe<IObserver<any>, IPromiseObservable<void, Error, void>> {
-    const [observer, promise] = observableAssert(values, timeout);
-    return new Pipe(() => {
-      return {
-        observer: new Observer<any>(observer),
-        observable: new PromiseObservable(() => promise)
-      }
-    });
-  }
-
-  function assertObservableEmits(observable: IObservable<any>, values: any[], timeout?: number): Promise<void> {
-    return toPromise<void>(
-      observable.pipeThrough(assertPipe(values, timeout))
-    );
-  }
-
-  function assertFunctionObservableEmits(valuesToEmit: any[], observable: IFunctionObservable<any>, values: any[], timeout?: number): Promise<void> {
-    const [observer, promise] = observableAssert(values, timeout);
-    observable
-      .observedBy(new Observer(observer).activate())
-      .run(function() {
-        for (let i = 0; i < valuesToEmit.length; i++) {
-          (this.arguments.item(i) as ISource<any>).emit(valuesToEmit[i]);
-        }
+    const pipe: TPipeBase<any, any> = Pipe.create<any, any>((context: TPipeContextBase<any, any>) => {
+      const valueObserver: IObserver<any> = new Observer<any>((value: any) => {
+        context.emit(value);
       });
-    return promise;
+
+      return {
+        onEmit: (input: any) => {
+          if (IsObject(input)) {
+            const value: any = (input as any)[propertyName];
+            if (IsObservable(value)) {
+              valueObserver.disconnect();
+              // console.log('observing', value);
+              context.emit(void 0); // emits undefined because path is potentially invalid
+              valueObserver.observe(value);
+            } else {
+              context.emit(value);
+            }
+          } else {
+            context.emit(void 0); // emits undefined because input is not an object so path becomes invalid
+          }
+        },
+        onObserved(): void {
+          if (context.pipe.observable.observers.length === 1) {
+            valueObserver.activate();
+          }
+        },
+        onUnobserved(): void {
+          if (!context.pipe.observable.observed) {
+            valueObserver.deactivate();
+          }
+        },
+      };
+    });
+
+    pipe.observer.observe(observable);
+
+    return $property<TOutput>(pipe.observable, ...propertyNames.slice(1));
   }
 
+}
 
+
+
+export type TValueToDeepSource<T> =
+  T extends IObservable<any>
+    ? T
+    : ISource<
+        T extends object
+        ? {
+          [K in keyof T]: TValueToDeepSource<T[K]>;
+        }
+        : T
+      >;
+
+export function ValueToDeepSource<T>(input: TObservableOrValue<T>): TValueToDeepSource<T> {
+  if (IsObservable(input)) {
+    return input as TValueToDeepSource<T>;
+  } else if (IsObject(input)) {
+    const keys: PropertyKey[] = (Object.keys(input) as PropertyKey[]).concat(Object.getOwnPropertySymbols(input));
+    const output: any = {};
+    for (let i = 0, l = keys.length; i < l; i++) {
+      output[keys[i]] = ValueToDeepSource<any>((input as any)[keys[i]]);
+    }
+    return new Source<any>().emit(output) as any;
+  } else {
+    return new Source<any>().emit(input) as any;
+  }
+}
+
+
+async function test$property(): Promise<void> {
+  // type OBJECT = {
+  //   a1: {
+  //     b1: 'a1-b1',
+  //     b2: {
+  //       c1: 'a1-b2-c1'
+  //     }
+  //   }
+  // };
+
+  type OBJECT = {
+    a1?: {
+      b1?: string,
+      b2?: {
+        c1?: string
+      }
+    }
+    a?: string
+  };
+
+  const object: OBJECT = {
+    a1: {
+      b1: 'a1-b1',
+      b2: {
+        c1: 'a1-b2-c1'
+      }
+    }
+  };
+
+  const observableObject = ValueToDeepSource<OBJECT>(object);
+  // const b: TObservableOrValueToValueType<IObservable<number>>;
+  //
+  const a = $property<string>(observableObject, 'a1', 'b1')
+  // const a = $property<string>(observableObject.a1, 'b1')
+  //   .pipeThrough(distinctPipe<string>())
+    .pipeTo((value: string) => {
+      console.warn('changed', value);
+    }).activate();
+
+  /**
+   * LIMITS: emitted values are not reflected on the object
+   */
+  observableObject.value.a1.emit(ValueToDeepSource({ b1: 'a1-b1-v2' }).value);
+  observableObject.emit(ValueToDeepSource({ a: 'a' }).value);
+  observableObject.emit(ValueToDeepSource({ a1: { b1: 'a1-b1-v3' }}).value);
+  console.log(observableObject.value.a1.value.b1.value);
+}
+
+
+
+export async function testMisc(): Promise<void> {
+  await test$property();
 
   await assertObservableEmits(
     new Source<any>().emit(1),

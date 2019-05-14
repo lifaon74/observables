@@ -1,2 +1,2 @@
 export * from './interfaces';
-export { WebSocketObservableObserver } from './implementation';
+export { WebSocketIO } from './implementation';

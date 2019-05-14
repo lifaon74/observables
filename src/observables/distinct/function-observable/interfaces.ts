@@ -1,7 +1,7 @@
 import { IValueObservable } from '../value-observable/interfaces';
 import { IReadonlyTuple, TupleTypes } from '../../../misc/readonly-list/interfaces';
 import { IObservable } from '../../../core/observable/interfaces';
-import { TupleArray } from "../../../classes/types";
+import { TupleArray } from '../../../classes/types';
 
 
 export interface IFunctionObservableConstructor {
@@ -13,8 +13,10 @@ export interface IFunctionObservableConstructor {
 
 export interface IFunctionObservable<T extends TFunctionObservableFactory> extends IValueObservable<TFunctionObservableValue<T>> {
   readonly factory: T;
-  readonly arguments: IReadonlyTuple<TFunctionObservableParameters<T>>;
+  readonly args: IReadonlyTuple<TFunctionObservableParameters<T>>;
 
+  pause(): void;
+  resume(): void;
   run(callback: (this: this) => void): this;
 }
 

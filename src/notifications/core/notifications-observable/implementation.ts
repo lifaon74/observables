@@ -1,27 +1,27 @@
 import { Notification } from '../notification/implementation';
 import {
-  INotificationsObservable,
-  INotificationsObservableConstructor,
-  INotificationsObservableContext,
-  INotificationsObservableContextConstructor,
-  TNotificationsObservableConstructorArgs,
-  TNotificationsObservableHook,
-  KeyValueMapToNotifications, KeyValueMapToNotificationsObservers,
+  INotificationsObservable, INotificationsObservableConstructor, INotificationsObservableContext,
+  INotificationsObservableContextConstructor, KeyValueMapToNotifications, KeyValueMapToNotificationsObservers,
+  TNotificationsObservableConstructorArgs, TNotificationsObservableHook,
 } from './interfaces';
-import { AllowObservableContextBaseConstruct, IObservableContextBaseInternal, IObservablePrivate, IsObservableConstructor, OBSERVABLE_CONTEXT_BASE_PRIVATE, OBSERVABLE_PRIVATE, ObservableContextBase, ObservableFactory } from '../../../core/observable/implementation';
-import { IObservable, IObservableContext } from '../../../core/observable/interfaces';
+import {
+  AllowObservableContextBaseConstruct, IObservableContextBaseInternal, IObservablePrivate,
+  IS_OBSERVABLE_LIKE_CONSTRUCTOR, IsObservableLikeConstructor, OBSERVABLE_CONTEXT_BASE_PRIVATE, OBSERVABLE_PRIVATE,
+  ObservableContextBase, ObservableFactory
+} from '../../../core/observable/implementation';
+import { IObservable, IObservableConstructor, IObservableContext } from '../../../core/observable/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { INotificationsObserver } from '../notifications-observer/interfaces';
 import {
-  INotificationsObserverInternal,
-  NOTIFICATIONS_OBSERVER_PRIVATE,
-  NotificationsObserver
+  INotificationsObserverInternal, NOTIFICATIONS_OBSERVER_PRIVATE, NotificationsObserver
 } from '../notifications-observer/implementation';
 import { IObserverInternal, OBSERVER_PRIVATE, ObserverUnobserveOne } from '../../../core/observer/implementation';
 import { INotification } from '../notification/interfaces';
 import { KeyValueMapGeneric, KeyValueMapGenericConstraint, KeyValueMapKeys, KeyValueMapValues } from '../interfaces';
 import { InitObservableHook, IObservableHookPrivate } from '../../../core/observable/hook';
-import { Constructor, FactoryClass, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass } from '../../../classes/factory';
+import {
+  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
+} from '../../../classes/factory';
 import { IsObject } from '../../../helpers';
 import { IObserver } from '../../../core/observer/interfaces';
 
@@ -71,9 +71,9 @@ export function IsNotificationsObservable(value: any): value is INotificationsOb
 }
 
 const IS_NOTIFICATIONS_OBSERVABLE_CONSTRUCTOR = Symbol('is-notifications-observable-constructor');
-export function IsNotificationsObservableConstructor(value: any): boolean {
+export function IsNotificationsObservableConstructor(value: any, direct?: boolean): boolean {
   return (typeof value === 'function')
-    && HasFactoryWaterMark(value, IS_NOTIFICATIONS_OBSERVABLE_CONSTRUCTOR);
+    && HasFactoryWaterMark(value, IS_NOTIFICATIONS_OBSERVABLE_CONSTRUCTOR, direct);
 }
 
 
@@ -192,18 +192,20 @@ export function NotificationsObservableDispatch<TKVMap extends KeyValueMapGeneri
 }
 
 
-export function NotificationsObservableFactory<TBase extends Constructor<IObservable<any>>>(superClass: TBase) {
+
+function PureNotificationsObservableFactory<TBase extends Constructor<IObservable<any>>>(superClass: TBase) {
   // type TKVMap = never; // dirty hack
   type TKVMap = { [key: string]: any };
   // type TKVMap = KeyValueMapGeneric;
-  if (!IsObservableConstructor(superClass)) {
+  if (!IsObservableLikeConstructor(superClass)) {
     throw new TypeError(`Expected Observables' constructor as superClass`);
   }
   const setSuperArgs = GetSetSuperArgsFunction(IsFactoryClass(superClass));
 
-  return FactoryClass(class NotificationsObservable extends superClass implements INotificationsObservable<TKVMap>{
+  return class NotificationsObservable extends superClass implements INotificationsObservable<TKVMap>{
     constructor(...args: any[]) {
       const [create]: TNotificationsObservableConstructorArgs<TKVMap> = args[0];
+      // const [create]: ConstructorParameters<INotificationsObservableConstructor> = args[0];
 
       let context: IObservableContext<KeyValueMapToNotifications<TKVMap>> = void 0;
       super(...setSuperArgs(args.slice(1), [
@@ -243,16 +245,33 @@ export function NotificationsObservableFactory<TBase extends Constructor<IObserv
     matches(name: string, callback?: (value: any) => void): IterableIterator<KeyValueMapToNotificationsObservers<TKVMap>> {
       return NotificationsObservableMatches<TKVMap>(this, name, callback);
     }
-
-  })<TNotificationsObservableConstructorArgs<TKVMap>>('NotificationsObservable', IS_NOTIFICATIONS_OBSERVABLE_CONSTRUCTOR);
+  };
 }
 
-export const NotificationsObservable: INotificationsObservableConstructor = class NotificationsObservable extends NotificationsObservableFactory(ObservableFactory<ObjectConstructor>(Object)) {
+export let NotificationsObservable: INotificationsObservableConstructor;
+
+export function NotificationsObservableFactory<TBase extends Constructor<IObservable<any>>>(superClass: TBase) {
+  return MakeFactory<INotificationsObservableConstructor, [], TBase>(PureNotificationsObservableFactory, [], superClass, {
+    name: 'NotificationsObservable',
+    instanceOf: NotificationsObservable,
+    waterMarks: [IS_NOTIFICATIONS_OBSERVABLE_CONSTRUCTOR, IS_OBSERVABLE_LIKE_CONSTRUCTOR],
+  });
+}
+
+export function NotificationsObservableBaseFactory<TBase extends Constructor>(superClass: TBase) {
+  return MakeFactory<INotificationsObservableConstructor, [IObservableConstructor], TBase>(PureNotificationsObservableFactory, [ObservableFactory], superClass, {
+    name: 'NotificationsObservable',
+    instanceOf: NotificationsObservable,
+    waterMarks: [IS_NOTIFICATIONS_OBSERVABLE_CONSTRUCTOR, IS_OBSERVABLE_LIKE_CONSTRUCTOR],
+  });
+}
+
+NotificationsObservable = class NotificationsObservable extends NotificationsObservableBaseFactory<ObjectConstructor>(Object) {
   constructor(create?: (context: INotificationsObservableContext<KeyValueMapGeneric>) => (TNotificationsObservableHook<KeyValueMapGeneric> | void)) {
   // constructor(create?: any) {
     super([create], []);
   }
-} as any;
+} as INotificationsObservableConstructor;
 
 
 /* ------------------------------------------- */

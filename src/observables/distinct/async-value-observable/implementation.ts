@@ -1,14 +1,26 @@
-import { AllowObservableContextBaseConstruct, IObservableContextBaseInternal, OBSERVABLE_CONTEXT_BASE_PRIVATE, ObservableContextBase, ObservableFactory } from '../../../core/observable/implementation';
-import { IObservableHook } from '../../../core/observable/interfaces';
+import {
+  AllowObservableContextBaseConstruct, IObservableContextBaseInternal, IS_OBSERVABLE_LIKE_CONSTRUCTOR,
+  OBSERVABLE_CONTEXT_BASE_PRIVATE, ObservableContextBase, ObservableFactory
+} from '../../../core/observable/implementation';
+import { IObservableConstructor, IObservableHook } from '../../../core/observable/interfaces';
 import { IObserver } from '../../../core/observer/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
-import { IAsyncValueObservable, IAsyncValueObservableConstructor, IAsyncValueObservableContext, IAsyncValueObservableContextConstructor, TAsyncValueObservableConstructorArgs } from './interfaces';
-import { Constructor, FactoryClass, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass } from '../../../classes/factory';
+import {
+  IAsyncValueObservable, IAsyncValueObservableConstructor, IAsyncValueObservableContext,
+  IAsyncValueObservableContextConstructor, TAsyncValueObservableConstructorArgs
+} from './interfaces';
+import {
+  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
+} from '../../../classes/factory';
 import { IPromiseCancelToken } from '../../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
-import { IValueObservable, IValueObservableContext } from '../value-observable/interfaces';
-import { IsValueObservableConstructor, IValueObservableInternal, ValueObservableFactory, } from '../value-observable/implementation';
+import { IValueObservable, IValueObservableConstructor, IValueObservableContext } from '../value-observable/interfaces';
+import {
+  IsValueObservableConstructor, IValueObservableInternal, ValueObservableFactory,
+} from '../value-observable/implementation';
 import { InitObservableHook, IObservableHookPrivate } from '../../../core/observable/hook';
-import { PromiseCancelReason, PromiseCancelToken } from '../../../notifications/observables/promise-observable/promise-cancel-token/implementation';
+import {
+  PromiseCancelReason, PromiseCancelToken
+} from '../../../notifications/observables/promise-observable/promise-cancel-token/implementation';
 import { IsObject } from '../../../helpers';
 
 
@@ -48,10 +60,10 @@ export function IsAsyncValueObservable(value: any): value is IAsyncValueObservab
 }
 
 const IS_ASYNC_VALUE_OBSERVABLE_CONSTRUCTOR = Symbol('is-async-value-observable-constructor');
+
 export function IsAsyncValueObservableConstructor(value: any): boolean {
   return (typeof value === 'function') && ((value === AsyncValueObservable) || HasFactoryWaterMark(value, IS_ASYNC_VALUE_OBSERVABLE_CONSTRUCTOR));
 }
-
 
 
 export function AsyncValueObservableOnObserved<T>(observable: IAsyncValueObservable<T>, observer: IObserver<T>): void {
@@ -86,15 +98,14 @@ export function AsyncValueObservableEmit<T>(observable: IAsyncValueObservable<T>
     });
 }
 
-
-export function AsyncValueObservableFactory<TBase extends Constructor<IValueObservable<any>>>(superClass: TBase) {
+function PureAsyncValueObservableFactory<TBase extends Constructor<IValueObservable<any>>>(superClass: TBase) {
   type T = any;
   if (!IsValueObservableConstructor(superClass)) {
     throw new TypeError(`Expected ValueObservables' constructor as superClass`);
   }
   const setSuperArgs = GetSetSuperArgsFunction(IsFactoryClass(superClass));
 
-  return FactoryClass(class AsyncValueObservable extends superClass implements IAsyncValueObservable<T> {
+  return class AsyncValueObservable extends superClass implements IAsyncValueObservable<T> {
     constructor(...args: any[]) {
       const [create]: TAsyncValueObservableConstructorArgs<T> = args[0];
       let context: IValueObservableContext<T> = void 0;
@@ -113,15 +124,32 @@ export function AsyncValueObservableFactory<TBase extends Constructor<IValueObse
       ]));
       ConstructAsyncValueObservable<T>(this, context, create);
     }
-  })<TAsyncValueObservableConstructorArgs<T>>('AsyncValueObservable', IS_ASYNC_VALUE_OBSERVABLE_CONSTRUCTOR);
+  };
 }
 
+export let AsyncValueObservable: IAsyncValueObservableConstructor;
 
-export const AsyncValueObservable: IAsyncValueObservableConstructor = class AsyncValueObservable extends AsyncValueObservableFactory(ValueObservableFactory(ObservableFactory<ObjectConstructor>(Object))) {
+export function AsyncValueObservableFactory<TBase extends Constructor<IValueObservable<any>>>(superClass: TBase) {
+  return MakeFactory<IAsyncValueObservableConstructor, [], TBase>(PureAsyncValueObservableFactory, [], superClass, {
+    name: 'AsyncValueObservable',
+    instanceOf: AsyncValueObservable,
+    waterMarks: [IS_ASYNC_VALUE_OBSERVABLE_CONSTRUCTOR, IS_OBSERVABLE_LIKE_CONSTRUCTOR],
+  });
+}
+
+export function AsyncValueObservableBaseFactory<TBase extends Constructor>(superClass: TBase) {
+  return MakeFactory<IAsyncValueObservableConstructor, [IValueObservableConstructor, IObservableConstructor], TBase>(PureAsyncValueObservableFactory, [ValueObservableFactory, ObservableFactory], superClass, {
+    name: 'AsyncValueObservable',
+    instanceOf: AsyncValueObservable,
+    waterMarks: [IS_ASYNC_VALUE_OBSERVABLE_CONSTRUCTOR, IS_OBSERVABLE_LIKE_CONSTRUCTOR],
+  });
+}
+
+AsyncValueObservable = class AsyncValueObservable extends AsyncValueObservableBaseFactory<ObjectConstructor>(Object) {
   constructor(create?: (context: IAsyncValueObservableContext<any>) => (IObservableHook<any> | void)) {
     super([create], [], []);
   }
-};
+} as IAsyncValueObservableConstructor;
 
 
 /*--------------------------*/

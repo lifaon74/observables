@@ -1,7 +1,11 @@
-import { TCancellablePromiseTuple, TPromiseObservableNotification } from '../../notifications/observables/promise-observable/interfaces';
+import {
+  TCancellablePromiseTuple, TPromiseObservableNotification
+} from '../../notifications/observables/promise-observable/interfaces';
 import { Notification } from '../../notifications/core/notification/implementation';
 import { IObservable } from '../../core/observable/interfaces';
-import { PromiseCancelError, PromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/implementation';
+import {
+  PromiseCancelError, PromiseCancelToken
+} from '../../notifications/observables/promise-observable/promise-cancel-token/implementation';
 import { IPromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
 import { Observer } from '../../core/observer/implementation';
 import { INotificationsObserver } from '../../notifications/core/notifications-observer/interfaces';
@@ -16,7 +20,7 @@ export type TValueOrNotificationType<T> = T | TBasePromiseObservableNotification
  * @param observable
  * @return a tuple: The Promise, and a PromiseCancelToken.
  */
-export function toCancellablePromise<T>(observable: IObservable<TBasePromiseObservableNotification<T>> | IObservable<T>): TCancellablePromiseTuple<T> {
+export function toCancellablePromiseTuple<T>(observable: IObservable<TBasePromiseObservableNotification<T>> | IObservable<T>): TCancellablePromiseTuple<T> {
   const token: IPromiseCancelToken = new PromiseCancelToken();
   return [
     new Promise<T>((resolve: any, reject: any) => {
@@ -70,5 +74,5 @@ export function toCancellablePromise<T>(observable: IObservable<TBasePromiseObse
 }
 
 export function toPromise<T>(observable: IObservable<TBasePromiseObservableNotification<T>> | IObservable<T>): Promise<T> {
-  return toCancellablePromise<T>(observable)[0];
+  return toCancellablePromiseTuple<T>(observable)[0];
 }

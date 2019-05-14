@@ -43,4 +43,10 @@ export class Notification<TName extends string, TValue> implements INotification
     return ((this as unknown) as INotificationInternal<TName, TValue>)[NOTIFICATION_PRIVATE].value;
   }
 
+  toJSON(): INotification<TName, TValue> {
+    return {
+      name: this.name,
+      value: this.value,
+    } as INotification<TName, TValue>;
+  }
 }

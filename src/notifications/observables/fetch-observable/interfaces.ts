@@ -1,4 +1,6 @@
-import { IPromiseNotificationKeyValueMap, IPromiseObservable, IPromiseObservableOptions } from '../promise-observable/interfaces';
+import {
+  IPromiseNotificationKeyValueMap, IPromiseObservable, IPromiseObservableOptions
+} from '../promise-observable/interfaces';
 
 export type TFetchObservableKeyValueMap = IPromiseNotificationKeyValueMap<Response, Error, any>;
 export type TFetchObservableCastKeyValueMap<T> = IPromiseNotificationKeyValueMap<T, Error, any>;

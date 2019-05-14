@@ -1,4 +1,8 @@
-import { IObservable, IObservableContext, IObservableContextConstructor, IObservableHook, TObserverOrCallback, IObservableContextBase, TObservableConstructorArgs, IObservableConstructor, IObservableTypedConstructor, TObservablePipeThroughResult, TObservablePipeResult, TObservableObservedByResultNonCyclic } from './interfaces';
+import {
+  IObservable, IObservableConstructor, IObservableContext, IObservableContextBase, IObservableContextConstructor,
+  IObservableHook, TObservableConstructorArgs, TObservableObservedByResultNonCyclic, TObservablePipeResult,
+  TObservablePipeThroughResult, TObserverOrCallback
+} from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { ReadonlyList } from '../../misc/readonly-list/implementation';
 import { IObserver } from '../observer/interfaces';
@@ -6,7 +10,7 @@ import { IReadonlyList } from '../../misc/readonly-list/interfaces';
 import { IObserverInternal, Observer, OBSERVER_PRIVATE } from '../observer/implementation';
 import { IObservableObserver } from '../observable-observer/interfaces';
 import { InitObservableHook, IObservableHookPrivate } from './hook';
-import { Constructor, FactoryClass, HasFactoryWaterMark } from '../../classes/factory';
+import { Constructor, HasFactoryWaterMark, MakeFactory } from '../../classes/factory';
 import { IsObject } from '../../helpers';
 
 
@@ -42,8 +46,29 @@ export function IsObservable(value: any): value is IObservable<any> {
 }
 
 const IS_OBSERVABLE_CONSTRUCTOR = Symbol('is-observable-constructor');
-export function IsObservableConstructor(value: any): value is IObservableConstructor {
-  return (typeof value === 'function') && ((value === Observable) || HasFactoryWaterMark(value, IS_OBSERVABLE_CONSTRUCTOR));
+
+/**
+ * Returns true if value is an Observable
+ * @param value
+ * @param direct
+ */
+export function IsObservableConstructor(value: any, direct?: boolean): value is IObservableConstructor {
+  return (typeof value === 'function') && ((value === Observable) || HasFactoryWaterMark(value, IS_OBSERVABLE_CONSTRUCTOR, direct));
+}
+
+export const IS_OBSERVABLE_LIKE_CONSTRUCTOR = Symbol('is-observable-constructor');
+
+/**
+ * Returns true if value is an ObservableConstructor (direct or indirect) and accepts same arguments than an Observable
+ * @param value
+ * @param direct
+ */
+export function IsObservableLikeConstructor(value: any, direct?: boolean): value is IObservableConstructor {
+  return (typeof value === 'function')
+    && (
+      (value === Observable)
+      || (HasFactoryWaterMark(value, IS_OBSERVABLE_LIKE_CONSTRUCTOR, direct) && HasFactoryWaterMark(value, IS_OBSERVABLE_CONSTRUCTOR, false))
+    );
 }
 
 
@@ -67,7 +92,7 @@ export function ObservablePipe<T>(observable: IObservable<T>, observerOrCallback
   } else if (IsObject(observerOrCallback)) {
     observer = observerOrCallback;
   } else {
-    throw new TypeError(`Expected Observer or function.`)
+    throw new TypeError(`Expected Observer or function.`);
   }
   return observer.observe(observable);
 }
@@ -77,7 +102,6 @@ export function ObservableObservedBy<T>(observable: IObservable<T>, observers: T
     ObservablePipe<T>(observable, observers[i]);
   }
 }
-
 
 
 export function LinkObservableAndObserver<T>(observable: IObservable<T>, observer: IObserver<T>): void {
@@ -104,10 +128,10 @@ export function ObservableClearObservers<T>(observable: IObservable<T>): void {
 }
 
 
-
-export function ObservableFactory<TBase extends Constructor>(superClass: TBase) {
+function PureObservableFactory<TBase extends Constructor>(superClass: TBase) {
   type T = any;
-  return FactoryClass(class Observable extends superClass implements IObservable<T> {
+
+  return class Observable extends superClass implements IObservable<T> {
     constructor(...args: any[]) {
       const [create]: TObservableConstructorArgs<T> = args[0];
       super(...args.slice(1));
@@ -115,6 +139,9 @@ export function ObservableFactory<TBase extends Constructor>(superClass: TBase) 
     }
 
     get observers(): IReadonlyList<IObserver<T>> {
+      // if (((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers === void 0) {
+      //   ((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers = new ReadonlyList<IObserver<T>>(((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers);
+      // }
       return ((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers;
     }
 
@@ -143,16 +170,25 @@ export function ObservableFactory<TBase extends Constructor>(superClass: TBase) 
       ObservableObservedBy<T>(this, observers);
       return (this as unknown) as TObservableObservedByResultNonCyclic<O, T, this>;
     }
-
-
-  })<TObservableConstructorArgs<T>>('Observable', IS_OBSERVABLE_CONSTRUCTOR);
+  };
 }
 
-export const Observable: IObservableConstructor = class Observable extends ObservableFactory<ObjectConstructor>(Object) {
+export let Observable: IObservableConstructor;
+
+export function ObservableFactory<TBase extends Constructor>(superClass: TBase) {
+  return MakeFactory<IObservableConstructor, [], TBase>(PureObservableFactory, [], superClass, {
+    name: 'Observable',
+    instanceOf: Observable,
+    waterMarks: [IS_OBSERVABLE_CONSTRUCTOR, IS_OBSERVABLE_LIKE_CONSTRUCTOR]
+  });
+}
+
+Observable = class Observable extends ObservableFactory<ObjectConstructor>(Object) {
   constructor(create?: (context: IObservableContext<any>) => (IObservableHook<any> | void)) {
     super([create]);
   }
-};
+} as IObservableConstructor;
+
 
 
 // export class Observable<T> implements IObservable<T> {
@@ -191,9 +227,7 @@ export const Observable: IObservableConstructor = class Observable extends Obser
 // }
 
 
-
 /* ---------------------------------- */
-
 
 
 export const OBSERVABLE_CONTEXT_BASE_PRIVATE = Symbol('observable-context-base-private');
@@ -207,6 +241,7 @@ export interface IObservableContextBaseInternal<T> extends IObservableContextBas
 }
 
 let ALLOW_OBSERVABLE_CONTEXT_BASE_CONSTRUCT: boolean = false;
+
 export function AllowObservableContextBaseConstruct(allow: boolean): void {
   ALLOW_OBSERVABLE_CONTEXT_BASE_CONSTRUCT = allow;
 }
@@ -239,7 +274,7 @@ export abstract class ObservableContextBase<T> implements IObservableContextBase
 
 export function NewObservableContext<T>(observable: IObservable<T>): IObservableContext<T> {
   ALLOW_OBSERVABLE_CONTEXT_BASE_CONSTRUCT = true;
-  const context: IObservableContext<T> = new((ObservableContext as unknown) as IObservableContextConstructor)<T>(observable);
+  const context: IObservableContext<T> = new ((ObservableContext as unknown) as IObservableContextConstructor)<T>(observable);
   ALLOW_OBSERVABLE_CONTEXT_BASE_CONSTRUCT = false;
   return context;
 }

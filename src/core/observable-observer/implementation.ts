@@ -1,8 +1,14 @@
-import { IObservableObserver, IPipe, IPipeContext, IPipeContextConstructor, IPipeHook, TObservableObserverActivateMode } from './interfaces';
+import {
+  IObservableObserver, IPipe, IPipeContext, IPipeContextConstructor, IPipeHook, TObservableObserverActivateMode
+} from './interfaces';
 import { IObservable, ObservableType } from '../observable/interfaces';
 import { IObserver, ObserverType } from '../observer/interfaces';
-import { IObservableInternal, IObservablePrivate, Observable, OBSERVABLE_PRIVATE, ObservableEmitAll } from '../observable/implementation';
-import { IObserverInternal, Observer, OBSERVER_PRIVATE, ObserverActivate, ObserverDeactivate } from '../observer/implementation';
+import {
+  IObservableInternal, IObservablePrivate, Observable, OBSERVABLE_PRIVATE, ObservableEmitAll
+} from '../observable/implementation';
+import {
+  IObserverInternal, Observer, OBSERVER_PRIVATE, ObserverActivate, ObserverDeactivate
+} from '../observer/implementation';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject, noop } from '../../helpers';
 
@@ -43,15 +49,15 @@ export function ConstructPipe<TObserver extends IObserver<any>, TObservable exte
         const observablePrivate: IObservablePrivate<TValueObservable> = ((((instance as unknown) as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].observable as unknown) as IObservableInternal<TValueObservable>)[OBSERVABLE_PRIVATE];
 
         const onObserveHook = observablePrivate.onObserveHook;
-        observablePrivate.onObserveHook = (observer: IObserver<TValueObservable>) => {
+        observablePrivate.onObserveHook = function(observer: IObserver<TValueObservable>) {
           PipeUpdateAutoActivate<TObserver, TObservable>(instance);
-          onObserveHook(observer);
+          onObserveHook.call(this, observer);
         };
 
         const onUnobserveHook = observablePrivate.onUnobserveHook;
-        observablePrivate.onUnobserveHook = (observer: IObserver<TValueObservable>) => {
+        observablePrivate.onUnobserveHook = function(observer: IObserver<TValueObservable>) {
           PipeUpdateAutoDeactivate<TObserver, TObservable>(instance);
-          onUnobserveHook(observer);
+          onUnobserveHook.call(this, observer);
         };
       } else {
         throw new TypeError(`Expected property observable of type Observable in return of Pipe's create function`);

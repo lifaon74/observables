@@ -1,11 +1,11 @@
-import { IPromiseCancelToken } from '../promise-cancel-token/interfaces';
-import { PromiseCancelToken } from '../promise-cancel-token/implementation';
+import { IPromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import { PromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/implementation';
+import { ICancellablePromise } from './interfaces';
+import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
+import { IsObject } from '../../helpers';
 import {
-  ICancellablePromise,
   TPromiseCreateCallback, TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion
-} from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
-import { IsObject } from '../../../../helpers';
+} from '../interfaces';
 
 
 export const CANCELLABLE_PROMISE_PRIVATE = Symbol('cancellable-promise-private');
@@ -49,29 +49,73 @@ export function IsCancellablePromiseWithSameToken<T>(value: any, instance: ICanc
     && (value.token === instance.token);
 }
 
+
+export function CancellablePromiseFulfillInternal<T, TResult>(
+  instance: ICancellablePromise<T>,
+  onFulfilled: ((value: T, token: IPromiseCancelToken) => TPromiseOrValue<TResult>) | undefined | null,
+  value: T,
+): TPromiseOrValue<TResult> {
+  if ((instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token.cancelled) {
+    return void 0;
+  } else if (typeof onFulfilled === 'function') {
+    return onFulfilled(value, (instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token);
+  } else {
+    return value as any;
+  }
+}
+
+export function CancellablePromiseCatchInternal<T, TResult>(
+  instance: ICancellablePromise<T>,
+  onRejected: ((reason: any, token: IPromiseCancelToken) => TPromiseOrValue<TResult>) | undefined | null,
+  reason: any,
+) {
+  if ((instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token.cancelled) {
+    return void 0;
+  } else if (typeof onRejected === 'function') {
+    return onRejected(reason, (instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token);
+  } else {
+    throw reason;
+  }
+}
+
+
+export function CancellablePromiseFinallyInternal<T>(
+  instance: ICancellablePromise<T>,
+  onFinally?: ((token: IPromiseCancelToken) => void) | undefined | null,
+): void {
+  if ((instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token.cancelled) {
+    return void 0;
+  } else if (typeof onFinally === 'function') {
+    return onFinally((instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token);
+  } else {
+    return void 0;
+  }
+}
+
+
+export function CancellablePromiseCancelledInternal<T>(
+  instance: ICancellablePromise<T>,
+  onCancelled?: ((token: IPromiseCancelToken) => void) | undefined | null
+): void {
+  if ((instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token.cancelled) {
+    return onCancelled((instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token);
+  } else {
+    return void 0;
+  }
+}
+
+
 export function CancellablePromiseThen<T, TResult1 = T, TResult2 = never>(
   instance: ICancellablePromise<T>,
-  onFulfilled?: ((value: T, token: IPromiseCancelToken) => TResult1 | PromiseLike<TResult1>) | undefined | null,
-  onRejected?: ((reason: any, token: IPromiseCancelToken) => TResult2 | PromiseLike<TResult2>) | undefined | null
+  onFulfilled?: ((value: T, token: IPromiseCancelToken) => TPromiseOrValue<TResult1>) | undefined | null,
+  onRejected?: ((reason: any, token: IPromiseCancelToken) => TPromiseOrValue<TResult2>) | undefined | null
 ): ICancellablePromise<TResult1 | TResult2> {
   return new CancellablePromise<TResult1 | TResult2>(
     (instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].promise
       .then((value: T) => {
-        if ((instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token.cancelled) {
-          return void 0;
-        } else if (typeof onFulfilled === 'function') {
-          return onFulfilled(value, (instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token);
-        } else {
-          return value as any;
-        }
+        return CancellablePromiseFulfillInternal<T, TResult1>(this, onFulfilled, value);
       }, (reason: any) => {
-        if ((instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token.cancelled) {
-          return void 0;
-        } else if (typeof onRejected === 'function') {
-          return onRejected(reason, (instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token);
-        } else {
-          throw reason;
-        }
+        return CancellablePromiseCatchInternal<T, TResult2>(instance, onRejected, reason);
       }),
     (instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token
   );
@@ -79,18 +123,12 @@ export function CancellablePromiseThen<T, TResult1 = T, TResult2 = never>(
 
 export function CancellablePromiseCatch<T, TResult = never>(
   instance: ICancellablePromise<T>,
-  onRejected?: ((reason: any, token: IPromiseCancelToken) => TResult | PromiseLike<TResult>) | undefined | null
+  onRejected?: ((reason: any, token: IPromiseCancelToken) => TPromiseOrValue<TResult>) | undefined | null
 ): ICancellablePromise<T | TResult> {
   return new CancellablePromise<T | TResult>(
     (instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].promise
       .catch((reason: any) => {
-        if ((instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token.cancelled) {
-          return void 0;
-        } else if (typeof onRejected === 'function') {
-          return onRejected(reason, (instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token);
-        } else {
-          throw reason;
-        }
+        return CancellablePromiseCatchInternal<T, TResult>(instance, onRejected, reason);
       }),
     (instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token
   );
@@ -104,13 +142,7 @@ export function CancellablePromiseFinally<T>(
   return new CancellablePromise<T>(
     (instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].promise
       .finally(() => {
-        if ((instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token.cancelled) {
-          return void 0;
-        } else if (typeof onFinally === 'function') {
-          return onFinally((instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token);
-        } else {
-          return void 0;
-        }
+        return CancellablePromiseFinallyInternal<T>(this, onFinally);
       }),
     (instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token
   );
@@ -123,11 +155,7 @@ export function CancellablePromiseCancelled<T>(
   return new CancellablePromise<T>(
     (instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].promise
       .finally(() => {
-        if ((instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token.cancelled) {
-          return onCancelled((instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token);
-        } else {
-          return void 0;
-        }
+        return CancellablePromiseCancelledInternal<T>(this, onCancelled);
       }),
     (instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token
   );
@@ -137,7 +165,7 @@ export function CancellablePromiseCancelled<T>(
 
 export function CancellablePromiseFastThen<T, TResult1 = T, TResult2 = never>(
   instance: ICancellablePromise<T>,
-  onFulfilled?: ((value: T, token: IPromiseCancelToken) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+  onFulfilled?: ((value: T, token: IPromiseCancelToken) => TPromiseOrValue<TResult1>) | undefined | null,
   onRejected?: ((reason: any, token: IPromiseCancelToken) => TResult2 | PromiseLike<TResult2>) | undefined | null
 ): ICancellablePromise<TResult1 | TResult2> {
   return IsCancellablePromiseWithSameToken((instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].promise, instance)
@@ -147,7 +175,7 @@ export function CancellablePromiseFastThen<T, TResult1 = T, TResult2 = never>(
 
 export function CancellablePromiseFastCatch<T, TResult = never>(
   instance: ICancellablePromise<T>,
-  onRejected?: ((reason: any, token: IPromiseCancelToken) => TResult | PromiseLike<TResult>) | undefined | null
+  onRejected?: ((reason: any, token: IPromiseCancelToken) => TPromiseOrValue<TResult>) | undefined | null
 ): ICancellablePromise<T | TResult> {
   return IsCancellablePromiseWithSameToken((instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].promise, instance)
     ? ((instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].promise as ICancellablePromise<T>).catch<TResult>(onRejected)
@@ -172,6 +200,15 @@ export function CancellablePromiseFastCancelled<T>(
     : CancellablePromiseCancelled<T>(instance, onCancelled);
 }
 
+
+export function CancellablePromiseOf<T>(promiseOrCallback: Promise<T> | TPromiseCreateCallback<T>, token?: IPromiseCancelToken): ICancellablePromise<T> {
+  return (
+    IsCancellablePromise(promiseOrCallback)
+    && (promiseOrCallback.token === token)
+  )
+    ? promiseOrCallback
+    : new CancellablePromise<T>(promiseOrCallback, token);
+}
 
 export class CancellablePromise<T> implements ICancellablePromise<T> {
 
@@ -199,6 +236,9 @@ export class CancellablePromise<T> implements ICancellablePromise<T> {
     return new CancellablePromise<TPromiseOrValueTupleToValueTuple<TTuple>>(Promise.all(values) as any, token);
   }
 
+  static of<T>(promiseOrCallback: Promise<T> | TPromiseCreateCallback<T>, token?: IPromiseCancelToken): ICancellablePromise<T> {
+    return CancellablePromiseOf<T>(promiseOrCallback, token);
+  }
 
   constructor(promiseOrCallback: Promise<T> | TPromiseCreateCallback<T>, token?: IPromiseCancelToken) {
     ConstructCancellablePromise(this, promiseOrCallback, token);
@@ -225,7 +265,7 @@ export class CancellablePromise<T> implements ICancellablePromise<T> {
   }
 
   catch<TResult = never>(
-    onRejected?: ((reason: any, token: IPromiseCancelToken) => TResult | PromiseLike<TResult>) | undefined | null
+    onRejected?: ((reason: any, token: IPromiseCancelToken) => TPromiseOrValue<TResult>) | undefined | null
   ): ICancellablePromise<T | TResult> {
     return CancellablePromiseFastCatch<T, TResult>(this, onRejected);
   }

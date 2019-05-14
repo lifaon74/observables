@@ -19,12 +19,15 @@ npm i @lifaon/observables --save
 
 Entry point: `public.js`, others may contain some private or garbage experiment code. I recommend you to use rollup to import/bundle the package,
 but you may use an already bundled version in `bundle/`.
-The minified, gzipped, esnext version of the core is less than 3K bytes !
+The minified, gzipped, esnext version of <span style="color: #1062A4">**the core is less than 3KB !**</span>
 
 You may also use unpkg: `https://unpkg.com/@lifaon/observables`
 
 [SOME EXAMPLES HERE](./examples/README.md)
 
+As comparision the rxjs core is: ![npm bundle size](https://img.shields.io/bundlephobia/minzip/rxjs.svg)
+ (4 times bigger than this core), and the full bundle <span style="color: #1062A4">**27KB**</span>. Of course less operators are available in this project.
+ 
 ### Motivation ###
 
 After using RXJS for a while (and a lot), I noticed some recurrent problems I faced:
@@ -54,7 +57,7 @@ It receives data without the need to pull them.
 - An Observer may be activated or deactivated (where RXJS only allow deactivation once though `.unsubscribe`).
 A deactivated Observer stops receiving data from its Observables and can be reactivated later.
 
-- When a Observer observes/unobserve an Observable, the Observable is notified and may start/stop some jobs.
+- When a Observer observes/unobserves an Observable, the Observable is notified and may start/stop some jobs.
 
 - **An ObservableObserver is both an Observer and an Observable**.
 It receives data from its observed Observables, and emits same or others data to its observing Observers.
@@ -185,12 +188,13 @@ const discoverObservable = wot.discover({ method: 'local' })
 ;
 ```
 
-The main advantage is how it is easy to activate/deactivate an observed value, and clear all the resources properly.
+With this specification it is extremely easy to activate/deactivate an observed value, and clear all the resources properly.
 
-In the first example (with RXJS like Observable) we will need a reference to `thing['temperature']` and the `subscription`
-everytime we want to activate/deactivate the Observable, where with this proposal, just providing `temperatureObserver`
+On the contrary, in the first example, with RXJS like Observable, we need a reference on `thing['temperature']` and `subscription`,
+everytime we want to activate/deactivate the Observable. With this proposal, just providing `temperatureObserver`
 would do the job.
 
+A more complete example may be found here: [wot-temperature-example](./examples/wot-temperature-example.md)
 
 ### Table of contents ###
 <!-- toc -->

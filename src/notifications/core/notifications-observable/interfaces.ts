@@ -1,8 +1,8 @@
 import {
-  IObservable, IObservableHook, IObservableContextBase, TObservablePipeToObserverResult,
-  TObservablePipeToCallbackResult, TObservablePipeThroughResult, TObserverOrCallback, TObservableObservedByResultNonCyclic
+  IObservable, IObservableContextBase, IObservableHook, TObservableObservedByResultNonCyclic,
+  TObservablePipeThroughResult, TObservablePipeToCallbackResult, TObservablePipeToObserverResult, TObserverOrCallback
 } from '../../../core/observable/interfaces';
-import {INotificationsObserver, INotificationsObserverLike} from '../notifications-observer/interfaces';
+import { INotificationsObserver, INotificationsObserverLike } from '../notifications-observer/interfaces';
 import { KeyValueMapGenericConstraint, KeyValueMapKeys, KeyValueMapValues, KVRecord } from '../interfaces';
 import { INotification } from '../notification/interfaces';
 import { IObserver } from '../../../core/observer/interfaces';

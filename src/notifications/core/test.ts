@@ -1,7 +1,3 @@
-import { INotificationsObservable } from './notifications-observable/interfaces';
-import { INotificationsObserver } from './notifications-observer/interfaces';
-import { KeyValueMapKeys } from './interfaces';
-
 export function typeTest(): void {
   type a = { a: 1, b: 2 };
   type b = { [key: string]: number };

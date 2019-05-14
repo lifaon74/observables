@@ -81,6 +81,7 @@ function temperatureObservable(thing: ConsumedThing): IObservable<number> {
 }
 ```
 
+Simpler isn't it ? And safer by the way ;)
 
 ### 3) Usage
 

@@ -1,13 +1,19 @@
-import {IPipe, IPipeContext, TPipeContextBase} from '../../core/observable-observer/interfaces';
+import { IPipe, TPipeContextBase } from '../../core/observable-observer/interfaces';
 import { IObserver } from '../../core/observer/interfaces';
 import { IObservable } from '../../core/observable/interfaces';
 import { Pipe } from '../../core/observable-observer/implementation';
 
-export function cache<T>(cacheSize: number = 128): IPipe<IObserver<T>, IObservable<T>> {
+/**
+ * ObservableObserver: caches incoming values to be able to emits them to future observers
+ *  - when a value is received, the pipe caches the value and transmits it
+ *  - when a new observer observes this pipe, the pipe emits the last cached values
+ * @param cacheSize
+ */
+export function cachePipe<T>(cacheSize: number = 128): IPipe<IObserver<T>, IObservable<T>> {
 
   const cachedValues: T[] = new Array(cacheSize);
   let writeIndex: number = 0;
-  const readIndexes = new WeakMap<IObserver<T>, number>();
+  const readIndexes: WeakMap<IObserver<T>, number> = new WeakMap<IObserver<T>, number>();
 
   return Pipe.create<T, T>((context: TPipeContextBase<T, T>) => {
     return {

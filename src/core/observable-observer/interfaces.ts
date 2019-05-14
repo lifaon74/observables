@@ -2,7 +2,6 @@ import { IObservable, IObservableHook, ObservableType } from '../observable/inte
 import { IObserver, ObserverType } from '../observer/interfaces';
 
 
-
 /**
  * An ObservableObserver is both a Observable and a Observer: it receives and emits data.
  *  For example, it can be used to transform data.

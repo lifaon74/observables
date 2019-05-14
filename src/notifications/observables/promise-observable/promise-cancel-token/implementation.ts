@@ -1,13 +1,16 @@
-import { Notification } from '../../../core/notification/implementation'
-import { INotificationsObservableInternal, NotificationsObservable } from '../../../core/notifications-observable/implementation';
+import { Notification } from '../../../core/notification/implementation';
+import {
+  INotificationsObservableInternal, NotificationsObservable
+} from '../../../core/notifications-observable/implementation';
 import { INotificationsObserver } from '../../../core/notifications-observer/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
-import { IPromiseCancelToken, IPromiseCancelTokenKeyValueMap, TPromiseType } from './interfaces';
+import { IPromiseCancelToken, IPromiseCancelTokenKeyValueMap } from './interfaces';
 import { ObservableEmitAll } from '../../../../core/observable/implementation';
 import { NotificationsObserver } from '../../../core/notifications-observer/implementation';
 import { Reason } from '../../../../misc/reason/implementation';
 import { INotification } from '../../../core/notification/interfaces';
 import { IsObject } from '../../../../helpers';
+import { TPromiseType } from '../../../../promises/interfaces';
 
 
 export const PROMISE_CANCEL_TOKEN_PRIVATE = Symbol('promise-cancel-token-private');

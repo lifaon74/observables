@@ -1,8 +1,7 @@
 import { INotification } from '../notification/interfaces';
 import { IObserverPrivate, Observer, OBSERVER_PRIVATE, } from '../../../core/observer/implementation';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
-import { INotificationsObserver, TNotificationsObserverCallback } from './interfaces';
-import { INotificationsObserverLike } from './interfaces';
+import { INotificationsObserver, INotificationsObserverLike, TNotificationsObserverCallback } from './interfaces';
 import { IsObject } from '../../../helpers';
 
 
