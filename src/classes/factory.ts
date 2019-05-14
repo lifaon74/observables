@@ -150,7 +150,6 @@ export function IsFactoryClass(_class: (new(...args: any[]) => any), direct: boo
  * Replace incoming args for the super class by superArgs in the context of a Factory class
  * @param args - list of remaining args from the constructor that should be passed to 'super'
  * @param superArgs - list of overloaded args to pass to the child
- * @constructor
  */
 export function SetSuperArgsForFactoryClass(args: any[], superArgs: any[]): any[] {
   if (Array.isArray(args[0])) {
@@ -184,33 +183,33 @@ export function GetSetSuperArgsFunction(isFactoryClass: boolean): TSetSuperArgs 
 
 /*------------------------------------*/
 
-export interface IA {
+interface IA {
   a: string;
 }
 
-export interface IAConstructor extends Function {
+interface IAConstructor extends Function {
   new(a: string): IA;
 }
 
 
-export interface IB {
+interface IB {
   b: number;
 }
 
-export interface IBConstructor extends Function {
+interface IBConstructor extends Function {
   new(b: number): IB;
 }
 
 
-export interface IC {
+interface IC {
   c: null;
 }
 
-export interface ICConstructor extends Function {
+interface ICConstructor extends Function {
   new(c: null): IC;
 }
 
-export function FactoryA<TBase extends Constructor>(superClass: TBase) {
+function FactoryA<TBase extends Constructor>(superClass: TBase) {
   return MakeFactory<IAConstructor, [], TBase>((superClass) => {
     return class A extends superClass implements IA {
       static staticA: string = 'static-a';
@@ -225,7 +224,7 @@ export function FactoryA<TBase extends Constructor>(superClass: TBase) {
 }
 
 
-export function FactoryB<TBase extends Constructor>(superClass: TBase) {
+function FactoryB<TBase extends Constructor>(superClass: TBase) {
   return MakeFactory<IBConstructor, [], TBase>((superClass) => {
     return class B extends superClass implements IB {
       b: number;
@@ -239,7 +238,7 @@ export function FactoryB<TBase extends Constructor>(superClass: TBase) {
 }
 
 
-export function FactoryC<TBase extends Constructor>(superClass: TBase) {
+function FactoryC<TBase extends Constructor>(superClass: TBase) {
   function factory<TBase extends Constructor<IA>>(superClass: TBase) {
     return class C extends superClass {
       c: null;
@@ -264,24 +263,15 @@ class D {
   }
 }
 
-// const z: TFactoryResult<typeof  FactoryA>;
-// const zz = new z();
-// zz.
-
-// const a: TupleToIntersection<[InstanceType<IAConstructor>, InstanceType<IBConstructor>]>;
-// const fac = MakeFactory(D, [FactoryA, FactoryB]);
-const A = FactoryA(D);
-const C = FactoryC(D);
-
 
 export function testFactoryV2() {
+  const A = FactoryA(D);
+  const C = FactoryC(D);
+
   const a = new A(['a'], 1, '2');
   console.log(a);
 
   const c = new C([null], ['a'], [2], 1, '2');
   console.log(c);
 }
-
-// const C = Factory(D);
-// const c = new C(['p'], [1], 1, 'f');
 

@@ -4,13 +4,19 @@ import {
   ObservableContextBase,
   ObservableEmitAll, ObservableFactory
 } from '../../../core/observable/implementation';
-import { IObservable, IObservableContext, IObservableHook } from '../../../core/observable/interfaces';
+import {
+  IObservable, IObservableConstructor, IObservableContext, IObservableHook
+} from '../../../core/observable/interfaces';
 import { IObserver } from '../../../core/observer/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IValueObservable, IValueObservableConstructor, IValueObservableContext, IValueObservableContextConstructor, TValueObservableConstructorArgs } from './interfaces';
-import { Constructor, FactoryClass, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass } from '../../../classes/factory';
+import {
+  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
+} from '../../../classes/factory';
 import { InitObservableHook, IObservableHookPrivate } from '../../../core/observable/hook';
 import { IsObject } from '../../../helpers';
+import { INotificationsObservableConstructor } from '../../../notifications/core/notifications-observable/interfaces';
+import { NotificationsObservable } from '../../../notifications/core/notifications-observable/implementation';
 
 export const VALUE_OBSERVABLE_PRIVATE = Symbol('value-observable-private');
 
@@ -111,14 +117,14 @@ export function ValueObservableEmit<T>(observable: IValueObservable<T>, value: T
 // }
 
 
-export function ValueObservableFactory<TBase extends Constructor<IObservable<any>>>(superClass: TBase) {
+export function PureValueObservableFactory<TBase extends Constructor<IObservable<any>>>(superClass: TBase) {
   type T = any;
   if (!IsObservableLikeConstructor(superClass)) {
     throw new TypeError(`Expected Observables' constructor as superClass`);
   }
   const setSuperArgs = GetSetSuperArgsFunction(IsFactoryClass(superClass));
 
-  return FactoryClass(class ValueObservable extends superClass implements IValueObservable<T> {
+  return class ValueObservable extends superClass implements IValueObservable<T> {
     constructor(...args: any[]) {
       const [create]: TValueObservableConstructorArgs<T> = args[0];
       let context: IObservableContext<T> = void 0;
@@ -137,15 +143,32 @@ export function ValueObservableFactory<TBase extends Constructor<IObservable<any
       ]));
       ConstructValueObservable<T>(this, context, create);
     }
-  })<TValueObservableConstructorArgs<T>>('ValueObservable', [IS_VALUE_OBSERVABLE_CONSTRUCTOR, IS_OBSERVABLE_LIKE_CONSTRUCTOR]);
+  };
 }
 
+export let ValueObservable: IValueObservableConstructor;
 
-export const ValueObservable: IValueObservableConstructor =  class ValueObservable extends ValueObservableFactory(ObservableFactory<ObjectConstructor>(Object)) {
+export function ValueObservableFactory<TBase extends Constructor<IObservable<any>>>(superClass: TBase) {
+  return MakeFactory<IValueObservableConstructor, [], TBase>(PureValueObservableFactory, [], superClass, {
+    name: 'ValueObservable',
+    instanceOf: ValueObservable,
+    waterMarks: [IS_VALUE_OBSERVABLE_CONSTRUCTOR, IS_OBSERVABLE_LIKE_CONSTRUCTOR],
+  });
+}
+
+export function ValueObservableBaseFactory<TBase extends Constructor>(superClass: TBase) {
+  return MakeFactory<IValueObservableConstructor, [IObservableConstructor], TBase>(PureValueObservableFactory, [ObservableFactory], superClass, {
+    name: 'ValueObservable',
+    instanceOf: ValueObservable,
+    waterMarks: [IS_VALUE_OBSERVABLE_CONSTRUCTOR, IS_OBSERVABLE_LIKE_CONSTRUCTOR],
+  });
+}
+
+ValueObservable =  class ValueObservable extends ValueObservableBaseFactory<ObjectConstructor>(Object) {
   constructor(create?: (context: IValueObservableContext<any>) => (IObservableHook<any> | void)) {
     super([create], []);
   }
-};
+} as IValueObservableConstructor;
 
 
 

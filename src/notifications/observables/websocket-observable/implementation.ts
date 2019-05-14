@@ -1,52 +1,56 @@
-import { NotificationsObservable } from '../../core/notifications-observable/implementation';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IReadonlyList } from '../../../misc/readonly-list/interfaces';
-import { IWebSocketObservableObserver, IWebSocketObservableObserverOptions, IWebSocketObservableObserverValueMap, TWebSocketData } from './interfaces';
+import { IWebSocketIO, IWebSocketIOOptions, IWebSocketIOValueMap, TWebSocketData } from './interfaces';
 import { ReadonlyList } from '../../../misc/readonly-list/implementation';
 import { EventsObservable } from '../events-observable/implementation';
 import { IEventsObservable } from '../events-observable/interfaces';
-import { INotificationsObservableContext, INotificationsObservableTypedConstructor } from '../../core/notifications-observable/interfaces';
+import {
+  INotificationsObservableContext, KeyValueMapToNotificationsObservers
+} from '../../core/notifications-observable/interfaces';
 import { Observable, ObservableClearObservers } from '../../../core/observable/implementation';
-import { ActivableFactory } from '../../../classes/activable/implementation';
 import { IObservable, IObservableContext } from '../../../core/observable/interfaces';
 import { IObserver, Observer } from '../../../core/observer/public';
+import { InputOutputBaseFactory } from '../io-observable/implementation';
+import { IsIterable } from '../../../helpers';
+import { WebSocketError } from './WebSocketCloseEvent';
 
-export const WEBSOCKET_OBSERVABLE_OBSERVER_PRIVATE = Symbol('websocket-observable-observer-private');
 
-export interface IWebSocketObservableObserverPrivate {
+export const WEBSOCKET_IO_PRIVATE = Symbol('websocket-io-private');
+
+export interface IWebSocketIOPrivate {
   url: string;
   protocols: string[];
   readonlyProtocols: IReadonlyList<string>;
   binaryType: BinaryType;
 
-  stateContext: INotificationsObservableContext<IWebSocketObservableObserverValueMap>;
-
   webSocket: WebSocket | null;
   webSocketListener: IEventsObservable<WebSocketEventMap> | null;
 
-  in: IObservable<TWebSocketData>;
   inContext: IObservableContext<TWebSocketData>;
-  out: IObserver<TWebSocketData>;
+  stateContext: INotificationsObservableContext<IWebSocketIOValueMap>;
 }
 
-export interface IWebSocketObservableObserverInternal extends IWebSocketObservableObserver/*, INotificationsObservableInternal<IWebSocketObservableKeyValueMap>*/ {
-  [WEBSOCKET_OBSERVABLE_OBSERVER_PRIVATE]: IWebSocketObservableObserverPrivate;
+export interface IWebSocketIOInternal extends IWebSocketIO {
+  [WEBSOCKET_IO_PRIVATE]: IWebSocketIOPrivate;
 }
 
-export function ConstructWebSocketObservableObserver(
-  observableObserver: IWebSocketObservableObserver,
-  context: INotificationsObservableContext<IWebSocketObservableObserverValueMap>,
+export function ConstructWebSocketIO(
+  instance: IWebSocketIO,
+  observable: IObservable<TWebSocketData>,
+  observer: IObserver<TWebSocketData>,
+  inContext: IObservableContext<TWebSocketData>,
+  stateContext: INotificationsObservableContext<IWebSocketIOValueMap>,
   url: string,
-  options: IWebSocketObservableObserverOptions = {}
+  options: IWebSocketIOOptions = {}
 ): void {
-  ConstructClassWithPrivateMembers(observableObserver, WEBSOCKET_OBSERVABLE_OBSERVER_PRIVATE);
-  const privates: IWebSocketObservableObserverPrivate = (observableObserver as IWebSocketObservableObserverInternal)[WEBSOCKET_OBSERVABLE_OBSERVER_PRIVATE];
+  ConstructClassWithPrivateMembers(instance, WEBSOCKET_IO_PRIVATE);
+  const privates: IWebSocketIOPrivate = (instance as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE];
 
   privates.url = url;
 
   if (options.protocols === void 0) {
     privates.protocols = [];
-  } else if (Array.isArray(options.protocols)) {
+  } else if (IsIterable(options.protocols)) {
     privates.protocols = Array.from(options.protocols);
   } else {
     throw new TypeError(`Expected array as options.protocols`);
@@ -55,26 +59,17 @@ export function ConstructWebSocketObservableObserver(
   privates.readonlyProtocols = new ReadonlyList<string>(privates.protocols);
   privates.binaryType = 'blob';
 
-  privates.stateContext = context;
-
   privates.webSocket = null;
   privates.webSocketListener = null;
 
-  privates.in = new Observable<TWebSocketData>((context: IObservableContext<TWebSocketData>) => {
-    privates.inContext = context;
-  });
-
-  privates.out = new Observer<TWebSocketData>((value: TWebSocketData) => {
-    if ((privates.webSocket !== null) && (privates.webSocket.readyState === WebSocket.OPEN)) {
-      privates.webSocket.send(value);
-    }
-  });
+  privates.stateContext = stateContext;
+  privates.inContext = inContext;
 }
 
 
-export function WebSocketObservableObserverActivate(observableObserver: IWebSocketObservableObserver): Promise<void> {
+export function WebSocketIOActivate(instance: IWebSocketIO): Promise<void> {
   return new Promise((resolve: any, reject: any) => {
-    const privates: IWebSocketObservableObserverPrivate = (observableObserver as IWebSocketObservableObserverInternal)[WEBSOCKET_OBSERVABLE_OBSERVER_PRIVATE];
+    const privates: IWebSocketIOPrivate = (instance as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE];
 
     privates.webSocket = new WebSocket(privates.url, privates.protocols);
     privates.webSocket.binaryType = privates.binaryType;
@@ -88,10 +83,10 @@ export function WebSocketObservableObserverActivate(observableObserver: IWebSock
         privates.stateContext.dispatch('error', error);
         reject(error);
       })
-      .on('close', () => {
-        observableObserver.deactivate()
+      .on('close', (event: CloseEvent) => {
+        instance.deactivate()
           .then(() => {
-            reject(new Error(`WebSocket closed`));
+            reject(new WebSocketError(event.code));
           });
       })
       .on('message', (event: MessageEvent) => {
@@ -100,9 +95,12 @@ export function WebSocketObservableObserverActivate(observableObserver: IWebSock
   });
 }
 
-export function WebSocketObservableObserverDeactivate(observableObserver: IWebSocketObservableObserver): Promise<void> {
-  const privates: IWebSocketObservableObserverPrivate = (observableObserver as IWebSocketObservableObserverInternal)[WEBSOCKET_OBSERVABLE_OBSERVER_PRIVATE];
-  return UntilWebSocketClosed(privates.webSocket)
+export function WebSocketIODeactivate(instance: IWebSocketIO): Promise<void> {
+  const privates: IWebSocketIOPrivate = (instance as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE];
+  if (privates.webSocket.readyState !== WebSocket.CLOSING) {
+    privates.webSocket.close();
+  }
+  return CloseWebSocket(privates.webSocket)
     .then(() => {
       privates.webSocket = null;
       ObservableClearObservers(privates.webSocketListener);
@@ -111,9 +109,17 @@ export function WebSocketObservableObserverDeactivate(observableObserver: IWebSo
     });
 }
 
-export function UntilWebSocketOpen(webSocket: WebSocket): Promise<void> {
+export function WebSocketIOOnOutputEmit(instance: IWebSocketIO, value: TWebSocketData): void {
+  const privates: IWebSocketIOPrivate = (instance as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE];
+  if ((privates.webSocket !== null) && (privates.webSocket.readyState === WebSocket.OPEN)) {
+    privates.webSocket.send(value);
+  }
+}
+
+
+export function UntilWebSocketState(webSocket: WebSocket, state: number): Promise<void> {
   return new Promise((resolve: any, reject: any) => {
-    if (webSocket.readyState === WebSocket.OPEN) {
+    if (webSocket.readyState === state) {
       resolve();
     } else {
       let timer: any;
@@ -138,7 +144,7 @@ export function UntilWebSocketOpen(webSocket: WebSocket): Promise<void> {
       webSocket.addEventListener('open', onOpen);
 
       timer = setInterval(() => {
-        if (webSocket.readyState === WebSocket.OPEN) {
+        if (webSocket.readyState === state) {
           onOpen();
         }
       }, 200);
@@ -146,59 +152,27 @@ export function UntilWebSocketOpen(webSocket: WebSocket): Promise<void> {
   });
 }
 
-export function UntilWebSocketClosed(webSocket: WebSocket): Promise<void> {
-  return new Promise((resolve: any, reject: any) => {
-    if (webSocket.readyState === WebSocket.CLOSED) {
-      resolve();
-    } else {
-      let timer: any;
-
-      const clear = () => {
-        webSocket.removeEventListener('error', onError);
-        webSocket.removeEventListener('close', onClose);
-        clearInterval(timer);
-      };
-
-      const onClose = () => {
-        clear();
-        resolve();
-      };
-
-      const onError = () => {
-        clear();
-        reject(new Error(`Websocket error`));
-      };
-
-      webSocket.addEventListener('error', onError);
-      webSocket.addEventListener('close', onClose);
-
-      timer = setInterval(() => {
-        if (webSocket.readyState === WebSocket.CLOSED) {
-          onClose();
-        }
-      }, 200);
-
-      if (webSocket.readyState !== WebSocket.CLOSING) {
-        webSocket.close();
-      }
-    }
-  });
+export function CloseWebSocket(webSocket: WebSocket): Promise<void> {
+  if (webSocket.readyState !== WebSocket.CLOSING) {
+    webSocket.close();
+  }
+  return UntilWebSocketState(webSocket, WebSocket.CLOSED);
 }
 
 
-export function WebSocketObservableObserverGetProtocol(observableObserver: IWebSocketObservableObserver): string | null {
-  return ((observableObserver as IWebSocketObservableObserverInternal)[WEBSOCKET_OBSERVABLE_OBSERVER_PRIVATE].webSocket === null)
+export function WebSocketIOGetProtocol(instance: IWebSocketIO): string | null {
+  return ((instance as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE].webSocket === null)
     ? null
-    : (observableObserver as IWebSocketObservableObserverInternal)[WEBSOCKET_OBSERVABLE_OBSERVER_PRIVATE].webSocket.protocol;
+    : (instance as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE].webSocket.protocol;
 }
 
-export function WebSocketObservableObserverSetBinaryType(observableObserver: IWebSocketObservableObserver, binaryType: BinaryType): void {
+export function WebSocketIOSetBinaryType(instance: IWebSocketIO, binaryType: BinaryType): void {
   switch (binaryType) {
     case 'blob':
     case 'arraybuffer':
-      (observableObserver as IWebSocketObservableObserverInternal)[WEBSOCKET_OBSERVABLE_OBSERVER_PRIVATE].binaryType = binaryType;
-      if ((observableObserver as IWebSocketObservableObserverInternal)[WEBSOCKET_OBSERVABLE_OBSERVER_PRIVATE].webSocket !== null) {
-        (observableObserver as IWebSocketObservableObserverInternal)[WEBSOCKET_OBSERVABLE_OBSERVER_PRIVATE].webSocket.binaryType = binaryType;
+      (instance as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE].binaryType = binaryType;
+      if ((instance as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE].webSocket !== null) {
+        (instance as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE].webSocket.binaryType = binaryType;
       }
       break;
     default:
@@ -207,50 +181,104 @@ export function WebSocketObservableObserverSetBinaryType(observableObserver: IWe
 }
 
 
-export class WebSocketObservableObserver extends ActivableFactory<INotificationsObservableTypedConstructor<IWebSocketObservableObserverValueMap>>(NotificationsObservable) implements IWebSocketObservableObserver {
+// export function WebSocketIOFactory<TBase extends Constructor>(superClass: TBase) {
+//   return MakeFactory<IWebSocketIOConstructor, [IInputOutputConstructor], TBase>((superClass) => {
+//     return class WebSocketIO extends superClass implements IWebSocketIO {
+//
+//       constructor(...args: any[]) {
+//         const [url, options]: TWebSocketIOConstructorArgs = args[0];
+//         super(...args.slice(1));
+//         ConstructInputOutput<TKVMap, TObservable, TObserver>(this, observable, observer);
+//       }
+//
+//       get url(): string {
+//         return ((this as unknown) as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE].url;
+//       }
+//
+//       get protocols(): IReadonlyList<string> {
+//         return ((this as unknown) as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE].readonlyProtocols;
+//       }
+//
+//       get protocol(): string | null {
+//         return WebSocketIOGetProtocol(this);
+//       }
+//
+//       get binaryType(): BinaryType {
+//         return ((this as unknown) as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE].binaryType;
+//       }
+//
+//       set binaryType(value: BinaryType) {
+//         WebSocketIOSetBinaryType(this, value);
+//       }
+//
+//
+//       // @type-fix
+//       matches(name: string, callback?: (value: any) => void): IterableIterator<KeyValueMapToNotificationsObservers<IWebSocketIOValueMap>> {
+//         return super.matches(name, callback) as IterableIterator<KeyValueMapToNotificationsObservers<IWebSocketIOValueMap>>;
+//       }
+//     };
+//   }, [InputOutputBaseFactory], superClass, {
+//     name: 'WebSocketIO',
+//     waterMarks: [],
+//   });
+// }
 
-  constructor(url: string, options?: IWebSocketObservableObserverOptions) {
-    let context: INotificationsObservableContext<IWebSocketObservableObserverValueMap> = void 0;
-    super([{
+
+export class WebSocketIO extends InputOutputBaseFactory<ObjectConstructor>(Object) implements IWebSocketIO {
+
+  constructor(url: string, options?: IWebSocketIOOptions) {
+    let inContext: IObservableContext<TWebSocketData> = void 0;
+    const observable: IObservable<TWebSocketData> = new Observable<TWebSocketData>((context: IObservableContext<TWebSocketData>) => {
+      inContext = context;
+    });
+
+    const observer: IObserver<TWebSocketData> = new Observer<TWebSocketData>((value: TWebSocketData) => {
+      WebSocketIOOnOutputEmit(this, value);
+    });
+
+    let stateContext: INotificationsObservableContext<IWebSocketIOValueMap> = void 0;
+    super([
+      observable,
+      observer
+    ], [{
       activate: () => {
-        return WebSocketObservableObserverActivate(this);
+        return WebSocketIOActivate(this);
       },
       deactivate: () => {
-        return WebSocketObservableObserverDeactivate(this);
+        return WebSocketIODeactivate(this);
       },
-    }], (_context: INotificationsObservableContext<IWebSocketObservableObserverValueMap>) => {
-      context = _context;
-    });
-    ConstructWebSocketObservableObserver(this, context, url, options);
+    }], [
+      (context: INotificationsObservableContext<IWebSocketIOValueMap>) => {
+        stateContext = context;
+      }
+    ],
+    []);
+    ConstructWebSocketIO(this, observable, observer, inContext, stateContext, url, options);
   }
-
-  get in(): IObservable<TWebSocketData> {
-    return ((this as unknown) as IWebSocketObservableObserverInternal)[WEBSOCKET_OBSERVABLE_OBSERVER_PRIVATE].in;
-  }
-
-  get out(): IObserver<TWebSocketData> {
-    return ((this as unknown) as IWebSocketObservableObserverInternal)[WEBSOCKET_OBSERVABLE_OBSERVER_PRIVATE].out;
-  }
-
   
   get url(): string {
-    return ((this as unknown) as IWebSocketObservableObserverInternal)[WEBSOCKET_OBSERVABLE_OBSERVER_PRIVATE].url;
+    return ((this as unknown) as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE].url;
   }
 
   get protocols(): IReadonlyList<string> {
-    return ((this as unknown) as IWebSocketObservableObserverInternal)[WEBSOCKET_OBSERVABLE_OBSERVER_PRIVATE].readonlyProtocols;
+    return ((this as unknown) as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE].readonlyProtocols;
   }
 
   get protocol(): string | null {
-    return WebSocketObservableObserverGetProtocol(this);
+    return WebSocketIOGetProtocol(this);
   }
 
   get binaryType(): BinaryType {
-    return ((this as unknown) as IWebSocketObservableObserverInternal)[WEBSOCKET_OBSERVABLE_OBSERVER_PRIVATE].binaryType;
+    return ((this as unknown) as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE].binaryType;
   }
 
   set binaryType(value: BinaryType) {
-    WebSocketObservableObserverSetBinaryType(this, value);
+    WebSocketIOSetBinaryType(this, value);
+  }
+
+  // @type-fix
+  matches(name: string, callback?: (value: any) => void): IterableIterator<KeyValueMapToNotificationsObservers<IWebSocketIOValueMap>> {
+    return super.matches(name, callback) as IterableIterator<KeyValueMapToNotificationsObservers<IWebSocketIOValueMap>>;
   }
 }
 

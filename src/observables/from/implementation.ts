@@ -1,6 +1,9 @@
-import { IObservable, IObservableContext, IObservableHook } from '../../core/observable/interfaces';
+import {
+  IObservable, IObservableConstructor, IObservableContext, IObservableHook
+} from '../../core/observable/interfaces';
 import {
   AllowObservableContextBaseConstruct, IObservableContextBaseInternal, IObservableInternal,
+  IS_OBSERVABLE_LIKE_CONSTRUCTOR,
   IsObservableLikeConstructor,
   OBSERVABLE_CONTEXT_BASE_PRIVATE, ObservableClearObservers,
   ObservableContextBase, ObservableEmitAll, ObservableFactory
@@ -13,10 +16,11 @@ import {
 } from './interfaces';
 import { IsObject } from '../../helpers';
 import {
-  Constructor, FactoryClass, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass
+  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
 } from '../../classes/factory';
 import { IObserver } from '../../core/observer/interfaces';
 import { InitObservableHook, IObservableHookPrivate } from '../../core/observable/hook';
+import { INotificationsObservableConstructor } from '../../notifications/core/notifications-observable/interfaces';
 
 
 export const FROM_OBSERVABLE_PRIVATE = Symbol('from-observable-private');
@@ -122,14 +126,14 @@ export function FromObservableComplete<T>(observable: IFromObservable<T>): void 
 }
 
 
-export function FromObservableFactory<TBase extends Constructor<IObservable<any>>>(superClass: TBase) {
+function PureFromObservableFactory<TBase extends Constructor<IObservable<any>>>(superClass: TBase) {
   type T = any;
   if (!IsObservableLikeConstructor(superClass)) {
     throw new TypeError(`Expected Observables' constructor as superClass`);
   }
   const setSuperArgs = GetSetSuperArgsFunction(IsFactoryClass(superClass));
 
-  return FactoryClass(class FromObservable extends superClass implements IFromObservable<T> {
+  return class FromObservable extends superClass implements IFromObservable<T> {
     constructor(...args: any[]) {
       const [create, onComplete]: TFromObservableConstructorArgs<T> = args[0];
       let context: IObservableContext<T> = void 0;
@@ -152,15 +156,32 @@ export function FromObservableFactory<TBase extends Constructor<IObservable<any>
     get complete(): boolean {
       return ((this as unknown) as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].state === 'complete';
     }
-  })<TFromObservableConstructorArgs<T>>('FromObservable', [IS_FROM_OBSERVABLE_CONSTRUCTOR]);
+  };
 }
 
+export let FromObservable: IFromObservableConstructor;
 
-export const FromObservable: IFromObservableConstructor =  class FromObservable extends FromObservableFactory(ObservableFactory<ObjectConstructor>(Object)) {
+export function FromObservableFactory<TBase extends Constructor<IObservable<any>>>(superClass: TBase) {
+  return MakeFactory<IFromObservableConstructor, [], TBase>(PureFromObservableFactory, [], superClass, {
+    name: 'FromObservable',
+    instanceOf: FromObservable,
+    waterMarks: [IS_FROM_OBSERVABLE_CONSTRUCTOR],
+  });
+}
+
+export function FromObservableBaseFactory<TBase extends Constructor>(superClass: TBase) {
+  return MakeFactory<IFromObservableConstructor, [IObservableConstructor], TBase>(PureFromObservableFactory, [ObservableFactory], superClass, {
+    name: 'FromObservable',
+    instanceOf: FromObservable,
+    waterMarks: [IS_FROM_OBSERVABLE_CONSTRUCTOR],
+  });
+}
+
+FromObservable =  class FromObservable extends FromObservableBaseFactory<ObjectConstructor>(Object) {
   constructor(create?: (context: IFromObservableContext<any>) => (IObservableHook<any> | void), onComplete?: TFromObservableCompleteAction) {
     super([create, onComplete], []);
   }
-};
+} as IFromObservableConstructor;
 
 
 /*--------------------------*/

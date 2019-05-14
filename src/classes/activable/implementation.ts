@@ -1,6 +1,9 @@
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
-import { Constructor, MakeFactory } from '../factory';
-import { IActivable, IActivableConstructor, IActivableHook, TActivableConstructorArgs, TActivableState } from './interfaces';
+import { Constructor, HasFactoryWaterMark, MakeFactory } from '../factory';
+import {
+  IActivable, IActivableConstructor, IActivableHook, TActivableConstructorArgs, TActivableState
+} from './interfaces';
+import { IsObject } from '../../helpers';
 
 
 export const ACTIVABLE_PRIVATE = Symbol('activable-private');
@@ -39,6 +42,19 @@ export function ConstructActivable(activable: IActivable, hook: IActivableHook):
     });
   };
 }
+
+export function IsActivable(value: any): value is IActivable {
+  return IsObject(value)
+    && value.hasOwnProperty(ACTIVABLE_PRIVATE);
+}
+
+const IS_ACTIVABLE_CONSTRUCTOR = Symbol('is-activable-constructor');
+export function IsActivableConstructor(value: any, direct?: boolean): boolean {
+  return (typeof value === 'function')
+    && HasFactoryWaterMark(value, IS_ACTIVABLE_CONSTRUCTOR, direct);
+}
+
+
 
 export function ActivableActivate(activable: IActivable): Promise<void> {
   const privates: IActivablePrivate = (activable as IActivableInternal)[ACTIVABLE_PRIVATE];
@@ -116,7 +132,11 @@ function PureActivableFactory<TBase extends Constructor>(superClass: TBase) {
 export let Activable: IActivableConstructor;
 
 export function ActivableFactory<TBase extends Constructor>(superClass: TBase) {
-  return MakeFactory<IActivableConstructor, [], TBase>(PureActivableFactory, [], superClass, { name: 'Activable', instanceOf: Activable });
+  return MakeFactory<IActivableConstructor, [], TBase>(PureActivableFactory, [], superClass, {
+    name: 'Activable',
+    instanceOf: Activable,
+    waterMarks: [IS_ACTIVABLE_CONSTRUCTOR]
+  });
 }
 
 Activable = class Activable extends ActivableFactory<ObjectConstructor>(Object) {

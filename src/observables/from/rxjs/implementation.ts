@@ -1,28 +1,22 @@
 import {
-  IFromRXJSObservable, IFromRXJSObservableConstructor,
-  INotificationsFromObservable,
-  TFromRXJSObservableConstructorArgs, TFromRXJSObservableNotifications
+  IFromRXJSObservable, IFromRXJSObservableConstructor, INotificationsFromObservable, TFromRXJSObservableConstructorArgs,
+  TFromRXJSObservableNotifications
 } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../../helpers';
-import {
-  IFromObservableContext, TFromObservableCompleteAction
-} from '../interfaces';
+import { IFromObservableConstructor, IFromObservableContext, TFromObservableCompleteAction } from '../interfaces';
 import { ObservableFactory } from '../../../core/observable/implementation';
 import {
-  FROM_OBSERVABLE_PRIVATE, FromObservableFactory, IFromObservablePrivate,
-  IsFromObservableConstructor
+  FROM_OBSERVABLE_PRIVATE, FromObservableFactory, IFromObservablePrivate, IsFromObservableConstructor
 } from '../implementation';
 import {
-  Constructor, FactoryClass, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass
+  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
 } from '../../../classes/factory';
 import { Observable as RXObservable, Subscription as RXSubscription } from 'rxjs';
-import {
-  NotificationsObservableFactory
-} from '../../../notifications/core/notifications-observable/implementation';
-import {
-  Notification
-} from '../../../notifications/core/notification/implementation';
+import { NotificationsObservableFactory } from '../../../notifications/core/notifications-observable/implementation';
+import { Notification } from '../../../notifications/core/notification/implementation';
+import { INotificationsObservableConstructor } from '../../../notifications/core/notifications-observable/interfaces';
+import { IObservableConstructor } from '../../../core/observable/interfaces';
 
 
 export const FROM_RXJS_OBSERVABLE_PRIVATE = Symbol('from-rxjs-observable-private');
@@ -55,6 +49,7 @@ export function IsFromRXJSObservable(value: any): value is IFromRXJSObservable<a
 }
 
 const IS_FROM_ITERABLE_OBSERVABLE_CONSTRUCTOR = Symbol('is-from-rxjs-observable-constructor');
+
 export function IsFromRXJSObservableConstructor(value: any): boolean {
   return (typeof value === 'function')
     && HasFactoryWaterMark(value, IS_FROM_ITERABLE_OBSERVABLE_CONSTRUCTOR);
@@ -105,7 +100,7 @@ export function FromRXJSObservableUnsubscribe<TValue, TError>(observable: IFromR
 }
 
 
-export function FromRXJSObservableFactory<TBase extends Constructor<INotificationsFromObservable<any, any>>>(superClass: TBase) {
+export function PureFromRXJSObservableFactory<TBase extends Constructor<INotificationsFromObservable<any, any>>>(superClass: TBase) {
   type TValue = any;
   type TError = any;
   type TNotifications = TFromRXJSObservableNotifications<TValue, TError>;
@@ -115,7 +110,7 @@ export function FromRXJSObservableFactory<TBase extends Constructor<INotificatio
   }
   const setSuperArgs = GetSetSuperArgsFunction(IsFactoryClass(superClass));
 
-  return FactoryClass(class FromRXJSObservable extends superClass implements IFromRXJSObservable<TValue, TError> {
+  return class FromRXJSObservable extends superClass implements IFromRXJSObservable<TValue, TError> {
     constructor(...args: any[]) {
       const [rxObservable, onComplete]: TFromRXJSObservableConstructorArgs<TValue, TError> = args[0];
       let context: IFromObservableContext<TNotifications> = void 0;
@@ -134,11 +129,29 @@ export function FromRXJSObservableFactory<TBase extends Constructor<INotificatio
       ]));
       ConstructFromRXJSObservable<TValue, TError>(this, context, rxObservable);
     }
-  })<TFromRXJSObservableConstructorArgs<TValue, TError>>('FromRXJSObservable', [IS_FROM_ITERABLE_OBSERVABLE_CONSTRUCTOR]);
+  };
 }
 
-export const FromRXJSObservable: IFromRXJSObservableConstructor = class FromRXJSObservable extends FromRXJSObservableFactory(FromObservableFactory(NotificationsObservableFactory(ObservableFactory<ObjectConstructor>(Object))) as any) {
+export let FromRXJSObservable: IFromRXJSObservableConstructor;
+
+export function FromRXJSObservableFactory<TBase extends Constructor<INotificationsFromObservable<any, any>>>(superClass: TBase) {
+  return MakeFactory<IFromRXJSObservableConstructor, [], TBase>(PureFromRXJSObservableFactory, [], superClass, {
+    name: 'FromRXJSObservable',
+    instanceOf: FromRXJSObservable,
+    waterMarks: [IS_FROM_ITERABLE_OBSERVABLE_CONSTRUCTOR],
+  });
+}
+
+export function FromRXJSObservableBaseFactory<TBase extends Constructor>(superClass: TBase) {
+  return MakeFactory<IFromRXJSObservableConstructor, [IFromObservableConstructor, INotificationsObservableConstructor, IObservableConstructor], TBase>(PureFromRXJSObservableFactory, [FromObservableFactory, NotificationsObservableFactory, ObservableFactory], superClass, {
+    name: 'FromRXJSObservable',
+    instanceOf: FromRXJSObservable,
+    waterMarks: [IS_FROM_ITERABLE_OBSERVABLE_CONSTRUCTOR],
+  });
+}
+
+FromRXJSObservable = class FromRXJSObservable extends FromRXJSObservableBaseFactory<ObjectConstructor>(Object) {
   constructor(rxObservable: RXObservable<any>, onComplete?: TFromObservableCompleteAction) {
     super([rxObservable, onComplete], [], [], []);
   }
-} as any;
+} as IFromRXJSObservableConstructor;

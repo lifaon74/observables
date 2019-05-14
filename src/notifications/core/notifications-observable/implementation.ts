@@ -1,26 +1,19 @@
 import { Notification } from '../notification/implementation';
 import {
-  INotificationsObservable,
-  INotificationsObservableConstructor,
-  INotificationsObservableContext,
-  INotificationsObservableContextConstructor,
-  TNotificationsObservableConstructorArgs,
-  TNotificationsObservableHook,
-  KeyValueMapToNotifications, KeyValueMapToNotificationsObservers,
+  INotificationsObservable, INotificationsObservableConstructor, INotificationsObservableContext,
+  INotificationsObservableContextConstructor, KeyValueMapToNotifications, KeyValueMapToNotificationsObservers,
+  TNotificationsObservableConstructorArgs, TNotificationsObservableHook,
 } from './interfaces';
 import {
   AllowObservableContextBaseConstruct, IObservableContextBaseInternal, IObservablePrivate,
-  IS_OBSERVABLE_LIKE_CONSTRUCTOR, IsObservableConstructor,
-  IsObservableLikeConstructor, OBSERVABLE_CONTEXT_BASE_PRIVATE, OBSERVABLE_PRIVATE, ObservableContextBase,
-  ObservableFactory
+  IS_OBSERVABLE_LIKE_CONSTRUCTOR, IsObservableLikeConstructor, OBSERVABLE_CONTEXT_BASE_PRIVATE, OBSERVABLE_PRIVATE,
+  ObservableContextBase, ObservableFactory
 } from '../../../core/observable/implementation';
 import { IObservable, IObservableConstructor, IObservableContext } from '../../../core/observable/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { INotificationsObserver } from '../notifications-observer/interfaces';
 import {
-  INotificationsObserverInternal,
-  NOTIFICATIONS_OBSERVER_PRIVATE,
-  NotificationsObserver
+  INotificationsObserverInternal, NOTIFICATIONS_OBSERVER_PRIVATE, NotificationsObserver
 } from '../notifications-observer/implementation';
 import { IObserverInternal, OBSERVER_PRIVATE, ObserverUnobserveOne } from '../../../core/observer/implementation';
 import { INotification } from '../notification/interfaces';
@@ -31,8 +24,6 @@ import {
 } from '../../../classes/factory';
 import { IsObject } from '../../../helpers';
 import { IObserver } from '../../../core/observer/interfaces';
-import { IActivableConstructor } from '../../../classes/activable/interfaces';
-import { Activable } from '../../../classes/activable/implementation';
 
 
 export const NOTIFICATIONS_OBSERVABLE_PRIVATE = Symbol('notifications-observable-private');
@@ -80,9 +71,9 @@ export function IsNotificationsObservable(value: any): value is INotificationsOb
 }
 
 const IS_NOTIFICATIONS_OBSERVABLE_CONSTRUCTOR = Symbol('is-notifications-observable-constructor');
-export function IsNotificationsObservableConstructor(value: any): boolean {
+export function IsNotificationsObservableConstructor(value: any, direct?: boolean): boolean {
   return (typeof value === 'function')
-    && HasFactoryWaterMark(value, IS_NOTIFICATIONS_OBSERVABLE_CONSTRUCTOR);
+    && HasFactoryWaterMark(value, IS_NOTIFICATIONS_OBSERVABLE_CONSTRUCTOR, direct);
 }
 
 
@@ -214,6 +205,7 @@ function PureNotificationsObservableFactory<TBase extends Constructor<IObservabl
   return class NotificationsObservable extends superClass implements INotificationsObservable<TKVMap>{
     constructor(...args: any[]) {
       const [create]: TNotificationsObservableConstructorArgs<TKVMap> = args[0];
+      // const [create]: ConstructorParameters<INotificationsObservableConstructor> = args[0];
 
       let context: IObservableContext<KeyValueMapToNotifications<TKVMap>> = void 0;
       super(...setSuperArgs(args.slice(1), [

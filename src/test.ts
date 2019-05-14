@@ -29,7 +29,7 @@ import { ISource } from './observables/distinct/source/interfaces';
 import { KeyValueMapKeys, KeyValueMapValues } from './notifications/core/interfaces';
 import { INotification } from './notifications/core/notification/interfaces';
 import { Notification } from './notifications/core/notification/implementation';
-import { WebSocketObservableObserver } from './notifications/observables/websocket-observable/implementation';
+import { WebSocketIO } from './notifications/observables/websocket-observable/implementation';
 import { INotificationsObserver } from './notifications/core/notifications-observer/interfaces';
 import { FunctionObservable } from './observables/distinct/function-observable/implementation';
 import { Expression } from './observables/distinct/expression/implementation';
@@ -44,6 +44,7 @@ import { FromIterableObservable } from './observables/from/iterable/implementati
 import { noop } from './helpers';
 import { FromRXJSObservable } from './observables/from/rxjs/implementation';
 import { Activable } from './classes/activable/implementation';
+import { FromObservable } from './observables/from/implementation';
 
 function testReadOnlyList() {
   const list = new ReadonlyList<number>([0, 1, 2, 3]);
@@ -870,7 +871,7 @@ export function testWebSocket() {
 
   // wss://echo.websocket.org
 
-  const ws = new WebSocketObservableObserver('wss://echo.websocket.org');
+  const ws = new WebSocketIO('wss://echo.websocket.org');
   ws.in.pipeTo((value: any) => {
     console.log('in:', value);
   }).activate();
@@ -879,9 +880,17 @@ export function testWebSocket() {
     .pipe(mapPipe<void, string>(() => `value-${Math.random()}`)).observable
     .pipeTo(ws.out);
 
+  const clear = () => {
+    ws.deactivate()
+      .then(() => {
+        Array.from(ws.observers).forEach(_ => _.disconnect());
+      });
+  };
+
   ws.on('activate', () => {
-    console.log('ws activate');
+    console.timeEnd('ws activate');
     emitter.activate();
+    setTimeout(clear, 5000);
   });
 
   ws.on('error', (error: Error) => {
@@ -893,23 +902,30 @@ export function testWebSocket() {
     emitter.deactivate();
   });
 
+  console.time('ws activate');
   ws.activate();
-
-  setTimeout(() => {
-    ws.deactivate();
-    Array.from(ws.observers).forEach(_ => _.disconnect());
-  }, 5000);
 }
 
-export function testActivable() {
-  const a = new Activable({
-    async activate(): Promise<void> {
-    },
-    async deactivate(): Promise<void> {
-    }
-  });
+export function testInstanceof() {
+  const a = new NotificationsObservable();
+  if (!(a instanceof Observable)) {
+    throw new Error(`!(a instanceof Observable)`)
+  }
 
-  console.log(a);
+  const b = new EventsObservable(window);
+  if (!(b instanceof Observable)) {
+    throw new Error(`!(b instanceof Observable)`)
+  }
+
+  const c = new Source();
+  if (!(c instanceof Observable)) {
+    throw new Error(`!(c instanceof Observable)`)
+  }
+
+  const d = new WebSocketIO('');
+  if (!(d instanceof Observable)) {
+    throw new Error(`!(d instanceof Observable)`)
+  }
 }
 
 export async function test() {
@@ -940,10 +956,10 @@ export async function test() {
   //
   // await testFromRXJSObservable();
 
-  // testWebSocket();
+  testWebSocket();
   // testMisc();
   // testFactoryV2();
-  testActivable();
+  // testInstanceof();
 }
 
 
