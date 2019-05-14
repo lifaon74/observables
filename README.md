@@ -57,7 +57,7 @@ It receives data without the need to pull them.
 - An Observer may be activated or deactivated (where RXJS only allow deactivation once though `.unsubscribe`).
 A deactivated Observer stops receiving data from its Observables and can be reactivated later.
 
-- When a Observer observes/unobserve an Observable, the Observable is notified and may start/stop some jobs.
+- When a Observer observes/unobserves an Observable, the Observable is notified and may start/stop some jobs.
 
 - **An ObservableObserver is both an Observer and an Observable**.
 It receives data from its observed Observables, and emits same or others data to its observing Observers.
@@ -188,12 +188,13 @@ const discoverObservable = wot.discover({ method: 'local' })
 ;
 ```
 
-The main advantage is how it is easy to activate/deactivate an observed value, and clear all the resources properly.
+With this specification it is extremely easy to activate/deactivate an observed value, and clear all the resources properly.
 
-In the first example (with RXJS like Observable) we will need a reference to `thing['temperature']` and the `subscription`
-everytime we want to activate/deactivate the Observable, where with this proposal, just providing `temperatureObserver`
+On the contrary, in the first example, with RXJS like Observable, we need a reference on `thing['temperature']` and `subscription`,
+everytime we want to activate/deactivate the Observable. With this proposal, just providing `temperatureObserver`
 would do the job.
 
+A more complete example may be found here: [wot-temperature-example](./examples/wot-temperature-example.md)
 
 ### Table of contents ###
 <!-- toc -->
