@@ -1,6 +1,4 @@
-import {
-  IDeferredPromise, TDeferredPromiseAllReturn, TDeferredPromiseRaceReturn, TPromiseStatus
-} from './interfaces';
+import { IDeferredPromise, TDeferredPromiseAllReturn, TDeferredPromiseRaceReturn, TPromiseStatus } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject, noop } from '../../helpers';
 import { TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion } from '../interfaces';

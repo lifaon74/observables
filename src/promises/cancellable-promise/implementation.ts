@@ -1,10 +1,11 @@
 import { IPromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
 import { PromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/implementation';
-import {
-  ICancellablePromise} from './interfaces';
+import { ICancellablePromise } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../helpers';
-import { TPromiseCreateCallback, TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion } from '../interfaces';
+import {
+  TPromiseCreateCallback, TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion
+} from '../interfaces';
 
 
 export const CANCELLABLE_PROMISE_PRIVATE = Symbol('cancellable-promise-private');

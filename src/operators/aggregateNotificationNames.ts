@@ -2,14 +2,15 @@ import { IPipe, TPipeContextBase } from '../core/observable-observer/interfaces'
 import { Pipe } from '../core/observable-observer/implementation';
 import { IObserver } from '../core/observer/interfaces';
 import { INotification } from '../notifications/core/notification/interfaces';
-import { IBaseNotificationsObservable, INotificationsObservableContext, KeyValueMapToNotifications } from '../notifications/core/notifications-observable/interfaces';
+import {
+  IBaseNotificationsObservable, INotificationsObservableContext, KeyValueMapToNotifications
+} from '../notifications/core/notifications-observable/interfaces';
 import { Observer } from '../core/observer/implementation';
 import { NotificationsObservable } from '../notifications/core/notifications-observable/implementation';
 import { IObservable } from '../core/observable/interfaces';
 import {
   KeyValueMapGenericConstraint, KeyValueMapKeys, KeyValueMapValues, KVRecord
 } from '../notifications/core/interfaces';
-
 
 
 export function aggregateNotificationNames<Tin extends string, TValue>(inNames: Tin[]): IPipe<IObserver<INotification<Tin, TValue>>, IObservable<TValue>> {

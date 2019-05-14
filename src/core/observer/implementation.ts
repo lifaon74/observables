@@ -1,8 +1,6 @@
 import {
-  IObserver,
-  IObserverConstructor,
-  TObserverConstructorArgs,
-  TObserverObserveResultNonCyclic, TObserverUnObserveResultNonCyclic
+  IObserver, IObserverConstructor, TObserverConstructorArgs, TObserverObserveResultNonCyclic,
+  TObserverUnObserveResultNonCyclic
 } from './interfaces';
 import { IReadonlyList } from '../../misc/readonly-list/interfaces';
 import { ReadonlyList } from '../../misc/readonly-list/implementation';
@@ -11,8 +9,6 @@ import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPr
 import { IsObservable, LinkObservableAndObserver, UnLinkObservableAndObserver } from '../observable/implementation';
 import { Constructor, MakeFactory } from '../../classes/factory';
 import { IsObject } from '../../helpers';
-import { IActivableConstructor } from '../../classes/activable/interfaces';
-import { Activable } from '../../classes/activable/implementation';
 
 export const OBSERVER_PRIVATE = Symbol('observer-private');
 

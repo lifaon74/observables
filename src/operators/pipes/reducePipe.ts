@@ -1,4 +1,4 @@
-import {IPipe, TPipeContextBase} from '../../core/observable-observer/interfaces';
+import { IPipe, TPipeContextBase } from '../../core/observable-observer/interfaces';
 import { IObservable } from '../../core/observable/interfaces';
 import { Pipe } from '../../core/observable-observer/implementation';
 import { IObserver } from '../../core/observer/interfaces';

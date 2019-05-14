@@ -1,7 +1,4 @@
-import {
-  IObservable, IObservableContext, IObservableHook
-} from '../../core/observable/interfaces';
-
+import { IObservable, IObservableContext, IObservableHook } from '../../core/observable/interfaces';
 
 
 /**

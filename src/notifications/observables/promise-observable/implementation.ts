@@ -1,7 +1,12 @@
 import { Notification } from '../../core/notification/implementation';
 import { IPromiseCancelToken } from './promise-cancel-token/interfaces';
-import { IPromiseNotificationKeyValueMap, IPromiseObservable, IPromiseObservableClearOptions, IPromiseObservableOptions, TCancellablePromiseTuple, TPromiseObservableNotification } from './interfaces';
-import { NOTIFICATIONS_OBSERVABLE_PRIVATE, NotificationsObservable, INotificationsObservablePrivate } from '../../core/notifications-observable/implementation';
+import {
+  IPromiseNotificationKeyValueMap, IPromiseObservable, IPromiseObservableClearOptions, IPromiseObservableOptions,
+  TCancellablePromiseTuple, TPromiseObservableNotification
+} from './interfaces';
+import {
+  INotificationsObservablePrivate, NOTIFICATIONS_OBSERVABLE_PRIVATE, NotificationsObservable
+} from '../../core/notifications-observable/implementation';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IObservableHook } from '../../../core/observable/interfaces';
 import { IObserver } from '../../../core/observer/interfaces';

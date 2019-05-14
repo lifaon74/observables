@@ -1,8 +1,3 @@
-import { IObservable } from './observable/interfaces';
-import { IObserver } from './observer/interfaces';
-import { IObservableObserver } from './observable-observer/interfaces';
-import { IsSuperSet } from '../classes/types';
-
 export function typeTest(): void {
   type a = 'a' | 'b';
   type b = 'a' | 'b' | 'c';

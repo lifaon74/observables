@@ -1,5 +1,7 @@
 import { IPromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
-import { TPromiseCreateCallback, TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion } from '../interfaces';
+import {
+  TPromiseCreateCallback, TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion
+} from '../interfaces';
 
 /** INTERFACES **/
 

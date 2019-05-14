@@ -43,8 +43,6 @@ import { assertFails, assertObservableEmits } from './classes/asserts';
 import { FromIterableObservable } from './observables/from/iterable/implementation';
 import { noop } from './helpers';
 import { FromRXJSObservable } from './observables/from/rxjs/implementation';
-import { Activable } from './classes/activable/implementation';
-import { FromObservable } from './observables/from/implementation';
 
 function testReadOnlyList() {
   const list = new ReadonlyList<number>([0, 1, 2, 3]);

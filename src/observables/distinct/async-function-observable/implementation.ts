@@ -1,6 +1,5 @@
 import {
-  IObservableInternal,
-  ObservableIsFreshlyObserved, ObservableIsNotObserved
+  IObservableInternal, ObservableIsFreshlyObserved, ObservableIsNotObserved
 } from '../../../core/observable/implementation';
 import { IObservable } from '../../../core/observable/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
@@ -20,9 +19,12 @@ import {
   PromiseCancelReason, PromiseCancelToken
 } from '../../../notifications/observables/promise-observable/promise-cancel-token/implementation';
 import {
-  FUNCTION_OBSERVABLE_PRIVATE,
-  IFunctionObservableInternal
+  FUNCTION_OBSERVABLE_PRIVATE, FunctionObservable, IFunctionObservableInternal
 } from '../function-observable/implementation';
+import { IFunctionObservable } from '../function-observable/interfaces';
+import { IsObject } from '../../../helpers';
+import { VALUE_OBSERVABLE_PRIVATE } from '../value-observable/implementation';
+import { HasFactoryWaterMark } from '../../../classes/factory';
 
 
 export const ASYNC_FUNCTION_OBSERVABLE_PRIVATE = Symbol('async-function-observable-private');
@@ -30,7 +32,7 @@ export const ASYNC_FUNCTION_OBSERVABLE_PRIVATE = Symbol('async-function-observab
 export interface IAsyncFunctionObservablePrivate<T extends TAsyncFunctionObservableFactory> {
   context: IAsyncValueObservableContext<TAsyncFunctionObservableValue<T>>;
   factory: T;
-  arguments: TAsyncFunctionObservableParameters<T>;
+  args: TAsyncFunctionObservableParameters<T>;
   readonlyArguments: IReadonlyTuple<TAsyncFunctionObservableParameters<T>>;
   argumentsObserver: IObserver<TAsyncFunctionObservableParametersUnion<T>>;
   argumentsObserverCount: number;
@@ -53,12 +55,12 @@ export function ConstructAsyncFunctionObservable<T extends TAsyncFunctionObserva
   const privates: IAsyncFunctionObservablePrivate<T> = (observable as IAsyncFunctionObservableInternal<T>)[ASYNC_FUNCTION_OBSERVABLE_PRIVATE];
   privates.context = context;
   privates.factory = factory;
-  privates.arguments = Array.from(args) as TAsyncFunctionObservableParameters<T>;
+  privates.args = Array.from(args) as TAsyncFunctionObservableParameters<T>;
   privates.readonlyArguments = new ReadonlyTuple<TAsyncFunctionObservableParameters<T>>(
-    privates.arguments
+    privates.args
   );
 
-  privates.values = Array.from({ length: privates.arguments.length }, () => void 0) as TAsyncFunctionObservableFactoryParameters<T>;
+  privates.values = Array.from({ length: privates.args.length }, () => void 0) as TAsyncFunctionObservableFactoryParameters<T>;
 
   privates.argumentsObserver = new Observer<TAsyncFunctionObservableParametersUnion<T>>((value: TAsyncFunctionObservableParametersUnion<T>, argObservable: IObservable<TAsyncFunctionObservableParametersUnion<T>>) => {
     AsyncFunctionObservableSetObservableValue<T>(observable, argObservable, value);
@@ -66,11 +68,22 @@ export function ConstructAsyncFunctionObservable<T extends TAsyncFunctionObserva
       AsyncFunctionObservableCallFactory<T>(observable)
         .catch(PromiseCancelReason.discard);
     }
-  }).observe(...Array.from(new Set(privates.arguments))); // ensure we observe it only once
+  }).observe(...Array.from(new Set(privates.args))); // ensure we observe it only once
 
   privates.argumentsObserverCount = 0;
   privates.argumentsObserverPauseCount = -1;
 }
+
+export function IsAsyncFunctionObservable(value: any): value is IAsyncFunctionObservable<any> {
+  return IsObject(value)
+    && value.hasOwnProperty(ASYNC_FUNCTION_OBSERVABLE_PRIVATE);
+}
+
+const IS_ASYNC_FUNCTION_OBSERVABLE_CONSTRUCTOR = Symbol('is-async-function-observable-constructor');
+export function IsAsyncFunctionObservableConstructor(value: any, direct?: boolean): boolean {
+  return (typeof value === 'function') && ((value === AsyncFunctionObservable) || HasFactoryWaterMark(value, IS_ASYNC_FUNCTION_OBSERVABLE_CONSTRUCTOR, direct));
+}
+
 
 export function AsyncFunctionObservableOnObserved<T extends TAsyncFunctionObservableFactory>(observable: IAsyncFunctionObservable<T>): void {
   if (ObservableIsFreshlyObserved<TAsyncFunctionObservableValue<T>>(observable)) {
@@ -87,7 +100,7 @@ export function AsyncFunctionObservableOnUnobserved<T extends TAsyncFunctionObse
 
 export function AsyncFunctionObservableSetObservableValue<T extends TAsyncFunctionObservableFactory>(observable: IAsyncFunctionObservable<T>, argObservable: IObservable<TAsyncFunctionObservableParametersUnion<T>>, value: TAsyncFunctionObservableParametersUnion<T>): void {
   let index: number = -1;
-  while ((index = (observable as IAsyncFunctionObservableInternal<T>)[ASYNC_FUNCTION_OBSERVABLE_PRIVATE].arguments.indexOf(argObservable as any, index + 1)) !== -1) {
+  while ((index = (observable as IAsyncFunctionObservableInternal<T>)[ASYNC_FUNCTION_OBSERVABLE_PRIVATE].args.indexOf(argObservable as any, index + 1)) !== -1) {
     ((observable as IAsyncFunctionObservableInternal<T>)[ASYNC_FUNCTION_OBSERVABLE_PRIVATE].values as any[])[index] = value;
   }
 }
@@ -156,7 +169,7 @@ export class AsyncFunctionObservable<T extends TAsyncFunctionObservableFactory> 
     return ((this as unknown) as IAsyncFunctionObservableInternal<T>)[ASYNC_FUNCTION_OBSERVABLE_PRIVATE].factory;
   }
 
-  get arguments(): IReadonlyTuple<TAsyncFunctionObservableParameters<T>> {
+  get args(): IReadonlyTuple<TAsyncFunctionObservableParameters<T>> {
     return ((this as unknown) as IAsyncFunctionObservableInternal<T>)[ASYNC_FUNCTION_OBSERVABLE_PRIVATE].readonlyArguments;
   }
 

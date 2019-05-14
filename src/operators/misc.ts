@@ -1,8 +1,7 @@
 import { FunctionObservable } from '../observables/distinct/function-observable/implementation';
 import { IsSource, Source } from '../observables/distinct/source/implementation';
 import {
-  IFunctionObservable,
-  TFunctionObservableFactory, TFunctionObservableFactoryParameters,
+  IFunctionObservable, TFunctionObservableFactory, TFunctionObservableFactoryParameters,
 } from '../observables/distinct/function-observable/interfaces';
 import { IsObservable } from '../core/observable/implementation';
 import { IObservable } from '../core/observable/interfaces';
@@ -10,14 +9,10 @@ import { Expression, IsExpression } from '../observables/distinct/expression/imp
 import { IExpression } from '../observables/distinct/expression/interfaces';
 import { ISource } from '../observables/distinct/source/interfaces';
 import {
-  IAsyncFunctionObservable,
-  TAsyncFunctionObservableFactory,
-  TAsyncFunctionObservableFactoryParameters
+  IAsyncFunctionObservable, TAsyncFunctionObservableFactory, TAsyncFunctionObservableFactoryParameters
 } from '../observables/distinct/async-function-observable/interfaces';
 import { AsyncFunctionObservable } from '../observables/distinct/async-function-observable/implementation';
-import {
-  IPromiseObservable,
-} from '../notifications/observables/promise-observable/interfaces';
+import { IPromiseObservable, } from '../notifications/observables/promise-observable/interfaces';
 import { toValueObservable } from './to/toValueObservable';
 import { IPromiseCancelToken } from '../notifications/observables/promise-observable/promise-cancel-token/interfaces';
 import { TPipeBase, TPipeContextBase } from '../core/observable-observer/interfaces';
@@ -26,10 +21,7 @@ import { Pipe } from '../core/observable-observer/implementation';
 import { IsObserver, Observer } from '../core/observer/public';
 import { assertFunctionObservableEmits, assertObservableEmits } from '../classes/asserts';
 import { IsObject } from '../helpers';
-import {
-  LinkPromiseCancelTokenWithFetchArguments
-} from '../notifications/observables/fetch-observable/implementation';
-import { distinctPipe } from './pipes/distinctPipe';
+import { LinkPromiseCancelTokenWithFetchArguments } from '../notifications/observables/fetch-observable/implementation';
 
 export type TObservableOrValue<T> = IObservable<T> | T;
 export type TObservableOrValueToValueType<T extends TObservableOrValue<any>> = T extends IObservable<infer R> ? R : T;

@@ -1,8 +1,10 @@
-import { Notification } from '../../../core/notification/implementation'
-import { INotificationsObservableInternal, NotificationsObservable } from '../../../core/notifications-observable/implementation';
+import { Notification } from '../../../core/notification/implementation';
+import {
+  INotificationsObservableInternal, NotificationsObservable
+} from '../../../core/notifications-observable/implementation';
 import { INotificationsObserver } from '../../../core/notifications-observer/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
-import { IPromiseCancelToken, IPromiseCancelTokenKeyValueMap} from './interfaces';
+import { IPromiseCancelToken, IPromiseCancelTokenKeyValueMap } from './interfaces';
 import { ObservableEmitAll } from '../../../../core/observable/implementation';
 import { NotificationsObserver } from '../../../core/notifications-observer/implementation';
 import { Reason } from '../../../../misc/reason/implementation';

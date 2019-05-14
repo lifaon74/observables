@@ -6,16 +6,14 @@ import { IsObject } from '../../../helpers';
 import {
   IFromObservable, IFromObservableConstructor, IFromObservableContext, TFromObservableCompleteAction
 } from '../interfaces';
-import { IS_OBSERVABLE_LIKE_CONSTRUCTOR, ObservableFactory } from '../../../core/observable/implementation';
+import { ObservableFactory } from '../../../core/observable/implementation';
 import {
-  FROM_OBSERVABLE_PRIVATE,
-  FromObservableFactory, IFromObservableInternal, IsFromObservableConstructor
+  FROM_OBSERVABLE_PRIVATE, FromObservableFactory, IFromObservableInternal, IsFromObservableConstructor
 } from '../implementation';
 import {
   Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
 } from '../../../classes/factory';
-import { INotificationsObservableConstructor } from '../../../notifications/core/notifications-observable/interfaces';
-import { IObservable, IObservableConstructor } from '../../../core/observable/interfaces';
+import { IObservableConstructor } from '../../../core/observable/interfaces';
 
 
 export const FROM_ITERABLE_OBSERVABLE_PRIVATE = Symbol('from-iterable-observable-private');

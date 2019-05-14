@@ -2,17 +2,13 @@ import {
   IObservable, IObservableConstructor, IObservableContext, IObservableHook
 } from '../../core/observable/interfaces';
 import {
-  AllowObservableContextBaseConstruct, IObservableContextBaseInternal, IObservableInternal,
-  IS_OBSERVABLE_LIKE_CONSTRUCTOR,
-  IsObservableLikeConstructor,
-  OBSERVABLE_CONTEXT_BASE_PRIVATE, ObservableClearObservers,
-  ObservableContextBase, ObservableEmitAll, ObservableFactory
+  AllowObservableContextBaseConstruct, IObservableContextBaseInternal, IObservableInternal, IsObservableLikeConstructor,
+  OBSERVABLE_CONTEXT_BASE_PRIVATE, ObservableClearObservers, ObservableContextBase, ObservableEmitAll, ObservableFactory
 } from '../../core/observable/implementation';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import {
-  IFromObservable, IFromObservableConstructor, IFromObservableContext,
-  IFromObservableContextConstructor, TFromObservableCompleteAction,
-  TFromObservableConstructorArgs, TFromObservableState
+  IFromObservable, IFromObservableConstructor, IFromObservableContext, IFromObservableContextConstructor,
+  TFromObservableCompleteAction, TFromObservableConstructorArgs, TFromObservableState
 } from './interfaces';
 import { IsObject } from '../../helpers';
 import {
@@ -20,7 +16,6 @@ import {
 } from '../../classes/factory';
 import { IObserver } from '../../core/observer/interfaces';
 import { InitObservableHook, IObservableHookPrivate } from '../../core/observable/hook';
-import { INotificationsObservableConstructor } from '../../notifications/core/notifications-observable/interfaces';
 
 
 export const FROM_OBSERVABLE_PRIVATE = Symbol('from-observable-private');

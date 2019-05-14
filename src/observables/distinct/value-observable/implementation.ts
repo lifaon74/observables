@@ -1,7 +1,6 @@
 import {
   AllowObservableContextBaseConstruct, IObservableContextBaseInternal, IObservableInternal,
-  IS_OBSERVABLE_LIKE_CONSTRUCTOR, IsObservableLikeConstructor, OBSERVABLE_CONTEXT_BASE_PRIVATE,
-  ObservableContextBase,
+  IS_OBSERVABLE_LIKE_CONSTRUCTOR, IsObservableLikeConstructor, OBSERVABLE_CONTEXT_BASE_PRIVATE, ObservableContextBase,
   ObservableEmitAll, ObservableFactory
 } from '../../../core/observable/implementation';
 import {
@@ -9,14 +8,15 @@ import {
 } from '../../../core/observable/interfaces';
 import { IObserver } from '../../../core/observer/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
-import { IValueObservable, IValueObservableConstructor, IValueObservableContext, IValueObservableContextConstructor, TValueObservableConstructorArgs } from './interfaces';
+import {
+  IValueObservable, IValueObservableConstructor, IValueObservableContext, IValueObservableContextConstructor,
+  TValueObservableConstructorArgs
+} from './interfaces';
 import {
   Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
 } from '../../../classes/factory';
 import { InitObservableHook, IObservableHookPrivate } from '../../../core/observable/hook';
 import { IsObject } from '../../../helpers';
-import { INotificationsObservableConstructor } from '../../../notifications/core/notifications-observable/interfaces';
-import { NotificationsObservable } from '../../../notifications/core/notifications-observable/implementation';
 
 export const VALUE_OBSERVABLE_PRIVATE = Symbol('value-observable-private');
 
@@ -164,7 +164,7 @@ export function ValueObservableBaseFactory<TBase extends Constructor>(superClass
   });
 }
 
-ValueObservable =  class ValueObservable extends ValueObservableBaseFactory<ObjectConstructor>(Object) {
+ValueObservable = class ValueObservable extends ValueObservableBaseFactory<ObjectConstructor>(Object) {
   constructor(create?: (context: IValueObservableContext<any>) => (IObservableHook<any> | void)) {
     super([create], []);
   }

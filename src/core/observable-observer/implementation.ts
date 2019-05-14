@@ -1,8 +1,14 @@
-import { IObservableObserver, IPipe, IPipeContext, IPipeContextConstructor, IPipeHook, TObservableObserverActivateMode } from './interfaces';
+import {
+  IObservableObserver, IPipe, IPipeContext, IPipeContextConstructor, IPipeHook, TObservableObserverActivateMode
+} from './interfaces';
 import { IObservable, ObservableType } from '../observable/interfaces';
 import { IObserver, ObserverType } from '../observer/interfaces';
-import { IObservableInternal, IObservablePrivate, Observable, OBSERVABLE_PRIVATE, ObservableEmitAll } from '../observable/implementation';
-import { IObserverInternal, Observer, OBSERVER_PRIVATE, ObserverActivate, ObserverDeactivate } from '../observer/implementation';
+import {
+  IObservableInternal, IObservablePrivate, Observable, OBSERVABLE_PRIVATE, ObservableEmitAll
+} from '../observable/implementation';
+import {
+  IObserverInternal, Observer, OBSERVER_PRIVATE, ObserverActivate, ObserverDeactivate
+} from '../observer/implementation';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject, noop } from '../../helpers';
 

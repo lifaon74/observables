@@ -15,7 +15,7 @@ import {
 } from '../../../classes/activable/implementation';
 import { IsObject } from '../../../helpers';
 import {
-  IsNotificationsObservableConstructor, NotificationsObservableBaseFactory, NotificationsObservableFactory
+  IsNotificationsObservableConstructor, NotificationsObservableFactory
 } from '../../core/notifications-observable/implementation';
 import { IActivableConstructor } from '../../../classes/activable/interfaces';
 

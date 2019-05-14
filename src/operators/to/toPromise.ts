@@ -1,7 +1,11 @@
-import { TCancellablePromiseTuple, TPromiseObservableNotification } from '../../notifications/observables/promise-observable/interfaces';
+import {
+  TCancellablePromiseTuple, TPromiseObservableNotification
+} from '../../notifications/observables/promise-observable/interfaces';
 import { Notification } from '../../notifications/core/notification/implementation';
 import { IObservable } from '../../core/observable/interfaces';
-import { PromiseCancelError, PromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/implementation';
+import {
+  PromiseCancelError, PromiseCancelToken
+} from '../../notifications/observables/promise-observable/promise-cancel-token/implementation';
 import { IPromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
 import { Observer } from '../../core/observer/implementation';
 import { INotificationsObserver } from '../../notifications/core/notifications-observer/interfaces';

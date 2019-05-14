@@ -22,7 +22,6 @@ import {
   PromiseCancelReason, PromiseCancelToken
 } from '../../../notifications/observables/promise-observable/promise-cancel-token/implementation';
 import { IsObject } from '../../../helpers';
-import { IActivableConstructor } from '../../../classes/activable/interfaces';
 
 
 export const ASYNC_VALUE_OBSERVABLE_PRIVATE = Symbol('async-value-observable-private');
