@@ -43,6 +43,7 @@ import { assertFails, assertObservableEmits } from './classes/asserts';
 import { FromIterableObservable } from './observables/from/iterable/implementation';
 import { noop } from './helpers';
 import { FromRXJSObservable } from './observables/from/rxjs/implementation';
+import { testPerformances } from './test-performances';
 
 function testReadOnlyList() {
   const list = new ReadonlyList<number>([0, 1, 2, 3]);
@@ -926,6 +927,8 @@ export function testInstanceof() {
   }
 }
 
+
+
 export async function test() {
   // testReadOnlyList();
 
@@ -958,6 +961,7 @@ export async function test() {
   // testMisc();
   // testFactoryV2();
   // testInstanceof();
+  // testPerformances();
 }
 
 

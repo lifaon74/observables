@@ -139,6 +139,9 @@ function PureObservableFactory<TBase extends Constructor>(superClass: TBase) {
     }
 
     get observers(): IReadonlyList<IObserver<T>> {
+      // if (((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers === void 0) {
+      //   ((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers = new ReadonlyList<IObserver<T>>(((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers);
+      // }
       return ((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers;
     }
 
@@ -185,6 +188,7 @@ Observable = class Observable extends ObservableFactory<ObjectConstructor>(Objec
     super([create]);
   }
 } as IObservableConstructor;
+
 
 
 // export class Observable<T> implements IObservable<T> {

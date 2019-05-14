@@ -26,7 +26,7 @@ You may also use unpkg: `https://unpkg.com/@lifaon/observables`
 [SOME EXAMPLES HERE](./examples/README.md)
 
 As comparision the rxjs core is: ![npm bundle size](https://img.shields.io/bundlephobia/minzip/rxjs.svg)
-, and the full bundle <span style="color: #1062A4">**27KB**</span>.
+ (4 times bigger than this core), and the full bundle <span style="color: #1062A4">**27KB**</span>. Of course less operators are available in this project.
  
 ### Motivation ###
 

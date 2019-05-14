@@ -83,6 +83,7 @@ function bundle(buildOptions) {
       $path.join(base, '**', '*.js'),
     ], { base: base })
       .pipe(gulpPlugins.rollup({
+        allowRealFiles: true,
         input: $path.join(paths.destination, buildOptions.rollup.main),
         output: {
           format: buildOptions.rollup.format || 'es',
@@ -91,8 +92,7 @@ function bundle(buildOptions) {
         },
         plugins: [
           $resolve({
-            jsnext: true,
-            browser: true,
+            mainFields: ['jsnext:main', 'browser', 'module', 'main'],
           })
         ]
       }))
