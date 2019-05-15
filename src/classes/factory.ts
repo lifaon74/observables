@@ -87,7 +87,7 @@ export function MakeFactory<TChildClass extends Constructor, TSuperClasses exten
     _superClass = factories[i](_superClass);
   }
 
-  const _class: TMakeFactoryClass<TChildClass, TSuperClasses, TBase> = create(_superClass) as TMakeFactoryClass<TChildClass, TSuperClasses, TBase>;
+  const _class: TMakeFactoryClass<TChildClass, TSuperClasses, TBase> = create(_superClass) as unknown as TMakeFactoryClass<TChildClass, TSuperClasses, TBase>;
 
   Object.defineProperty(_class, IS_FACTORY_CLASS, {
     value: null,

@@ -83,8 +83,8 @@ function bundle(buildOptions) {
       $path.join(base, '**', '*.js'),
     ], { base: base })
       .pipe(gulpPlugins.rollup({
-        allowRealFiles: true,
         input: $path.join(paths.destination, buildOptions.rollup.main),
+        allowRealFiles: true,
         output: {
           format: buildOptions.rollup.format || 'es',
           name: buildOptions.rollup.name,

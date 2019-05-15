@@ -48,9 +48,7 @@ export type KeyValueMapGeneric = { [key: string]: any };
 export type KeyValueMapGenericConstraint<TKVMap extends object> = KeyValueMapConstraint<TKVMap, KeyValueMapGeneric>;
 
 export type KVRecord<T extends string, V> = Record<Extract<T, string>, V>;
-
-
-
+// export type KVRecord<T extends string, V> = Record<Extract<string, string>, V>;
 
 
 //

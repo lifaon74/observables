@@ -8,7 +8,7 @@ import { IsObject } from '../../helpers';
 export const TIMER_OBSERVABLE_PRIVATE = Symbol('timer-observable-private');
 
 export interface ITimerObservablePrivate {
-  context: IObservableContext<void>;
+  context: IObservableContext<undefined>;
   period: number;
   timer: any | null;
 }
@@ -18,7 +18,7 @@ export interface ITimerObservableInternal extends ITimerObservable {
 }
 
 
-export function ConstructTimerObservable(observable: ITimerObservable, context: IObservableContext<void>, period: number): void {
+export function ConstructTimerObservable(observable: ITimerObservable, context: IObservableContext<undefined>, period: number): void {
   ConstructClassWithPrivateMembers(observable, TIMER_OBSERVABLE_PRIVATE);
   (observable as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE].context = context;
   (observable as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE].period = period;
@@ -46,9 +46,9 @@ export function TimerObservableOnUnobserved(observable: ITimerObservable): void 
 }
 
 
-export class TimerObservable extends Observable<void> implements ITimerObservable {
+export class TimerObservable extends Observable<undefined> implements ITimerObservable {
   constructor(period: number) {
-    let context: IObservableContext<void> = void 0;
+    let context: IObservableContext<undefined> = void 0;
     super((_context: IObservableContext<void>) => {
       context = _context;
       return {
