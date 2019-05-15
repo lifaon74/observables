@@ -160,7 +160,7 @@ export function DeferredPromiseFinally<T>(
   return new DeferredPromise<T>((deferred: DeferredPromise<T>) => {
     (instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].promise
       .then((result: T) => {
-        return new Promise(resolve => resolve(onFinally()))
+        return new Promise<void>(resolve => resolve(onFinally()))
           .then(
             () => {
               DeferredPromiseResolve<T>(deferred, result);
@@ -172,7 +172,7 @@ export function DeferredPromiseFinally<T>(
             }
           );
       }, (reason: any) => {
-        return new Promise(resolve => resolve(onFinally()))
+        return new Promise<void>(resolve => resolve(onFinally()))
           .then(
             () => {
               DeferredPromiseReject<T>(deferred, reason);
