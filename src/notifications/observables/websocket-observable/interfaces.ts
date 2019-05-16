@@ -12,7 +12,7 @@ export type TWebSocketData = string | ArrayBufferLike | Blob | ArrayBufferView;
 // export interface IWebSocketIn extends IObservable<TWebSocketData> {
 // }
 
-export interface IWebSocketIOValueMap extends IInputOutputKeyValueMap {
+export interface IWebSocketIOKeyValueMap extends IInputOutputKeyValueMap {
 }
 
 // export type TWebSocketIOConstructorArgs = [string, IWebSocketIOOptions] | [string];
@@ -25,7 +25,7 @@ export interface IWebSocketIOConstructor {
   new(url: string, options?: IWebSocketIOOptions): IWebSocketIO;
 }
 
-export interface IWebSocketIO extends IInputOutput<IWebSocketIOValueMap, IObservable<TWebSocketData>, IObserver<TWebSocketData>> {
+export interface IWebSocketIO extends IInputOutput<IWebSocketIOKeyValueMap, IObservable<TWebSocketData>, IObserver<TWebSocketData>> {
   readonly url: string;
   readonly protocols: IReadonlyList<string>;
   readonly protocol: string | null;

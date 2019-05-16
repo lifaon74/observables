@@ -1,6 +1,6 @@
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IReadonlyList } from '../../../misc/readonly-list/interfaces';
-import { IWebSocketIO, IWebSocketIOOptions, IWebSocketIOValueMap, TWebSocketData } from './interfaces';
+import { IWebSocketIO, IWebSocketIOOptions, IWebSocketIOKeyValueMap, TWebSocketData } from './interfaces';
 import { ReadonlyList } from '../../../misc/readonly-list/implementation';
 import { EventsObservable } from '../events-observable/implementation';
 import { IEventsObservable } from '../events-observable/interfaces';
@@ -27,7 +27,7 @@ export interface IWebSocketIOPrivate {
   webSocketListener: IEventsObservable<WebSocketEventMap> | null;
 
   inContext: IObservableContext<TWebSocketData>;
-  stateContext: INotificationsObservableContext<IWebSocketIOValueMap>;
+  stateContext: INotificationsObservableContext<IWebSocketIOKeyValueMap>;
 }
 
 export interface IWebSocketIOInternal extends IWebSocketIO {
@@ -39,7 +39,7 @@ export function ConstructWebSocketIO(
   observable: IObservable<TWebSocketData>,
   observer: IObserver<TWebSocketData>,
   inContext: IObservableContext<TWebSocketData>,
-  stateContext: INotificationsObservableContext<IWebSocketIOValueMap>,
+  stateContext: INotificationsObservableContext<IWebSocketIOKeyValueMap>,
   url: string,
   options: IWebSocketIOOptions = {}
 ): void {
@@ -236,7 +236,7 @@ export class WebSocketIO extends InputOutputBaseFactory<ObjectConstructor>(Objec
       WebSocketIOOnOutputEmit(this, value);
     });
 
-    let stateContext: INotificationsObservableContext<IWebSocketIOValueMap> = void 0;
+    let stateContext: INotificationsObservableContext<IWebSocketIOKeyValueMap> = void 0;
     super([
       observable,
       observer
@@ -248,7 +248,7 @@ export class WebSocketIO extends InputOutputBaseFactory<ObjectConstructor>(Objec
         return WebSocketIODeactivate(this);
       },
     }], [
-      (context: INotificationsObservableContext<IWebSocketIOValueMap>) => {
+      (context: INotificationsObservableContext<IWebSocketIOKeyValueMap>) => {
         stateContext = context;
       }
     ],
@@ -277,8 +277,8 @@ export class WebSocketIO extends InputOutputBaseFactory<ObjectConstructor>(Objec
   }
 
   // @type-fix
-  matches(name: string, callback?: (value: any) => void): IterableIterator<KeyValueMapToNotificationsObservers<IWebSocketIOValueMap>> {
-    return super.matches(name, callback) as IterableIterator<KeyValueMapToNotificationsObservers<IWebSocketIOValueMap>>;
+  matches(name: string, callback?: (value: any) => void): IterableIterator<KeyValueMapToNotificationsObservers<IWebSocketIOKeyValueMap>> {
+    return super.matches(name, callback) as IterableIterator<KeyValueMapToNotificationsObservers<IWebSocketIOKeyValueMap>>;
   }
 }
 
