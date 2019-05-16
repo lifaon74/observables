@@ -6,7 +6,6 @@ const INSTANCE_OF_SYMBOL = Symbol('instanceof');
  * @param destination
  */
 export function SetInstanceOf(source: Function, destination: Function): void {
-  // console.log(`destination ${destination.name} became instanceof ${source.name}`);
   const hasInstance = (Symbol.hasInstance in source)
     ? source[Symbol.hasInstance].bind(source)
     : (() => false);
@@ -16,12 +15,6 @@ export function SetInstanceOf(source: Function, destination: Function): void {
     enumerable: false,
     writable: false,
     value: (instance: any) => {
-      // if (source.name === 'FromObservable') debugger;
-      // console.log('instance');
-      // console.log(instance);
-      // console.log('destination');
-      // console.log(destination);
-      // console.log('---------------------------------');
       return (instance instanceof destination)
         || hasInstance(instance);
     }

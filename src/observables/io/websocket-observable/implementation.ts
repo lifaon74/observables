@@ -1,17 +1,17 @@
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IReadonlyList } from '../../../misc/readonly-list/interfaces';
-import { IWebSocketIO, IWebSocketIOOptions, IWebSocketIOKeyValueMap, TWebSocketData } from './interfaces';
+import { IWebSocketIO, IWebSocketIOKeyValueMap, IWebSocketIOOptions, TWebSocketData } from './interfaces';
 import { ReadonlyList } from '../../../misc/readonly-list/implementation';
-import { EventsObservable } from '../events-observable/implementation';
-import { IEventsObservable } from '../events-observable/interfaces';
+import { EventsObservable } from '../../../notifications/observables/events-observable/implementation';
+import { IEventsObservable } from '../../../notifications/observables/events-observable/interfaces';
 import {
   INotificationsObservableContext, KeyValueMapToNotificationsObservers
-} from '../../core/notifications-observable/interfaces';
+} from '../../../notifications/core/notifications-observable/interfaces';
 import { Observable, ObservableClearObservers } from '../../../core/observable/implementation';
 import { IObservable, IObservableContext } from '../../../core/observable/interfaces';
 import { IObserver, Observer } from '../../../core/observer/public';
-import { InputOutputBaseFactory } from '../io-observable/implementation';
-import { IsIterable } from '../../../helpers';
+import { InputOutput } from '../io-observable/implementation';
+import { IsIterable, IsObject } from '../../../helpers';
 import { WebSocketError } from './WebSocketCloseEvent';
 
 
@@ -36,8 +36,6 @@ export interface IWebSocketIOInternal extends IWebSocketIO {
 
 export function ConstructWebSocketIO(
   instance: IWebSocketIO,
-  observable: IObservable<TWebSocketData>,
-  observer: IObserver<TWebSocketData>,
   inContext: IObservableContext<TWebSocketData>,
   stateContext: INotificationsObservableContext<IWebSocketIOKeyValueMap>,
   url: string,
@@ -62,8 +60,13 @@ export function ConstructWebSocketIO(
   privates.webSocket = null;
   privates.webSocketListener = null;
 
-  privates.stateContext = stateContext;
   privates.inContext = inContext;
+  privates.stateContext = stateContext;
+}
+
+export function IsWebSocketIO(value: any): value is IWebSocketIO {
+  return IsObject(value)
+    && value.hasOwnProperty(WEBSOCKET_IO_PRIVATE);
 }
 
 
@@ -224,38 +227,59 @@ export function WebSocketIOSetBinaryType(instance: IWebSocketIO, binaryType: Bin
 // }
 
 
-export class WebSocketIO extends InputOutputBaseFactory<ObjectConstructor>(Object) implements IWebSocketIO {
+export class WebSocketIO extends InputOutput<IWebSocketIOKeyValueMap, IObservable<TWebSocketData>, IObserver<TWebSocketData>> implements IWebSocketIO {
 
   constructor(url: string, options?: IWebSocketIOOptions) {
     let inContext: IObservableContext<TWebSocketData> = void 0;
-    const observable: IObservable<TWebSocketData> = new Observable<TWebSocketData>((context: IObservableContext<TWebSocketData>) => {
-      inContext = context;
-    });
-
-    const observer: IObserver<TWebSocketData> = new Observer<TWebSocketData>((value: TWebSocketData) => {
-      WebSocketIOOnOutputEmit(this, value);
-    });
-
     let stateContext: INotificationsObservableContext<IWebSocketIOKeyValueMap> = void 0;
-    super([
-      observable,
-      observer
-    ], [{
+
+    super({
+      observable: new Observable<TWebSocketData>((context: IObservableContext<TWebSocketData>) => {
+        inContext = context;
+      }),
+      observer: new Observer<TWebSocketData>((value: TWebSocketData) => {
+        WebSocketIOOnOutputEmit(this, value);
+      }),
       activate: () => {
         return WebSocketIOActivate(this);
       },
       deactivate: () => {
         return WebSocketIODeactivate(this);
       },
-    }], [
-      (context: INotificationsObservableContext<IWebSocketIOKeyValueMap>) => {
+      create: (context: INotificationsObservableContext<IWebSocketIOKeyValueMap>) => {
         stateContext = context;
       }
-    ],
-    []);
-    ConstructWebSocketIO(this, observable, observer, inContext, stateContext, url, options);
+    });
+
+    // let inContext: IObservableContext<TWebSocketData> = void 0;
+    // const observable: IObservable<TWebSocketData> = new Observable<TWebSocketData>((context: IObservableContext<TWebSocketData>) => {
+    //   inContext = context;
+    // });
+    //
+    // const observer: IObserver<TWebSocketData> = new Observer<TWebSocketData>((value: TWebSocketData) => {
+    //   WebSocketIOOnOutputEmit(this, value);
+    // });
+    //
+    // let stateContext: INotificationsObservableContext<IWebSocketIOKeyValueMap> = void 0;
+    // super([
+    //     observable,
+    //     observer
+    //   ], [{
+    //     activate: () => {
+    //       return WebSocketIOActivate(this);
+    //     },
+    //     deactivate: () => {
+    //       return WebSocketIODeactivate(this);
+    //     },
+    //   }], [
+    //     (context: INotificationsObservableContext<IWebSocketIOKeyValueMap>) => {
+    //       stateContext = context;
+    //     }
+    //   ],
+    //   []);
+    ConstructWebSocketIO(this, inContext, stateContext, url, options);
   }
-  
+
   get url(): string {
     return ((this as unknown) as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE].url;
   }
