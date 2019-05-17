@@ -5,7 +5,7 @@ import { IsObject } from '../../../helpers';
 
 export const NOTIFICATION_PRIVATE = Symbol('notification-private');
 
-export interface INotificationPrivate<TName extends string, TValue,> {
+export interface INotificationPrivate<TName extends string, TValue> {
   name: TName;
   value: TValue;
 }

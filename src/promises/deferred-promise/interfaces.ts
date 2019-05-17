@@ -3,7 +3,7 @@ import { IsSubSet } from '../../classes/types';
 
 /** TYPES **/
 
-export type TPromiseStatus = 'fulfilled' | 'rejected' | 'pending';
+export type TPromiseStatus = 'fulfilled' | 'rejected' | 'pending' | 'resolving';
 
 export type TDeferredPromiseRaceReturn<TTuple extends TPromiseOrValue<any>[], TReference, TReturn> =
   true extends {

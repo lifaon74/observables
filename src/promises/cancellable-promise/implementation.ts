@@ -28,7 +28,9 @@ export function ConstructCancellablePromise<T>(
   ConstructClassWithPrivateMembers(instance, CANCELLABLE_PROMISE_PRIVATE);
 
   if (typeof promiseOrCallback === 'function') {
-    (instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].promise = new Promise<T>(promiseOrCallback);
+    (instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].promise = token.cancelled
+      ? Promise.resolve<T>(void 0)
+      : new Promise<T>(promiseOrCallback);
   } else if (promiseOrCallback instanceof Promise){
     (instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].promise = promiseOrCallback;
   } else {

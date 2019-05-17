@@ -29,7 +29,7 @@ import { ISource } from './observables/distinct/source/interfaces';
 import { KeyValueMapKeys, KeyValueMapValues } from './notifications/core/interfaces';
 import { INotification } from './notifications/core/notification/interfaces';
 import { Notification } from './notifications/core/notification/implementation';
-import { WebSocketIO } from './notifications/observables/websocket-observable/implementation';
+import { WebSocketIO } from './observables/io/websocket-observable/implementation';
 import { INotificationsObserver } from './notifications/core/notifications-observer/interfaces';
 import { FunctionObservable } from './observables/distinct/function-observable/implementation';
 import { Expression } from './observables/distinct/expression/implementation';
@@ -869,7 +869,6 @@ async function testFromRXJSObservable() {
 export function testWebSocket() {
 
   // wss://echo.websocket.org
-
   const ws = new WebSocketIO('wss://echo.websocket.org');
   ws.in.pipeTo((value: any) => {
     console.log('in:', value);
