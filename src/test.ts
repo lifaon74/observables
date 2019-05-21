@@ -923,9 +923,10 @@ export async function testWEBRTC() {
   ];
 
   const hashes: [string, number][] = [
-    ['SHA-256', 0x01],
-    ['SHA-384', 0x02],
-    ['SHA-512', 0x03],
+    ['SHA-1', 0x01],
+    ['SHA-256', 0x02],
+    ['SHA-384', 0x03],
+    ['SHA-512', 0x04],
   ];
 
   const curves: [string, number][] = [
@@ -1088,8 +1089,10 @@ export async function testWEBRTC() {
 }
 
 
-
-
+//
+// export async function testWEBRTCChat() {
+//
+// }
 
 
 
@@ -1152,6 +1155,7 @@ export async function test() {
 
   // testWebSocket();
   testWEBRTC();
+  // testWEBRTCChat();
 
   // testMisc();
   // testFactoryV2();
