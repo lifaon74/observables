@@ -1,10 +1,9 @@
 import { from, Observable as RXObservable, Subscriber as RXSubscriber } from 'rxjs';
-import { FromIterableObservable } from './observables/from/iterable/implementation';
-import { Observable, ObservableClearObservers } from './core/observable/implementation';
-import { IObserver, Observer } from './core/observer/public';
-import { IObservable } from './core/observable/interfaces';
-import { INotificationsObservable } from './notifications/core/notifications-observable/interfaces';
-import { NotificationsObservable } from './notifications/core/notifications-observable/public';
+import { FromIterableObservable } from '../observables/from/iterable/implementation';
+import { Observable, ObservableClearObservers } from '../core/observable/implementation';
+import { IObserver, Observer } from '../core/observer/public';
+import { IObservable } from '../core/observable/interfaces';
+import { NotificationsObservable } from '../notifications/core/notifications-observable/public';
 
 /**
  * Test 'from' for an iterable

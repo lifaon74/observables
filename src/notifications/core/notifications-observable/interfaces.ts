@@ -78,6 +78,13 @@ export type TNotificationsObservableHook<TKVMap extends KeyValueMapGenericConstr
 export type TNotificationsObservableConstructorArgs<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> = [(context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)] | [];
 
 
+
+export interface INotificationsObservableBasicKeyValueMap<TValue, TError = any> {
+  next: TValue;
+  complete: undefined;
+  error: TError;
+}
+
 /** INTERFACES **/
 
 export interface INotificationsObservableConstructor {

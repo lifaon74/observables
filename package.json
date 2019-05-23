@@ -1,10 +1,10 @@
 {
   "name": "@lifaon/observables",
-  "version": "1.1.5",
+  "version": "1.2.0",
   "description": "Better observables for everyone",
-  "main": "public.js",
-  "module": "public.js",
-  "jsnext:main": "public.js",
+  "main": "bundle/public.umd.esnext.min.js",
+  "module": "index.js",
+  "jsnext:main": "bundle/public.umd.esnext.min.js",
   "scripts": {
     "start": "npm run clean && gulp watch",
     "clean": "rimraf ./dist",

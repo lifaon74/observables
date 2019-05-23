@@ -1,66 +1,39 @@
-import { ReadonlyList } from './misc/readonly-list/implementation';
-import { Observable } from './core/observable/implementation';
-import { Observer } from './core/observer/implementation';
+import { ReadonlyList } from '../../misc/readonly-list/implementation';
+import { Observable } from '../../core/observable/implementation';
+import { Observer } from '../../core/observer/implementation';
 import {
   NotificationsObservable, NotificationsObservableContext
-} from './notifications/core/notifications-observable/implementation';
-import { NotificationsObserver } from './notifications/core/notifications-observer/implementation';
-import { EventsObservable } from './notifications/observables/events-observable/implementation';
-import { FetchObservable } from './notifications/observables/fetch-observable/implementation';
-import { toCancellablePromiseTuple, toPromise } from './operators/to/toPromise';
+} from '../../notifications/core/notifications-observable/implementation';
+import { NotificationsObserver } from '../../notifications/core/notifications-observer/implementation';
+import { EventsObservable } from '../../notifications/observables/events-observable/implementation';
+import { FetchObservable } from '../../notifications/observables/fetch-observable/implementation';
+import { toCancellablePromiseTuple, toPromise } from '../../operators/to/toPromise';
 import {
   PromiseCancelReason, PromiseCancelToken
-} from './notifications/observables/promise-observable/promise-cancel-token/implementation';
-import { TCancellablePromiseTuple } from './notifications/observables/promise-observable/interfaces';
-import { Reason } from './misc/reason/implementation';
-import { PromiseObservable } from './notifications/observables/promise-observable/implementation';
-import { IObserver } from './core/observer/interfaces';
-import { Pipe } from './core/observable-observer/implementation';
+} from '../../notifications/observables/promise-observable/promise-cancel-token/implementation';
+import { TCancellablePromiseTuple } from '../../notifications/observables/promise-observable/interfaces';
+import { Reason } from '../../misc/reason/implementation';
+import { PromiseObservable } from '../../notifications/observables/promise-observable/implementation';
+import { IObserver } from '../../core/observer/interfaces';
+import { Pipe } from '../../core/observable-observer/implementation';
 import {
   INotificationsObservable, INotificationsObservableContext
-} from './notifications/core/notifications-observable/interfaces';
-import { IObservableObserver, IPipe } from './core/observable-observer/interfaces';
-import { IObservable, IObservableContext } from './core/observable/interfaces';
-import { promisePipe } from './operators/pipes/promisePipe';
-import { mapPipe } from './operators/pipes/mapPipe';
-import { TimerObservable } from './observables/timer-observable/implementation';
-import { AsyncSource, Source } from './observables/distinct/source/implementation';
-import { ISource } from './observables/distinct/source/interfaces';
-import { KeyValueMapKeys, KeyValueMapValues } from './notifications/core/interfaces';
-import { INotification } from './notifications/core/notification/interfaces';
-import { Notification } from './notifications/core/notification/implementation';
-import { WebSocketIO } from './observables/io/websocket-observable/implementation';
-import { INotificationsObserver } from './notifications/core/notifications-observer/interfaces';
-import { FunctionObservable } from './observables/distinct/function-observable/implementation';
-import { Expression } from './observables/distinct/expression/implementation';
-import { $equal, $expression, $string } from './operators/misc';
-import { IPromiseCancelToken } from './notifications/observables/promise-observable/promise-cancel-token/interfaces';
-import { UnionToIntersection } from './classes/types';
-import { EventKeyValueMapConstraint } from './notifications/observables/events-observable/interfaces';
-import { reducePipe } from './operators/pipes/reducePipe';
-import { flattenPipe } from './operators/pipes/flattenPipe';
-import { assertFails, assertObservableEmits } from './classes/asserts';
-import { FromIterableObservable } from './observables/from/iterable/implementation';
-import { noop } from './helpers';
-import { FromRXJSObservable } from './observables/from/rxjs/implementation';
+} from '../../notifications/core/notifications-observable/interfaces';
+import { IObservableObserver, IPipe, TPipeContextBase } from '../../core/observable-observer/interfaces';
+import { IObservable, IObservableContext } from '../../core/observable/interfaces';
+import { promisePipe } from '../../operators/pipes/promisePipe';
+import { TimerObservable } from '../../observables/timer-observable/implementation';
+import { Source } from '../../observables/distinct/source/implementation';
+import { ISource } from '../../observables/distinct/source/interfaces';
+import { KeyValueMapKeys, KeyValueMapValues } from '../../notifications/core/interfaces';
+import { INotification } from '../../notifications/core/notification/interfaces';
+import { INotificationsObserver } from '../../notifications/core/notifications-observer/interfaces';
+import { FunctionObservable } from '../../observables/distinct/function-observable/implementation';
+import { Expression } from '../../observables/distinct/expression/implementation';
+import { $equal, $expression, $string } from '../../operators/misc';
+import { IPromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import { EventKeyValueMapConstraint } from '../../notifications/observables/events-observable/interfaces';
 
-function testReadOnlyList() {
-  const list = new ReadonlyList<number>([0, 1, 2, 3]);
-  for (let i = 0; i < list.length; i++) {
-    if (list.item(i) !== i) {
-      throw new Error(`list.item(${i}) !== ${i}`);
-    }
-  }
-
-  let i: number = 0;
-  for (const value of Array.from(list)) {
-    if (value !== i) {
-      throw new Error(`iterable[${i}] !== ${i}`);
-    }
-    i++;
-  }
-
-}
 
 /**
  * EXAMPLES
@@ -166,7 +139,7 @@ function timerObservableExample1(): void {
   const observer = new TimerObservable(1000)
     .pipeTo(() => {
       count++;
-      console.log(`count: ${count}`);
+      console.log(`count: ${ count }`);
       if (count >= 10) {
         observer.deactivate();
       }
@@ -185,30 +158,30 @@ function observeNotificationsObservable(): void {
   // 1) use 'addListener' to listen to 'mousemove' on X axis
   const observer1 = createEventNotificationsObservable<WindowEventMap>(window, 'mousemove')
     .addListener('mousemove', (event: MouseEvent) => {
-      console.log(`x: ${event.clientX}`);
+      console.log(`x: ${ event.clientX }`);
     }).activate(); // WARN: don't forget to activate the observer !
 
   // 2) use 'pipeTo' and NotificationsObserver (is strictly equal to 'addListener')
   const observer2 = createEventNotificationsObservable<WindowEventMap>(window, 'mousemove')
     .pipeTo<INotificationsObserver<'mousemove', MouseEvent>>(new NotificationsObserver<'mousemove', MouseEvent>('mousemove', (event: MouseEvent) => {
-      console.log(`y: ${event.clientY}`);
+      console.log(`y: ${ event.clientY }`);
     })).activate();
 
   // 3) use standard Observer
   const observer3 = createEventNotificationsObservable(window, 'click')
     .pipeTo(new Observer<INotification<'click', MouseEvent>>((notification: INotification<'click', MouseEvent>) => {
       if (notification.name === 'click') {
-        console.log(`click => x: ${notification.value.clientX}, x: ${notification.value.clientY}`);
+        console.log(`click => x: ${ notification.value.clientX }, x: ${ notification.value.clientY }`);
       }
     })).activate();
 
   // 4) use 'on' which is strictly equal to 'addListener' but returns the observable instead of the observer
   const observable = createEventNotificationsObservable(window, 'mousedown')
     .on('mousedown', (event: MouseEvent) => {
-      console.log(`mousedown => x: ${event.clientX}`);
+      console.log(`mousedown => x: ${ event.clientX }`);
     })
     .on('mousedown', (event: MouseEvent) => { // great way to chain listeners
-      console.log(`mousedown => y: ${event.clientY}`);
+      console.log(`mousedown => y: ${ event.clientY }`);
     }); // INFO: the observers are automatically activated with 'on'
 
 
@@ -226,10 +199,10 @@ function observeNotificationsObservable(): void {
 function eventsObservableExample1(): void {
   const observable = new EventsObservable<WindowEventMap>(window)
     .on('click', (event: MouseEvent) => {
-      console.log(`click => button: ${event.button}`);
+      console.log(`click => button: ${ event.button }`);
     })
     .on('mousemove', (event: MouseEvent) => {
-      console.log(`mousemove => x: ${event.clientX}, x: ${event.clientY}`);
+      console.log(`mousemove => x: ${ event.clientX }, x: ${ event.clientY }`);
     });
 
   // or
@@ -257,7 +230,7 @@ function eventsObservableExample1(): void {
 function eventsObservableExample2(): void {
   const observer = new EventsObservable(window, 'mousemove')
     .pipeTo(new Observer((notification: INotification<'mousemove', MouseEvent>) => {
-      console.log(`x: ${notification.value.clientX}, x: ${notification.value.clientY}`);
+      console.log(`x: ${ notification.value.clientX }, x: ${ notification.value.clientY }`);
     })).activate();
 
   setTimeout(() => {
@@ -267,7 +240,7 @@ function eventsObservableExample2(): void {
 
 function promiseCancelTokenFetchExample1(): void {
   function loadNews(page: number, token: IPromiseCancelToken = new PromiseCancelToken()): Promise<void> {
-    return fetch(`https://my-domain/api/news?page${page}`, { signal: token.toAbortController().signal })
+    return fetch(`https://my-domain/api/news?page${ page }`, { signal: token.toAbortController().signal })
       .then((response: Response) => {
         if (token.cancelled) {
           throw token.reason;
@@ -312,7 +285,7 @@ function createHttpRequest(url: string, token: IPromiseCancelToken = new Promise
           resolve(request.responseText);
         })
         .on('error', () => {
-          reject(new Error(`Failed to fetch data: ${request.statusText}`));
+          reject(new Error(`Failed to fetch data: ${ request.statusText }`));
         })
         .on('abort', () => {
           reject(token.reason || new PromiseCancelReason());
@@ -463,7 +436,7 @@ function fetchObservableExample1(): void {
 /**
  * Example how to cast an Observable to a Promise
  */
-function observableToPromiseExample1(): void {
+async function observableToPromiseExample1(): Promise<void> {
 
   function observePromise(promise: Promise<Response>, token?: PromiseCancelToken): Promise<void> {
     return promise
@@ -511,70 +484,6 @@ function observableObserverExampple1(): void {
   }
 }
 
-function typeTest() {
-  type a = 'a' | 'b';
-  type b = 'a' | 'b' | 'c';
-  type c = 'a';
-  type d = 'd';
-
-  type inter_a = 'a' & 'b';
-  type inter_b = 'a' & 'b' & 'c';
-  type inter_c = 'a';
-  type inter_d = 'd';
-
-
-  // expect B super set of A
-  function foo<A extends string, B extends string>(v: UnionToIntersection<A>): B {
-    return v as any;
-  }
-
-  const v: unknown = null;
-
-  // const k: O<a> = { a: 'a', b: 'b' };
-  // const k: (a & b) = 'b';
-  // const k: keyof { [key in a]: void };
-  // const k: T<a, b> = 'c';
-  // const k: UnionToIntersection<a> = 'a' as unknown as a;
-  // const k: keyof { a: 1, b: never };
-
-  // (a & b) extends b => true
-  // (b & a) extends b => true
-  // (a & b) extends a => true
-  // (a & b) extends c => false
-  // (a & b) extends d => false
-  // ('a' | 'b' | 'c') extends ('a' | 'b') => false
-  // ('a' | 'b' | 'c') extends ('a' | 'b' | 'c') => true
-  // ('a' & 'b' & 'c') extends ('a' & 'b') => true
-  // ('a' & 'b') extends ('a') => true
-  // ('a') extends ('a' & 'b') => false
-
-  // string extends ('a' & 'b') => false
-  // ('a' & 'b') extends string => true
-
-  // string extends ('a' | 'b') => false
-  // ('a' | 'b') extends string => true
-
-  // ('a' | 'b' | 'c') extends ('a' & 'b') => false
-  // ('a' | 'b') extends ('a' & 'b') => false
-  // ('a') extends ('a' & 'b') => false
-  // (('a' & 'b') | ('a' & 'b' & 'c')) extends ('a' & 'b') => true
-  // ('a' & 'b') extends ('a' | 'b') => true
-
-  // const k: (string extends ('a' | 'b') ? boolean : never) = null;
-  // const k: Record<a, void> & Record<b, void> = null;
-  // k.c = void 0;
-
-
-  // const r0 = foo<a, a>(v as inter_a); // valid
-  // const r1 = foo<a, b>(v as inter_b); // valid
-  // const r2 = foo<a, c>(v as inter_c); // valid
-  // const r3 = foo<a, d>(v as inter_d); // valid
-  //
-  // const ra = foo<a, a>(v as a); // valid
-  // const rb = foo<a, b>(v as b); // valid
-  // const rc = foo<a, c>(v as c); // invalid
-  // const rd = foo<a, d>(v as d); // invalid
-}
 
 function pipeExample1() {
   function map<Tin, Tout>(transform: (value: Tin) => Tout): IPipe<IObserver<Tin>, IObservable<Tout>> {
@@ -615,7 +524,7 @@ function pipeExample2() {
 
 function pipeExample3() {
   // create a map pipe which transform incoming data into numbers
-  const pipe = Pipe.create<any, number>((context) => {
+  const pipe = Pipe.create<any, number>((context: TPipeContextBase<any, number>) => {
     return {
       onEmit(value: any) {
         context.emit(Number(value));
@@ -637,35 +546,6 @@ function pipeExample3() {
   emitter.observer.emit('2'); // 2
   emitter.observer.emit(void 0); // NaN
 }
-
-
-
-export function testSource() {
-  const source = new Source<number>().emit(0);
-
-  source.pipeTo((value: number) => {
-    console.log(value);
-  }).activate(); // print 0
-
-  source.emit(1); // print 1
-  source.emit(1); // nothing to print
-  source.emit(2); // print 2
-}
-
-export async function testAsyncSource() {
-  const source = await new AsyncSource<number>().emit(Promise.resolve(0));
-
-  source.pipeTo((value: number) => {
-    console.log(value);
-  }).activate(); // print 0
-
-  await source.emit(Promise.resolve(1)); // print 1
-  await source.emit(Promise.resolve(1)); // nothing to print
-  await source.emit(Promise.resolve(2)); // print 2
-}
-
-
-
 
 
 function functionObservableExample1() {
@@ -701,12 +581,11 @@ function functionObservableExample1() {
     }).activate();
 
 
-  $string`a${a}b${a}c${$expression(() => window.location.href)}`
+  $string`a${ a }b${ a }c${ $expression(() => window.location.href) }`
     .pipeTo((value: string) => {
       console.log('str', value);
     }).activate();
 }
-
 
 
 function expressionExample1() {
@@ -728,406 +607,7 @@ function expressionExample1() {
 }
 
 
-
-async function testFromIterableObservable() {
-  const values1 = new FromIterableObservable([0, 1, 2, 3]);
-
-  await assertObservableEmits(
-    values1,
-    [0, 1, 2, 3]
-  );
-
-  assertFails(() =>  values1.pipeTo(noop).activate());
-
-  const values2 = new FromIterableObservable([0, 1, 2, 3][Symbol.iterator](), 'cache');
-
-  await assertObservableEmits(
-    values2,
-    [0, 1, 2, 3]
-  );
-
-  await assertObservableEmits(
-    values2,
-    [0, 1, 2, 3]
-  );
-}
-
-async function testReducePipe() {
-  await assertObservableEmits(
-    new FromIterableObservable([0, 1, 2, 3])
-      .pipeThrough(reducePipe<number>((a, b) => (a + b), 0)),
-    [0, 1, 3, 6]
-  );
-}
-
-async function testFlattenPipe() {
-  await assertObservableEmits(
-    new FromIterableObservable([[0, 1], [2, 3]])
-      .pipeThrough(flattenPipe<number>()),
-    [0, 1, 2, 3]
-  );
-}
-
-
-
-
-async function testFromRXJSObservable() {
-  function loadScript(src: string): Promise<void> {
-    return new Promise((resolve: any, reject: any) => {
-      const script: HTMLScriptElement = document.createElement('script');
-
-      const clear = () => {
-        script.removeEventListener('load', onLoad);
-        script.removeEventListener('error', onLoad);
-        document.head.removeChild(script);
-      };
-
-      const onLoad = () => {
-        clear();
-        resolve();
-      };
-
-      const onError = () => {
-        clear();
-        reject(new URIError(`The script '${src.substring(0, 300)}' didn't load correctly.`));
-      };
-
-      script.addEventListener('load', onLoad);
-      script.addEventListener('error', onError);
-
-      script.src = src;
-
-      document.head.appendChild(script);
-    });
-  }
-
-  function loadUMDScript<T>(src: string, name: string): Promise<T> {
-    // (window as any).exports = {};
-    // (window as any).module = {
-    //   exports: (window as any).exports
-    // };
-    if (name in (window as any)) {
-      return Promise.reject(new Error(`The global object already contains a property with name '${name}'.`));
-    } else {
-      return loadScript(src)
-        .then(() => {
-          if (name in (window as any)) {
-            const module: any = (window as any)[name];
-            delete (window as any)[name];
-            return module;
-          } else {
-            throw new Error(`No exported UMD name '${name}'.`)
-          }
-        });
-    }
-
-  }
-
-  const rxjs: any = await loadUMDScript( 'https://unpkg.com/rxjs@6.4.0/bundles/rxjs.umd.js', 'rxjs');
-  // await loadScript( 'https://unpkg.com/rxjs@6.4.0/bundles/rxjs.umd.min.js');
-
-  const { range, operators: { map, filter }} = rxjs;
-
-  const notifications = [
-    new Notification('next', 0),
-    new Notification('next', 1),
-    new Notification('next', 2),
-    new Notification('next', 3),
-    new Notification('complete'),
-  ];
-
-  const rxObservable = range(0, 7).pipe(
-    filter((x: number) => x % 2 === 0),
-    map((x: number) => x  / 2)
-  ); // 0, 1, 2, 3
-
-  const values1 = new FromRXJSObservable<number, undefined>(rxObservable);
-
-  await assertObservableEmits(
-    values1,
-    notifications
-  );
-
-  assertFails(() =>  values1.pipeTo(noop).activate());
-
-  const values2 = new FromRXJSObservable<number, undefined>(rxObservable, 'cache');
-
-  await assertObservableEmits(
-    values2,
-    notifications
-  );
-
-  await assertObservableEmits(
-    values2,
-    notifications
-  );
-
-}
-
-
-export function testWebSocket() {
-
-  // wss://echo.websocket.org
-  const ws = new WebSocketIO('wss://echo.websocket.org');
-  ws.in.pipeTo((value: any) => {
-    console.log('in:', value);
-  }).activate();
-
-  const emitter = new TimerObservable(1000)
-    .pipe(mapPipe<void, string>(() => `value-${Math.random()}`)).observable
-    .pipeTo(ws.out);
-
-  const clear = () => {
-    ws.deactivate()
-      .then(() => {
-        Array.from(ws.observers).forEach(_ => _.disconnect());
-      });
-  };
-
-  ws.on('activate', () => {
-    console.timeEnd('ws activate');
-    emitter.activate();
-    setTimeout(clear, 5000);
-  });
-
-  ws.on('error', (error: Error) => {
-    console.error('ws error', error);
-  });
-
-  ws.on('deactivate', () => {
-    console.log('ws deactivate');
-    emitter.deactivate();
-  });
-
-  console.time('ws activate');
-  ws.activate();
-}
-
-
-export async function testWEBRTC() {
-
-  function NewLocalServer(): Promise<LocalServer> {
-    return crypto.subtle.generateKey({
-      name: 'ECDSA',
-      namedCurve: 'P-256'
-    }, true, [
-      'sign'
-    ])
-      .then((pair: CryptoKeyPair) => {
-        return new LocalServer(pair);
-      }) as Promise<LocalServer>;
-  }
-
-  const algorithms: [string, number][] = [
-    ['ECDSA', 0x01],
-  ];
-
-  const hashes: [string, number][] = [
-    ['SHA-1', 0x01],
-    ['SHA-256', 0x02],
-    ['SHA-384', 0x03],
-    ['SHA-512', 0x04],
-  ];
-
-  const curves: [string, number][] = [
-    ['P-256', 0x01],
-    ['P-384', 0x02],
-    ['P-512', 0x03],
-  ];
-
-
-  function ExportCryptoKeyToInternal(key: CryptoKey): Promise<Uint8Array> {
-    // just support ec currently
-    switch (key.algorithm.name) {
-      case 'ECDSA':
-        return (crypto.subtle.exportKey('raw', key) as Promise<ArrayBuffer>)
-          .then((buffer: ArrayBuffer) => {
-            return new Uint8Array([
-              0x01,  // algorithms.find(([name]) => (name === 'ECDSA'))[1],
-              curves.find(([name]) => (name === (key.algorithm as EcKeyAlgorithm).namedCurve))[1],
-              ...new Uint8Array(buffer)
-            ]);
-          });
-      default:
-        return Promise.reject(new Error(`Unsupported key`));
-    }
-  }
-
-  function ImportCryptoKeyFromInternal(data: Uint8Array, options: { extractable: boolean, keyUsages: string[] }): Promise<CryptoKey> {
-    switch (data[0]) {
-      case 0x01:
-        return crypto.subtle.importKey(
-          'raw',
-          data.subarray(2).buffer,
-          {
-            name: 'ECDSA',
-            namedCurve: curves.find(([, code]) => (code === data[1]))[0],
-          },
-          options.extractable,
-          options.keyUsages
-        ) as Promise<CryptoKey>;
-      default:
-        return Promise.reject(new Error(`Unsupported algorithm`));
-    }
-  }
-
-  function SignToInternal(algorithm: RsaPssParams | EcdsaParams | AesCmacParams, key: CryptoKey, data: Uint8Array): Promise<Uint8Array> {
-    return (crypto.subtle.sign(algorithm, key, data) as Promise<ArrayBuffer>)
-      .then((buffer: ArrayBuffer) => {
-        return new Uint8Array([
-          algorithms.find(([name]) => (name === algorithm.name))[1],
-          hashes.find(([name]) => (name === (algorithm as EcdsaParams).hash))[1],
-          ...new Uint8Array(buffer)
-        ]);
-      });
-  }
-
-  function SignAlgorithmFromInternal(key: CryptoKey, signature: Uint8Array): RsaPssParams | EcdsaParams | AesCmacParams {
-    switch (signature[0]) {
-      case 0x01:
-        return {
-          name: 'ECDSA',
-          hash: hashes.find(([, code]) => (code === signature[1]))[0],
-        } as EcdsaParams;
-      default:
-        throw new Error(`Unsupported algorithm`);
-    }
-  }
-
-
-  function VerifyFromInternal(key: CryptoKey, signature: Uint8Array, data: Uint8Array): Promise<boolean> {
-    return (crypto.subtle.verify(SignAlgorithmFromInternal(key, signature), key, signature.subarray(2), data) as Promise<boolean>);
-  }
-
-  interface IPeerOffer {
-    offer: RTCSessionDescription,
-    signature: Uint8Array,
-  }
-
-  const peers = new Map<string, IPeerOffer>(); // id, offer
-
-  class LocalServer {
-
-    public readonly publicKey: CryptoKey;
-    public readonly privateKey: CryptoKey;
-
-
-    protected _id: Promise<Uint8Array> | null;
-    protected readonly _connection: RTCPeerConnection;
-
-    constructor({ publicKey, privateKey }: CryptoKeyPair) {
-      this.publicKey = publicKey;
-      this.privateKey = privateKey;
-
-      this._id = null;
-      this._connection = new RTCPeerConnection();
-    }
-
-    id(): Promise<Readonly<Uint8Array>> {
-      if (this._id === null) {
-        this._id = ExportCryptoKeyToInternal(this.publicKey);
-      }
-      return this._id;
-    }
-
-    start(): Promise<void> {
-      return Promise.all([
-       this.id(),
-        this._connection.createOffer()
-          .then((offer: RTCSessionDescriptionInit) => this._connection.setLocalDescription(offer))
-          .then(() => SignToInternal({
-            name: 'ECDSA',
-            hash: 'SHA-256'
-          },
-            this.privateKey,
-            new TextEncoder().encode(JSON.stringify(this._connection.localDescription))
-          ))
-      ])
-        .then(([id, signature]: [Uint8Array, Uint8Array]) => {
-          peers.set(String.fromCodePoint(...id), {
-            offer: this._connection.localDescription,
-            signature: signature,
-          });
-          console.log(peers);
-        });
-    }
-
-
-//     localConnection.createOffer()
-//   .then((offer: RTCSessionDescriptionInit) => {
-//     console.log(offer);
-//     return localConnection.setLocalDescription(offer);
-//   })
-// .then(() => remoteConnection.setRemoteDescription(localConnection.localDescription))
-//     .then(() => remoteConnection.createAnswer())
-//     .then(answer => remoteConnection.setLocalDescription(answer))
-//     .then(() => localConnection.setRemoteDescription(remoteConnection.localDescription));
-
-  }
-
-  const server = await NewLocalServer();
-  await server.start();
-
-
-  // const uuid: string = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(16).padStart(14, '0') + '-' + Date.now().toString(16).padStart(12, '0');
-  // console.log(uuid);
-  //
-  // const localConnection = new RTCPeerConnection();
-  //
-  // new EventsObservable<RTCPeerConnectionEventMap>(localConnection)
-  //   .on('icecandidate', (event: RTCPeerConnectionIceEvent) => {
-  //     console.log('on ice candidate');
-  //   })
-  //   .on('negotiationneeded', (event: Event) => {
-  //     console.log('on negotiationneeded');
-  //   })
-  //   .on('datachannel', (event: RTCDataChannelEvent) => {
-  //     console.log('on datachannel');
-  //   })
-  // ;
-
-}
-
-
-//
-// export async function testWEBRTCChat() {
-//
-// }
-
-
-
-
-
-
-
-
-export function testInstanceof() {
-  const a = new NotificationsObservable();
-  if (!(a instanceof Observable)) {
-    throw new Error(`!(a instanceof Observable)`)
-  }
-
-  const b = new EventsObservable(window);
-  if (!(b instanceof Observable)) {
-    throw new Error(`!(b instanceof Observable)`)
-  }
-
-  const c = new Source();
-  if (!(c instanceof Observable)) {
-    throw new Error(`!(c instanceof Observable)`)
-  }
-
-  const d = new WebSocketIO('');
-  if (!(d instanceof Observable)) {
-    throw new Error(`!(d instanceof Observable)`)
-  }
-}
-
-
-
 export async function test() {
-  // testReadOnlyList();
-
   // timerObservableExample1();
   // observeTimerObservable();
   // observeNotificationsObservable();
@@ -1141,27 +621,10 @@ export async function test() {
   // pipeExample2();
   // pipeExample3();
 
-  // testSource();
-  // testAsyncSource();
-
   // functionObservableExample1();
   // expressionExample1();
-
-  // await testFromIterableObservable();
-  // await testReducePipe();
-  // await testFlattenPipe();
-  //
-  // await testFromRXJSObservable();
-
-  // testWebSocket();
-  testWEBRTC();
-  // testWEBRTCChat();
-
-  // testMisc();
-  // testFactoryV2();
-  // testInstanceof();
-  // testPerformances();
 }
+
 
 
 

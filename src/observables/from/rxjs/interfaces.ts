@@ -1,7 +1,7 @@
 import { IFromObservableBase, TFromObservableCompleteAction } from '../interfaces';
 import { Observable as RXObservable } from 'rxjs';
 import {
-  INotificationsObservable, KeyValueMapToNotifications
+  INotificationsObservable, INotificationsObservableBasicKeyValueMap, KeyValueMapToNotifications
 } from '../../../notifications/core/notifications-observable/interfaces';
 
 /** TYPES **/
@@ -9,10 +9,7 @@ import {
 export type TFromRXJSObservableConstructorArgs<TValue, TError> = [RXObservable<TValue>, TFromObservableCompleteAction]
 | [RXObservable<TValue>];
 
-export interface IFromRXJSObservableNotificationKeyValueMap<TValue, TError> {
-  next: TValue;
-  error: TError;
-  complete: void;
+export interface IFromRXJSObservableNotificationKeyValueMap<TValue, TError> extends INotificationsObservableBasicKeyValueMap<TValue, TError> {
 }
 
 export type TFromRXJSObservableNotifications<TValue, TError> = KeyValueMapToNotifications<IFromRXJSObservableNotificationKeyValueMap<TValue, TError>>;
