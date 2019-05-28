@@ -45,8 +45,14 @@ export function NodeJSEventsObservableOnObserved<TKVMap extends NodeJSEventKeyVa
     if (name === null) {
       throw new TypeError(`Cannot observe an NodeJSEventsObservable without a name (null), with a standard Observer (use a NotificationsObserver instead).`);
     } else {
-      const listener = (event: KeyValueMapValues<TKVMap>) => {
-        observer.emit(new Notification<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>(name, event) as unknown as KeyValueMapToNotifications<TKVMap>);
+      const listener = (...args: any[]) => {
+        const value: KeyValueMapValues<TKVMap> =
+          (args.length === 0)
+            ? void 0
+            : (args.length === 1)
+              ? args[0]
+              : args;
+        observer.emit(new Notification<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>(name, value) as unknown as KeyValueMapToNotifications<TKVMap>);
       };
       (observable as INodeJSEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].observerListenerMap.set(observer as any, listener);
       (observable as INodeJSEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].target.addListener(name, listener);
@@ -93,9 +99,9 @@ export function NodeJSEventsObservableOnUnobserved<TKVMap extends NodeJSEventKey
  * An NodeJSEventsObservable links an PureNodeJSEventTarget with an NotificationsObservable.
  *  When a listened event occurs (ex: though "addListener"), a Notification is dispatched.
  * @Example:
- *  const mouseMoveListener = new NodeJSEventsObservable(window)
- *    .addListener<MouseEvent>('mousemove', (event: MouseEvent) => {
- *      console.log(event.clientX);
+ *  const listener = new NodeJSEventsObservable(stream)
+ *    .addListener<Buffer>('data', (data: Buffer) => {
+ *      console.log(data);
  *    }).activate();
  */
 export class NodeJSEventsObservable<TKVMap extends NodeJSEventKeyValueMapConstraint<TKVMap>, TTarget extends PureNodeJSEventTarget = PureNodeJSEventTarget> extends NotificationsObservable<TKVMap> implements INodeJSEventsObservable<TKVMap, TTarget> {

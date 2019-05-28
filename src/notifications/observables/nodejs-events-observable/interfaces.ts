@@ -3,7 +3,7 @@ import { KeyValueMapConstraint, KeyValueMapKeys } from '../../core/interfaces';
 
 
 export type NodeJSEventsObservableKeyValueMapGeneric = {
-  [key: string]: Event;
+  [key: string]: any;
 };
 
 export type NodeJSEventKeyValueMapConstraint<TKVMap extends object> = KeyValueMapConstraint<TKVMap, NodeJSEventsObservableKeyValueMapGeneric>;
