@@ -71,7 +71,7 @@ export function FromRXJSObservableOnObserved<TValue, TError>(observable: IFromRX
           privates.context.emit(new Notification<'error', TError>('error', error));
         },
         () => {
-          privates.context.emit(new Notification<'complete', void>('complete'));
+          privates.context.emit(new Notification<'complete', undefined>('complete'));
           privates.context.complete();
         });
   }

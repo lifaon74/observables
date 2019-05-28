@@ -7,7 +7,8 @@ import { Notification } from '../../core/notification/implementation';
 import { ExtractObserverNameAndCallback } from '../../core/notifications-observer/implementation';
 import { KeyValueMapKeys, KeyValueMapValues } from '../../core/interfaces';
 import {
-  KeyValueMapToNotifications, KeyValueMapToNotificationsObserversLikeGeneric, TNotificationsObservableHook,
+  KeyValueMapToNotifications, KeyValueMapToNotificationsObserversLikeGeneric,
+  TNotificationsObservableHook,
 } from '../../core/notifications-observable/interfaces';
 import { IObserver } from '../../../core/observer/interfaces';
 import { IsObject } from '../../../helpers';
@@ -18,7 +19,7 @@ export const EVENTS_OBSERVABLE_PRIVATE = Symbol('events-observable-private');
 export interface IEventsObservablePrivate<TKVMap extends EventKeyValueMapConstraint<TKVMap>, TTarget extends PureEventTarget> {
   target: TTarget;
   name: KeyValueMapKeys<TKVMap> | null;
-  observerListenerMap: WeakMap<KeyValueMapToNotifications<TKVMap>, (event: KeyValueMapValues<TKVMap>) => void>;
+  observerListenerMap: WeakMap<IObserver<KeyValueMapToNotifications<TKVMap>>, (event: KeyValueMapValues<TKVMap>) => void>;
 }
 
 export interface IEventsObservableInternal<TKVMap extends EventKeyValueMapConstraint<TKVMap>, TTarget extends PureEventTarget> extends IEventsObservable<TKVMap, TTarget>, INotificationsObservableInternal<TKVMap> {
@@ -29,7 +30,7 @@ export function ConstructEventsObservable<TKVMap extends EventKeyValueMapConstra
   ConstructClassWithPrivateMembers(observable, EVENTS_OBSERVABLE_PRIVATE);
   (observable as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].target = target;
   (observable as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].name = name;
-  (observable as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].observerListenerMap = new WeakMap<KeyValueMapToNotifications<TKVMap>, (event: KeyValueMapValues<TKVMap>) => void>();
+  (observable as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].observerListenerMap = new WeakMap<IObserver<KeyValueMapToNotifications<TKVMap>>, (event: KeyValueMapValues<TKVMap>) => void>();
 }
 
 export function IsEventsObservable(value: any): value is IEventsObservable<any> {
@@ -46,9 +47,9 @@ export function EventsObservableOnObserved<TKVMap extends EventKeyValueMapConstr
       throw new TypeError(`Cannot observe an EventsObservable without a name (null), with a standard Observer (use a NotificationsObserver instead).`);
     } else {
       const listener = (event: KeyValueMapValues<TKVMap>) => {
-        observer.emit(new Notification<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>(name, event) as unknown as KeyValueMapToNotifications<TKVMap>);
+        observer.emit(new Notification<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>(name, event) as KeyValueMapToNotifications<TKVMap>);
       };
-      (observable as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].observerListenerMap.set(observer as any, listener);
+      (observable as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].observerListenerMap.set(observer, listener);
       (observable as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].target.addEventListener(name, listener);
     }
   } else {
@@ -72,9 +73,9 @@ export function EventsObservableOnUnobserved<TKVMap extends EventKeyValueMapCons
     } else {
       (observable as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].target.removeEventListener(
         name,
-        (observable as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].observerListenerMap.get(observer as any)
+        (observable as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].observerListenerMap.get(observer)
       );
-      (observable as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].observerListenerMap.delete(observer as any);
+      (observable as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].observerListenerMap.delete(observer);
     }
   } else {
     if ((name !== null) && (nameAndCallback.name !== name)) {
