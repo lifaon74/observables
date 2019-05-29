@@ -43,6 +43,6 @@ export function testDeferredPromise() {
 }
 
 export function testPromises() {
-  testCancellablePromise();
-  // testDeferredPromise();
+  // testCancellablePromise();
+  testDeferredPromise();
 }
