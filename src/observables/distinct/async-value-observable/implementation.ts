@@ -28,7 +28,7 @@ export const ASYNC_VALUE_OBSERVABLE_PRIVATE = Symbol('async-value-observable-pri
 
 export interface IAsyncValueObservablePrivate<T> extends IObservableHookPrivate<T> {
   context: IValueObservableContext<T>;
-  promise: Promise<T>;
+  promise: Promise<T> | null;
   token: IPromiseCancelToken | null;
 }
 
@@ -46,11 +46,11 @@ export function ConstructAsyncValueObservable<T>(
   InitObservableHook(
     observable,
     (observable as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE],
+    NewAsyncValueObservableContext,
     create,
-    NewAsyncValueObservableContext
   );
   (observable as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].context = context;
-  (observable as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].promise = Promise.resolve(void 0);
+  (observable as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].promise = null;
   (observable as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].token = null;
 }
 
@@ -83,18 +83,9 @@ export function AsyncValueObservableEmit<T>(observable: IAsyncValueObservable<T>
   privates.token = token;
   privates.promise = promise;
 
-  return privates.promise
+  return token.wrapPromise(privates.promise)
     .then((value: T) => {
-      if (token.cancelled) {
-        throw token.reason;
-      } else {
-        privates.context.emit(value);
-      }
-    })
-    .finally(() => {
-      if (privates.token === token) {
-        privates.token = null;
-      }
+      privates.context.emit(value);
     });
 }
 
@@ -108,7 +99,7 @@ function PureAsyncValueObservableFactory<TBase extends Constructor<IValueObserva
   return class AsyncValueObservable extends superClass implements IAsyncValueObservable<T> {
     constructor(...args: any[]) {
       const [create]: TAsyncValueObservableConstructorArgs<T> = args[0];
-      let context: IValueObservableContext<T> = void 0;
+      let context: IValueObservableContext<T>;
       super(...setSuperArgs(args.slice(1), [
         (_context: IValueObservableContext<T>) => {
           context = _context;
@@ -122,6 +113,7 @@ function PureAsyncValueObservableFactory<TBase extends Constructor<IValueObserva
           };
         }
       ]));
+      // @ts-ignore
       ConstructAsyncValueObservable<T>(this, context, create);
     }
   };

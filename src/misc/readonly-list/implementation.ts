@@ -18,7 +18,7 @@ export function ConstructReadonlyTuple<T extends any[]>(instance: IReadonlyTuple
   if (Array.isArray(tuple)) {
     (instance as IReadonlyTupleInternal<T>)[READONLY_TUPLE_PRIVATE].items = tuple;
   } else {
-    throw new TypeError(`Expected array as tuple`)
+    throw new TypeError(`Expected array as tuple`);
   }
 }
 
@@ -79,7 +79,6 @@ export class ReadonlyTuple<T extends any[]> implements IReadonlyTuple<T> {
 }
 
 
-
 /*----------------------------------*/
 
 
@@ -134,15 +133,15 @@ export class ReadonlyList<T> extends ReadonlyTuple<T[]> implements IReadonlyList
     return ((this as unknown) as IReadonlyListInternal<T>)[READONLY_TUPLE_PRIVATE].items.filter(callback, thisArg);
   }
 
-  reduce<U>(callback: (previousValue: U, currentValue: T, currentIndex: number, array: T[]) => U, initialValue?: U): U {
-    return ((this as unknown) as IReadonlyListInternal<T>)[READONLY_TUPLE_PRIVATE].items.reduce(callback, initialValue);
+  reduce<U>(callback: (previousValue: U, currentValue: T, currentIndex: number, array: T[]) => U, initialValue: U): U {
+    return ((this as unknown) as IReadonlyListInternal<T>)[READONLY_TUPLE_PRIVATE].items.reduce<U>(callback, initialValue);
   }
 
-  reduceRight<U>(callback: (previousValue: U, currentValue: T, currentIndex: number, array: T[]) => U, initialValue?: U): U {
-    return ((this as unknown) as IReadonlyListInternal<T>)[READONLY_TUPLE_PRIVATE].items.reduceRight(callback, initialValue);
+  reduceRight<U>(callback: (previousValue: U, currentValue: T, currentIndex: number, array: T[]) => U, initialValue: U): U {
+    return ((this as unknown) as IReadonlyListInternal<T>)[READONLY_TUPLE_PRIVATE].items.reduceRight<U>(callback, initialValue);
   }
 
-  flatMap<U>(callback: (value: T, index: number, array: T[]) => U|ReadonlyArray<U>, thisArg: any = this): U[] {
+  flatMap<U>(callback: (value: T, index: number, array: T[]) => U | ReadonlyArray<U>, thisArg: any = this): U[] {
     return ((this as unknown) as IReadonlyListInternal<T>)[READONLY_TUPLE_PRIVATE].items.flatMap<U>(callback, thisArg);
   }
 

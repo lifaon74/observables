@@ -1,5 +1,5 @@
 import { INotificationsObservable } from '../../../core/notifications-observable/interfaces';
-import { TPromiseType } from '../../../../promises/interfaces';
+import { TPromiseOrValue, TPromiseType } from '../../../../promises/interfaces';
 
 export interface IPromiseCancelTokenConstructor {
   new(): IPromiseCancelToken;
@@ -37,12 +37,22 @@ export interface IPromiseCancelToken extends INotificationsObservable<IPromiseCa
    */
   linkWithAbortSignal(signal: AbortSignal): () => void;
 
+
+  /**
+   * Wraps a promise with a this Token:
+   *  Returns a Promise:
+   *    if the token is cancelled, the Promise will never resolve
+   *    else the Promise is resolved with the received value
+   * @param promise
+   */
+  wrapPromise<P extends PromiseLike<any>>(promise: P): P;
+
   /**
    * Wraps a callback with this Token:
    *  Returns a function similar to 'callback':
    *    Has the same parameters than 'callback'
-   *    If the token is cancelled, returns a Promise rejected with the Token's reason
+   *    If the token is cancelled, returns a Promise never resolved
    *    Else, returns a Promise resolved with the callback's return
    */
-  wrap<CB extends (...args: any[]) => any>(callback: CB): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>>>;
+  wrapCallback<CB extends (...args: any[]) => any>(callback: CB): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>>>;
 }

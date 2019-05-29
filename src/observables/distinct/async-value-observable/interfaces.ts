@@ -3,7 +3,9 @@ import { IPromiseCancelToken } from '../../../notifications/observables/promise-
 import { IValueObservable } from '../value-observable/interfaces';
 
 
-export type TAsyncValueObservableConstructorArgs<T> = [(context: IAsyncValueObservableContext<T>) => (IObservableHook<T> | void)] | [];
+export type TAsyncValueObservableConstructorArgs<T> =
+  [(context: IAsyncValueObservableContext<T>) => (IObservableHook<T> | void)]
+  | [];
 
 /**
  * An AsyncValueObservable is an distinct value emitter:
@@ -18,7 +20,6 @@ export interface IAsyncValueObservableConstructor {
 
 export interface IAsyncValueObservable<T> extends IValueObservable<T> {
 }
-
 
 
 export interface IAsyncValueObservableContextConstructor {

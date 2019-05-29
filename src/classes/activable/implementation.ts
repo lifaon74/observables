@@ -12,7 +12,9 @@ export interface IActivablePrivate {
   state: TActivableState;
   activatePromise: Promise<void>;
   deactivatePromise: Promise<void>;
+
   activate(): Promise<void>;
+
   deactivate(): Promise<void>;
 }
 
@@ -49,11 +51,11 @@ export function IsActivable(value: any): value is IActivable {
 }
 
 const IS_ACTIVABLE_CONSTRUCTOR = Symbol('is-activable-constructor');
+
 export function IsActivableConstructor(value: any, direct?: boolean): boolean {
   return (typeof value === 'function')
     && HasFactoryWaterMark(value, IS_ACTIVABLE_CONSTRUCTOR, direct);
 }
-
 
 
 export function ActivableActivate(activable: IActivable): Promise<void> {

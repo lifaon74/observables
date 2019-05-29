@@ -45,7 +45,6 @@ export interface IPromiseObservableOptions {
 }
 
 
-
 // export type TPromiseObserverType<T> = IObserver<INotification<TPromiseNotificationType, T>>;
 export type TPromiseObservableNotification<TFulfilled, TErrored, TCancelled> = KeyValueMapToNotifications<IPromiseNotificationKeyValueMap<TFulfilled, TErrored, TCancelled>>;
 

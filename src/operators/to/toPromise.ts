@@ -24,9 +24,7 @@ export function toCancellablePromiseTuple<T>(observable: IObservable<TBasePromis
   const token: IPromiseCancelToken = new PromiseCancelToken();
   return [
     new Promise<T>((resolve: any, reject: any) => {
-      if (token.cancelled) {
-        reject(new PromiseCancelError());
-      } else {
+      if (!token.cancelled) {
         const _clear = () => {
           observer.deactivate();
           tokenObserver.deactivate();
@@ -55,14 +53,14 @@ export function toCancellablePromiseTuple<T>(observable: IObservable<TBasePromis
                 token.cancel(value.value);
                 break;
               default:
-                throw new Error(`Invalid Notification.name '${value.name}'. Expected 'complete', 'error', or 'cancelled'`);
+                throw new Error(`Invalid Notification.name '${ value.name }'. Expected 'complete', 'error', or 'cancelled'`);
             }
           } else {
             _resolve(value as T);
           }
         })
-            .observe(observable)
-            .activate();
+          .observe(observable)
+          .activate();
 
         const tokenObserver: INotificationsObserver<'cancel', void> = token.addListener('cancel', () => {
           _reject(new PromiseCancelError());

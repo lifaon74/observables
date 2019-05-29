@@ -1,5 +1,5 @@
-
-export function noop() {}
+export function noop() {
+}
 
 export function EnumToString<T>(values: T[]): string {
   let string: string = '';
@@ -7,7 +7,7 @@ export function EnumToString<T>(values: T[]): string {
     if (i > 0) {
       string += (i === (l - 1)) ? ' or ' : ',';
     }
-    string += `'${values[i]}'`;
+    string += `'${ values[i] }'`;
   }
   return string;
 }

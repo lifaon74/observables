@@ -1,4 +1,3 @@
-
 export type TVoidCB = () => void;
 export type TDestination<Tin> = (data: Tin) => void;
 export type TTransform<Tin, Tout> = (data: Tin) => Tout;
@@ -93,7 +92,7 @@ export function safeMergeTwo<Tin>(d1: TDestination<Tin> | void, d2: TDestination
 
 
 export type ExtractDestinationTypes<T> = {
-  [P in keyof T] : T[P] extends TDestination<infer U> ? U : never
+  [P in keyof T]: T[P] extends TDestination<infer U> ? U : never
 }
 
 /**
@@ -169,7 +168,6 @@ export function race<Tin>(destination: TDestination<Tin>, number: number = 2): T
 }
 
 
-
 /*** FILTERS ***/
 
 /**
@@ -192,7 +190,7 @@ export function filter<Tin>(destination: TDestination<Tin>, predicate: (value: T
  * @param {boolean} previousValue
  * @return {TDestination<Tin>}
  */
-export function distinct<Tin>(destination: TDestination<Tin>, previousValue: Tin | undefined = void 0): TDestination<Tin> {
+export function distinct<Tin>(destination: TDestination<Tin>, previousValue: Tin): TDestination<Tin> {
   return (a: Tin) => {
     if (a !== previousValue) {
       previousValue = a;
@@ -225,12 +223,11 @@ export function catchError<Tin, TError = any>(destination: TDestination<Tin>, ca
  * -> 'source' is where to emit data
  * -> 'condition' is an emitter, which will enable/disable emits in 'destination'
  * @param {TDestination<Tin>} destination
- * @param {boolean} previousValue
  * @param {boolean} defaultState
  * @return {[TDestination<Tin> , TDestination<boolean>]}
  */
-export function condition<Tin>(destination: TDestination<Tin>, previousValue: Tin | undefined = void 0, defaultState: boolean = true): [TDestination<Tin>, TDestination<boolean>] {
-  let data: Tin = previousValue;
+export function condition<Tin>(destination: TDestination<Tin>, defaultState: boolean = true): [TDestination<Tin>, TDestination<boolean>] {
+  let data: Tin;
   let dataChanged: boolean = false;
   let bool: boolean = defaultState;
 
@@ -257,7 +254,7 @@ export function condition<Tin>(destination: TDestination<Tin>, previousValue: Ti
 }
 
 
-export function reemitter<Tin>(destination: TDestination<Tin>, previousValue: Tin | undefined = void 0): [TDestination<Tin>, TDestination<void>] {
+export function reemitter<Tin>(destination: TDestination<Tin>, previousValue: Tin): [TDestination<Tin>, TDestination<undefined>] {
   return [
     (a: Tin) => {
       previousValue = a;
@@ -272,7 +269,7 @@ export function reemitter<Tin>(destination: TDestination<Tin>, previousValue: Ti
 
 /*** TRANSFORMS ***/
 
-export function reduce<Tin>(destination: TDestination<Tin>, reducer: (previousValue: Tin, value: Tin) => Tin, previousValue: Tin = void 0): TDestination<Tin> {
+export function reduce<Tin>(destination: TDestination<Tin>, reducer: (previousValue: Tin, value: Tin) => Tin, previousValue: Tin): TDestination<Tin> {
   return (a: Tin) => {
     previousValue = reducer(previousValue, a);
     destination(previousValue);
@@ -414,7 +411,7 @@ export function throttleFrame<Tin>(destination: TDestination<Tin>): TDestination
  */
 export function period<Tin>(destination: TDestination<Tin>, _period: (a: Tin) => number): TDestination<Tin> {
   let timer: any | null = null;
-  let previousValue: Tin | undefined = void 0;
+  let previousValue: Tin;
   let hasValue: boolean = false;
   const _destination = (a: Tin) => {
     if (timer === null) {
@@ -431,7 +428,7 @@ export function period<Tin>(destination: TDestination<Tin>, _period: (a: Tin) =>
       previousValue = a;
     }
   };
-  return _destination
+  return _destination;
 }
 
 export function periodTime<Tin>(destination: TDestination<Tin>, _period: number): TDestination<Tin> {
@@ -440,7 +437,7 @@ export function periodTime<Tin>(destination: TDestination<Tin>, _period: number)
 
 export function periodFrame<Tin>(destination: TDestination<Tin>): TDestination<Tin> {
   let id: number | null = null;
-  let value: Tin | undefined = void 0;
+  let value: Tin;
   return (a: Tin) => {
     value = a;
     if (id === null) {

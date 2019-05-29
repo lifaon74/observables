@@ -7,7 +7,7 @@ import {
 /** TYPES **/
 
 export type TFromRXJSObservableConstructorArgs<TValue, TError> = [RXObservable<TValue>, TFromObservableCompleteAction]
-| [RXObservable<TValue>];
+  | [RXObservable<TValue>];
 
 export interface IFromRXJSObservableNotificationKeyValueMap<TValue, TError> extends INotificationsObservableBasicKeyValueMap<TValue, TError> {
 }

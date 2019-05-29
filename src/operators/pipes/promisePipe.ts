@@ -18,23 +18,17 @@ import { TPromiseOrValue } from '../../promises/interfaces';
  * @param onErrored
  */
 export function promisePipe<TFulfilledIn, TFulfilledOut = TFulfilledIn, TErroredIn = Error, TErroredOut = TErroredIn, TCancelled = any>(
-  onFulfilled?: (value: TFulfilledIn, token: IPromiseCancelToken) => TPromiseOrValue<TFulfilledOut>,
-  onErrored?: (error: TErroredIn, token: IPromiseCancelToken) => TPromiseOrValue<TFulfilledOut>,
+  onFulfilled: (value: TFulfilledIn, token: IPromiseCancelToken) => TPromiseOrValue<TFulfilledOut> = (value: TFulfilledIn) => (value as any),
+  onErrored: (error: TErroredIn, token: IPromiseCancelToken) => TPromiseOrValue<TFulfilledOut> = (error: TErroredIn) => Promise.reject(error),
 ): IPipe<IObserver<TPromiseObservableNotification<TFulfilledIn, TErroredIn, TCancelled>>,
   IPromiseObservable<TFulfilledOut, TErroredOut, TCancelled>> {
   return new Pipe<IObserver<TPromiseObservableNotification<TFulfilledIn, TErroredIn, TCancelled>>,
     IPromiseObservable<TFulfilledOut, TErroredOut, TCancelled>>(() => {
-    if (onFulfilled === void 0) {
-      onFulfilled = (value: TFulfilledIn) => (value as any);
-    } else if (typeof onFulfilled !== 'function') {
+    if (typeof onFulfilled !== 'function') {
       throw new TypeError(`Expected function or void as onFulfilled`);
     }
 
-    if (onErrored === void 0) {
-      onErrored = (error: TErroredIn) => {
-        return Promise.reject(error);
-      };
-    } else if (typeof onErrored !== 'function') {
+    if (typeof onErrored !== 'function') {
       throw new TypeError(`Expected function or void as onErrored`);
     }
 

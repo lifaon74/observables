@@ -4,14 +4,15 @@ import { IsObject, noop } from '../../helpers';
 
 export interface IObservableHookPrivate<T> {
   onObserveHook(observer: IObserver<T>): void;
+
   onUnobserveHook(observer: IObserver<T>): void;
 }
 
 export function InitObservableHook<T>(
   observable: IObservable<T>,
   privates: IObservableHookPrivate<T>,
+  createContext: (observable: IObservable<T>) => IObservableContextBase<T>,
   create?: (context: IObservableContextBase<T>) => (IObservableHook<T> | void),
-  createContext?: (observable: IObservable<T>) => IObservableContextBase<T>,
 ): void {
   privates.onObserveHook = noop;
   privates.onUnobserveHook = noop;
@@ -29,10 +30,10 @@ export function InitObservableHook<T>(
           privates.onUnobserveHook = hook.onUnobserved.bind(observable);
         }
       } else {
-        throw new TypeError(`Expected object or void as return of ${observable.constructor.name}'s create function.`);
+        throw new TypeError(`Expected object or void as return of ${ observable.constructor.name }'s create function.`);
       }
     }
   } else if (create !== void 0) {
-    throw new TypeError(`Expected function or void as ${observable.constructor.name}'s create function.`);
+    throw new TypeError(`Expected function or void as ${ observable.constructor.name }'s create function.`);
   }
 }

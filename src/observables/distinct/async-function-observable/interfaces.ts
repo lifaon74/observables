@@ -6,6 +6,7 @@ import { IPromiseCancelToken } from '../../../notifications/observables/promise-
 
 export interface IAsyncFunctionObservableConstructor {
   create<T extends TAsyncFunctionObservableFactory>(factory: T): (...args: TAsyncFunctionObservableParameters<T>) => IAsyncFunctionObservable<T>;
+
   new<T extends TAsyncFunctionObservableFactory>(factory: T, args: TAsyncFunctionObservableParameters<T>): IAsyncFunctionObservable<T>;
 }
 
@@ -15,7 +16,9 @@ export interface IAsyncFunctionObservable<T extends TAsyncFunctionObservableFact
   readonly args: IReadonlyTuple<TAsyncFunctionObservableParameters<T>>;
 
   pause(): void;
+
   resume(): Promise<void>;
+
   run(callback: (this: this) => void): Promise<this>;
 }
 

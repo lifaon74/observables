@@ -14,8 +14,9 @@ import { assertFails, assertObservableEmits } from '../classes/asserts';
 import { FromIterableObservable } from '../observables/from/iterable/implementation';
 import { noop } from '../helpers';
 import { FromRXJSObservable } from '../observables/from/rxjs/implementation';
-import { testWEBRTC1 } from './webrtc/test1';
 import { testSignalingServer } from './webrtc/test-signaling-server';
+import { Observer } from '..';
+import { testPromises } from './test-promises';
 
 function testReadOnlyList() {
   const list = new ReadonlyList<number>([0, 1, 2, 3]);
@@ -227,7 +228,7 @@ async function testFromRXJSObservable() {
     new Notification('next', 1),
     new Notification('next', 2),
     new Notification('next', 3),
-    new Notification('complete'),
+    new Notification('complete', void 0),
   ];
 
   const rxObservable = range(0, 7).pipe(
@@ -302,6 +303,12 @@ export function testWebSocket() {
 //
 // }
 
+export function testTypes(): void {
+  new Observable<Uint8Array>()
+    .pipeTo(new Observer<Uint8Array>((data: Uint8Array) => {
+
+    })).activate();
+}
 
 export function testInstanceof() {
   const a = new NotificationsObservable();
@@ -345,7 +352,8 @@ export async function test() {
   // testFactoryV2();
   // testInstanceof();
   // testPerformances();
-  testSignalingServer();
+  // testSignalingServer();
+  testPromises();
 }
 
 

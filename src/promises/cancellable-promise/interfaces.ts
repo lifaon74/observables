@@ -3,6 +3,8 @@ import {
   TPromiseCreateCallback, TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion
 } from '../interfaces';
 
+// export type TCancelStrategy = 'resolve' | 'reject' | 'never';
+
 /** INTERFACES **/
 
 export interface ICancellablePromiseConstructor {

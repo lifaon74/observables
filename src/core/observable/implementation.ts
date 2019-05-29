@@ -33,8 +33,8 @@ export function ConstructObservable<T>(
   InitObservableHook(
     observable,
     (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE],
+    NewObservableContext,
     create,
-    NewObservableContext
   );
   (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers = [];
   (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers = new ReadonlyList<IObserver<T>>((observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers);
@@ -188,7 +188,6 @@ Observable = class Observable extends ObservableFactory<ObjectConstructor>(Objec
     super([create]);
   }
 } as IObservableConstructor;
-
 
 
 // export class Observable<T> implements IObservable<T> {

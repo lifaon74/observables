@@ -13,6 +13,6 @@ export interface IFetchObservableConstructor {
 /**
  * A FetchObservable is an Observable which will fetch a Request when observed.
  */
-export interface IFetchObservable extends IPromiseObservable<Response, Error, any>  {
+export interface IFetchObservable extends IPromiseObservable<Response, Error, any> {
   // toJSON<T>(): INotificationsObservable<TPromiseNotificationType, T | Error | any>;
 }

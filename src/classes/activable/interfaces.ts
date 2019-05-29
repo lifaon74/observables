@@ -2,6 +2,7 @@ export type TActivableState = 'activated' | 'activating' | 'deactivated' | 'deac
 
 export interface IActivableHook {
   activate(): Promise<void>;
+
   deactivate(): Promise<void>;
 }
 

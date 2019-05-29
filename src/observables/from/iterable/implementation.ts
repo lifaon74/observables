@@ -39,10 +39,11 @@ export function ConstructFromIterableObservable<T>(
 
 export function IsFromIterableObservable(value: any): value is IFromIterableObservable<any> {
   return IsObject(value)
-    && value.hasOwnProperty(FROM_ITERABLE_OBSERVABLE_PRIVATE);
+    && value.hasOwnProperty(FROM_ITERABLE_OBSERVABLE_PRIVATE as symbol);
 }
 
 const IS_FROM_ITERABLE_OBSERVABLE_CONSTRUCTOR = Symbol('is-from-iterable-observable-constructor');
+
 export function IsFromIterableObservableConstructor(value: any): boolean {
   return (typeof value === 'function')
     && HasFactoryWaterMark(value, IS_FROM_ITERABLE_OBSERVABLE_CONSTRUCTOR);
@@ -73,7 +74,7 @@ export function PureFromIterableObservableFactory<TBase extends Constructor<IFro
   return class FromIterableObservable extends superClass implements IFromIterableObservable<T> {
     constructor(...args: any[]) {
       const [iterable, onComplete]: TFromIterableObservableConstructorArgs<T> = args[0];
-      let context: IFromObservableContext<T> = void 0;
+      let context: IFromObservableContext<T>;
       super(...setSuperArgs(args.slice(1), [
         (_context: IFromObservableContext<T>) => {
           context = _context;
@@ -84,6 +85,7 @@ export function PureFromIterableObservableFactory<TBase extends Constructor<IFro
           };
         }, onComplete
       ]));
+      // @ts-ignore
       ConstructFromIterableObservable<T>(this, context, iterable);
     }
   };
@@ -100,7 +102,7 @@ export function FromIterableObservableFactory<TBase extends Constructor<IFromObs
 }
 
 export function FromIterableObservableBaseFactory<TBase extends Constructor>(superClass: TBase) {
-  return MakeFactory<IFromIterableObservableConstructor, [IFromObservableConstructor,  IObservableConstructor], TBase>(PureFromIterableObservableFactory, [FromObservableFactory, ObservableFactory], superClass, {
+  return MakeFactory<IFromIterableObservableConstructor, [IFromObservableConstructor, IObservableConstructor], TBase>(PureFromIterableObservableFactory, [FromObservableFactory, ObservableFactory], superClass, {
     name: 'FromIterableObservable',
     instanceOf: FromIterableObservable,
     waterMarks: [IS_FROM_ITERABLE_OBSERVABLE_CONSTRUCTOR,],

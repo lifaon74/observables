@@ -1,4 +1,4 @@
-import { TupleConcat, TupleToIntersection } from './types';
+import { ToTuple, TupleConcat, TupleToIntersection } from './types';
 import { SetInstanceOf } from './instanceof';
 
 export interface Constructor<Instance = any, Args extends any[] = any[]> extends Function {
@@ -21,19 +21,21 @@ export type ExcludeConstructor<T> = {
 
 // removes all constructors of a tuple
 export type ExcludeConstructors<T extends any[]> = {
-  [P in Extract<keyof T, number>]: ExcludeConstructor<T[P]>;
+  // [P in Extract<keyof T, number>]: ExcludeConstructor<T[P]>;
+  [P in keyof T]: ExcludeConstructor<T[P]>;
 };
 
 
 // converts a tuple of constructor types (ex: [Constructor<A>, Constructor<B>]) to a tuple of instances types
 export type InstancesTypes<T extends (new (...args: any[]) => any)[]> = {
-  [P in Extract<keyof T, number>]: T[P] extends new (...args: any[]) => infer R ? R : never;
-}
+  [P in keyof T]: T[P] extends new (...args: any[]) => infer R ? R : never;
+  // [P in Extract<keyof T, number>]: T[P] extends new (...args: any[]) => infer R ? R : never;
+};
 
 // converts a tuple of constructor types (ex: [Constructor<A>, Constructor<B>]) to a tuple of their parameters
 export type ConstructorsParameters<T extends (new (...args: any[]) => any)[]> = {
   [P in keyof T]: T[P] extends new (...args: infer P) => any ? P : never;
-}
+};
 
 
 // returns a tuple where types are the expected factories types
@@ -41,12 +43,23 @@ export type TMakeFactoryFactories<TSuperClasses extends (new (...args: any[]) =>
   [P in keyof TSuperClasses]: TSuperClasses[P] extends (new (...args: any[]) => infer R)
     ? (superClass: any) => new(ownArgs: any[], ...args: any[]) => R
     : never;
-}
+};
+
 
 export type TMakeFactorySuperInstance<TSuperClasses extends Constructor[]> = TupleToIntersection<InstancesTypes<TSuperClasses>>;
-export type TMakeFactoryInstance<TChildClass extends Constructor, TSuperClasses extends Constructor[], TBase extends Constructor> = InstanceType<TBase> & TMakeFactorySuperInstance<TSuperClasses> & InstanceType<TChildClass>;
+
+export type TMakeFactoryInstance<TChildClass extends Constructor, TSuperClasses extends Constructor[], TBase extends Constructor> =
+  InstanceType<TBase>
+  & TMakeFactorySuperInstance<TSuperClasses>
+  & InstanceType<TChildClass>;
+
 export type TMakeFactorySuperStatic<TSuperClasses extends Constructor[]> = TupleToIntersection<ExcludeConstructors<TSuperClasses>>;
-export type TMakeFactoryStatic<TChildClass extends Constructor, TSuperClasses extends Constructor[], TBase extends Constructor> = ExcludeConstructor<TBase> & TMakeFactorySuperStatic<TSuperClasses> & ExcludeConstructor<TChildClass>;
+
+export type TMakeFactoryStatic<TChildClass extends Constructor, TSuperClasses extends Constructor[], TBase extends Constructor> =
+  ExcludeConstructor<TBase>
+  & TMakeFactorySuperStatic<TSuperClasses>
+  & ExcludeConstructor<TChildClass>;
+
 export type TMakeFactoryCreateSuperClass<TSuperClasses extends Constructor[]> =
   TSuperClasses extends []
     ? new(...args: any) => any
@@ -54,9 +67,11 @@ export type TMakeFactoryCreateSuperClass<TSuperClasses extends Constructor[]> =
       new(...args: any): TMakeFactorySuperInstance<TSuperClasses>;
     };
 
-export type TMakeFactoryClass<TChildClass extends Constructor, TSuperClasses extends Constructor[], TBase extends Constructor> = TMakeFactoryStatic<TBase, TSuperClasses, TChildClass> & {
-  new(ownArgs: ConstructorParameters<TChildClass>, ...args: TupleConcat<ConstructorsParameters<TSuperClasses>, ConstructorParameters<TBase>>): TMakeFactoryInstance<TChildClass, TSuperClasses, TBase>;
-};
+export type TMakeFactoryClass<TChildClass extends Constructor, TSuperClasses extends Constructor[], TBase extends Constructor> =
+  TMakeFactoryStatic<TBase, TSuperClasses, TChildClass>
+  & {
+    new(ownArgs: ConstructorParameters<TChildClass>, ...args: TupleConcat<ConstructorsParameters<TSuperClasses>, ConstructorParameters<TBase>>): TMakeFactoryInstance<TChildClass, TSuperClasses, TBase>;
+  };
 
 
 export interface IMakeFactoryOptions {
@@ -173,12 +188,12 @@ export function SetSuperArgsForStandardClass(args: any[], superArgs: any[]): any
 }
 
 export type TSetSuperArgs = (args: any[], superArgs: any[]) => any[];
+
 export function GetSetSuperArgsFunction(isFactoryClass: boolean): TSetSuperArgs {
   return isFactoryClass
     ? SetSuperArgsForFactoryClass
     : SetSuperArgsForStandardClass;
 }
-
 
 
 /*------------------------------------*/
@@ -214,6 +229,7 @@ function FactoryA<TBase extends Constructor>(superClass: TBase) {
     return class A extends superClass implements IA {
       static staticA: string = 'static-a';
       a: string;
+
       constructor(...args: any[]) {
         const [a] = args[0];
         super(...args.slice(1));
@@ -228,6 +244,7 @@ function FactoryB<TBase extends Constructor>(superClass: TBase) {
   return MakeFactory<IBConstructor, [], TBase>((superClass) => {
     return class B extends superClass implements IB {
       b: number;
+
       constructor(...args: any[]) {
         const [b] = args[0];
         super(...args.slice(1));
@@ -242,6 +259,7 @@ function FactoryC<TBase extends Constructor>(superClass: TBase) {
   function factory<TBase extends Constructor<IA>>(superClass: TBase) {
     return class C extends superClass {
       c: null;
+
       constructor(...args: any[]) {
         const [c] = args[0];
         super(...args.slice(1));
@@ -250,6 +268,7 @@ function FactoryC<TBase extends Constructor>(superClass: TBase) {
       }
     };
   }
+
   return MakeFactory<ICConstructor, [IAConstructor, IBConstructor], TBase>(factory, [FactoryA, FactoryB], superClass);
 }
 
@@ -257,6 +276,7 @@ function FactoryC<TBase extends Constructor>(superClass: TBase) {
 class D {
   d1: number;
   d2: string;
+
   constructor(d1: number, d2: string) {
     this.d1 = d1;
     this.d2 = d2;

@@ -16,6 +16,15 @@ export async function testWEBRTC1() {
     ['ECDSA', 0x01],
   ];
 
+  function AlgorithmNameToAlgorithmId(name: string): number {
+    const result = algorithms.find(([_name]) => (_name === name));
+    if (result === void 0) {
+      throw new Error(`Missing named curve`);
+    } else {
+      return result[1];
+    }
+  }
+
   const hashes: [string, number][] = [
     ['SHA-1', 0x01],
     ['SHA-256', 0x02],
@@ -29,6 +38,32 @@ export async function testWEBRTC1() {
     ['P-512', 0x03],
   ];
 
+  function FindOrThrow<T>(array: T[], predicate: (value: T, index: number, obj: T[]) => unknown): T {
+    const result = array.find(predicate);
+    if (result === void 0) {
+      throw new Error(`Not found`);
+    } else {
+      return result;
+    }
+  }
+
+  function NamedCurveToCurveId(name: string): number {
+    const result = curves.find(([_name]) => (_name === name));
+    if (result === void 0) {
+      throw new Error(`Missing named curve`);
+    } else {
+      return result[1];
+    }
+  }
+
+  function CurveIdToNamedCurve(id: number): string {
+    const result = curves.find(([, _id]) => (_id === id));
+    if (result === void 0) {
+      throw new Error(`Missing named curve`);
+    } else {
+      return result[0];
+    }
+  }
 
   function ExportCryptoKeyToInternal(key: CryptoKey): Promise<Uint8Array> {
     // just support ec currently
@@ -38,7 +73,7 @@ export async function testWEBRTC1() {
           .then((buffer: ArrayBuffer) => {
             return new Uint8Array([
               0x01,  // algorithms.find(([name]) => (name === 'ECDSA'))[1],
-              curves.find(([name]) => (name === (key.algorithm as EcKeyAlgorithm).namedCurve))[1],
+              NamedCurveToCurveId((key.algorithm as EcKeyAlgorithm).namedCurve),
               ...new Uint8Array(buffer)
             ]);
           });
@@ -55,7 +90,7 @@ export async function testWEBRTC1() {
           data.subarray(2).buffer,
           {
             name: 'ECDSA',
-            namedCurve: curves.find(([, code]) => (code === data[1]))[0],
+            namedCurve: CurveIdToNamedCurve(data[1]),
           },
           options.extractable,
           options.keyUsages
@@ -69,8 +104,8 @@ export async function testWEBRTC1() {
     return (crypto.subtle.sign(algorithm, key, data) as Promise<ArrayBuffer>)
       .then((buffer: ArrayBuffer) => {
         return new Uint8Array([
-          algorithms.find(([name]) => (name === algorithm.name))[1],
-          hashes.find(([name]) => (name === (algorithm as EcdsaParams).hash))[1],
+          FindOrThrow(algorithms, ([name]) => (name === algorithm.name))[1],
+          FindOrThrow(hashes, ([name]) => (name === (algorithm as EcdsaParams).hash))[1],
           ...new Uint8Array(buffer)
         ]);
       });
@@ -81,7 +116,7 @@ export async function testWEBRTC1() {
       case 0x01:
         return {
           name: 'ECDSA',
-          hash: hashes.find(([, code]) => (code === signature[1]))[0],
+          hash: FindOrThrow(hashes, ([, code]) => (code === signature[1]))[0],
         } as EcdsaParams;
       default:
         throw new Error(`Unsupported algorithm`);
@@ -139,7 +174,7 @@ export async function testWEBRTC1() {
       ])
         .then(([id, signature]: [Uint8Array, Uint8Array]) => {
           peers.set(String.fromCodePoint(...id), {
-            offer: this._connection.localDescription,
+            offer: this._connection.localDescription as RTCSessionDescription,
             signature: signature,
           });
           console.log(peers);

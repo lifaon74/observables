@@ -25,10 +25,10 @@ export function observableAssert(values: any[], timeout: number = 100, equalFunc
         if (equalFunction(value, values[index])) {
           index++;
         } else {
-          reject(new Error(`Received value ${value} (#${index}), expected ${values[index]}`));
+          reject(new Error(`Received value ${ value } (#${ index }), expected ${ values[index] }`));
         }
       } else {
-        reject(new Error(`Received more than ${index} values`));
+        reject(new Error(`Received more than ${ index } values`));
       }
     },
     Promise.race([
@@ -54,8 +54,8 @@ export function assertPipe(values: any[], timeout?: number): IPipe<IObserver<any
   return new Pipe(() => {
     return {
       observer: new Observer<any>(observer),
-      observable: new PromiseObservable(() => promise)
-    }
+      observable: new PromiseObservable<void, any, any>(() => promise)
+    };
   });
 }
 
@@ -65,11 +65,11 @@ export function assertObservableEmits(observable: IObservable<any>, values: any[
   );
 }
 
-export function assertFunctionObservableEmits(valuesToEmit: any[], observable: IFunctionObservable<any>, values: any[], timeout?: number): Promise<void> {
+export function assertFunctionObservableEmits(valuesToEmit: any[], observable: IFunctionObservable<(...args: any[]) => void>, values: any[], timeout?: number): Promise<void> {
   const [observer, promise] = observableAssert(values, timeout);
   observable
     .observedBy(new Observer(observer).activate())
-    .run(function() {
+    .run(function () {
       for (let i = 0; i < valuesToEmit.length; i++) {
         (this.args.item(i) as ISource<any>).emit(valuesToEmit[i]);
       }

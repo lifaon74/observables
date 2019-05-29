@@ -3,7 +3,7 @@ import { IFromObservable, TFromObservableCompleteAction } from '../interfaces';
 /** TYPES **/
 
 export type TFromIterableObservableConstructorArgs<T> = [Iterable<T>, TFromObservableCompleteAction]
-| [Iterable<T>];
+  | [Iterable<T>];
 
 /** INTERFACES **/
 

@@ -43,8 +43,8 @@ export function ConstructFromObservable<T>(
   InitObservableHook(
     observable,
     (observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE],
+    NewFromObservableContext,
     create,
-    NewFromObservableContext
   );
   (observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].context = context;
   (observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].onComplete = NormalizeFromObservableCompleteAction(onComplete);
@@ -53,13 +53,13 @@ export function ConstructFromObservable<T>(
 }
 
 
-
 export function IsFromObservable(value: any): value is IFromObservable<any> {
   return IsObject(value)
     && value.hasOwnProperty(FROM_OBSERVABLE_PRIVATE);
 }
 
 const IS_FROM_OBSERVABLE_CONSTRUCTOR = Symbol('is-from-observable-constructor');
+
 export function IsFromObservableConstructor(value: any): boolean {
   return (typeof value === 'function') && ((value === FromObservable) || HasFactoryWaterMark(value, IS_FROM_OBSERVABLE_CONSTRUCTOR));
 }
@@ -131,7 +131,7 @@ function PureFromObservableFactory<TBase extends Constructor<IObservable<any>>>(
   return class FromObservable extends superClass implements IFromObservable<T> {
     constructor(...args: any[]) {
       const [create, onComplete]: TFromObservableConstructorArgs<T> = args[0];
-      let context: IObservableContext<T> = void 0;
+      let context: IObservableContext<T>;
       super(...setSuperArgs(args.slice(1), [
         (_context: IObservableContext<T>) => {
           context = _context;
@@ -145,6 +145,7 @@ function PureFromObservableFactory<TBase extends Constructor<IObservable<any>>>(
           };
         }
       ]));
+      // @ts-ignore
       ConstructFromObservable<T>(this, context, create, onComplete);
     }
 
@@ -172,7 +173,7 @@ export function FromObservableBaseFactory<TBase extends Constructor>(superClass:
   });
 }
 
-FromObservable =  class FromObservable extends FromObservableBaseFactory<ObjectConstructor>(Object) {
+FromObservable = class FromObservable extends FromObservableBaseFactory<ObjectConstructor>(Object) {
   constructor(create?: (context: IFromObservableContext<any>) => (IObservableHook<any> | void), onComplete?: TFromObservableCompleteAction) {
     super([create, onComplete], []);
   }
@@ -184,7 +185,7 @@ FromObservable =  class FromObservable extends FromObservableBaseFactory<ObjectC
 
 export function NewFromObservableContext<T>(observable: IFromObservable<T>): IFromObservableContext<T> {
   AllowObservableContextBaseConstruct(true);
-  const context: IFromObservableContext<T> = new((FromObservableContext as any) as IFromObservableContextConstructor)<T>(observable);
+  const context: IFromObservableContext<T> = new ((FromObservableContext as any) as IFromObservableContextConstructor)<T>(observable);
   AllowObservableContextBaseConstruct(false);
   return context;
 }

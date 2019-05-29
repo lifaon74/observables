@@ -59,7 +59,7 @@ export function ExpressionUpdate<T>(expression: IExpression<T>): void {
 
 export class Expression<T> extends ValueObservable<T> implements IExpression<T> {
   constructor(factory: () => T) {
-    let context: IObservableContext<T> = void 0;
+    let context: IObservableContext<T>;
     super((_context: IObservableContext<T>) => {
       context = _context;
       return {
@@ -71,6 +71,7 @@ export class Expression<T> extends ValueObservable<T> implements IExpression<T> 
         },
       };
     });
+    // @ts-ignore
     ConstructExpression<T>(this, context, factory);
   }
 

@@ -6,7 +6,7 @@ import { IObserver, ObserverType } from '../observer/interfaces';
  * An ObservableObserver is both a Observable and a Observer: it receives and emits data.
  *  For example, it can be used to transform data.
  */
-export interface IObservableObserver<TObserver extends IObserver<any>, TObservable extends IObservable<any>>  {
+export interface IObservableObserver<TObserver extends IObserver<any>, TObservable extends IObservable<any>> {
   readonly observer: TObserver;
   readonly observable: TObservable;
 }
@@ -32,19 +32,19 @@ export interface IPipeConstructor {
 /**
  * A Pipe is an ObservableObserver which self activate/deactivate
  */
-export interface IPipe<TObserver extends IObserver<any>, TObservable extends IObservable<any>> extends IObservableObserver<TObserver, TObservable>  {
+export interface IPipe<TObserver extends IObserver<any>, TObservable extends IObservable<any>> extends IObservableObserver<TObserver, TObservable> {
   readonly activateMode: TObservableObserverActivateMode;
   readonly deactivateMode: TObservableObserverActivateMode;
   readonly activated: boolean;
 
   activate(mode?: TObservableObserverActivateMode): this;
+
   deactivate(mode?: TObservableObserverActivateMode): this;
 }
 
 export type TObservableObserverActivateMode = 'auto' | 'manual';
 
 export type TBasePipe<TValueObserver, TValueObservable> = IPipe<IObserver<TValueObserver>, IObservable<TValueObservable>>;
-
 
 
 export interface IPipeContextConstructor {

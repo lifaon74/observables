@@ -13,8 +13,8 @@ export type TFromObservableCompleteAction = 'noop' | 'cache' | 'clear' | 'clear-
 export type TFromObservableState = 'awaiting' | 'emitting' | 'complete';
 
 
-
-export type TFromObservableConstructorArgs<T> = [(context: IFromObservableContext<T>) => (IObservableHook<T> | void), TFromObservableCompleteAction]
+export type TFromObservableConstructorArgs<T> =
+  [(context: IFromObservableContext<T>) => (IObservableHook<T> | void), TFromObservableCompleteAction]
   | [(context: IFromObservableContext<T>) => (IObservableHook<T> | void)]
   | [];
 

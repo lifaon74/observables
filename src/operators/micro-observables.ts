@@ -24,7 +24,6 @@ function testRef() {
   }
 
 
-
   function $add$(...values: Ref<number>[]): Ref<number> {
     return (): number => {
       let sum: number = 0;
@@ -54,8 +53,6 @@ function testMicoObservables() {
   type MObservable<T> = (observer: MObserver<T>) => MUndo;
 
 
-
-
   function $source<T>(): [MObservable<T>, MObserver<T>] { // read, write
     const observers: Set<MObserver<T>> = new Set<MObserver<T>>();
     return [
@@ -80,17 +77,18 @@ function testMicoObservables() {
   function $const<T>(value: T): MObservable<T> {
     return (observer: MObserver<T>) => {
       observer(value);
-      return () => { };
+      return () => {
+      };
     };
   }
 
-  function $let<T>(value: T = void 0): [MObservable<T>, MObserver<T>] {
+  function $let<T>(value?: T): [MObservable<T>, MObserver<T>] {
     const [pipe, emit] = $source<T>();
 
     return [
       (observer: MObserver<T>) => {
         const undo: MUndo = pipe(observer);
-        observer(value);
+        observer(value as T);
         return undo;
       },
       (_value: T) => {
@@ -136,27 +134,26 @@ function testMicoObservables() {
   function $fnc<FNC extends (...args: any[]) => any>(fnc: FNC, args: MObservableCastTupleArray<Parameters<FNC>>): MObservable<ReturnType<FNC>> {
     const [pipe, emit] = $let<ReturnType<FNC>>();
 
-    const values: any[] = Array.from({ length: args.length}, () => void 0);
+    const values: any[] = Array.from({ length: args.length }, () => void 0);
     let undoArgsObservers: MUndo[] | null = null;
 
     let count: number = 0;
     return (observer: MObserver<ReturnType<FNC>>) => {
       const undo: MUndo = pipe(observer);
       count++;
-      if (undoArgsObservers === null) {
-        undoArgsObservers = args.map((arg: MObservable<any>, index: number) => {
+      const _undoArgsObservers: MUndo[] = (undoArgsObservers === null)
+        ? args.map((arg: MObservable<any>, index: number) => {
           return arg((value: any) => {
             values[index] = value;
             emit(fnc.apply(null, values));
           });
-        });
-      }
-
+        })
+        : undoArgsObservers;
       return () => {
         count--;
         if (count === 0) {
-          for (let i = 0, l = undoArgsObservers.length; i < l; i++) {
-            undoArgsObservers[i]();
+          for (let i = 0, l = _undoArgsObservers.length; i < l; i++) {
+            _undoArgsObservers[i]();
           }
           undoArgsObservers = null;
         }

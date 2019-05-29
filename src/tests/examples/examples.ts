@@ -1,4 +1,3 @@
-import { ReadonlyList } from '../../misc/readonly-list/implementation';
 import { Observable } from '../../core/observable/implementation';
 import { Observer } from '../../core/observer/implementation';
 import {
@@ -240,26 +239,18 @@ function eventsObservableExample2(): void {
 
 function promiseCancelTokenFetchExample1(): void {
   function loadNews(page: number, token: IPromiseCancelToken = new PromiseCancelToken()): Promise<void> {
-    return fetch(`https://my-domain/api/news?page${ page }`, { signal: token.toAbortController().signal })
-      .then((response: Response) => {
-        if (token.cancelled) {
-          throw token.reason;
-        } else {
-          return response.json();
-        }
-      })
-      .then((news: any) => {
-        if (token.cancelled) {
-          throw token.reason;
-        } else {
-          // render news in DOM for example
-        }
-      });
+    return token.wrapPromise(fetch(`https://my-domain/api/news?page${ page }`, { signal: token.toAbortController().signal }))
+      .then(token.wrapCallback((response: Response) => {
+        return response.json();
+      }))
+      .then(token.wrapCallback((news: any) => {
+        // render news in DOM for example
+      }));
   }
 
   let page: number = 0;
   let token: IPromiseCancelToken;
-  document.querySelector('button')
+  (document.querySelector('button') as HTMLElement)
     .addEventListener(`click`, () => {
       if (token !== void 0) {
         token.cancel(new PromiseCancelReason('Manual cancel'));

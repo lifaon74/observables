@@ -1,4 +1,3 @@
-
 /**
  * Returns a descriptor following prototype inheritance for a target (must be a prototype)
  * @param target
@@ -16,7 +15,6 @@ export function GetPropertyDescriptor(target: Object, propertyName: string): Pro
 }
 
 
-
 export type PropertyDescriptorType = 'property' | 'method';
 
 export interface NormalizedPropertyDescriptorResult<T> {
@@ -31,7 +29,7 @@ export interface NormalizedPropertyDescriptorResult<T> {
  * @param {TypedPropertyDescriptor<T>} descriptor
  * @return {NormalizedPropertyDescriptorResult<T>}
  */
-export function NormalizePropertyDescriptor<T>(target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<T>): NormalizedPropertyDescriptorResult<T> {
+export function NormalizePropertyDescriptor<T>(target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<T> | undefined): NormalizedPropertyDescriptorResult<T> {
   if (descriptor === void 0) {
     descriptor = Object.getOwnPropertyDescriptor(target, propertyKey);
   }
@@ -169,7 +167,7 @@ export function PropertyOrMethodDecoratorWrapper(callback: PropertyOrMethodDecor
 
 export function PropertyCallInterceptor<T extends { [key: string]: any }, P extends string>(object: T, propertyName: P, callback: (args: Parameters<T[P]>, object: T, native: T[P]) => ReturnType<T[P]>): () => void {
   const originalFunction: (...args: any[]) => any = (object as any)[propertyName];
-  (object as any)[propertyName] = function(...args: any[]) {
+  (object as any)[propertyName] = function (...args: any[]) {
     return callback.apply(this, [args, object, originalFunction]);
   };
 

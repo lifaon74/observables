@@ -9,7 +9,7 @@ import { IObserver } from '../../core/observer/interfaces';
  * @param reducer
  * @param previousValue
  */
-export function reducePipe<T>(reducer: (previousValue: T, value: T) => T, previousValue: T = void 0): IPipe<IObserver<T>, IObservable<T>> {
+export function reducePipe<T>(reducer: (previousValue: T, value: T) => T, previousValue: T): IPipe<IObserver<T>, IObservable<T>> {
   return Pipe.create<T, T>((context: TPipeContextBase<T, T>) => {
     return {
       onEmit(value: T): void {

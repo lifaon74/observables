@@ -28,7 +28,7 @@
     "removeComments": true,
     "sourceMap": false,
 
-    "strictNullChecks": false,
+    "strictNullChecks": true,
 
     "moduleResolution": "node",
 

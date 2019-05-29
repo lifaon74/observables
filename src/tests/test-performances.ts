@@ -199,7 +199,7 @@ export function testPerformances5() {
     };
   });
 
-  const observable: IObservable<number> =new Observable<number>((context) => {
+  const observable: IObservable<number> = new Observable<number>((context) => {
     return {
       onObserved(): void {
         for (let i = 0; i < count; i++) {
@@ -261,7 +261,7 @@ export function testPerformances6() {
             context.dispatch('next', Math.random());
           }
         } else {
-          context.dispatch('complete');
+          context.dispatch('complete', void 0);
           ObservableClearObservers<any>(observable);
         }
       },

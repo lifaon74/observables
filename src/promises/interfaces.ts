@@ -1,4 +1,3 @@
-
 export type TPromiseType<P> = P extends Promise<infer T>
   ? T extends Promise<any>
     ? never

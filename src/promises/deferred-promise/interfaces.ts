@@ -28,6 +28,7 @@ export interface IDeferredPromiseConstructor {
   readonly PENDING: 'pending';
 
   resolve(): IDeferredPromise<void>;
+
   resolve<T>(value: TPromiseOrValue<T>,): IDeferredPromise<T>;
 
   reject<T = never>(reason?: any,): IDeferredPromise<T>;
@@ -41,12 +42,20 @@ export interface IDeferredPromiseConstructor {
   new<T>(callback?: (deferred: IDeferredPromise<T>) => any): IDeferredPromise<T>;
 }
 
-export interface IDeferredPromise<T> extends Promise<T> {
+export interface IDeferredPromiseCodes {
+  readonly FULFILLED: 'fulfilled';
+  readonly REJECTED: 'rejected';
+  readonly PENDING: 'pending';
+  readonly RESOLVING: 'resolving';
+}
+
+export interface IDeferredPromise<T> extends IDeferredPromiseCodes, Promise<T> {
   readonly status: TPromiseStatus;
   readonly promise: Promise<T>;
 
 
   resolve(value?: TPromiseOrValue<T>): this;
+
   reject(reason?: any): this;
 
   try(callback: () => TPromiseOrValue<T>): this;

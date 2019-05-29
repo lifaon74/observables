@@ -22,8 +22,8 @@ export interface ISourceConstructor {
  *
  */
 export interface ISource<T> extends IValueObservable<T> {
-  readonly value: T; // last emitted value
-  valueOf(): T;
+  readonly value: T | undefined; // last emitted value
+  valueOf(): T | undefined;
 
   emit(value: T): this;
 }
@@ -41,7 +41,7 @@ export interface IAsyncSourceConstructor extends IObservableConstructor {
  * then waits until the promise is resolved (fulfilled or rejected), and emits the values with the same behaviour than a Source.
  */
 export interface IAsyncSource<T> extends IObservable<T> {
-  readonly promise: Promise<T>;
+  readonly promise: Promise<T> | null;
   readonly token: IPromiseCancelToken | null;
 
   emit(promise: Promise<T>, token?: IPromiseCancelToken): Promise<this>;

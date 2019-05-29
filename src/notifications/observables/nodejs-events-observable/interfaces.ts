@@ -9,9 +9,9 @@ export type NodeJSEventsObservableKeyValueMapGeneric = {
 export type NodeJSEventKeyValueMapConstraint<TKVMap extends object> = KeyValueMapConstraint<TKVMap, NodeJSEventsObservableKeyValueMapGeneric>;
 
 
-
 export interface PureNodeJSEventTarget {
   addListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
   removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
 }
 
@@ -19,7 +19,6 @@ export interface PureNodeJSEventTarget {
 export interface INodeJSEventsObservableConstructor {
   new<TKVMap extends NodeJSEventKeyValueMapConstraint<TKVMap>, TTarget extends PureNodeJSEventTarget = PureNodeJSEventTarget>(target: TTarget, name?: KeyValueMapKeys<TKVMap> | null): INodeJSEventsObservable<TKVMap, TTarget>;
 }
-
 
 
 /**

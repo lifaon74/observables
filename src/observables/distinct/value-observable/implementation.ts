@@ -22,7 +22,7 @@ export const VALUE_OBSERVABLE_PRIVATE = Symbol('value-observable-private');
 
 export interface IValueObservablePrivate<T> extends IObservableHookPrivate<T> {
   context: IObservableContext<T>;
-  value: T | undefined;
+  value: T;
   count: number;
   lastCountPerObserver: WeakMap<IObserver<T>, number>;
 }
@@ -41,11 +41,11 @@ export function ConstructValueObservable<T>(
   InitObservableHook(
     observable,
     (observable as IValueObservableInternal<T>)[VALUE_OBSERVABLE_PRIVATE],
+    NewValueObservableContext,
     create,
-    NewValueObservableContext
   );
   (observable as IValueObservableInternal<T>)[VALUE_OBSERVABLE_PRIVATE].context = context;
-  (observable as IValueObservableInternal<T>)[VALUE_OBSERVABLE_PRIVATE].value = void 0;
+  // (observable as IValueObservableInternal<T>)[VALUE_OBSERVABLE_PRIVATE].value = void 0;
   (observable as IValueObservableInternal<T>)[VALUE_OBSERVABLE_PRIVATE].count = 0;
   (observable as IValueObservableInternal<T>)[VALUE_OBSERVABLE_PRIVATE].lastCountPerObserver = new WeakMap<IObserver<T>, number>();
 }
@@ -57,6 +57,7 @@ export function IsValueObservable(value: any): value is IValueObservable<any> {
 }
 
 const IS_VALUE_OBSERVABLE_CONSTRUCTOR = Symbol('is-value-observable-constructor');
+
 export function IsValueObservableConstructor(value: any): boolean {
   return (typeof value === 'function') && ((value === ValueObservable) || HasFactoryWaterMark(value, IS_VALUE_OBSERVABLE_CONSTRUCTOR));
 }
@@ -127,7 +128,7 @@ export function PureValueObservableFactory<TBase extends Constructor<IObservable
   return class ValueObservable extends superClass implements IValueObservable<T> {
     constructor(...args: any[]) {
       const [create]: TValueObservableConstructorArgs<T> = args[0];
-      let context: IObservableContext<T> = void 0;
+      let context: IObservableContext<T>;
       super(...setSuperArgs(args.slice(1), [
         (_context: IObservableContext<T>) => {
           context = _context;
@@ -141,6 +142,7 @@ export function PureValueObservableFactory<TBase extends Constructor<IObservable
           };
         }
       ]));
+      // @ts-ignore
       ConstructValueObservable<T>(this, context, create);
     }
   };
@@ -171,13 +173,12 @@ ValueObservable = class ValueObservable extends ValueObservableBaseFactory<Objec
 } as IValueObservableConstructor;
 
 
-
 /*--------------------------*/
 
 
 export function NewValueObservableContext<T>(observable: IValueObservable<T>): IValueObservableContext<T> {
   AllowObservableContextBaseConstruct(true);
-  const context: IValueObservableContext<T> = new((ValueObservableContext as any) as IValueObservableContextConstructor)<T>(observable);
+  const context: IValueObservableContext<T> = new ((ValueObservableContext as any) as IValueObservableContextConstructor)<T>(observable);
   AllowObservableContextBaseConstruct(false);
   return context;
 }

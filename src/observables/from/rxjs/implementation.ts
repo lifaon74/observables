@@ -1,5 +1,6 @@
 import {
-  IFromRXJSObservable, IFromRXJSObservableConstructor, INotificationsFromObservable, TFromRXJSObservableConstructorArgs,
+  IFromRXJSObservable, IFromRXJSObservableConstructor, IFromRXJSObservableNotificationKeyValueMap,
+  INotificationsFromObservable, TFromRXJSObservableConstructorArgs,
   TFromRXJSObservableNotifications
 } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
@@ -10,12 +11,16 @@ import {
   FROM_OBSERVABLE_PRIVATE, FromObservableFactory, IFromObservablePrivate, IsFromObservableConstructor
 } from '../implementation';
 import {
-  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
+  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, InstancesTypes, IsFactoryClass, MakeFactory,
+  TMakeFactoryCreateSuperClass,
+  TMakeFactorySuperInstance
 } from '../../../classes/factory';
 import { Observable as RXObservable, Subscription as RXSubscription } from 'rxjs';
 import { NotificationsObservableFactory } from '../../../notifications/core/notifications-observable/implementation';
 import { Notification } from '../../../notifications/core/notification/implementation';
-import { INotificationsObservableConstructor } from '../../../notifications/core/notifications-observable/interfaces';
+import {
+  INotificationsObservableConstructor, INotificationsObservableTypedConstructor
+} from '../../../notifications/core/notifications-observable/interfaces';
 import { IObservableConstructor } from '../../../core/observable/interfaces';
 
 
@@ -71,7 +76,7 @@ export function FromRXJSObservableOnObserved<TValue, TError>(observable: IFromRX
           privates.context.emit(new Notification<'error', TError>('error', error));
         },
         () => {
-          privates.context.emit(new Notification<'complete', undefined>('complete'));
+          privates.context.emit(new Notification<'complete', undefined>('complete', void 0));
           privates.context.complete();
         });
   }
@@ -86,15 +91,17 @@ export function FromRXJSObservableOnUnobserved<TValue, TError>(observable: IFrom
 }
 
 export function FromRXJSObservableUnsubscribe<TValue, TError>(observable: IFromRXJSObservable<TValue, TError>, count: number = 1): void {
+  const privates: IFromRXJSObservablePrivate<TValue, TError> = (observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_RXJS_OBSERVABLE_PRIVATE];
+
   if (count >= 0) {
-    if ((observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_RXJS_OBSERVABLE_PRIVATE].rxSubscription === null) { // may append if rxObservable is complete before rxSubscription is set
+    if (privates.rxSubscription === null) { // may append if rxObservable is complete before rxSubscription is set
       // in this case, delay the executing until rxSubscription exists
       setTimeout(() => {
         FromRXJSObservableUnsubscribe<TValue, TError>(observable, count - 1);
       }, 0);
     } else {
-      (observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_RXJS_OBSERVABLE_PRIVATE].rxSubscription.unsubscribe();
-      (observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_RXJS_OBSERVABLE_PRIVATE].rxSubscription = null;
+      privates.rxSubscription.unsubscribe();
+      privates.rxSubscription = null;
     }
   }
 }
@@ -113,7 +120,7 @@ export function PureFromRXJSObservableFactory<TBase extends Constructor<INotific
   return class FromRXJSObservable extends superClass implements IFromRXJSObservable<TValue, TError> {
     constructor(...args: any[]) {
       const [rxObservable, onComplete]: TFromRXJSObservableConstructorArgs<TValue, TError> = args[0];
-      let context: IFromObservableContext<TNotifications> = void 0;
+      let context: IFromObservableContext<TNotifications>;
       super(...setSuperArgs(args.slice(1), [
         (_context: IFromObservableContext<TNotifications>) => {
           context = _context;
@@ -127,6 +134,7 @@ export function PureFromRXJSObservableFactory<TBase extends Constructor<INotific
           };
         }, onComplete
       ]));
+      // @ts-ignore
       ConstructFromRXJSObservable<TValue, TError>(this, context, rxObservable);
     }
   };
@@ -143,7 +151,7 @@ export function FromRXJSObservableFactory<TBase extends Constructor<INotificatio
 }
 
 export function FromRXJSObservableBaseFactory<TBase extends Constructor>(superClass: TBase) {
-  return MakeFactory<IFromRXJSObservableConstructor, [IFromObservableConstructor, INotificationsObservableConstructor, IObservableConstructor], TBase>(PureFromRXJSObservableFactory, [FromObservableFactory, NotificationsObservableFactory, ObservableFactory], superClass, {
+  return MakeFactory<IFromRXJSObservableConstructor, [IFromObservableConstructor, INotificationsObservableTypedConstructor<IFromRXJSObservableNotificationKeyValueMap<any, any>>, IObservableConstructor], TBase>(PureFromRXJSObservableFactory, [FromObservableFactory, NotificationsObservableFactory, ObservableFactory], superClass, {
     name: 'FromRXJSObservable',
     instanceOf: FromRXJSObservable,
     waterMarks: [IS_FROM_ITERABLE_OBSERVABLE_CONSTRUCTOR],

@@ -75,7 +75,7 @@ export function ExtractSignalFromFetchArguments(requestInfo: RequestInfo, reques
  * @param requestInfo
  * @param requestInit
  */
-export function LinkPromiseCancelTokenWithFetchArguments(token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit?: RequestInit): RequestInit {
+export function LinkPromiseCancelTokenWithFetchArguments(token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit?: RequestInit): RequestInit | undefined {
   if ('AbortController' in self) {
     const signal: AbortSignal | null = ExtractSignalFromFetchArguments(requestInfo, requestInit);
     if (signal === null) {
@@ -97,7 +97,7 @@ export function LinkPromiseCancelTokenWithFetchArguments(token: IPromiseCancelTo
  * @param requestInfo
  * @param requestInit
  */
-export function LinkPromiseCancelTokenWithFetchArgumentsSpread(token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit?: RequestInit): [RequestInfo, RequestInit]  {
+export function LinkPromiseCancelTokenWithFetchArgumentsSpread(token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit?: RequestInit): [RequestInfo, RequestInit | undefined] {
   return [requestInfo, LinkPromiseCancelTokenWithFetchArguments(token, requestInfo, requestInit)];
 }
 
@@ -115,13 +115,12 @@ export function FetchObservablePromiseFactory(observable: IFetchObservable, toke
       init = Object.assign({}, (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInit);
       init.signal = controller.signal;
     } else {
-      token.linkWithAbortSignal((observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].signal);
+      token.linkWithAbortSignal((observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].signal as AbortSignal);
     }
   }
 
   return fetch((observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInfo, init);
 }
-
 
 
 export class FetchObservable extends PromiseObservable<Response, Error, any> implements IFetchObservable {

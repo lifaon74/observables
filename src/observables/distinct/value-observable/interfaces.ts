@@ -1,7 +1,9 @@
 import { IObservable, IObservableContext, IObservableHook } from '../../../core/observable/interfaces';
 
 
-export type TValueObservableConstructorArgs<T> = [(context: IValueObservableContext<T>) => (IObservableHook<T> | void)] | [];
+export type TValueObservableConstructorArgs<T> =
+  [(context: IValueObservableContext<T>) => (IObservableHook<T> | void)]
+  | [];
 
 /**
  * An ValueObservable is an distinct value emitter:

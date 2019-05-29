@@ -9,7 +9,7 @@ import { ObservableEmitAll } from '../../../../core/observable/implementation';
 import { NotificationsObserver } from '../../../core/notifications-observer/implementation';
 import { Reason } from '../../../../misc/reason/implementation';
 import { INotification } from '../../../core/notification/interfaces';
-import { IsObject } from '../../../../helpers';
+import { IsObject, noop } from '../../../../helpers';
 import { TPromiseType } from '../../../../promises/interfaces';
 
 
@@ -57,10 +57,12 @@ export function PromiseCancelTokenLinkWithAbortController(token: IPromiseCancelT
     } else {
       token.cancel(new PromiseCancelReason(`AbortController aborted`));
     }
-    return () => {};
+    return () => {
+    };
   } else if ((token as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].cancelled) {
     controller.abort();
-    return () => {};
+    return () => {
+    };
   } else { // none cancelled
     const clear = () => {
       controller.signal.removeEventListener('abort', onControllerAborted, false);
@@ -101,7 +103,8 @@ export function PromiseCancelTokenLinkWithAbortSignal(token: IPromiseCancelToken
     } else {
       token.cancel(new PromiseCancelReason(`AbortSignal aborted`));
     }
-    return () => {};
+    return () => {
+    };
   } else if ((token as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].cancelled) {
     throw new Error(`Trying to link a cancelled PromiseCancelToken with a non aborted signal.`);
   } else {
@@ -122,19 +125,29 @@ export function PromiseCancelTokenLinkWithAbortSignal(token: IPromiseCancelToken
 }
 
 
-export function PromiseCancelTokenWrap<CB extends (...args: any[]) => any>(token: PromiseCancelToken, callback: CB): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>>> {
+export function PromiseCancelTokenWarpPromise<P extends PromiseLike<any>>(promise: P, token: IPromiseCancelToken): P {
+  return promise
+    .then((value: any) => {
+      return (token.cancelled)
+        ? new Promise<never>(noop)
+        : Promise.resolve<any>(value);
+    }, (reason: any) => {
+      return (token.cancelled)
+        ? new Promise<never>(noop)
+        : Promise.reject(reason);
+    }) as P;
+}
+
+export function PromiseCancelTokenWrapCallback<CB extends (...args: any[]) => any>(token: PromiseCancelToken, callback: CB): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>>> {
   type T = TPromiseType<ReturnType<CB>>;
   return function(...args: Parameters<CB>): Promise<T> {
-    return new Promise<T>((resolve: any, reject: any) => {
-      if (token.cancelled) {
-        reject(token.reason);
-      } else {
+    return new Promise<T>((resolve: any) => {
+      if (!token.cancelled) {
         resolve(callback.apply(this, args));
       }
     });
   };
 }
-
 
 export class PromiseCancelToken extends NotificationsObservable<IPromiseCancelTokenKeyValueMap> implements IPromiseCancelToken {
 
@@ -162,7 +175,7 @@ export class PromiseCancelToken extends NotificationsObservable<IPromiseCancelTo
     return controller;
   }
 
-  linkWithAbortController(controller: AbortController): () => void  {
+  linkWithAbortController(controller: AbortController): () => void {
     return PromiseCancelTokenLinkWithAbortController(this, controller);
   }
 
@@ -170,11 +183,14 @@ export class PromiseCancelToken extends NotificationsObservable<IPromiseCancelTo
     return PromiseCancelTokenLinkWithAbortSignal(this, signal);
   }
 
-  wrap<CB extends (...args: any[]) => any>(callback: CB): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>>> {
-    return PromiseCancelTokenWrap<CB>(this, callback);
+  wrapPromise<P extends PromiseLike<any>>(promise: P): P  {
+    return PromiseCancelTokenWarpPromise<P>(promise, this);
+  }
+
+  wrapCallback<CB extends (...args: any[]) => any>(callback: CB): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>>> {
+    return PromiseCancelTokenWrapCallback<CB>(this, callback);
   }
 }
-
 
 
 export class PromiseCancelTokenObserver extends NotificationsObserver<'cancel', any> {

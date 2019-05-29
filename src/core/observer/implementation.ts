@@ -16,6 +16,7 @@ export interface IObserverPrivate<T> {
   activated: boolean;
   observables: IObservable<T>[];
   readOnlyObservables: IReadonlyList<IObservable<T>>;
+
   onEmit(value: T, observable?: IObservable<T>): void;
 }
 
@@ -96,7 +97,7 @@ export function ObserverObserve<T>(observer: IObserver<T>, observables: IObserva
         }
       }
     } else {
-      throw new TypeError(`Expected Observable as argument #${i + 1} of Observer.observe.`);
+      throw new TypeError(`Expected Observable as argument #${ i + 1 } of Observer.observe.`);
     }
   }
 }
@@ -113,7 +114,7 @@ export function ObserverUnobserve<T>(observer: IObserver<T>, observables: IObser
     if (IsObservable(observables[i])) {
       ObserverUnobserveOne<T>(observer, observables[i]);
     } else {
-      throw new TypeError(`Expected Observable as argument #${i + 1} of Observer.unobserve.`);
+      throw new TypeError(`Expected Observable as argument #${ i + 1 } of Observer.unobserve.`);
     }
   }
 }
@@ -204,7 +205,7 @@ function PureObserverFactory<TBase extends Constructor>(superClass: TBase) {
       return ObserverUnobserveAll<T, this>(this);
     }
 
-  }
+  };
 }
 
 export let Observer: IObserverConstructor;

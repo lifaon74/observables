@@ -16,14 +16,15 @@ export interface IFunctionObservable<T extends TFunctionObservableFactory> exten
   readonly args: IReadonlyTuple<TFunctionObservableParameters<T>>;
 
   pause(): void;
+
   resume(): void;
+
   run(callback: (this: this) => void): this;
 }
 
 export type ObservableCastTuple<T extends any[]> = {
   [K in keyof T]: IObservable<T[K]>;
 };
-
 
 
 export type ObservableCastTupleArray<T extends any[]> = TupleArray<ObservableCastTuple<T>, IObservable<any>>;

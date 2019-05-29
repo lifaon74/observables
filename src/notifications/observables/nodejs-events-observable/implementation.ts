@@ -7,8 +7,7 @@ import { Notification } from '../../core/notification/implementation';
 import { ExtractObserverNameAndCallback } from '../../core/notifications-observer/implementation';
 import { KeyValueMapKeys, KeyValueMapValues } from '../../core/interfaces';
 import {
-  KeyValueMapToNotifications, KeyValueMapToNotificationsObserversLikeGeneric,
-  TNotificationsObservableHook,
+  KeyValueMapToNotifications, KeyValueMapToNotificationsObserversLikeGeneric, TNotificationsObservableHook,
 } from '../../core/notifications-observable/interfaces';
 import { IObserver } from '../../../core/observer/interfaces';
 import { IsObject } from '../../../helpers';
@@ -68,7 +67,7 @@ export function NodeJSEventsObservableOnObserved<TKVMap extends NodeJSEventKeyVa
   }
 
   const listener = (...args: any[]) => {
-    nameAndCallback.callback(NormalizeNodeJSListenerValue(args) as KeyValueMapValues<TKVMap>);
+    (nameAndCallback as KeyValueMapToNotificationsObserversLikeGeneric<TKVMap>).callback(NormalizeNodeJSListenerValue(args) as KeyValueMapValues<TKVMap>);
   };
 
   (observable as INodeJSEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].observerListenerMap.set(observer, listener);
@@ -97,7 +96,7 @@ export function NodeJSEventsObservableOnUnobserved<TKVMap extends NodeJSEventKey
 
   (observable as INodeJSEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].target.removeListener(
     _name,
-    (observable as INodeJSEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].observerListenerMap.get(observer)
+    (observable as INodeJSEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].observerListenerMap.get(observer) as (event: KeyValueMapValues<TKVMap>) => void
   );
   (observable as INodeJSEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].observerListenerMap.delete(observer);
 }
