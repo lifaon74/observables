@@ -48,16 +48,16 @@ export function ConstructPipe<TObserver extends IObserver<any>, TObservable exte
         type TValueObservable = ObservableType<TObservable>;
         const observablePrivate: IObservablePrivate<TValueObservable> = ((((instance as unknown) as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].observable as unknown) as IObservableInternal<TValueObservable>)[OBSERVABLE_PRIVATE];
 
-        const onObserveHook = observablePrivate.onObserveHook;
+        const _onObserveHook = observablePrivate.onObserveHook;
         observablePrivate.onObserveHook = function onObserveHook(observer: IObserver<TValueObservable>) {
           PipeUpdateAutoActivate<TObserver, TObservable>(instance);
-          onObserveHook.call(this, observer);
+          _onObserveHook.call(this, observer);
         };
 
-        const onUnobserveHook = observablePrivate.onUnobserveHook;
+        const _onUnobserveHook = observablePrivate.onUnobserveHook;
         observablePrivate.onUnobserveHook = function onUnobserveHook(observer: IObserver<TValueObservable>) {
           PipeUpdateAutoDeactivate<TObserver, TObservable>(instance);
-          onUnobserveHook.call(this, observer);
+          _onUnobserveHook.call(this, observer);
         };
       } else {
         throw new TypeError(`Expected property observable of type Observable in return of Pipe's create function`);

@@ -1,26 +1,19 @@
 import {
   IFromRXJSObservable, IFromRXJSObservableConstructor, IFromRXJSObservableNotificationKeyValueMap,
-  INotificationsFromObservable, TFromRXJSObservableConstructorArgs,
-  TFromRXJSObservableNotifications
+  INotificationsFromObservable, TFromRXJSObservableConstructorArgs, TFromRXJSObservableNotifications
 } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../../helpers';
 import { IFromObservableConstructor, IFromObservableContext, TFromObservableCompleteAction } from '../interfaces';
 import { ObservableFactory } from '../../../core/observable/implementation';
+import { FromObservableFactory, IsFromObservableConstructor } from '../implementation';
 import {
-  FROM_OBSERVABLE_PRIVATE, FromObservableFactory, IFromObservablePrivate, IsFromObservableConstructor
-} from '../implementation';
-import {
-  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, InstancesTypes, IsFactoryClass, MakeFactory,
-  TMakeFactoryCreateSuperClass,
-  TMakeFactorySuperInstance
+  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
 } from '../../../classes/factory';
 import { Observable as RXObservable, Subscription as RXSubscription } from 'rxjs';
 import { NotificationsObservableFactory } from '../../../notifications/core/notifications-observable/implementation';
 import { Notification } from '../../../notifications/core/notification/implementation';
-import {
-  INotificationsObservableConstructor, INotificationsObservableTypedConstructor
-} from '../../../notifications/core/notifications-observable/interfaces';
+import { INotificationsObservableTypedConstructor } from '../../../notifications/core/notifications-observable/interfaces';
 import { IObservableConstructor } from '../../../core/observable/interfaces';
 
 
@@ -28,13 +21,13 @@ export const FROM_RXJS_OBSERVABLE_PRIVATE = Symbol('from-rxjs-observable-private
 
 export interface IFromRXJSObservablePrivate<TValue, TError> {
   context: IFromObservableContext<TFromRXJSObservableNotifications<TValue, TError>>;
+  pending: boolean;
   rxObservable: RXObservable<TValue>;
   rxSubscription: RXSubscription | null;
 }
 
 export interface IFromRXJSObservableInternal<TValue, TError> extends IFromRXJSObservable<TValue, TError> {
   [FROM_RXJS_OBSERVABLE_PRIVATE]: IFromRXJSObservablePrivate<TValue, TError>;
-  [FROM_OBSERVABLE_PRIVATE]: IFromObservablePrivate<TFromRXJSObservableNotifications<TValue, TError>>;
 }
 
 export function ConstructFromRXJSObservable<TValue, TError>(
@@ -44,13 +37,14 @@ export function ConstructFromRXJSObservable<TValue, TError>(
 ): void {
   ConstructClassWithPrivateMembers(observable, FROM_RXJS_OBSERVABLE_PRIVATE);
   (observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_RXJS_OBSERVABLE_PRIVATE].context = context;
+  (observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_RXJS_OBSERVABLE_PRIVATE].pending = true;
   (observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_RXJS_OBSERVABLE_PRIVATE].rxObservable = rxObservable;
   (observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_RXJS_OBSERVABLE_PRIVATE].rxSubscription = null;
 }
 
 export function IsFromRXJSObservable(value: any): value is IFromRXJSObservable<any, any> {
   return IsObject(value)
-    && value.hasOwnProperty(FROM_RXJS_OBSERVABLE_PRIVATE);
+    && value.hasOwnProperty(FROM_RXJS_OBSERVABLE_PRIVATE as symbol);
 }
 
 const IS_FROM_ITERABLE_OBSERVABLE_CONSTRUCTOR = Symbol('is-from-rxjs-observable-constructor');
@@ -62,8 +56,8 @@ export function IsFromRXJSObservableConstructor(value: any): boolean {
 
 
 export function FromRXJSObservableOnObserved<TValue, TError>(observable: IFromRXJSObservable<TValue, TError>): void {
-  if ((observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_OBSERVABLE_PRIVATE].state === 'awaiting') {
-    (observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_OBSERVABLE_PRIVATE].state = 'emitting';
+  if ((observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_RXJS_OBSERVABLE_PRIVATE].pending) {
+    (observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_RXJS_OBSERVABLE_PRIVATE].pending = false;
 
     const privates: IFromRXJSObservablePrivate<TValue, TError> = (observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_RXJS_OBSERVABLE_PRIVATE];
 
@@ -83,7 +77,7 @@ export function FromRXJSObservableOnObserved<TValue, TError>(observable: IFromRX
 }
 
 export function FromRXJSObservableOnUnobserved<TValue, TError>(observable: IFromRXJSObservable<TValue, TError>): void {
-  if ((observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_OBSERVABLE_PRIVATE].state === 'emitting') {
+  if (!(observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_RXJS_OBSERVABLE_PRIVATE].pending) {
     if (!(observable as IFromRXJSObservableInternal<TValue, TError>)[FROM_RXJS_OBSERVABLE_PRIVATE].context.observable.observed) {
       FromRXJSObservableUnsubscribe<TValue, TError>(observable);
     }

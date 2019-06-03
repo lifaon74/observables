@@ -21,7 +21,7 @@ import { Pipe } from '../core/observable-observer/implementation';
 import { IsObserver, Observer } from '../core/observer/public';
 import { assertFunctionObservableEmits, assertObservableEmits } from '../classes/asserts';
 import { IsObject } from '../helpers';
-import { LinkPromiseCancelTokenWithFetchArguments } from '../notifications/observables/fetch-observable/implementation';
+import { LinkPromiseCancelTokenWithFetchArguments } from '../notifications/observables/promise-observable/promise-cancel-token/implementation';
 
 export type TObservableOrValue<T> = IObservable<T> | T;
 export type TObservableOrValueToValueType<T extends TObservableOrValue<any>> = T extends IObservable<infer R> ? R : T;

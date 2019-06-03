@@ -37,7 +37,7 @@ export function ConstructObservable<T>(
     create,
   );
   (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers = [];
-  (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers = new ReadonlyList<IObserver<T>>((observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers);
+  // (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers = new ReadonlyList<IObserver<T>>((observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers);
 }
 
 export function IsObservable(value: any): value is IObservable<any> {
@@ -139,9 +139,9 @@ function PureObservableFactory<TBase extends Constructor>(superClass: TBase) {
     }
 
     get observers(): IReadonlyList<IObserver<T>> {
-      // if (((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers === void 0) {
-      //   ((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers = new ReadonlyList<IObserver<T>>(((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers);
-      // }
+      if (((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers === void 0) {
+        ((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers = new ReadonlyList<IObserver<T>>(((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers);
+      }
       return ((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers;
     }
 

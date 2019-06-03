@@ -240,10 +240,10 @@ function eventsObservableExample2(): void {
 function promiseCancelTokenFetchExample1(): void {
   function loadNews(page: number, token: IPromiseCancelToken = new PromiseCancelToken()): Promise<void> {
     return token.wrapPromise(fetch(`https://my-domain/api/news?page${ page }`, { signal: token.toAbortController().signal }))
-      .then(token.wrapCallback((response: Response) => {
+      .then(token.wrapFunction((response: Response) => {
         return response.json();
       }))
-      .then(token.wrapCallback((news: any) => {
+      .then(token.wrapFunction((news: any) => {
         // render news in DOM for example
       }));
   }
@@ -429,19 +429,19 @@ function fetchObservableExample1(): void {
  */
 async function observableToPromiseExample1(): Promise<void> {
 
-  function observePromise(promise: Promise<Response>, token?: PromiseCancelToken): Promise<void> {
+  function observePromise(name: string, promise: Promise<Response>, token?: PromiseCancelToken): Promise<void> {
     return promise
       .then((response: Response) => {
         if (token && token.cancelled) {
-          console.warn('cancel', token.reason);
+          console.warn(`cancel '${ name }'`, token.reason);
         } else {
-          console.log(response);
+          console.log(name, response);
         }
       }, (error: any) => {
         if (token && token.cancelled) {
-          console.warn('cancel', token.reason);
+          console.warn(`cancel '${ name }'`, token.reason);
         } else {
-          console.error('error', error);
+          console.error(`error '${ name }'`, error);
         }
       });
   }
@@ -449,15 +449,15 @@ async function observableToPromiseExample1(): Promise<void> {
   const url1: string = 'https://server.test-cors.org/server?id=643798&enable=true&status=200&credentials=false&response_headers=Access-Control-Allow-Origin%3A%20*'; // valid cors url
   const url2: string = 'https://invalid url'; // invalid  url
 
-  observePromise(toPromise<Response>(new FetchObservable(url1))); // will complete
-  observePromise(toPromise<Response>(new FetchObservable(url2))); // will error
+  observePromise('fetch url 1', toPromise<Response>(new FetchObservable(url1))); // will complete
+  observePromise('fetch url 2', toPromise<Response>(new FetchObservable(url2))); // will error
 
   const abortController: AbortController = new AbortController();
-  observePromise(toPromise<Response>(new FetchObservable(url1, { signal: abortController.signal }))); // will cancel
+  observePromise('fetch url with abort controller without token', toPromise<Response>(new FetchObservable(url1, { signal: abortController.signal }), 'reject')); // will cancel
   abortController.abort();
 
   // provides PromiseCancelToken too, to detect cancellation
-  observePromise(...toCancellablePromiseTuple<Response>(new FetchObservable(url1, { signal: abortController.signal }))); // will cancel
+  observePromise('fetch url with abort controller with token', ...toCancellablePromiseTuple<Response>(new FetchObservable(url1, { signal: abortController.signal }), 'reject')); // will cancel
 }
 
 
@@ -598,7 +598,7 @@ function expressionExample1() {
 }
 
 
-export async function test() {
+export async function testExamples() {
   // timerObservableExample1();
   // observeTimerObservable();
   // observeNotificationsObservable();
@@ -606,7 +606,7 @@ export async function test() {
   // promiseCancelTokenExample1();
   // promiseObservableExample1();
   // fetchObservableExample1();
-  // observableToPromiseExample1();
+  observableToPromiseExample1();
 
   // pipeExample1();
   // pipeExample2();

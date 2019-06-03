@@ -10,7 +10,7 @@ import { IObservable, IObservableContext, IObservableHook } from '../../core/obs
  */
 export type TFromObservableCompleteAction = 'noop' | 'cache' | 'clear' | 'clear-strict';
 
-export type TFromObservableState = 'awaiting' | 'emitting' | 'complete';
+// export type TFromObservableState = 'awaiting' | 'emitting' | 'complete';
 
 
 export type TFromObservableConstructorArgs<T> =
@@ -20,11 +20,11 @@ export type TFromObservableConstructorArgs<T> =
 
 
 export interface IFromObservableConstructor {
-  new<T>(create?: (context: IFromObservableContext<T>) => (IObservableHook<T> | void), onComplete?: TFromObservableCompleteAction): IFromObservable<T>;
+  new<T>(create?: (context: IFromObservableContext<T>) => (IObservableHook<T> | void), onCompleteAction?: TFromObservableCompleteAction): IFromObservable<T>;
 }
 
 export interface IFromObservableBase {
-  readonly complete: boolean;
+  readonly complete: IObservable<void>;
 }
 
 export interface IFromObservable<T> extends IFromObservableBase, IObservable<T> {

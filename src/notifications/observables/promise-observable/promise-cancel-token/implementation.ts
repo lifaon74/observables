@@ -4,7 +4,7 @@ import {
 } from '../../../core/notifications-observable/implementation';
 import { INotificationsObserver } from '../../../core/notifications-observer/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
-import { IPromiseCancelToken, IPromiseCancelTokenKeyValueMap } from './interfaces';
+import { IPromiseCancelToken, IPromiseCancelTokenKeyValueMap, TCancelStrategy } from './interfaces';
 import { ObservableEmitAll } from '../../../../core/observable/implementation';
 import { NotificationsObserver } from '../../../core/notifications-observer/implementation';
 import { Reason } from '../../../../misc/reason/implementation';
@@ -43,6 +43,71 @@ export function PromiseCancelTokenCancel(token: IPromiseCancelToken, reason: any
     ObservableEmitAll<INotification<'cancel', any>>(token, new CancelNotification(reason));
   }
 }
+
+/**
+ * HELPERS - public
+ */
+
+/**
+ * Returns the linked AbortSignal (if exists) of a fetch request
+ * @param requestInfo
+ * @param requestInit
+ */
+export function ExtractSignalFromFetchArguments(requestInfo: RequestInfo, requestInit: RequestInit = {}): AbortSignal | null {
+  if ('AbortController' in self) {
+    if (requestInit.signal instanceof AbortSignal) {
+      return requestInit.signal;
+    } else if (
+      (requestInfo instanceof Request)
+      && (requestInfo.signal instanceof AbortSignal)
+    ) {
+      return requestInfo.signal;
+    } else {
+      return null;
+    }
+  } else {
+    return null;
+  }
+}
+
+/**
+ * Links a PromiseCancelToken with the fetch arguments.
+ * Returns the modified RequestInit
+ * @param token
+ * @param requestInfo
+ * @param requestInit
+ */
+export function LinkPromiseCancelTokenWithFetchArguments(token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit?: RequestInit): RequestInit | undefined {
+  if ('AbortController' in self) {
+    const signal: AbortSignal | null = ExtractSignalFromFetchArguments(requestInfo, requestInit);
+    if (signal === null) {
+      const controller: AbortController = token.toAbortController();
+      // shallow copy of RequestInit
+      requestInit = (requestInit === void 0) ? {} : Object.assign({}, requestInit);
+      requestInit.signal = controller.signal;
+    } else {
+      token.linkWithAbortSignal(signal);
+    }
+  }
+  return requestInit;
+}
+
+/**
+ * Just like the previous functions, but simplifies fetch calls:
+ *  fetch(...LinkPromiseCancelTokenWithFetchArgumentsSpread(token, requestInfo, requestInit))
+ * @param token
+ * @param requestInfo
+ * @param requestInit
+ */
+export function LinkPromiseCancelTokenWithFetchArgumentsSpread(token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit?: RequestInit): [RequestInfo, RequestInit | undefined] {
+  return [requestInfo, LinkPromiseCancelTokenWithFetchArguments(token, requestInfo, requestInit)];
+}
+
+
+
+/**
+ * IMPLEMENTATION
+ */
 
 /**
  * Links a PromiseCancelToken with an AbortController.
@@ -110,7 +175,13 @@ export function PromiseCancelTokenLinkWithAbortSignal(token: IPromiseCancelToken
   } else {
     const clear = () => {
       signal.removeEventListener('abort', onControllerAborted, false);
+      tokenCancelListener.deactivate();
     };
+
+    const tokenCancelListener: INotificationsObserver<'cancel', any> = token.addListener('cancel', () => {
+      clear();
+      throw new Error(`A PromiseCancelToken linked with an AbortSignal has been cancelled. But a AbortSignal is not directly cancellable.`);
+    }).activate();
 
     const onControllerAborted = () => {
       // controller has been cancelled first
@@ -124,25 +195,39 @@ export function PromiseCancelTokenLinkWithAbortSignal(token: IPromiseCancelToken
   }
 }
 
+export function ApplyCancelStrategy(token: IPromiseCancelToken, strategy: TCancelStrategy = 'never'): Promise<void> {
+  switch (strategy) {
+    case 'never':
+      return new Promise<never>(noop);
+    case 'resolve':
+      return Promise.resolve();
+    case 'reject':
+      return Promise.reject(token.reason);
+    default:
+      throw new TypeError(`Unexpected strategy: ${ strategy }`);
+  }
+}
 
-export function PromiseCancelTokenWarpPromise<P extends PromiseLike<any>>(promise: P, token: IPromiseCancelToken): P {
+export function PromiseCancelTokenWarpPromise<P extends PromiseLike<any>>(token: IPromiseCancelToken, promise: P, strategy?: TCancelStrategy): P {
   return promise
     .then((value: any) => {
       return (token.cancelled)
-        ? new Promise<never>(noop)
+        ? ApplyCancelStrategy(token, strategy)
         : Promise.resolve<any>(value);
     }, (reason: any) => {
       return (token.cancelled)
-        ? new Promise<never>(noop)
+        ? ApplyCancelStrategy(token, strategy)
         : Promise.reject(reason);
     }) as P;
 }
 
-export function PromiseCancelTokenWrapCallback<CB extends (...args: any[]) => any>(token: PromiseCancelToken, callback: CB): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>>> {
+export function PromiseCancelTokenWrapFunction<CB extends (...args: any[]) => any>(token: PromiseCancelToken, callback: CB, strategy?: TCancelStrategy): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>>> {
   type T = TPromiseType<ReturnType<CB>>;
   return function(...args: Parameters<CB>): Promise<T> {
     return new Promise<T>((resolve: any) => {
-      if (!token.cancelled) {
+      if (token.cancelled) {
+        resolve(ApplyCancelStrategy(token, strategy));
+      } else {
         resolve(callback.apply(this, args));
       }
     });
@@ -183,12 +268,16 @@ export class PromiseCancelToken extends NotificationsObservable<IPromiseCancelTo
     return PromiseCancelTokenLinkWithAbortSignal(this, signal);
   }
 
-  wrapPromise<P extends PromiseLike<any>>(promise: P): P  {
-    return PromiseCancelTokenWarpPromise<P>(promise, this);
+  wrapPromise<P extends PromiseLike<any>>(promise: P, strategy?: TCancelStrategy): P  {
+    return PromiseCancelTokenWarpPromise<P>(this, promise);
   }
 
-  wrapCallback<CB extends (...args: any[]) => any>(callback: CB): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>>> {
-    return PromiseCancelTokenWrapCallback<CB>(this, callback);
+  wrapFunction<CB extends (...args: any[]) => any>(callback: CB, strategy?: TCancelStrategy): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>>> {
+    return PromiseCancelTokenWrapFunction<CB>(this, callback);
+  }
+
+  wrapFetchArguments(requestInfo: RequestInfo, requestInit?: RequestInit): [RequestInfo, RequestInit | undefined] {
+    return LinkPromiseCancelTokenWithFetchArgumentsSpread(this, requestInfo, requestInit);
   }
 }
 

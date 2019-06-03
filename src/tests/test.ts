@@ -15,8 +15,68 @@ import { FromIterableObservable } from '../observables/from/iterable/implementat
 import { noop } from '../helpers';
 import { FromRXJSObservable } from '../observables/from/rxjs/implementation';
 import { testSignalingServer } from './webrtc/test-signaling-server';
-import { Observer } from '..';
 import { testPromises } from './test-promises';
+import { Observer } from '../core/observer/public';
+import { testExamples } from './examples/examples';
+import { toRXJS } from '../operators/to/toRXJS';
+import { testPerformances } from './test-performances';
+
+function loadScript(src: string): Promise<void> {
+  return new Promise((resolve: any, reject: any) => {
+    const script: HTMLScriptElement = document.createElement('script');
+
+    const clear = () => {
+      script.removeEventListener('load', onLoad);
+      script.removeEventListener('error', onLoad);
+      document.head.removeChild(script);
+    };
+
+    const onLoad = () => {
+      clear();
+      resolve();
+    };
+
+    const onError = () => {
+      clear();
+      reject(new URIError(`The script '${ src.substring(0, 300) }' didn't load correctly.`));
+    };
+
+    script.addEventListener('load', onLoad);
+    script.addEventListener('error', onError);
+
+    script.src = src;
+
+    document.head.appendChild(script);
+  });
+}
+
+function loadUMDScript<T>(src: string, name: string): Promise<T> {
+  // (window as any).exports = {};
+  // (window as any).module = {
+  //   exports: (window as any).exports
+  // };
+  if (name in (window as any)) {
+    return Promise.reject(new Error(`The global object already contains a property with name '${ name }'.`));
+  } else {
+    return loadScript(src)
+      .then(() => {
+        if (name in (window as any)) {
+          const module: any = (window as any)[name];
+          delete (window as any)[name];
+          return module;
+        } else {
+          throw new Error(`No exported UMD name '${ name }'.`);
+        }
+      });
+  }
+
+}
+
+function loadRXJS(): Promise<any> {
+  return loadUMDScript('https://unpkg.com/rxjs@6.4.0/bundles/rxjs.umd.js', 'rxjs');
+  // loadScript( 'https://unpkg.com/rxjs@6.4.0/bundles/rxjs.umd.min.js');
+}
+
 
 function testReadOnlyList() {
   const list = new ReadonlyList<number>([0, 1, 2, 3]);
@@ -167,59 +227,7 @@ async function testFlattenPipe() {
 
 
 async function testFromRXJSObservable() {
-  function loadScript(src: string): Promise<void> {
-    return new Promise((resolve: any, reject: any) => {
-      const script: HTMLScriptElement = document.createElement('script');
-
-      const clear = () => {
-        script.removeEventListener('load', onLoad);
-        script.removeEventListener('error', onLoad);
-        document.head.removeChild(script);
-      };
-
-      const onLoad = () => {
-        clear();
-        resolve();
-      };
-
-      const onError = () => {
-        clear();
-        reject(new URIError(`The script '${ src.substring(0, 300) }' didn't load correctly.`));
-      };
-
-      script.addEventListener('load', onLoad);
-      script.addEventListener('error', onError);
-
-      script.src = src;
-
-      document.head.appendChild(script);
-    });
-  }
-
-  function loadUMDScript<T>(src: string, name: string): Promise<T> {
-    // (window as any).exports = {};
-    // (window as any).module = {
-    //   exports: (window as any).exports
-    // };
-    if (name in (window as any)) {
-      return Promise.reject(new Error(`The global object already contains a property with name '${ name }'.`));
-    } else {
-      return loadScript(src)
-        .then(() => {
-          if (name in (window as any)) {
-            const module: any = (window as any)[name];
-            delete (window as any)[name];
-            return module;
-          } else {
-            throw new Error(`No exported UMD name '${ name }'.`);
-          }
-        });
-    }
-
-  }
-
-  const rxjs: any = await loadUMDScript('https://unpkg.com/rxjs@6.4.0/bundles/rxjs.umd.js', 'rxjs');
-  // await loadScript( 'https://unpkg.com/rxjs@6.4.0/bundles/rxjs.umd.min.js');
+  const rxjs: any = await loadRXJS();
 
   const { range, operators: { map, filter } } = rxjs;
 
@@ -257,6 +265,21 @@ async function testFromRXJSObservable() {
     notifications
   );
 
+}
+
+async function testToRXJSObservable() {
+  toRXJS<number>(new FromIterableObservable([0, 1, 2, 3, 4]))
+    .subscribe({
+      next: (value: number) => {
+        console.log('next', value);
+      },
+      complete: () => {
+        console.log('complete');
+      },
+      error: (error: any) => {
+        console.log('error', error);
+      }
+    });
 }
 
 
@@ -334,6 +357,8 @@ export function testInstanceof() {
 
 
 export async function test() {
+  // await testExamples();
+
   // testReadOnlyList();
   // testSource();
   // testAsyncSource();
@@ -341,8 +366,9 @@ export async function test() {
   // await testFromIterableObservable();
   // await testReducePipe();
   // await testFlattenPipe();
-  //
+
   // await testFromRXJSObservable();
+  // await testToRXJSObservable();
 
   // testWebSocket();
   // testWEBRTC1();
@@ -351,9 +377,9 @@ export async function test() {
   // testMisc();
   // testFactoryV2();
   // testInstanceof();
-  // testPerformances();
+  testPerformances();
   // testSignalingServer();
-  testPromises();
+  // testPromises();
 }
 
 

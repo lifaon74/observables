@@ -4,11 +4,15 @@ import {
 import { Notification } from '../../notifications/core/notification/implementation';
 import { IObservable } from '../../core/observable/interfaces';
 import {
-  PromiseCancelError, PromiseCancelToken
+  ApplyCancelStrategy,
+  PromiseCancelToken
 } from '../../notifications/observables/promise-observable/promise-cancel-token/implementation';
-import { IPromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import {
+  IPromiseCancelToken, TCancelStrategy
+} from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
 import { Observer } from '../../core/observer/implementation';
 import { INotificationsObserver } from '../../notifications/core/notifications-observer/interfaces';
+import { TPromiseOrValue } from '../../promises/interfaces';
 
 export type TBasePromiseObservableNotification<T> = TPromiseObservableNotification<T, any, any>;
 export type TValueOrNotificationType<T> = T | TBasePromiseObservableNotification<T>;
@@ -18,19 +22,22 @@ export type TValueOrNotificationType<T> = T | TBasePromiseObservableNotification
  *  If the Observable sends a Notification, 'complete' or 'error' is expected as "name", and the promise is resolved of rejected.
  *  If the Observable sends a value, the promise is resolved with this value.
  * @param observable
+ * @param strategy
  * @return a tuple: The Promise, and a PromiseCancelToken.
  */
-export function toCancellablePromiseTuple<T>(observable: IObservable<TBasePromiseObservableNotification<T>> | IObservable<T>): TCancellablePromiseTuple<T> {
+export function toCancellablePromiseTuple<T>(observable: IObservable<TBasePromiseObservableNotification<T>> | IObservable<T>, strategy?: TCancelStrategy): TCancellablePromiseTuple<T> {
   const token: IPromiseCancelToken = new PromiseCancelToken();
   return [
     new Promise<T>((resolve: any, reject: any) => {
-      if (!token.cancelled) {
+      if (token.cancelled) {
+        resolve(ApplyCancelStrategy(token, strategy));
+      } else {
         const _clear = () => {
           observer.deactivate();
           tokenObserver.deactivate();
         };
 
-        const _resolve = (value: T) => {
+        const _resolve = (value: TPromiseOrValue<T | void>) => {
           _clear();
           resolve(value);
         };
@@ -63,7 +70,7 @@ export function toCancellablePromiseTuple<T>(observable: IObservable<TBasePromis
           .activate();
 
         const tokenObserver: INotificationsObserver<'cancel', void> = token.addListener('cancel', () => {
-          _reject(new PromiseCancelError());
+          _resolve(ApplyCancelStrategy(token, strategy));
         }).activate();
       }
     }),
@@ -71,6 +78,6 @@ export function toCancellablePromiseTuple<T>(observable: IObservable<TBasePromis
   ];
 }
 
-export function toPromise<T>(observable: IObservable<TBasePromiseObservableNotification<T>> | IObservable<T>): Promise<T> {
-  return toCancellablePromiseTuple<T>(observable)[0];
+export function toPromise<T>(observable: IObservable<TBasePromiseObservableNotification<T>> | IObservable<T>, strategy?: TCancelStrategy): Promise<T> {
+  return toCancellablePromiseTuple<T>(observable, strategy)[0];
 }

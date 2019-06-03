@@ -7,9 +7,7 @@ import {
   IFromObservable, IFromObservableConstructor, IFromObservableContext, TFromObservableCompleteAction
 } from '../interfaces';
 import { ObservableFactory } from '../../../core/observable/implementation';
-import {
-  FROM_OBSERVABLE_PRIVATE, FromObservableFactory, IFromObservableInternal, IsFromObservableConstructor
-} from '../implementation';
+import { FromObservableFactory, IFromObservableInternal, IsFromObservableConstructor } from '../implementation';
 import {
   Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
 } from '../../../classes/factory';
@@ -20,6 +18,7 @@ export const FROM_ITERABLE_OBSERVABLE_PRIVATE = Symbol('from-iterable-observable
 
 export interface IFromIterableObservablePrivate<T> {
   context: IFromObservableContext<T>;
+  pending: boolean;
   iterable: Iterable<T>;
 }
 
@@ -34,6 +33,7 @@ export function ConstructFromIterableObservable<T>(
 ): void {
   ConstructClassWithPrivateMembers(observable, FROM_ITERABLE_OBSERVABLE_PRIVATE);
   (observable as IFromIterableObservableInternal<T>)[FROM_ITERABLE_OBSERVABLE_PRIVATE].context = context;
+  (observable as IFromIterableObservableInternal<T>)[FROM_ITERABLE_OBSERVABLE_PRIVATE].pending = true;
   (observable as IFromIterableObservableInternal<T>)[FROM_ITERABLE_OBSERVABLE_PRIVATE].iterable = iterable;
 }
 
@@ -51,8 +51,8 @@ export function IsFromIterableObservableConstructor(value: any): boolean {
 
 
 export function FromIterableObservableOnObserved<T>(observable: IFromIterableObservable<T>): void {
-  if ((observable as IFromIterableObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].state === 'awaiting') {
-    (observable as IFromIterableObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].state = 'emitting';
+  if ((observable as IFromIterableObservableInternal<T>)[FROM_ITERABLE_OBSERVABLE_PRIVATE].pending) {
+    (observable as IFromIterableObservableInternal<T>)[FROM_ITERABLE_OBSERVABLE_PRIVATE].pending = false;
 
     const iterator: Iterator<T> = (observable as IFromIterableObservableInternal<T>)[FROM_ITERABLE_OBSERVABLE_PRIVATE].iterable[Symbol.iterator]();
     let result: IteratorResult<T>;

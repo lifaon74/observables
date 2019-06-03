@@ -69,11 +69,11 @@ export function assertFunctionObservableEmits(valuesToEmit: any[], observable: I
   const [observer, promise] = observableAssert(values, timeout);
   observable
     .observedBy(new Observer(observer).activate())
-    .run(function () {
-      for (let i = 0; i < valuesToEmit.length; i++) {
-        (this.args.item(i) as ISource<any>).emit(valuesToEmit[i]);
-      }
-    });
+    .run(() => {
+        for (let i = 0; i < valuesToEmit.length; i++) {
+          (observable.args.item(i) as ISource<any>).emit(valuesToEmit[i]);
+        }
+      });
   return promise;
 }
 

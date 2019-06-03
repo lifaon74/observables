@@ -6,7 +6,9 @@ import { IReadonlyList } from '../../misc/readonly-list/interfaces';
 import { ReadonlyList } from '../../misc/readonly-list/implementation';
 import { IObservable } from '../observable/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
-import { IsObservable, LinkObservableAndObserver, UnLinkObservableAndObserver } from '../observable/implementation';
+import {
+  IsObservable, LinkObservableAndObserver, UnLinkObservableAndObserver
+} from '../observable/implementation';
 import { Constructor, MakeFactory } from '../../classes/factory';
 import { IsObject } from '../../helpers';
 
@@ -29,7 +31,7 @@ export function ConstructObserver<T>(observer: IObserver<T>, onEmit: (value: T, 
   ConstructClassWithPrivateMembers(observer, OBSERVER_PRIVATE);
   (observer as IObserverInternal<T>)[OBSERVER_PRIVATE].activated = false;
   (observer as IObserverInternal<T>)[OBSERVER_PRIVATE].observables = [];
-  (observer as IObserverInternal<T>)[OBSERVER_PRIVATE].readOnlyObservables = new ReadonlyList<IObservable<T>>((observer as IObserverInternal<T>)[OBSERVER_PRIVATE].observables);
+  // (observer as IObserverInternal<T>)[OBSERVER_PRIVATE].readOnlyObservables = new ReadonlyList<IObservable<T>>((observer as IObserverInternal<T>)[OBSERVER_PRIVATE].observables);
 
   if (typeof onEmit === 'function') {
     (observer as IObserverInternal<T>)[OBSERVER_PRIVATE].onEmit = onEmit.bind(observer);
@@ -168,6 +170,9 @@ function PureObserverFactory<TBase extends Constructor>(superClass: TBase) {
     }
 
     get observables(): IReadonlyList<IObservable<T>> {
+      if (((this as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].readOnlyObservables === void 0) {
+        ((this as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].readOnlyObservables = new ReadonlyList<IObservable<T>>(((this as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].observables);
+      }
       return ((this as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].readOnlyObservables;
     }
 

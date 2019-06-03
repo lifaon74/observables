@@ -1,4 +1,6 @@
-import { CancellablePromise, DeferredPromise, IPromiseCancelToken } from '..';
+import { CancellablePromise } from '../promises/cancellable-promise/implementation';
+import { IPromiseCancelToken } from '../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import { DeferredPromise } from '../promises/deferred-promise/implementation';
 
 export function testCancellablePromise() {
   const a = CancellablePromise.resolve(1)
