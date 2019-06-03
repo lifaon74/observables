@@ -6,6 +6,7 @@ import { IPromiseObservableOptions } from '../promise-observable/interfaces';
 import { INotificationsObservable } from '../../core/notifications-observable/interfaces';
 import { promisePipe } from '../../../operators/pipes/promisePipe';
 import { IsObject } from '../../../helpers';
+import { TPromiseOrValue } from '../../..';
 
 export const FETCH_OBSERVABLE_PRIVATE = Symbol('fetch-observable-private');
 
@@ -39,16 +40,21 @@ export function IsFetchObservable(value: any): value is IFetchObservable {
     && (FETCH_OBSERVABLE_PRIVATE in value);
 }
 
-
-/**
- * IMPLEMENTATION
- */
-
 export function FetchObservablePromiseFactory(observable: IFetchObservable, token: IPromiseCancelToken): Promise<Response> {
   return fetch(...token.wrapFetchArguments(
     (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInfo,
     (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInit,
   ));
+}
+
+export function FetchObservablePromiseTo<T>(observable: IFetchObservable, callback: (response: Response) => TPromiseOrValue<T>): INotificationsObservable<TFetchObservableCastKeyValueMap<T, Error | Response>> {
+  return this.pipeThrough(promisePipe<Response, T, Error, any>((response: Response) => {
+    if (response.ok) {
+      return callback(response);
+    } else {
+      throw response;
+    }
+  }));
 }
 
 
@@ -61,24 +67,24 @@ export class FetchObservable extends PromiseObservable<Response, Error, any> imp
     ConstructFetchObservable(this, requestInfo, requestInit);
   }
 
-  toJSON<T>(): INotificationsObservable<TFetchObservableCastKeyValueMap<T>> {
-    return this.pipeThrough(promisePipe<Response, T, Error, any>((response: Response) => response.json()));
+  toJSON<T>(): INotificationsObservable<TFetchObservableCastKeyValueMap<T, Error | Response>> {
+    return FetchObservablePromiseTo<T>(this, (response: Response) => response.json());
   }
 
-  toText(): INotificationsObservable<TFetchObservableCastKeyValueMap<string>> {
-    return this.pipeThrough(promisePipe<Response, string, Error, any>((response: Response) => response.text()));
+  toText(): INotificationsObservable<TFetchObservableCastKeyValueMap<string, Error | Response>> {
+    return FetchObservablePromiseTo<string>(this, (response: Response) => response.text());
   }
 
-  toArrayBuffer(): INotificationsObservable<TFetchObservableCastKeyValueMap<ArrayBuffer>> {
-    return this.pipeThrough(promisePipe<Response, ArrayBuffer, Error, any>((response: Response) => response.arrayBuffer()));
+  toArrayBuffer(): INotificationsObservable<TFetchObservableCastKeyValueMap<ArrayBuffer, Error | Response>> {
+    return FetchObservablePromiseTo<ArrayBuffer>(this, (response: Response) => response.arrayBuffer());
   }
 
-  toBlob(): INotificationsObservable<TFetchObservableCastKeyValueMap<Blob>> {
-    return this.pipeThrough(promisePipe<Response, Blob, Error, any>((response: Response) => response.blob()));
+  toBlob(): INotificationsObservable<TFetchObservableCastKeyValueMap<Blob, Error | Response>> {
+    return FetchObservablePromiseTo<Blob>(this, (response: Response) => response.blob());
   }
 
-  toFormData(): INotificationsObservable<TFetchObservableCastKeyValueMap<FormData>> {
-    return this.pipeThrough(promisePipe<Response, FormData, Error, any>((response: Response) => response.formData()));
+  toFormData(): INotificationsObservable<TFetchObservableCastKeyValueMap<FormData, Error | Response>> {
+    return FetchObservablePromiseTo<FormData>(this, (response: Response) => response.formData());
   }
 
 }

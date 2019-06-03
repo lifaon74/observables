@@ -55,7 +55,7 @@ function temperatureObservable(thing: ConsumedThing): IObservable<number> {
 
 ### 2) Implementation with Pipe (better)
 
-Remember we I said that Pipes should be used everytime we pipe data from one observable to another ?
+Remember when I said that Pipes should be used everytime we pipe data from one observable to another ?
 
 Here we pipe data from `thing['temperature']` (an Observable) to another (the returned one).
 

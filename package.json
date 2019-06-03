@@ -11,6 +11,7 @@
     "build.prod": "npm run clean && gulp build.prod && npm run minify",
     "babelify": "babel ./dist/bundle/public.umd.esnext.js --out-file ./dist/bundle/public.umd.es5.js --presets=@babel/preset-env",
     "minify": "npm run min.esnext && npm run min.core",
+    "pre-min": "node post-minify.js",
     "min.esnext": "uglifyjs ./dist/bundle/public.umd.esnext.js -o ./dist/bundle/public.umd.esnext.min.js -c inline=false -m",
     "min.core": "uglifyjs ./dist/bundle/public.core.umd.esnext.js -o ./dist/bundle/public.core.umd.esnext.min.js -c inline=false -m",
     "publish.prod": "cd ./dist && npm publish --access=public",

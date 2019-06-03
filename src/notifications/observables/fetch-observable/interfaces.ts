@@ -3,8 +3,8 @@ import {
 } from '../promise-observable/interfaces';
 import { INotificationsObservable } from '../../core/notifications-observable/interfaces';
 
-export type TFetchObservableKeyValueMap = IPromiseNotificationKeyValueMap<Response, Error, any>;
-export type TFetchObservableCastKeyValueMap<T> = IPromiseNotificationKeyValueMap<T, Error, any>;
+export type TFetchObservableKeyValueMap<TErrored = Error> = IPromiseNotificationKeyValueMap<Response, TErrored, any>;
+export type TFetchObservableCastKeyValueMap<T, TErrored = Error> = IPromiseNotificationKeyValueMap<T, TErrored, any>;
 
 
 export interface IFetchObservableConstructor {
@@ -16,14 +16,14 @@ export interface IFetchObservableConstructor {
  */
 export interface IFetchObservable extends IPromiseObservable<Response, Error, any> {
 
-  toJSON<T>(): INotificationsObservable<TFetchObservableCastKeyValueMap<T>>;
+  toJSON<T>(): INotificationsObservable<TFetchObservableCastKeyValueMap<T, Error | Response>>;
 
-  toText(): INotificationsObservable<TFetchObservableCastKeyValueMap<string>>;
+  toText(): INotificationsObservable<TFetchObservableCastKeyValueMap<string, Error | Response>>;
 
-  toArrayBuffer(): INotificationsObservable<TFetchObservableCastKeyValueMap<ArrayBuffer>>;
+  toArrayBuffer(): INotificationsObservable<TFetchObservableCastKeyValueMap<ArrayBuffer, Error | Response>>;
 
-  toBlob(): INotificationsObservable<TFetchObservableCastKeyValueMap<Blob>>;
+  toBlob(): INotificationsObservable<TFetchObservableCastKeyValueMap<Blob, Error | Response>>;
 
-  toFormData(): INotificationsObservable<TFetchObservableCastKeyValueMap<FormData>>;
+  toFormData(): INotificationsObservable<TFetchObservableCastKeyValueMap<FormData, Error | Response>>;
 
 }

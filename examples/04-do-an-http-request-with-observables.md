@@ -69,7 +69,49 @@ document.querySelector('button')
   });
 ```
 
-**The PromiseCancelToken is useful to avoid unnecessary work into the promise chain.**
+Or even better, using the *wrap* methods:
+```ts
+function loadNews(page: number, token: IPromiseCancelToken = new PromiseCancelToken()): Promise<void> {
+  return token.wrapPromise(fetch(`https://my-domain/api/news?page=${page}`, { signal: token.toAbortController().signal }))
+    .then(token.wrapFunction((response: Response) => {
+      return response.json();
+    }))
+    .then(token.wrapFunction((news: INews) => {
+      // render news in DOM for example
+    }));
+}
+```
+
+Or if you prefer to use the provided CancellablePromise:
+```ts
+function loadNews(page: number, token: IPromiseCancelToken = new PromiseCancelToken()): Promise<void> {
+  return new CancellablePromise(fetch(`https://my-domain/api/news?page=${page}`, { signal: token.toAbortController().signal }), token)
+    .then((response: Response) => {
+      return response.json();
+    })
+    .then((news: INews) => {
+      // render news in DOM for example
+    })
+        .promise; // optional
+}
+```
+
+**The PromiseCancelToken is useful to avoid unnecessary work into the promise chain, and should be used in most of your workflow.**
+
+*Another example - assuming a payment mobile app:*
+
+1) (t = 0s) user click on a "pay" button
+    1) an http request starts in the background to verify the order and will take 10s (assuming the server is very slow). User navigation is not blocked.
+    The server expects a valid user's session during the whole time.
+    2) at the end a "choose a payment method" popup is displayed
+2) (t = 5s) user expected a change, but nothing append (5s remaining for the request), so user decides to logout.
+    1) *the first request must de cancelled, to avoid to display the "choose a payment method" popup after the user reached the logout page*
+    2) a logout request is done. The server clear the user session.
+    3) the user is redirected to the login page
+    4) the server detects that the session is no more valid for the first request, and returns a 401 error.
+
+This king of pattern occurs extremely frequently: a call to the server after a click on a button, followed by a success/error popup.
+Sadly, by laziness or time constraint, developers tend to forgot the *cancel* part (and the error part too ;) ), where PromiseCancelToken simplifies the work.
 
 ### Simple cancellable http request example
 
@@ -123,7 +165,7 @@ doRequest();
 
 Unlike Promises, Observables are cancellable due to their onObserve/onUnobserve mechanism (a core functionality), that's why we introduced the PromiseCancelToken.
 
-We may consider that Promises have 3 states: *completed*, *errored*, and *canceled*.
+We may consider that Promises have 3 final states: *completed*, *errored*, and *canceled*.
 
 The PromiseObservable is constructed like this:
 ```ts
@@ -133,8 +175,8 @@ new<TFulfilled, TErrored, TCancelled>(promiseFactory: (token: IPromiseCancelToke
 The `promiseFactory` is a function returning a Promise, called in certain circumstances (see bellow).
 The PromiseCancelToken provided by this function must be used to abort/cancel unnecessary work as seen previously (used in `then`for example).
 
-This token is cancelled by the PromiseObservable if it has no more observers,
-or if the Observer which generated the promise stopped to observe it for example.
+This token is cancelled by the PromiseObservable in certain circumstances: for example, if it has no more observers,
+or if the Observer which generated the promise stopped to observe.
 
 
 The second argument `options` is used to adjust the behaviour:
@@ -165,7 +207,7 @@ When the Promise resolves, an uniq Notification is emitted according to the Prom
 
 ---
 
-Using PromiseObservable, we can now create a simpler cancellable fetch function:
+Using PromiseObservable, we can now create a simple cancellable fetch function:
 
 ```ts
 function http(url: string) {
@@ -206,7 +248,22 @@ new FetchObservable(url)
   });
 ```
 
+Moreover, it provides some convenient methods to extract the body of the response:
 
+
+```ts
+new FetchObservable(url)
+  .toJSON<INewsJSON>()
+  .on('complete', (news: INewsJSON) => {
+    console.log(news);
+  })
+  .on('error', (error: any) => {
+    console.error('error', error);
+  })
+  .on('cancel', (reason: any) => {
+    console.warn('cancelled', reason);
+  });
+```
 
 
 
