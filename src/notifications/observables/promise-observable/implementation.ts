@@ -84,7 +84,7 @@ export function ConstructPromiseObservable<TFulfilled, TErrored, TCancelled>(
   }
 
   let clear: IPromiseObservableClearOptions;
-  if (options.clear == void 0) {
+  if (options.clear === void 0) {
     clear = {};
   } else if ((typeof options.clear === 'object') && (options.clear !== null)) {
     clear = options.clear;

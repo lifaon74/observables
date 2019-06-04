@@ -119,7 +119,7 @@ export function AsyncFunctionObservablePause<T extends TAsyncFunctionObservableF
 export function AsyncFunctionObservableResume<T extends TAsyncFunctionObservableFactory>(observable: IAsyncFunctionObservable<T>): Promise<void> {
   const argumentsObserverPauseCount: number = ((observable as unknown) as IFunctionObservableInternal<T>)[FUNCTION_OBSERVABLE_PRIVATE].argumentsObserverPauseCount;
   ((observable as unknown) as IFunctionObservableInternal<T>)[FUNCTION_OBSERVABLE_PRIVATE].argumentsObserverPauseCount = -1;
-  if (((observable as unknown) as IFunctionObservableInternal<T>)[FUNCTION_OBSERVABLE_PRIVATE].argumentsObserverCount == argumentsObserverPauseCount) {
+  if (((observable as unknown) as IFunctionObservableInternal<T>)[FUNCTION_OBSERVABLE_PRIVATE].argumentsObserverCount === argumentsObserverPauseCount) {
     return Promise.resolve();
   } else {
     return AsyncFunctionObservableCallFactory<T>(observable);

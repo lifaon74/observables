@@ -46,16 +46,16 @@ export function ConstructPipe<TObserver extends IObserver<any>, TObservable exte
       if (OBSERVABLE_PRIVATE in result.observable) {
         ((instance as unknown) as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].observable = result.observable;
         type TValueObservable = ObservableType<TObservable>;
-        const observablePrivate: IObservablePrivate<TValueObservable> = ((((instance as unknown) as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].observable as unknown) as IObservableInternal<TValueObservable>)[OBSERVABLE_PRIVATE];
+        const observablePrivates: IObservablePrivate<TValueObservable> = ((((instance as unknown) as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].observable as unknown) as IObservableInternal<TValueObservable>)[OBSERVABLE_PRIVATE];
 
-        const _onObserveHook = observablePrivate.onObserveHook;
-        observablePrivate.onObserveHook = function onObserveHook(observer: IObserver<TValueObservable>) {
+        const _onObserveHook = observablePrivates.onObserveHook;
+        observablePrivates.onObserveHook = function onObserveHook(observer: IObserver<TValueObservable>) {
           PipeUpdateAutoActivate<TObserver, TObservable>(instance);
           _onObserveHook.call(this, observer);
         };
 
-        const _onUnobserveHook = observablePrivate.onUnobserveHook;
-        observablePrivate.onUnobserveHook = function onUnobserveHook(observer: IObserver<TValueObservable>) {
+        const _onUnobserveHook = observablePrivates.onUnobserveHook;
+        observablePrivates.onUnobserveHook = function onUnobserveHook(observer: IObserver<TValueObservable>) {
           PipeUpdateAutoDeactivate<TObserver, TObservable>(instance);
           _onUnobserveHook.call(this, observer);
         };
