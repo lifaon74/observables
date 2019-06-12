@@ -1,8 +1,7 @@
-import { IFetchObservable, TFetchObservableCastKeyValueMap } from './interfaces';
+import { IFetchObservable, IFetchObservableOptions, TFetchObservableCastKeyValueMap } from './interfaces';
 import { IPromiseObservableInternal, PromiseObservable } from '../promise-observable/implementation';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IPromiseCancelToken } from '../promise-observable/promise-cancel-token/interfaces';
-import { IPromiseObservableOptions } from '../promise-observable/interfaces';
 import { INotificationsObservable } from '../../core/notifications-observable/interfaces';
 import { promisePipe } from '../../../operators/pipes/promisePipe';
 import { IsObject } from '../../../helpers';
@@ -13,26 +12,45 @@ export const FETCH_OBSERVABLE_PRIVATE = Symbol('fetch-observable-private');
 export interface IFetchObservablePrivate {
   requestInfo: RequestInfo;
   requestInit: RequestInit;
+  // fetch: typeof fetch;
 }
 
 export interface IFetchObservableInternal extends IFetchObservable, IPromiseObservableInternal<Response, Error, any> {
   [FETCH_OBSERVABLE_PRIVATE]: IFetchObservablePrivate;
 }
 
-export function ConstructFetchObservable(observable: IFetchObservable, requestInfo: RequestInfo, requestInit?: RequestInit): void {
+export function ConstructFetchObservable(
+  observable: IFetchObservable,
+  requestInfo: RequestInfo,
+  requestInit?: RequestInit,
+  options: IFetchObservableOptions = {}
+): void {
   ConstructClassWithPrivateMembers(observable, FETCH_OBSERVABLE_PRIVATE);
+  const privates: IFetchObservablePrivate = (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE];
 
   if ((typeof requestInfo === 'string') || (requestInfo instanceof Request)) {
-    (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInfo = requestInfo;
+    privates.requestInfo = requestInfo;
   } else {
     throw new TypeError(`Expected string or Request as first parameter of FetchObservable's constructor.`);
   }
 
   if ((typeof requestInit === 'object') && (requestInit !== null)) {
-    (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInit = requestInit;
+    privates.requestInit = requestInit;
   } else if (requestInit !== void 0) {
     throw new TypeError(`Expected RequestInit or void as second parameter of FetchObservable's constructor.`);
   }
+
+  // if (IsObject(options)) {
+  //   if (options.fetch === void 0) {
+  //     privates.fetch = window.fetch;
+  //   } else if (typeof options.fetch === 'function') {
+  //     privates.fetch = options.fetch;
+  //   } else {
+  //     throw new TypeError(`Expected function or void as options.fetch`);
+  //   }
+  // } else {
+  //   throw new TypeError(`Expected object or void as third parameter of FetchObservable's constructor`);
+  // }
 }
 
 export function IsFetchObservable(value: any): value is IFetchObservable {
@@ -41,9 +59,10 @@ export function IsFetchObservable(value: any): value is IFetchObservable {
 }
 
 export function FetchObservablePromiseFactory(observable: IFetchObservable, token: IPromiseCancelToken): Promise<Response> {
+  const privates: IFetchObservablePrivate = (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE];
   return fetch(...token.wrapFetchArguments(
-    (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInfo,
-    (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE].requestInit,
+    privates.requestInfo,
+    privates.requestInit,
   ));
 }
 
@@ -60,11 +79,11 @@ export function FetchObservablePromiseTo<T>(observable: IFetchObservable, callba
 
 export class FetchObservable extends PromiseObservable<Response, Error, any> implements IFetchObservable {
 
-  constructor(requestInfo: RequestInfo, requestInit?: RequestInit, options?: IPromiseObservableOptions) {
+  constructor(requestInfo: RequestInfo, requestInit?: RequestInit, options?: IFetchObservableOptions) {
     super((token: IPromiseCancelToken): Promise<Response> => {
       return FetchObservablePromiseFactory(this, token);
     }, options);
-    ConstructFetchObservable(this, requestInfo, requestInit);
+    ConstructFetchObservable(this, requestInfo, requestInit, options);
   }
 
   toJSON<T>(): INotificationsObservable<TFetchObservableCastKeyValueMap<T, Error | Response>> {

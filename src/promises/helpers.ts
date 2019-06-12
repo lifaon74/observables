@@ -33,3 +33,27 @@ export function Finally<T>(onFinally?: (() => void) | undefined | null): [
       }
     ] : [void 0, void 0];
 }
+
+export interface AllSettledFulfilled<T> {
+  status: 'fulfilled';
+  value: T;
+}
+
+export interface AllSettledRejected {
+  status: 'rejected';
+  reason: any;
+}
+
+export type AllSettledResult<T> = AllSettledFulfilled<T> | AllSettledRejected;
+
+export function AllSettled<T>(promises: Iterable<Promise<T>>): Promise<AllSettledResult<T>[]> {
+  return Promise.all<AllSettledResult<T>>(
+    Array.from<Promise<T>, Promise<AllSettledResult<T>>>(promises, (promise: Promise<T>) => {
+      return promise
+        .then<AllSettledFulfilled<T>, AllSettledRejected>(
+          (value: T) => ( { status: 'fulfilled', value: value } ),
+          (reason: any) => ( { status: 'rejected', reason: reason } ),
+        );
+    })
+  );
+}

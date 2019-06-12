@@ -122,9 +122,12 @@ export function ObservableEmitAll<T>(observable: IObservable<T>, value: T): void
 }
 
 export function ObservableClearObservers<T>(observable: IObservable<T>): void {
-  while (observable.observers.length > 0) {
-    observable.observers.item(0).unobserve(observable);
+  while ((observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length > 0) {
+    (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers[0].unobserve(observable);
   }
+  // while (observable.observers.length > 0) {
+  //   observable.observers.item(0).unobserve(observable);
+  // }
 }
 
 
@@ -169,6 +172,11 @@ function PureObservableFactory<TBase extends Constructor>(superClass: TBase) {
     observedBy<O extends TObserverOrCallback<any>[]>(...observers: O): TObservableObservedByResultNonCyclic<O, T, this> {
       ObservableObservedBy<T>(this, observers);
       return (this as unknown) as TObservableObservedByResultNonCyclic<O, T, this>;
+    }
+
+    clearObservers(): this {
+      ObservableClearObservers<T>(this);
+      return this;
     }
   };
 }

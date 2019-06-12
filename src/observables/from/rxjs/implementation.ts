@@ -4,7 +4,9 @@ import {
 } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../../helpers';
-import { IFromObservableConstructor, IFromObservableContext, TFromObservableCompleteAction } from '../interfaces';
+import {
+  IFromObservableCompleteOptions, IFromObservableConstructor, IFromObservableContext
+} from '../interfaces';
 import { ObservableFactory } from '../../../core/observable/implementation';
 import { FromObservableFactory, IsFromObservableConstructor } from '../implementation';
 import {
@@ -113,7 +115,7 @@ export function PureFromRXJSObservableFactory<TBase extends Constructor<INotific
 
   return class FromRXJSObservable extends superClass implements IFromRXJSObservable<TValue, TError> {
     constructor(...args: any[]) {
-      const [rxObservable, onComplete]: TFromRXJSObservableConstructorArgs<TValue, TError> = args[0];
+      const [rxObservable, onCompleteOptions]: TFromRXJSObservableConstructorArgs<TValue, TError> = args[0];
       let context: IFromObservableContext<TNotifications>;
       super(...setSuperArgs(args.slice(1), [
         (_context: IFromObservableContext<TNotifications>) => {
@@ -126,7 +128,7 @@ export function PureFromRXJSObservableFactory<TBase extends Constructor<INotific
               FromRXJSObservableOnUnobserved<TValue, TError>(this);
             }
           };
-        }, onComplete
+        }, onCompleteOptions
       ]));
       // @ts-ignore
       ConstructFromRXJSObservable<TValue, TError>(this, context, rxObservable);
@@ -153,7 +155,7 @@ export function FromRXJSObservableBaseFactory<TBase extends Constructor>(superCl
 }
 
 FromRXJSObservable = class FromRXJSObservable extends FromRXJSObservableBaseFactory<ObjectConstructor>(Object) {
-  constructor(rxObservable: RXObservable<any>, onComplete?: TFromObservableCompleteAction) {
-    super([rxObservable, onComplete], [], [], []);
+  constructor(rxObservable: RXObservable<any>, onCompleteOptions?: IFromObservableCompleteOptions) {
+    super([rxObservable, onCompleteOptions], [], [], []);
   }
 } as IFromRXJSObservableConstructor;

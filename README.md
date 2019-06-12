@@ -181,9 +181,7 @@ const discoverObservable = wot.discover({ method: 'local' })
   })
   .on('complete', () => {
     console.log('Discovery finished successfully');
-    while (discoverObservable.observers.length > 0) { // clear the observers
-      discoverObservable.observers.item(0).unobserve(discoverObservable);
-    }
+    discoverObservable.clearObservers();
   })
 ;
 ```
@@ -205,6 +203,7 @@ A more complete example may be found here: [wot-temperature-example](./examples/
     + [pipeThrough](#pipethrough)
     + [pipe](#pipe)
     + [observedBy](#observedby)
+    + [clearObservers](#clearobservers)
   * [Observer](#observer)
     + [Construct](#construct-1)
     + [emit](#emit)
@@ -263,6 +262,9 @@ interface IObservable<T> {
 
   // like "pipeTo" but returns this instead
   observedBy<O extends TObserverOrCallback<any>[]>(...observers: O): TObservableObservedByResultNonCyclic<O, T, this>; // returns this
+  
+  // detaches all the observers observing this observable
+  clearObservers(): this;
 }
 
 type TObserverOrCallback<T> = IObserver<T> | ((value: T) => void);
@@ -420,8 +422,22 @@ observedBy<O extends TObserverOrCallback<any>[]>(...observers: O): TObservableOb
 ```
 Tells all the *observers* to observe this Observable.
 
+##### clearObservers
+```ts
+clearObservers(): this;
+```
+Detaches (*unobserve*) all the *observers* of this Observable.
 
-
+Equivalent of:
+```ts
+// don't for loop because if we remove the first observer,
+// the observers' array is shifted on the left (second become first, etc...)
+// instead we just have to continuously remove the first element until the array is empty
+while (observable.observers.length > 0) {
+  observable.observers.item(0).unobserve(observable);
+}
+```
+    
 ---
 
 

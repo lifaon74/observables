@@ -6,9 +6,12 @@ import { INotificationsObservable } from '../../core/notifications-observable/in
 export type TFetchObservableKeyValueMap<TErrored = Error> = IPromiseNotificationKeyValueMap<Response, TErrored, any>;
 export type TFetchObservableCastKeyValueMap<T, TErrored = Error> = IPromiseNotificationKeyValueMap<T, TErrored, any>;
 
+export interface IFetchObservableOptions extends IPromiseObservableOptions{
+  // fetch?: typeof fetch;
+}
 
 export interface IFetchObservableConstructor {
-  new(requestInfo: RequestInfo, requestInit?: RequestInit, options?: IPromiseObservableOptions): IFetchObservable;
+  new(requestInfo: RequestInfo, requestInit?: RequestInit, options?: IFetchObservableOptions): IFetchObservable;
 }
 
 /**

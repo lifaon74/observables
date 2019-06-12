@@ -1,5 +1,11 @@
 # How to listen to a temperature sensor
 
+---
+
+**OUT OF DATE** due to draft spec, waiting for stable release. Example remains interesting to understand Observables.
+
+---
+
 This example will show you how to create a simple Observable for a temperature sensor (WoT).
 
 ### WoT introduction 

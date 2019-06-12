@@ -4,7 +4,7 @@ import {
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../../helpers';
 import {
-  IFromObservable, IFromObservableConstructor, IFromObservableContext, TFromObservableCompleteAction
+  IFromObservable, IFromObservableCompleteOptions, IFromObservableConstructor, IFromObservableContext
 } from '../interfaces';
 import { ObservableFactory } from '../../../core/observable/implementation';
 import { FromObservableFactory, IFromObservableInternal, IsFromObservableConstructor } from '../implementation';
@@ -73,7 +73,7 @@ export function PureFromIterableObservableFactory<TBase extends Constructor<IFro
 
   return class FromIterableObservable extends superClass implements IFromIterableObservable<T> {
     constructor(...args: any[]) {
-      const [iterable, onComplete]: TFromIterableObservableConstructorArgs<T> = args[0];
+      const [iterable, onCompleteOptions]: TFromIterableObservableConstructorArgs<T> = args[0];
       let context: IFromObservableContext<T>;
       super(...setSuperArgs(args.slice(1), [
         (_context: IFromObservableContext<T>) => {
@@ -83,7 +83,7 @@ export function PureFromIterableObservableFactory<TBase extends Constructor<IFro
               FromIterableObservableOnObserved<T>(this);
             }
           };
-        }, onComplete
+        }, onCompleteOptions
       ]));
       // @ts-ignore
       ConstructFromIterableObservable<T>(this, context, iterable);
@@ -110,7 +110,7 @@ export function FromIterableObservableBaseFactory<TBase extends Constructor>(sup
 }
 
 FromIterableObservable = class FromIterableObservable extends FromIterableObservableBaseFactory<ObjectConstructor>(Object) {
-  constructor(iterable: Iterable<any>, onComplete?: TFromObservableCompleteAction) {
-    super([iterable, onComplete], [], []);
+  constructor(iterable: Iterable<any>, onCompleteOptions?: IFromObservableCompleteOptions) {
+    super([iterable, onCompleteOptions], [], []);
   }
 } as IFromIterableObservableConstructor;

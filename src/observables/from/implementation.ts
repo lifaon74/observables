@@ -8,8 +8,9 @@ import {
 } from '../../core/observable/implementation';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import {
-  IFromObservable, IFromObservableConstructor, IFromObservableContext, IFromObservableContextConstructor,
-  TFromObservableCompleteAction, TFromObservableConstructorArgs
+  IFromObservable, IFromObservableCompleteOptions, IFromObservableConstructor, IFromObservableContext,
+  IFromObservableContextConstructor,
+  TFromObservableCompleteNextObserversAction, TFromObservableConstructorArgs
 } from './interfaces';
 import { IsObject } from '../../helpers';
 import {
@@ -26,7 +27,8 @@ export interface IFromObservablePrivate<T> extends IObservableHookPrivate<T> {
   context: IObservableContext<T>;
   values: T[];
 
-  onCompleteAction: TFromObservableCompleteAction;
+  nextObserversActionOnComplete: TFromObservableCompleteNextObserversAction;
+  clearOnComplete: boolean;
   complete: boolean;
   completeObservable: IObservable<void>;
   completeObservableContext: IObservableContext<void>;
@@ -41,7 +43,7 @@ export function ConstructFromObservable<T>(
   observable: IFromObservable<T>,
   context: IObservableContext<T>,
   create?: (context: IFromObservableContext<T>) => (IObservableHook<T> | void),
-  onCompleteAction?: TFromObservableCompleteAction
+  onCompleteOptions: IFromObservableCompleteOptions = {}
 ): void {
   ConstructClassWithPrivateMembers(observable, FROM_OBSERVABLE_PRIVATE);
   const privates: IFromObservablePrivate<T> = (observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE];
@@ -56,8 +58,16 @@ export function ConstructFromObservable<T>(
   privates.context = context;
   privates.values = [];
 
-  privates.onCompleteAction = NormalizeFromObservableCompleteAction(onCompleteAction);
+  if (IsObject(onCompleteOptions)) {
+    privates.nextObserversActionOnComplete = NormalizeFromObservableCompleteNextObserversAction(onCompleteOptions.nextObservers);
+    privates.clearOnComplete = Boolean(onCompleteOptions.clear);
+  } else {
+    throw new TypeError(`Expected object or void as onCompleteOptions`);
+  }
+
+
   privates.complete = false;
+
   // privates.completeObservable = new Observable<void>((context: IObservableContext<void>) => {
   //   privates.completeObservableContext = context;
   //   return {
@@ -84,17 +94,16 @@ export function IsFromObservableConstructor(value: any): boolean {
 }
 
 
-export function NormalizeFromObservableCompleteAction(action?: TFromObservableCompleteAction): TFromObservableCompleteAction {
+export function NormalizeFromObservableCompleteNextObserversAction(action?: TFromObservableCompleteNextObserversAction): TFromObservableCompleteNextObserversAction {
   switch (action) {
     case void 0:
-      return 'noop';
-    case 'noop':
+      return 'throw';
+    case 'never':
     case 'cache':
-    case 'clear':
-    case 'clear-strict':
+    case 'throw':
       return action;
     default:
-      throw new TypeError(`Expected 'noop', 'cache', 'clear' or 'clear-strict' as onCompleteAction`);
+      throw new TypeError(`Expected 'throw', 'cache', 'throw' as onCompleteNextObserversAction`);
   }
 }
 
@@ -102,11 +111,11 @@ export function NormalizeFromObservableCompleteAction(action?: TFromObservableCo
 export function FromObservableOnObserved<T>(observable: IFromObservable<T>, observer: IObserver<T>): void {
   const privates: IFromObservablePrivate<T> = (observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE];
   if (privates.complete) {
-    if (privates.onCompleteAction === 'clear-strict') {
+    if (privates.nextObserversActionOnComplete === 'throw') {
       throw new Error(`Cannot observe this Observable because it is in a 'complete' state.`);
-    } else if (privates.onCompleteAction === 'cache') {
+    } else if (privates.nextObserversActionOnComplete === 'cache') {
       for (let i = 0, l = privates.values.length; i < l; i++) {
-        ObservableEmitAll<T>(observable, privates.values[i]);
+        observer.emit(privates.values[i]);
       }
     }
   }
@@ -122,7 +131,7 @@ export function FromObservableEmit<T>(observable: IFromObservable<T>, value: T):
   if ((observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].complete) {
     throw new Error(`Cannot emit values from this Observable because it is in a 'complete' state.`);
   } else {
-    if ((observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].onCompleteAction === 'cache') {
+    if ((observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].nextObserversActionOnComplete === 'cache') {
       (observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].values.push(value);
     }
     ObservableEmitAll<T>(observable, value);
@@ -139,12 +148,29 @@ export function FromObservableComplete<T>(observable: IFromObservable<T>): void 
       privates.completeObservableContext.emit();
     }
 
-    if ((privates.onCompleteAction === 'clear') || (privates.onCompleteAction === 'clear-strict')) {
+    if (privates.clearOnComplete) {
       setTimeout(() => {
         ObservableClearObservers<T>(observable);
       }, 0);
     }
   }
+}
+
+export function FromObservableGetCompleteObservable<T>(observable: IFromObservable<T>): IObservable<void> {
+  const privates: IFromObservablePrivate<T> = (observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE];
+  if (privates.completeObservable === void 0) {
+    privates.completeObservable = new Observable<void>((context: IObservableContext<void>) => {
+      privates.completeObservableContext = context;
+      return {
+        onObserved: (observer: IObserver<void>) => {
+          if (privates.complete) {
+            observer.emit();
+          }
+        }
+      };
+    });
+  }
+  return privates.completeObservable;
 }
 
 
@@ -157,7 +183,7 @@ function PureFromObservableFactory<TBase extends Constructor<IObservable<any>>>(
 
   return class FromObservable extends superClass implements IFromObservable<T> {
     constructor(...args: any[]) {
-      const [create, onCompleteAction]: TFromObservableConstructorArgs<T> = args[0];
+      const [create, onCompleteOptions]: TFromObservableConstructorArgs<T> = args[0];
       let context: IObservableContext<T>;
       super(...setSuperArgs(args.slice(1), [
         (_context: IObservableContext<T>) => {
@@ -173,24 +199,15 @@ function PureFromObservableFactory<TBase extends Constructor<IObservable<any>>>(
         }
       ]));
       // @ts-ignore
-      ConstructFromObservable<T>(this, context, create, onCompleteAction);
+      ConstructFromObservable<T>(this, context, create, onCompleteOptions);
     }
 
-    get complete(): IObservable<void> {
-      const privates: IFromObservablePrivate<T> = ((this as unknown) as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE];
-      if (privates.completeObservable === void 0) {
-        privates.completeObservable = new Observable<void>((context: IObservableContext<void>) => {
-          privates.completeObservableContext = context;
-          return {
-            onObserved: (observer: IObserver<void>) => {
-              if (privates.complete) {
-                observer.emit();
-              }
-            }
-          };
-        });
-      }
-      return privates.completeObservable;
+    get complete(): boolean {
+      return ((this as unknown) as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].complete;
+    }
+
+    get onComplete(): IObservable<void> {
+      return FromObservableGetCompleteObservable<T>(this);
       // return ((this as unknown) as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].completeObservable;
     }
   };
@@ -215,8 +232,8 @@ export function FromObservableBaseFactory<TBase extends Constructor>(superClass:
 }
 
 FromObservable = class FromObservable extends FromObservableBaseFactory<ObjectConstructor>(Object) {
-  constructor(create?: (context: IFromObservableContext<any>) => (IObservableHook<any> | void), onCompleteAction?: TFromObservableCompleteAction) {
-    super([create, onCompleteAction], []);
+  constructor(create?: (context: IFromObservableContext<any>) => (IObservableHook<any> | void), onCompleteOptions?: IFromObservableCompleteOptions) {
+    super([create, onCompleteOptions], []);
   }
 } as IFromObservableConstructor;
 

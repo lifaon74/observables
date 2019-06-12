@@ -196,7 +196,7 @@ async function testFromIterableObservable() {
 
   assertFails(() => values1.pipeTo(noop).activate());
 
-  const values2 = new FromIterableObservable([0, 1, 2, 3][Symbol.iterator](), 'cache');
+  const values2 = new FromIterableObservable([0, 1, 2, 3][Symbol.iterator](), { nextObservers: 'cache' });
 
   await assertObservableEmits(
     values2,
@@ -253,7 +253,7 @@ async function testFromRXJSObservable() {
 
   assertFails(() => values1.pipeTo(noop).activate());
 
-  const values2 = new FromRXJSObservable<number, undefined>(rxObservable, 'cache');
+  const values2 = new FromRXJSObservable<number, undefined>(rxObservable, { nextObservers: 'cache' });
 
   await assertObservableEmits(
     values2,

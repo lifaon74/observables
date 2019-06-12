@@ -1,14 +1,14 @@
-import { IFromObservable, TFromObservableCompleteAction } from '../interfaces';
+import { IFromObservable, IFromObservableCompleteOptions } from '../interfaces';
 
 /** TYPES **/
 
-export type TFromIterableObservableConstructorArgs<T> = [Iterable<T>, TFromObservableCompleteAction]
+export type TFromIterableObservableConstructorArgs<T> = [Iterable<T>, IFromObservableCompleteOptions]
   | [Iterable<T>];
 
 /** INTERFACES **/
 
 export interface IFromIterableObservableConstructor {
-  new<T>(iterable: Iterable<T>, onComplete?: TFromObservableCompleteAction): IFromIterableObservable<T>;
+  new<T>(iterable: Iterable<T>, onCompleteOptions?: IFromObservableCompleteOptions): IFromIterableObservable<T>;
 }
 
 export interface IFromIterableObservable<T> extends IFromObservable<T> {
