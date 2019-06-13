@@ -92,7 +92,7 @@ export function DeferredPromiseTry<T>(instance: IDeferredPromise<T>, callback: (
   } else {
     EnsuresDeferredPromiseIsPending<T>(instance, 'try', () => {
       (instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].resolve(new Promise<T>((resolve: any) => {
-        resolve(callback());
+        resolve(callback.call(instance));
       }));
     });
   }

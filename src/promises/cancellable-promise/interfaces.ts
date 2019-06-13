@@ -6,7 +6,7 @@ import {
 } from '../interfaces';
 
 
-export type TCancellablePromiseCreateCallback<T> = (resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void, token: IPromiseCancelToken) => void;
+export type TCancellablePromiseCreateCallback<T> = (this: ICancellablePromise<T>, resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void, token: IPromiseCancelToken) => void;
 
 /** INTERFACES **/
 
@@ -17,11 +17,12 @@ export interface ICancellablePromiseConstructor {
 
   reject<T = never>(reason?: any, token?: IPromiseCancelToken): ICancellablePromise<T>;
 
-  try<T>(callback: () => TPromiseOrValue<T>, token?: IPromiseCancelToken): ICancellablePromise<T>;
+  try<T>(callback: (this: ICancellablePromise<T>, token: IPromiseCancelToken) => TPromiseOrValue<T>, token?: IPromiseCancelToken): ICancellablePromise<T>;
 
   race<TTuple extends TPromiseOrValue<any>[]>(values: TTuple, token?: IPromiseCancelToken): ICancellablePromise<TPromiseOrValueTupleToValueUnion<TTuple>>;
+  $race<TTuple extends TPromiseOrValue<any>[]>(callback: (this: ICancellablePromise<TPromiseOrValueTupleToValueUnion<TTuple>>, token: IPromiseCancelToken) => TTuple, token?: IPromiseCancelToken): ICancellablePromise<TPromiseOrValueTupleToValueUnion<TTuple>>;
 
-  all<TTuple extends TPromiseOrValue<any>[]>(values: TTuple, token?: IPromiseCancelToken): Promise<TPromiseOrValueTupleToValueTuple<TTuple>>;
+  all<TTuple extends TPromiseOrValue<any>[]>(values: TTuple, token?: IPromiseCancelToken): ICancellablePromise<TPromiseOrValueTupleToValueTuple<TTuple>>;
 
   of<T>(promiseOrCallback: Promise<T> | TCancellablePromiseCreateCallback<T>, token?: IPromiseCancelToken): ICancellablePromise<T>;
 
@@ -30,6 +31,7 @@ export interface ICancellablePromiseConstructor {
 }
 
 export interface ICancellablePromise<T> extends Promise<T> {
+  readonly promise: Promise<T>;
   readonly token: IPromiseCancelToken;
 
   then<TResult1 = T, TResult2 = never>(
@@ -45,6 +47,5 @@ export interface ICancellablePromise<T> extends Promise<T> {
 
   cancelled(onCancelled: ((token: IPromiseCancelToken) => void) | undefined | null): ICancellablePromise<T>;
 
-  promise(strategy?: TCancelStrategy): Promise<T>;
 }
 

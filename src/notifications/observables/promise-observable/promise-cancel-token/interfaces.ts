@@ -1,5 +1,6 @@
 import { INotificationsObservable } from '../../../core/notifications-observable/interfaces';
-import { TPromiseType } from '../../../../promises/interfaces';
+import { TPromiseOrValue, TPromiseType } from '../../../../promises/interfaces';
+import { PromiseCancelToken } from './implementation';
 
 export type TCancelStrategy =
   'resolve' // resolve the promise with void
@@ -48,44 +49,84 @@ export interface IPromiseCancelToken extends INotificationsObservable<IPromiseCa
   /**
    * Wraps a promise with a this Token:
    *  Returns a Promise:
-   *    if the token is cancelled, the Promise will never resolve (depends on strategy)
-   *    else the Promise is resolved with the received value
+   *    if/when the token is cancelled, apply the cancel strategy (ex: the returned Promise will never resolve by default)
+   *    else the returned Promise is resolved with the received value from 'promise'
+   *
+   *  INFO: the cancelled state doesnt wait on the resolved state of the promise, meaning this function's returned Promise may resolve even if promise didn't resolve
    *
    * @Example:
-   *  token.wrapPromise(new Promise(_ => setTimeout(_, 100)))
+   *  token.wrapPromise(new Promise(resolve => setTimeout(resolve, 100)))
    *    .then(() => {
    *      console.log('never called');
    *    });
    *  token.cancel();
    *
    */
-  wrapPromise<P extends PromiseLike<any>>(promise: P, strategy?: TCancelStrategy): P;
+  wrapPromise<T>(promise: Promise<T>, strategy?: TCancelStrategy): Promise<T | void>;
 
   /**
    * Wraps a function with this Token:
    *  Returns a function similar to 'callback':
    *    Has the same parameters than 'callback'
-   *    If the token is cancelled, returns a Promise never resolved (depends on strategy)
+   *    If/when the token is cancelled, apply the cancel strategy (ex: the Promise will never resolve by default)
    *    Else, returns a Promise resolved with the callback's return
    *
+   *  INFO: the cancelled state doesnt wait on the resolved state of the promise/value returned by 'callback', meaning this function's returned Promise may resolve even if the callback's promise/value didn't resolve
+   *  INFO: is token is already cancelled when calling the returned function, 'callback' is never called
    *
    *  @Example:
-   *   token.wrapPromise(fetch('abc'))
-   *    .then(token.wrap(_ => _.json()));
+   *   fetch('abc')
+   *    .then(token.wrapFunction(() => {
+   *      console.log('never called');
+   *    })
    *    .then(() => {
    *      console.log('never called');
    *    });
-   *  token.cancel();
+   *   token.cancel();
+   *
+   *  @Example:
+   *   fetch('abc')
+   *    .then(token.wrapFunction((response) => {
+   *      token.cancel();
+   *      return response.json()
+   *    }));
+   *    .then(() => {
+   *      console.log('never called');
+   *    });
    */
-  wrapFunction<CB extends (...args: any[]) => any>(callback: CB, strategy?: TCancelStrategy): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>>>;
+  wrapFunction<CB extends (...args: any[]) => any>(callback: CB, strategy?: TCancelStrategy): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>> | void>;
 
   /**
    * Wraps the fetch arguments with this Token:
    *  If the token is cancelled, the fetch will be aborted
    *
+   *  INFO: an aborted fetch will throw an error, you may catch it by wrapping it with 'wrapPromise'
+   *
    * @Example:
-   *  fetch(...token.wrapFetchArguments('http://domain.com'))
+   *  fetch(...token.wrapFetchArguments('http://domain.com'));
    */
   wrapFetchArguments(requestInfo: RequestInfo, requestInit?: RequestInit): [RequestInfo, RequestInit | undefined];
 
 }
+
+
+/*
+Full example:
+
+export function promiseCancelTokenExample(): Promise<void> {
+  const token = new PromiseCancelToken();
+  // 1) wrapFetchArguments => ensures fetch will be aborted when token is cancelled
+  // 2) wrapPromise => ensures fetch won't resolve if token is cancelled
+  return token.wrapPromise(fetch(...token.wrapFetchArguments('http://domain.com/request1')))
+    .then(token.wrapFunction(function toJSON(response: Response) { // 3) ensures 'toJSON' is called only if token is not cancelled
+      return response.json(); // 'wrapPromise' not required because we immediately return a promise inside 'wrapFunction'
+    }))
+    .then(token.wrapFunction(function next(json: any) { // 4) ensures 'next' is called only if token is not cancelled
+      console.log(json);
+      // continue...
+    }));
+}
+ */
+
+
+

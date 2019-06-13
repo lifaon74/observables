@@ -1,5 +1,5 @@
 import { IsObject } from '../helpers';
-import { TPromiseOrValue } from './interfaces';
+import { TPromiseCreateCallback, TPromiseOrValue } from './interfaces';
 
 export function IsPromiseLike(value: any): value is Promise<any> {
   return IsPromiseLikeBase(value)
@@ -14,6 +14,28 @@ export function IsPromiseLikeBase(value: any): value is PromiseLike<any> {
   ;
 }
 
+
+export function PromiseCreateCallbackNoop(): TPromiseCreateCallback<never> {
+  return () => {};
+}
+
+export function PromiseCreateCallbackResolve<T>(value: T): TPromiseCreateCallback<T> {
+  return (resolve: (value?: TPromiseOrValue<T>) => void) => resolve(value);
+}
+
+export function PromiseCreateCallbackReject(reason: any): TPromiseCreateCallback<never> {
+  return (resolve: (value?: never) => void, reject: (reason?: any) => void) => reject(reason);
+}
+
+export function PromiseTry<T>(callback: () => TPromiseOrValue<T>): Promise<T> {
+  return new Promise<T>(resolve => resolve(callback()));
+}
+
+export function EnsuresPromise<T>(promise: PromiseLike<T>): Promise<T> {
+  return (promise instanceof Promise)
+    ? promise
+    : Promise.resolve(promise);
+}
 
 export function Finally<T>(onFinally?: (() => void) | undefined | null): [
   ((value: T) => TPromiseOrValue<T>) | undefined | null,
