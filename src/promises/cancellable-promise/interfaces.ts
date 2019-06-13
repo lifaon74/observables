@@ -1,9 +1,12 @@
-import { IPromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
 import {
-  TPromiseCreateCallback, TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion
+  IPromiseCancelToken, TCancelStrategy
+} from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import {
+  TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion
 } from '../interfaces';
 
-// export type TCancelStrategy = 'resolve' | 'reject' | 'never';
+
+export type TCancellablePromiseCreateCallback<T> = (resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void, token: IPromiseCancelToken) => void;
 
 /** INTERFACES **/
 
@@ -20,14 +23,13 @@ export interface ICancellablePromiseConstructor {
 
   all<TTuple extends TPromiseOrValue<any>[]>(values: TTuple, token?: IPromiseCancelToken): Promise<TPromiseOrValueTupleToValueTuple<TTuple>>;
 
-  of<T>(promiseOrCallback: Promise<T> | TPromiseCreateCallback<T>, token?: IPromiseCancelToken): ICancellablePromise<T>;
+  of<T>(promiseOrCallback: Promise<T> | TCancellablePromiseCreateCallback<T>, token?: IPromiseCancelToken): ICancellablePromise<T>;
 
 
-  new<T>(promiseOrCallback: Promise<T> | TPromiseCreateCallback<T>, token?: IPromiseCancelToken): ICancellablePromise<T>;
+  new<T>(promiseOrCallback: Promise<T> | TCancellablePromiseCreateCallback<T>, token?: IPromiseCancelToken): ICancellablePromise<T>;
 }
 
 export interface ICancellablePromise<T> extends Promise<T> {
-  readonly promise: Promise<T>;
   readonly token: IPromiseCancelToken;
 
   then<TResult1 = T, TResult2 = never>(
@@ -42,5 +44,7 @@ export interface ICancellablePromise<T> extends Promise<T> {
   finally(onFinally?: ((token: IPromiseCancelToken) => void) | undefined | null): ICancellablePromise<T>;
 
   cancelled(onCancelled: ((token: IPromiseCancelToken) => void) | undefined | null): ICancellablePromise<T>;
+
+  promise(strategy?: TCancelStrategy): Promise<T>;
 }
 

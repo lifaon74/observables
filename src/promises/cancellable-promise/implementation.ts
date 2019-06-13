@@ -1,13 +1,11 @@
-import { IPromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
 import {
-  PromiseCancelToken
-} from '../../notifications/observables/promise-observable/promise-cancel-token/implementation';
-import { ICancellablePromise } from './interfaces';
+  IPromiseCancelToken, TCancelStrategy
+} from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import { PromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/implementation';
+import { ICancellablePromise, TCancellablePromiseCreateCallback } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../helpers';
-import {
-  TPromiseCreateCallback, TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion
-} from '../interfaces';
+import { TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion } from '../interfaces';
 import { Finally, IsPromiseLike } from '../helpers';
 
 
@@ -16,7 +14,6 @@ export const CANCELLABLE_PROMISE_PRIVATE = Symbol('cancellable-promise-private')
 export interface ICancellablePromisePrivate<T> {
   promise: Promise<T>;
   token: IPromiseCancelToken;
-  outPromise: Promise<T | never>;
 }
 
 export interface ICancellablePromiseInternal<T> extends ICancellablePromise<T> {
@@ -26,7 +23,7 @@ export interface ICancellablePromiseInternal<T> extends ICancellablePromise<T> {
 
 export function ConstructCancellablePromise<T>(
   instance: ICancellablePromise<T>,
-  promiseOrCallback: Promise<T> | TPromiseCreateCallback<T>,
+  promiseOrCallback: Promise<T> | TCancellablePromiseCreateCallback<T>,
   token: IPromiseCancelToken = new PromiseCancelToken(),
 ): void {
   ConstructClassWithPrivateMembers(instance, CANCELLABLE_PROMISE_PRIVATE);
@@ -35,7 +32,9 @@ export function ConstructCancellablePromise<T>(
   if (typeof promiseOrCallback === 'function') {
     privates.promise = token.cancelled
       ? Promise.reject<T>(token.reason)
-      : new Promise<T>(promiseOrCallback);
+      : new Promise<T>((resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void) => {
+        promiseOrCallback(resolve, reject, token);
+      });
   } else if (IsPromiseLike(promiseOrCallback)) {
     privates.promise = promiseOrCallback;
   } else {
@@ -43,8 +42,6 @@ export function ConstructCancellablePromise<T>(
   }
 
   privates.token = token;
-
-  privates.outPromise = privates.token.wrapPromise(privates.promise);
 }
 
 
@@ -58,6 +55,13 @@ export function IsCancellablePromiseWithSameToken<T>(value: any, instance: ICanc
     && (value.token === instance.token);
 }
 
+
+export function CancellablePromiseToPromise<T>(
+  instance: ICancellablePromise<T>,
+  strategy?: TCancelStrategy
+): Promise<T> {
+  return (instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].token.wrapPromise<Promise<T>>((instance as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].promise, strategy);
+}
 
 export function CancellablePromiseFulfillInternal<T, TResult>(
   instance: ICancellablePromise<T>,
@@ -219,7 +223,7 @@ export function CancellablePromiseFastCancelled<T>(
 }
 
 
-export function CancellablePromiseOf<T>(promiseOrCallback: Promise<T> | TPromiseCreateCallback<T>, token?: IPromiseCancelToken): ICancellablePromise<T> {
+export function CancellablePromiseOf<T>(promiseOrCallback: Promise<T> | TCancellablePromiseCreateCallback<T>, token?: IPromiseCancelToken): ICancellablePromise<T> {
   return (
     IsCancellablePromise(promiseOrCallback)
     && (promiseOrCallback.token === token)
@@ -254,16 +258,12 @@ export class CancellablePromise<T> implements ICancellablePromise<T> {
     return new CancellablePromise<TPromiseOrValueTupleToValueTuple<TTuple>>(Promise.all(values) as any, token);
   }
 
-  static of<T>(promiseOrCallback: Promise<T> | TPromiseCreateCallback<T>, token?: IPromiseCancelToken): ICancellablePromise<T> {
+  static of<T>(promiseOrCallback: Promise<T> | TCancellablePromiseCreateCallback<T>, token?: IPromiseCancelToken): ICancellablePromise<T> {
     return CancellablePromiseOf<T>(promiseOrCallback, token);
   }
 
-  constructor(promiseOrCallback: Promise<T> | TPromiseCreateCallback<T>, token?: IPromiseCancelToken) {
+  constructor(promiseOrCallback: Promise<T> | TCancellablePromiseCreateCallback<T>, token?: IPromiseCancelToken) {
     ConstructCancellablePromise(this, promiseOrCallback, token);
-  }
-
-  get promise(): Promise<T> {
-    return ((this as unknown) as ICancellablePromiseInternal<T>)[CANCELLABLE_PROMISE_PRIVATE].outPromise;
   }
 
   get token(): IPromiseCancelToken {
@@ -296,6 +296,9 @@ export class CancellablePromise<T> implements ICancellablePromise<T> {
     return CancellablePromiseFastCancelled<T>(this, onCancelled);
   }
 
+  promise(strategy?: TCancelStrategy): Promise<T> {
+    return CancellablePromiseToPromise<T>(this, strategy);
+  }
 }
 
 

@@ -16,7 +16,7 @@ export function testCancellablePromise() {
       console.log('cancelled', token.reason);
     });
 
-  a.promise
+  a.promise()
     .then(() =>{
       console.log('never append');
     });
