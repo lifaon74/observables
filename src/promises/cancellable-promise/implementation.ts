@@ -291,6 +291,12 @@ export class CancellablePromise<T> implements ICancellablePromise<T> {
     }, token);
   }
 
+  static fetch(requestInfo: RequestInfo, requestInit?: RequestInit, token?: IPromiseCancelToken): ICancellablePromise<Response> {
+    return new CancellablePromise<Response>((resolve: any, reject: any, token: IPromiseCancelToken) => {
+      resolve(fetch(...token.wrapFetchArguments(requestInfo, requestInit)));
+    }, token);
+  }
+
   static of<T>(promiseOrCallback: Promise<T> | TCancellablePromiseCreateCallback<T>, token?: IPromiseCancelToken): ICancellablePromise<T> {
     return CancellablePromiseOf<T>(promiseOrCallback, token);
   }

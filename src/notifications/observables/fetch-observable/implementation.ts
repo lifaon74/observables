@@ -86,7 +86,7 @@ export class FetchObservable extends PromiseObservable<Response, Error, any> imp
     ConstructFetchObservable(this, requestInfo, requestInit, options);
   }
 
-  toJSON<T>(): INotificationsObservable<TFetchObservableCastKeyValueMap<T, Error | Response>> {
+  toJson<T>(): INotificationsObservable<TFetchObservableCastKeyValueMap<T, Error | Response>> {
     return FetchObservablePromiseTo<T>(this, (response: Response) => response.json());
   }
 

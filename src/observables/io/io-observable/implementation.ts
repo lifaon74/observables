@@ -48,7 +48,7 @@ export function ConstructInputOutput<TKVMap extends IOKeyValueMapGenericConstrai
 
 export function IsInputOutput(value: any): value is IInputOutput<IInputOutputKeyValueMap, any, any> {
   return IsObject(value)
-    && value.hasOwnProperty(INPUT_OUTPUT_PRIVATE);
+    && value.hasOwnProperty(INPUT_OUTPUT_PRIVATE as symbol);
 }
 
 const IS_INPUT_OUTPUT_CONSTRUCTOR = Symbol('is-input-output-constructor');
@@ -65,7 +65,7 @@ function PureInputOutputFactory<TBase extends Constructor<IInputOutputSuperClass
   type TObserver = IObserver<any>;
 
   if (!IsNotificationsObservableConstructor(superClass, false)) {
-    throw new TypeError(`Expected Observables' constructor as superClass`);
+    throw new TypeError(`Expected NotificationsObservables' constructor as superClass`);
   }
 
   if (!IsActivableConstructor(superClass, false)) {

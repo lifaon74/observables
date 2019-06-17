@@ -19,7 +19,7 @@ export interface IFetchObservableConstructor {
  */
 export interface IFetchObservable extends IPromiseObservable<Response, Error, any> {
 
-  toJSON<T>(): INotificationsObservable<TFetchObservableCastKeyValueMap<T, Error | Response>>;
+  toJson<T>(): INotificationsObservable<TFetchObservableCastKeyValueMap<T, Error | Response>>;
 
   toText(): INotificationsObservable<TFetchObservableCastKeyValueMap<string, Error | Response>>;
 

@@ -55,7 +55,7 @@ export function PromiseCancelTokenCancel(token: IPromiseCancelToken, reason: any
  * @param requestInit
  */
 export function ExtractSignalFromFetchArguments(requestInfo: RequestInfo, requestInit: RequestInit = {}): AbortSignal | null {
-  if ('AbortController' in self) {
+  if (IsObject(globalThis) && ('AbortController' in globalThis)) {
     if (requestInit.signal instanceof AbortSignal) {
       return requestInit.signal;
     } else if (
@@ -79,7 +79,7 @@ export function ExtractSignalFromFetchArguments(requestInfo: RequestInfo, reques
  * @param requestInit
  */
 export function LinkPromiseCancelTokenWithFetchArguments(token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit?: RequestInit): RequestInit | undefined {
-  if ('AbortController' in self) {
+  if (IsObject(globalThis) && ('AbortController' in globalThis)) {
     const signal: AbortSignal | null = ExtractSignalFromFetchArguments(requestInfo, requestInit);
     if (signal === null) {
       const controller: AbortController = token.toAbortController();

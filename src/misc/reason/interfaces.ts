@@ -9,4 +9,6 @@ export interface IReasonConstructor {
 export interface IReason<T = undefined> {
   readonly message: string;
   readonly code: T;
+
+  toJSON(): Pick<IReason<T>, 'message' | 'code'>;
 }

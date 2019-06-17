@@ -23,5 +23,5 @@ export interface INotification<TName extends string, TValue> {
   readonly name: TName;
   readonly value: TValue;
 
-  toJSON(): INotification<TName, TValue>;
+  toJSON(): Pick<INotification<TName, TValue>, 'name' | 'value'>;
 }

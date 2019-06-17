@@ -34,4 +34,11 @@ export class Reason<T = void> implements IReason<T> {
   get code(): T {
     return ((this as unknown) as ReasonInternal<T>)[REASON_PRIVATE].code;
   }
+
+  toJSON(): Pick<IReason<T>, 'message' | 'code'> {
+    return {
+      message: this.message,
+      code: this.code,
+    };
+  }
 }

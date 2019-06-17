@@ -42,7 +42,7 @@ export function ConstructObservable<T>(
 
 export function IsObservable(value: any): value is IObservable<any> {
   return IsObject(value)
-    && value.hasOwnProperty(OBSERVABLE_PRIVATE);
+    && value.hasOwnProperty(OBSERVABLE_PRIVATE as symbol);
 }
 
 const IS_OBSERVABLE_CONSTRUCTOR = Symbol('is-observable-constructor');
