@@ -6,7 +6,7 @@ export function testCancellablePromise() {
   const a = CancellablePromise.resolve(1)
     .then((value: number, token: IPromiseCancelToken) => {
       console.log('1', value);
-      // token.cancel('cancelled');
+      token.cancel('cancelled');
       return value * 2;
     })
     .then((value: number) => {
@@ -14,19 +14,27 @@ export function testCancellablePromise() {
     })
     .cancelled((token: IPromiseCancelToken) => {
       console.log('cancelled', token.reason);
+      return new Promise(() => {});
+    })
+    .then(() => {
+      console.log('never append');
     });
 
-  a.promise()
+  a.promise
     .then(() =>{
       console.log('never append');
     });
 
   const b = CancellablePromise.all([Promise.resolve({ a: 1 }), { b: 1 }, 'a'])
-    .then((values) => {
+    .then((values: any[], token: IPromiseCancelToken) => {
       console.log('values', values);
+      token.cancel('cancel b');
+    })
+    .then(() =>{
+      console.log('never append');
     });
 
-  console.log(a);
+  // console.log(a);
   // debugger;
 }
 
@@ -45,6 +53,6 @@ export function testDeferredPromise() {
 }
 
 export function testPromises() {
-  // testCancellablePromise();
-  testDeferredPromise();
+  testCancellablePromise();
+  // testDeferredPromise();
 }

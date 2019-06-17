@@ -1,6 +1,5 @@
 import { INotificationsObservable } from '../../../core/notifications-observable/interfaces';
 import { TPromiseOrValue, TPromiseType } from '../../../../promises/interfaces';
-import { PromiseCancelToken } from './implementation';
 
 export type TCancelStrategy =
   'resolve' // resolve the promise with void
@@ -8,6 +7,7 @@ export type TCancelStrategy =
   | 'never' // (default) never resolve the promise, it stays in a pending state forever
   ;
 
+export type TOnCancelled = ((this: IPromiseCancelToken) => TPromiseOrValue<void>) | undefined | null;
 
 export interface IPromiseCancelTokenConstructor {
   new(): IPromiseCancelToken;
@@ -62,7 +62,11 @@ export interface IPromiseCancelToken extends INotificationsObservable<IPromiseCa
    *  token.cancel();
    *
    */
-  wrapPromise<T>(promise: Promise<T>, strategy?: TCancelStrategy): Promise<T | void>;
+  wrapPromise<T>(
+    promise: Promise<T>,
+    strategy?: TCancelStrategy,
+    onCancelled?: TOnCancelled,
+  ): Promise<T | void>;
 
   /**
    * Wraps a function with this Token:
@@ -94,7 +98,11 @@ export interface IPromiseCancelToken extends INotificationsObservable<IPromiseCa
    *      console.log('never called');
    *    });
    */
-  wrapFunction<CB extends (...args: any[]) => any>(callback: CB, strategy?: TCancelStrategy): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>> | void>;
+  wrapFunction<CB extends (...args: any[]) => any>(
+    callback: CB,
+    strategy?: TCancelStrategy,
+    onCancelled?: TOnCancelled,
+  ): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>> | void>;
 
   /**
    * Wraps the fetch arguments with this Token:

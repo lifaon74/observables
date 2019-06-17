@@ -4,7 +4,7 @@ import {
 } from '../../../core/notifications-observable/implementation';
 import { INotificationsObserver } from '../../../core/notifications-observer/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
-import { IPromiseCancelToken, IPromiseCancelTokenKeyValueMap, TCancelStrategy } from './interfaces';
+import { IPromiseCancelToken, IPromiseCancelTokenKeyValueMap, TCancelStrategy, TOnCancelled } from './interfaces';
 import { ObservableEmitAll } from '../../../../core/observable/implementation';
 import { NotificationsObserver } from '../../../core/notifications-observer/implementation';
 import { Reason } from '../../../../misc/reason/implementation';
@@ -252,47 +252,89 @@ export function ApplyCancelStrategy(token: IPromiseCancelToken, strategy: TCance
 }
 
 /**
+ * If present, apply the onCancelled function and when resolved, the cancel strategy
+ * @param token
+ * @param strategy
+ * @param onCancelled
+ */
+export function ApplyOnCancelCallback(
+  token: IPromiseCancelToken,
+  strategy?: TCancelStrategy,
+  onCancelled?: TOnCancelled,
+): Promise<void> {
+  const promise: Promise<void> = (typeof onCancelled === 'function')
+    ? PromiseTry<void>(() => onCancelled.call(token))
+    : Promise.resolve();
+
+  return promise.then(() => ApplyCancelStrategy(token, strategy));
+}
+
+/**
+ * Returns a Promise resolving as soon as 'promise' is resolved or 'token' is cancelled
+ * @param token
+ * @param promise
+ */
+export function RaceCancelled<T>(
+  token: IPromiseCancelToken,
+  promise: Promise<T>,
+): Promise<T | void> {
+  let observer: INotificationsObserver<'cancel', void>;
+
+  return Promise.race<T | void>([
+    new Promise<void>((resolve: any) => {
+      if (token.cancelled) {
+        resolve();
+      } else {
+        observer = token.addListener('cancel', () => {
+          resolve();
+        });
+        observer.activate();
+      }
+    }),
+    promise
+  ])
+    .then(...Finally<T>(() => {
+      if (observer !== void 0) {
+        observer.deactivate();
+      }
+    }));
+}
+
+
+/**
  * Races between the promise and a cancelled state.
  *  if cancel first, apply strategy
  *  else pass though promise
  * @param token
  * @param promise
  * @param strategy
+ * @param onCancelled
  */
-export function PromiseCancelTokenWrapPromise<T>(token: IPromiseCancelToken, promise: Promise<T>, strategy?: TCancelStrategy): Promise<T | void> {
-  let observer: INotificationsObserver<'cancel', void>;
-
-  return Promise.race<T | void>([
-    new Promise<void>((resolve: any) => { // until cancelled
-      const _resolve = () => {
-        resolve(ApplyCancelStrategy(token, strategy));
-      };
-
-      if (token.cancelled) {
-        _resolve();
-      } else {
-        observer = token.addListener('cancel', () => {
-          observer.deactivate();
-          _resolve();
-        });
-        observer.activate();
-      }
-    }),
-    promise
-      .then(...Finally<T>(() => {
-        if (observer !== void 0) {
-          observer.deactivate();
-        }
-      }))
-  ]);
+export function PromiseCancelTokenWrapPromise<T>(
+  token: IPromiseCancelToken,
+  promise: Promise<T>,
+  strategy?: TCancelStrategy,
+  onCancelled?: TOnCancelled,
+): Promise<T | void> {
+  return RaceCancelled<T>(token, promise)
+    .then(...Finally<T>(() => {
+      return token.cancelled
+        ? ApplyOnCancelCallback(token, strategy, onCancelled)
+        : Promise.resolve();
+    }));
 }
 
-export function PromiseCancelTokenWrapFunction<CB extends (...args: any[]) => any>(token: PromiseCancelToken, callback: CB, strategy?: TCancelStrategy): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>> | void> {
+export function PromiseCancelTokenWrapFunction<CB extends (...args: any[]) => any>(
+  token: PromiseCancelToken,
+  callback: CB,
+  strategy?: TCancelStrategy,
+  onCancelled?: TOnCancelled,
+): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>> | void> {
   type T = TPromiseType<ReturnType<CB>>;
   return function (...args: Parameters<CB>): Promise<T | void> {
     return token.cancelled
-      ? ApplyCancelStrategy(token, strategy)
-      : PromiseCancelTokenWrapPromise<T>(token, PromiseTry<T>(() => callback.apply(null, args)), strategy);
+      ? ApplyOnCancelCallback(token, strategy, onCancelled)
+      : PromiseCancelTokenWrapPromise<T>(token, PromiseTry<T>(() => callback.apply(null, args)), strategy, onCancelled);
   };
 }
 
@@ -330,12 +372,20 @@ export class PromiseCancelToken extends NotificationsObservable<IPromiseCancelTo
     return PromiseCancelTokenLinkWithAbortSignal(this, signal);
   }
 
-  wrapPromise<T>(promise: Promise<T>, strategy?: TCancelStrategy): Promise<T | void> {
-    return PromiseCancelTokenWrapPromise<T>(this, promise, strategy);
+  wrapPromise<T>(
+    promise: Promise<T>,
+    strategy?: TCancelStrategy,
+    onCancelled?: TOnCancelled,
+  ): Promise<T | void> {
+    return PromiseCancelTokenWrapPromise<T>(this, promise, strategy, onCancelled);
   }
 
-  wrapFunction<CB extends (...args: any[]) => any>(callback: CB, strategy?: TCancelStrategy): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>> | void> {
-    return PromiseCancelTokenWrapFunction<CB>(this, callback, strategy);
+  wrapFunction<CB extends (...args: any[]) => any>(
+    callback: CB,
+    strategy?: TCancelStrategy,
+    onCancelled?: TOnCancelled,
+  ): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>> | void> {
+    return PromiseCancelTokenWrapFunction<CB>(this, callback, strategy, onCancelled);
   }
 
   wrapFetchArguments(requestInfo: RequestInfo, requestInit?: RequestInit): [RequestInfo, RequestInit | undefined] {
