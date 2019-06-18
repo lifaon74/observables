@@ -16,7 +16,7 @@ import { Pipe } from '../../core/observable-observer/implementation';
  * @param inNames
  * @param outName
  */
-export function mapNotificationsPipe<TKVMapIn extends KeyValueMapGenericConstraint<TKVMapIn>, TKeyOut extends string>(inNames: Iterable<KeyValueMapKeys<TKVMapIn>>, outName: TKeyOut): IPipe<IObserver<KeyValueMapToNotifications<TKVMapIn>>, IBaseNotificationsObservable<TKeyOut, KeyValueMapValues<TKVMapIn>>> { // Record<TKeyOut, KeyValueMapValues<TKVMapIn>>
+export function mapNotificationsPipe<TKVMapIn extends KeyValueMapGenericConstraint<TKVMapIn>, TKeyOut extends string>(inNames: Iterable<KeyValueMapKeys<TKVMapIn>> | null = null, outName: TKeyOut): IPipe<IObserver<KeyValueMapToNotifications<TKVMapIn>>, IBaseNotificationsObservable<TKeyOut, KeyValueMapValues<TKVMapIn>>> { // Record<TKeyOut, KeyValueMapValues<TKVMapIn>>
   type TKeysIn = KeyValueMapKeys<TKVMapIn>;
   type TValuesOut = KeyValueMapValues<TKVMapIn>;
   type TKVOut = KVRecord<TKeyOut, TValuesOut>;
@@ -24,11 +24,11 @@ export function mapNotificationsPipe<TKVMapIn extends KeyValueMapGenericConstrai
   type TNotificationsIn = KeyValueMapToNotifications<TKVMapIn>;
 
   return new Pipe<IObserver<TNotificationsIn>, IBaseNotificationsObservable<TKeyOut, TValuesOut>>(() => {
-    const inNamesSet: Set<TKeysIn> = new Set<TKeysIn>(inNames);
+    const inNamesSet: Set<TKeysIn> | null = (inNames === null) ? null : new Set<TKeysIn>(inNames);
     let context: INotificationsObservableContext<TKVOut>;
     return {
       observer: new Observer<TNotificationsIn>((notification: TNotificationsIn) => {
-        if (inNamesSet.has(notification.name as TKeysIn)) {
+        if ((inNamesSet === null) || inNamesSet.has(notification.name as TKeysIn)) {
           context.dispatch(outName as TKeysOut, notification.value);
         }
       }),
