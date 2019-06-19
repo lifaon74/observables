@@ -20,6 +20,7 @@ import { Observer } from '../core/observer/public';
 import { testExamples } from './examples/examples';
 import { toRXJS } from '../operators/to/toRXJS';
 import { testPerformances } from './test-performances';
+import { testClasses } from './test-class';
 
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve: any, reject: any) => {
@@ -379,7 +380,8 @@ export async function test() {
   // testInstanceof();
   // testPerformances();
   // testSignalingServer();
-  testPromises();
+  // testPromises();
+  testClasses();
 }
 
 

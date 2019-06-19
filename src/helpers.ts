@@ -31,6 +31,10 @@ export function IsObject(value: any): value is object {
   return (typeof value === 'object') && (value !== null);
 }
 
+export function IsArray(value: any): value is Iterable<any> {
+  return Array.isArray(value);
+}
+
 export function IsIterable(value: any): value is Iterable<any> {
   return IsObject(value)
     && (Symbol.iterator in value);

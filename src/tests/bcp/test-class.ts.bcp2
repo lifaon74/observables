@@ -1,0 +1,528 @@
+import { ConstructClassWithPrivateMembers } from '../misc/helpers/ClassWithPrivateMembers';
+import { IsObject } from '../helpers';
+import { IsType } from '../classes/types';
+import { ExcludeConstructor } from '../classes/factory';
+
+// export type TClassBuilderInstance<TConstructArgs extends any[], TProtoTypes extends object[]> = {
+//   new ()
+// }
+//
+// export type TClassBuilderClass<TConstructArgs extends any[], TProtoTypes extends object[]> = {
+//   new ()
+// }
+
+// const a = TClassBuilderClass;
+
+// export interface IClassBuilderOptions<TConstructArgs extends any[], TProtoTypes> {
+//   name: string;
+//   construct?: (...args: TConstructArgs) => void | object;
+//   destruct?: () => void;
+//   static?: object;
+//   properties?: object;
+//   extends?: object[];
+// }
+
+/**
+ * Extracts the methods (keys) of a class
+ */
+// export type TPrototypeMethodKeys<TClass extends new (...args: any[]) => any> = Extract<{
+//   [K in keyof InstanceType<TClass>]: IsType<InstanceType<TClass>[K], (...args: any) => any> extends true ? K : never;
+// } extends { [key: string]: infer V } ? V : never, PropertyKey>;
+//
+// export type TPrototypeAttributeKeys<TClass extends new (...args: any[]) => any> = Extract<{
+//   [K in keyof InstanceType<TClass>]: IsType<InstanceType<TClass>[K], (...args: any) => any> extends true ? never : K;
+// } extends { [key: string]: infer V } ? V : never, PropertyKey>;
+//
+// export type TPrototype<TClass extends new (...args: any[]) => any> = {
+//   [K in TPrototypeMethodKeys<TClass>]: InstanceType<TClass>[K] extends (...args: infer TArgs) => infer TReturn
+//     ? (this: InstanceType<TClass>, ...args: TArgs) => TReturn
+//     : never;
+// } & {
+//   [K in TPrototypeAttributeKeys<TClass>]?: InstanceType<TClass>[K];
+// };
+
+
+/**
+ * Extracts property names of type 'method' keys from an object
+ */
+export type TObjectMethodKeys<T extends object> = Extract<{
+  [K in keyof T]: IsType<T[K], (...args: any) => any> extends true ? K : never;
+} extends { [key: string]: infer V } ? V : never, keyof T>;
+
+/**
+ * Extracts property names with a type different than 'method' from an object
+ */
+export type TObjectAttributeKeys<T extends object> = Extract<{
+  [K in keyof T]: IsType<T[K], (...args: any) => any> extends true ? never : K;
+} extends { [key: string]: infer V } ? V : never, keyof T>;
+
+
+
+/**
+ * Generates a Prototype template for ClassBuilder
+ */
+export type TPrototypeTemplate<TPrototype extends object> = {
+  [K in TObjectMethodKeys<TPrototype>]: TPrototype[K] extends (...args: infer TArgs) => infer TReturn
+    ? (this: TClassBuilderInstance<TPrototype>, ...args: TArgs) => TReturn
+    : never;
+} & {
+  [K in TObjectAttributeKeys<TPrototype>]?: TPrototype[K];
+};
+
+
+export type TClassBuilderStatic<TStatic extends object> = ExcludeConstructor<TStatic>;
+export type TClassBuilderInstance<TPrototype extends object> = TPrototype;
+
+export type TClassBuilderConstructor<TStatic extends object, TConstructArgs extends any[], TPrototype extends object> = TClassBuilderStatic<TStatic> & {
+  new(...args: TConstructArgs): TClassBuilderInstance<TPrototype>;
+};
+
+
+
+
+export type TClassBuilderExtend =  ClassBuilder<any, any, any>;
+
+export interface IClassBuilderConstructOptions<TConstructArgs extends any[], TPrototype extends object, TInitArgs extends any[] = TConstructArgs> {
+  preInit?: (this: undefined, ...args: TConstructArgs) => TInitArgs; // checking arguments, etc...
+  supers?: (this: undefined, ...args: TInitArgs) => any[]; // returns the list of arguments to provide to each supers
+  init?: (this: TClassBuilderInstance<TPrototype>, ...args: TInitArgs) => void | TClassBuilderInstance<TPrototype>;
+  // init?: (this: undefined, $this: () => TClassBuilderInstance<TPrototype>, ...args: TInitArgs) => void | TClassBuilderInstance<TPrototype>; // assign some values to 'this'. Because 'this' may change (ex: a child class returning a different this), a $this function is used instead
+}
+
+export interface IClassBuilderOptions<TStatic extends object, TConstructArgs extends any[], TPrototype extends object, TInitArgs extends any[] = TConstructArgs> {
+  name: string;
+  construct?: IClassBuilderConstructOptions<TConstructArgs, TPrototype, TInitArgs>;
+  // construct?: (this: TClassBuilderInstance<TPrototype>, ...args: TNormalizedArgs) => void | TClassBuilderInstance<TPrototype>;
+  // destruct?: () => void;
+  static?: TStatic;
+  prototype?: TPrototypeTemplate<TPrototype>;
+  extends?: TClassBuilderExtend[];
+}
+
+export type IClassBuilderCreateThis<TPrototype extends object> = (_this: object) => TClassBuilderInstance<TPrototype>;
+
+export type IClassBuilderCreate<TStatic extends object, TConstructArgs extends any[], TPrototype extends object, TInitArgs extends any[] = TConstructArgs> = (
+  $this: IClassBuilderCreateThis<TPrototype>,
+  /*$private: (_this: object) => object, $super: (_this: object, index: number) => object*/
+) => IClassBuilderOptions<TStatic, TConstructArgs, TPrototype, TInitArgs>;
+
+
+
+
+// export interface IClassBuilderCookedOptions<TStatic extends object, TConstructArgs extends any[], TPrototype extends object, TInitArgs extends any[] = TConstructArgs> {
+//   name: string;
+//   construct(_this: object, thisSet: Set<object>, args: any[]): object;
+//   static: TStatic;
+//   prototype: TPrototypeTemplate<TPrototype>;
+//   extends: TClassBuilderExtend[];
+// }
+//
+// export function CookClassBuilderOptions<TStatic extends object, TConstructArgs extends any[], TPrototype extends object, TInitArgs extends any[] = TConstructArgs>(options: IClassBuilderOptions<TStatic, TConstructArgs, TPrototype, TInitArgs>) {
+//   return {
+//     name: options.name,
+//     construct: (_this: object, thisSet: Set<object>): object => {
+//
+//     }
+//   }
+// }
+
+
+
+export interface IClassBuilder {
+  
+}
+
+
+/*----------------------------*/
+
+export const CLASS_BUILDER_PRIVATE = Symbol('class-constructor-private');
+
+export interface IClassBuilderPrivate/*<TStatic extends object, TConstructArgs extends any[], TPrototype extends object, TInitArgs extends any[] = TConstructArgs>*/ {
+  // name: string;
+  // static: TClassBuilderStatic<TStatic>;
+}
+
+export interface IClassBuilderInternal extends IClassBuilder {
+  [CLASS_BUILDER_PRIVATE]: IClassBuilderPrivate;
+}
+
+export function ConstructClassBuilder(
+  instance: IClassBuilder,
+  // options: IClassBuilderOptions
+): void {
+  ConstructClassWithPrivateMembers(instance, CLASS_BUILDER_PRIVATE);
+  // (instance as IClassBuilderInternal)[CLASS_BUILDER_PRIVATE].observers = [];
+  // (observable as IClassBuilderInternal)[OBSERVABLE_PRIVATE].readOnlyObservers = new ReadonlyList<IObserver>((observable as IClassBuilderInternal)[OBSERVABLE_PRIVATE].observers);
+}
+
+export function IsClassBuilder(value: any): value is IClassBuilder {
+  return IsObject(value)
+    && value.hasOwnProperty(CLASS_BUILDER_PRIVATE as symbol);
+}
+
+export type TErrorStrategy = 'resolve' | 'warn' | 'throw';
+export function HandleError(error: Error, strategy: TErrorStrategy = 'throw'): boolean {
+  switch (strategy) {
+    case 'resolve':
+      return true;
+    case 'warn':
+      console.warn(error);
+      return false;
+    case 'throw':
+      throw error;
+    default:
+      throw new TypeError(`Unexpected strategy: ${ strategy }`);
+  }
+}
+
+export function CopyDescriptors<T extends object>(source: object, destination: T, conflictStrategy?: TErrorStrategy): T {
+  Object.entries(Object.getOwnPropertyDescriptors(source)).forEach(([key, descriptor]) => {
+    if (!destination.hasOwnProperty(key) || HandleError(new Error(`Property '${ key }' already exists`), conflictStrategy)) {
+      Object.defineProperty(destination, key, descriptor);
+    }
+  });
+  return destination;
+}
+
+export function SetConstructor<T extends object>(target: T, _constructor: Function): T {
+  Object.defineProperty(target, 'constructor', {
+    value: _constructor,
+    writable: true,
+    configurable: true,
+    enumerable: false,
+  });
+  return target;
+}
+
+export function SetFunctionName<T extends Function>(target: T, name: string): T {
+  Object.defineProperty(target, 'name', Object.assign(Object.getOwnPropertyDescriptor(target, 'name'), { value: name }));
+  return target;
+}
+
+// export function ClassBuilderBuild(instance: IClassBuilder): TClassBuilderInstance<TPrototype> {
+//
+// }
+
+const thisMap: WeakMap<object, object> = new WeakMap<object, object>();
+function $this(_this: object): object {
+  if (thisMap.has(_this)) {
+    return thisMap.get(_this) as object;
+  } else {
+    throw new Error(`Invalid this`);
+  }
+}
+
+function RegisterThis<T extends object>(newThis: T, thisList: Set<T>): T {
+  if (!thisList.has(newThis)) {
+    thisList.add(newThis);
+    for (const _this of thisList) {
+      thisMap.set(_this, newThis);
+    }
+  }
+  return newThis;
+}
+
+
+export class ClassBuilder<TStatic extends object, TConstructArgs extends any[], TPrototype extends object, TInitArgs extends any[] = TConstructArgs> implements IClassBuilder {
+  public readonly options: IClassBuilderOptions<TStatic, TConstructArgs, TPrototype, TInitArgs>;
+
+
+  constructor(create: IClassBuilderCreate<TStatic, TConstructArgs, TPrototype, TInitArgs>) {
+    // ConstructClassBuilder(this);
+    this.options = create($this as IClassBuilderCreateThis<TPrototype>);
+    // INFO could ensure than _this is and instanceof this class
+    // this.options = create((_this: object) => {
+    //   _this = $this(_this);
+    //   if (_this instanceof ...)
+    //   // IClassBuilderCreateThis<TPrototype>
+    //     // TClassBuilderInstance<TPrototype>
+    // });
+  }
+
+  buildStatic<T extends object>(target: T): T {
+    if (this.options.static !== void 0) {
+      CopyDescriptors(this.options.static, target);
+    }
+
+    if (this.options.extends !== void 0) {
+      this.options.extends.forEach((superClass: TClassBuilderExtend) => {
+        superClass.buildStatic<T>(target);
+      });
+    }
+
+    return target;
+  }
+
+  buildPrototype<T extends object>(target: T): T {
+    if (this.options.prototype !== void 0) {
+      CopyDescriptors(this.options.prototype, target);
+    }
+
+    if (this.options.extends !== void 0) {
+      this.options.extends.forEach((superClass: TClassBuilderExtend) => {
+        superClass.buildPrototype<T>(target);
+      });
+    }
+
+    return target;
+  }
+
+  // buildConstructor(): Function {
+  //   const options = this.options;
+  //
+  //   return function(...args: any) {
+  //     if (new.target === void 0) {
+  //       throw new SyntaxError(`Must call class '${ options.name  }' with new.`);
+  //     }
+  //
+  //     let _this = this;
+  //     if (options.construct !== void 0) {
+  //       _this = options.construct.apply(_this, args);
+  //     }
+  //
+  //     if (options.extends !== void 0) {
+  //       options.extends.forEach((superClass: TClassBuilderExtend) => {
+  //         superClass.buildPrototype<T>(target);
+  //       });
+  //     }
+  //
+  //     return _this;
+  //   };
+  // }
+
+  construct(_this: any, thisList: Set<any>, args: any[]): any {
+    const options = this.options;
+    RegisterThis(_this, thisList);
+
+    if (options.construct !== void 0) {
+      const initArgs: TInitArgs = (options.construct.preInit === void 0)
+        ? args
+        : options.construct.preInit.apply(void 0, args);
+
+      if (options.extends !== void 0) {
+        if (options.construct.supers !== void 0) {
+          const superArgs: any[] = options.construct.supers.apply(void 0, initArgs);
+
+          options.extends.forEach((superClass: TClassBuilderExtend, index: number) => {
+            _this = RegisterThis(superClass.construct(_this, thisList, superArgs[index]), thisList);
+          });
+        }
+      }
+
+      if (options.construct.init !== void 0) {
+        _this = RegisterThis(options.construct.init.apply(_this, initArgs) || _this, thisList);
+      }
+    }
+
+    return _this;
+  }
+
+  build(): TClassBuilderConstructor<TStatic, TConstructArgs, TPrototype> {
+    const __this__ = this;
+    const options = this.options;
+    // const thisMap = this.thisMap;
+
+    const _class = function(...args: TConstructArgs) {
+      if (new.target === void 0) {
+        throw new SyntaxError(`Must call class '${ options.name  }' with new.`);
+      }
+
+      const thisList = new Set<TClassBuilderInstance<TPrototype>>();
+
+      let _this: TClassBuilderInstance<TPrototype> = this;
+      // const $this = () => _this;
+      // thisMap.set(_this, $this);
+
+      if (options.construct !== void 0) {
+        const initArgs: TInitArgs = (options.construct.preInit === void 0)
+          ? args
+          : options.construct.preInit.apply(void 0, args);
+
+        if (options.extends !== void 0) {
+          if (options.construct.supers !== void 0) {
+            const superArgs: any[] = options.construct.supers.apply(void 0, initArgs);
+
+            options.extends.forEach((superClass: TClassBuilderExtend, index: number) => {
+
+            });
+          }
+        }
+
+        if (options.construct.init !== void 0) {
+          _this = RegisterThis(options.construct.init.apply(_this, initArgs) || _this, thisList);
+        }
+      }
+
+      return _this;
+    };
+
+    // const _class = class {
+    //   constructor(...args: any) {
+    //     let _this = this;
+    //     if (options.construct !== void 0) {
+    //       _this = options.construct.apply(_this, args);
+    //     }
+    //     return _this;
+    //   }
+    // };
+
+    // set statics
+    this.buildStatic(_class);
+
+    // set name
+    SetFunctionName(_class, options.name);
+
+    // elegant toString
+    _class.toString = () => `class ${ options.name } extends A, B, C {}`; // TODO
+
+
+    const proto: any = this.buildPrototype({}); // Object.create(null)
+    SetConstructor(proto, _class);
+
+    _class.prototype = proto;
+
+    return _class as unknown as  TClassBuilderConstructor<TStatic, TConstructArgs, TPrototype>;
+  }
+}
+
+
+/*----------------------------*/
+
+export interface AStatic {
+  a_static: string;
+}
+
+export interface AConstructor {
+  new(a: string): A;
+}
+
+export interface APrototype {
+  a_prop: string;
+  a_method(arg: string): string;
+}
+
+export interface A extends APrototype {
+
+}
+
+
+export interface BConstructor {
+  new(b: number): B;
+}
+
+export interface BPrototype {
+  b_prop: number;
+  b_method(arg: number): number;
+}
+
+export interface B extends BPrototype {
+}
+
+
+export interface CConstructor {
+  new(c: number): C;
+}
+
+export interface CPrototype {
+  c_prop: boolean;
+  c_method(arg: boolean): boolean;
+}
+
+export interface C extends CPrototype {
+}
+
+
+const d = Symbol('d');
+const e = Symbol('d');
+
+export interface ZPrototype {
+  a: string;
+  method(arg: number): string;
+  readonly b: string
+  c?: string;
+  [d]: () => void;
+  [e]: boolean;
+}
+
+// const a: TPrototypeMethodKeys<AConstructor> = null;
+// const b: TPrototypeAttributeKeys<AConstructor> = null;
+// const c: TPrototype<AConstructor> = null;
+// a[d] = 'ok';
+// a.a = 1;
+// const b: TPrototype<AConstructor>;
+
+
+
+export async function testClasses() {
+  const _classA = new ClassBuilder<AStatic, [string], APrototype>(($this) => {
+    return {
+      name: 'classA',
+      static: {
+        get a_static() {
+          return 'a_static';
+        }
+      },
+      construct: {
+        preInit(a: string) {
+          console.log('preInit A', arguments);
+          return [a];
+        },
+        init(a: string) {
+          console.log('construct A', arguments);
+          $this(this).a_prop = a;
+          // this.a_prop = a;
+        },
+      },
+      prototype: {
+        a_method(arg: string): string {
+          // $super(this, 0).prop('a')
+          return arg + $this(this).a_prop;
+        },
+      }
+    };
+  });
+
+  // const $classA = _classA.build();
+  // const instanceA = new $classA('hello');
+  //
+  // console.log($classA);
+  // console.log(instanceA);
+
+
+  const _classB = new ClassBuilder<{}, [number], BPrototype>(($this) => {
+    return {
+      name: 'classB',
+      construct: {
+        supers() {
+          console.log('super B');
+          return [['value-from-b']];
+        },
+        init(b: number) {
+          console.log('construct B', arguments);
+          $this(this).b_prop = b;
+        },
+      },
+      prototype: {
+        b_method(arg: number): number {
+          // $super(this, 0).prop('a')
+          return arg + $this(this).b_prop;
+        },
+      },
+      extends: [
+        _classA
+      ]
+    };
+  });
+
+
+  const $classB = _classB.build();
+  const instanceB = new $classB(10);
+
+  console.log($classB);
+  console.log(instanceB);
+
+
+  (window as any).$classB = $classB;
+  (window as any).instanceB = instanceB;
+
+}

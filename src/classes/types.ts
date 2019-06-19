@@ -287,6 +287,18 @@ export type IsType<TargetType, T> =
     : true;
 
 
+// export type IsReadonly<T extends object, K extends keyof T> = T extends {
+//   readonly [P in K]: T[P];
+// } ? true : false;
+//
+//
+// const a1: { a: string } extends { readonly a: string } ? true : false = true;
+// const a2: { readonly a: string } extends { a: string } ? true : false = true;
+// const a3: readonly [string] extends [string] ? true : false = false;
+// const a4: [string] extends readonly [string] ? true : false = true;
+// const a5: readonly [string] extends readonly [string] ? true : false = true;
+// // const a: IsReadonly<{ a: string }, 'a'> = false;
+
 // const y0: IsType<string, any> = false;
 // const y1: IsType<string, 'a'> = false;
 // const y2: IsType<string , string> = true;

@@ -1,0 +1,152 @@
+import { ConstructClassWithPrivateMembers } from '../misc/helpers/ClassWithPrivateMembers';
+import { IsObject } from '../helpers';
+import { IsType } from '../classes/types';
+
+// export type TClassBuilderInstance<TConstructArgs extends any[], TProtoTypes extends object[]> = {
+//   new ()
+// }
+//
+// export type TClassBuilderClass<TConstructArgs extends any[], TProtoTypes extends object[]> = {
+//   new ()
+// }
+
+// const a = TClassBuilderClass;
+
+// export interface IClassBuilderOptions<TConstructArgs extends any[], TProtoTypes> {
+//   name: string;
+//   construct?: (...args: TConstructArgs) => void | object;
+//   destruct?: () => void;
+//   static?: object;
+//   properties?: object;
+//   extends?: object[];
+// }
+
+/**
+ * Extracts the methods (keys) of a class
+ */
+export type TPrototypeMethodKeys<TClass extends new (...args: any[]) => any> = Extract<{
+  [K in keyof InstanceType<TClass>]: IsType<InstanceType<TClass>[K], (...args: any) => any> extends true ? K : never;
+} extends { [key: string]: infer V } ? V : never, PropertyKey>;
+
+export type TPrototypeAttributeKeys<TClass extends new (...args: any[]) => any> = Extract<{
+  [K in keyof InstanceType<TClass>]: IsType<InstanceType<TClass>[K], (...args: any) => any> extends true ? never : K;
+} extends { [key: string]: infer V } ? V : never, PropertyKey>;
+
+export type TPrototype<TClass extends new (...args: any[]) => any> = {
+  [K in TPrototypeMethodKeys<TClass>]: InstanceType<TClass>[K] extends (...args: infer TArgs) => infer TReturn
+    ? (this: InstanceType<TClass>, ...args: TArgs) => TReturn
+    : never;
+} & {
+  [K in TPrototypeAttributeKeys<TClass>]?: InstanceType<TClass>[K];
+};
+
+
+
+export interface IClassBuilderOptions<TClass extends new (...args: any[]) => any> {
+  name: string;
+  construct?: (this: InstanceType<TClass>, ...args: ConstructorParameters<TClass>) => void | InstanceType<TClass>;
+  destruct?: () => void;
+  static?: object;
+  prototype?: TPrototype<TClass>;
+  extends?: object[];
+}
+
+export class IClassBuilder {
+  
+}
+
+/*----------------------------*/
+
+export const CLASS_BUILDER_PRIVATE = Symbol('class-constructor-private');
+
+export interface IClassBuilderPrivate {
+  
+}
+
+export interface IClassBuilderInternal extends IClassBuilder {
+  [CLASS_BUILDER_PRIVATE]: IClassBuilderPrivate;
+}
+
+export function ConstructClassBuilder(
+  instance: IClassBuilder,
+  // options: IClassBuilderOptions
+): void {
+  ConstructClassWithPrivateMembers(instance, CLASS_BUILDER_PRIVATE);
+  // (instance as IClassBuilderInternal)[CLASS_BUILDER_PRIVATE].observers = [];
+  // (observable as IClassBuilderInternal)[OBSERVABLE_PRIVATE].readOnlyObservers = new ReadonlyList<IObserver>((observable as IClassBuilderInternal)[OBSERVABLE_PRIVATE].observers);
+}
+
+export function IsClassBuilder(value: any): value is IClassBuilder {
+  return IsObject(value)
+    && value.hasOwnProperty(CLASS_BUILDER_PRIVATE as symbol);
+}
+
+export class ClassBuilder<TClass extends new (...args: any[]) => any> implements IClassBuilder {
+  constructor(create: (privates: object, supers: object[]) => IClassBuilderOptions<TClass>) {
+    ConstructClassBuilder(this);
+  }
+
+  build(): any {
+
+  }
+}
+
+export interface AConstructor {
+  new(a: string): A;
+}
+
+const d = Symbol('d');
+const e = Symbol('d');
+
+export interface A {
+  a: string;
+  method(arg: number): string;
+  readonly b: string
+  c?: string;
+  [d]: () => void;
+  [e]: boolean;
+}
+
+export interface BConstructor {
+  new(a: string): B;
+}
+
+export interface B extends A {
+  b_prop: string;
+  b_method(): void;
+}
+// const a: TPrototypeMethodKeys<AConstructor> = null;
+// const b: TPrototypeAttributeKeys<AConstructor> = null;
+// const c: TPrototype<AConstructor> = null;
+// a[d] = 'ok';
+// a.a = 1;
+// const b: TPrototype<AConstructor>;
+
+
+
+
+
+export async function testClasses() {
+  const _class = new ClassBuilder<BConstructor>(() => {
+    return {
+      name: 'MyClass',
+      construct: function (a: string) {
+        this.a = a;
+      },
+      prototype: {
+        a: 'a',
+        // a: 1,
+        get b() {
+          return 'b';
+          // return 1;
+        },
+        method(arg: number): string {
+          return this.a;
+        },
+        [d]: () => {
+
+        }
+      }
+    };
+  });
+}
