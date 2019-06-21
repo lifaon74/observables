@@ -21,6 +21,7 @@ import { testExamples } from './examples/examples';
 import { toRXJS } from '../operators/to/toRXJS';
 import { testPerformances } from './test-performances';
 import { testClasses } from './test-class';
+import { testProgram } from './test-program';
 
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve: any, reject: any) => {
@@ -381,7 +382,8 @@ export async function test() {
   // testPerformances();
   // testSignalingServer();
   // testPromises();
-  testClasses();
+  // testClasses();
+  testProgram();
 }
 
 

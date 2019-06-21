@@ -485,6 +485,9 @@ export interface ZPrototype {
 // a.a = 1;
 // const b: TPrototype<AConstructor>;
 
+// TODO:
+// - privates
+// - supers
 
 
 export async function testClasses() {
