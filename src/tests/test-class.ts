@@ -1,6 +1,11 @@
 import { ConstructClassWithPrivateMembers } from '../misc/helpers/ClassWithPrivateMembers';
 import { IsArray, IsIterable, IsObject } from '../helpers';
 import { Constructor } from '../classes/factory';
+import { $this, CopyDescriptors, RegisterThis, SetConstructor, SetFunctionName } from './classes/helpers';
+import { IInstance } from './classes/instance/interfaces';
+import { Instance } from './classes/instance/implementation';
+import { IsInstanceOf, SetInstanceOf } from '../classes/instanceof';
+import { assert, assertFails } from '../classes/asserts';
 
 // export type TClassBuilderInstance<TConstructArgs extends any[], TProtoTypes extends object[]> = {
 //   new ()
@@ -79,69 +84,6 @@ import { Constructor } from '../classes/factory';
 
 /*----------------------------*/
 
-export type TErrorStrategy = 'resolve' | 'warn' | 'throw';
-export function HandleError(error: Error, strategy: TErrorStrategy = 'throw'): boolean {
-  switch (strategy) {
-    case 'resolve':
-      return true;
-    case 'warn':
-      console.warn(error);
-      return false;
-    case 'throw':
-      throw error;
-    default:
-      throw new TypeError(`Unexpected strategy: ${ strategy }`);
-  }
-}
-
-export function CopyDescriptors<T extends object>(source: object, destination: T, conflictStrategy?: TErrorStrategy): T {
-  Object.entries(Object.getOwnPropertyDescriptors(source)).forEach(([key, descriptor]) => {
-    if (!destination.hasOwnProperty(key) || HandleError(new Error(`Property '${ key }' already exists`), conflictStrategy)) {
-      Object.defineProperty(destination, key, descriptor);
-    }
-  });
-  return destination;
-}
-
-export function SetConstructor<T extends object>(target: T, _constructor: Function): T {
-  Object.defineProperty(target, 'constructor', {
-    value: _constructor,
-    writable: true,
-    configurable: true,
-    enumerable: false,
-  });
-  return target;
-}
-
-export function SetFunctionName<T extends Function>(target: T, name: string): T {
-  Object.defineProperty(target, 'name', Object.assign(Object.getOwnPropertyDescriptor(target, 'name'), { value: name }));
-  return target;
-}
-
-
-const thisMap: WeakMap<object, object> = new WeakMap<object, object>();
-function $this(_this: object): object {
-  if (thisMap.has(_this)) {
-    return thisMap.get(_this) as object;
-  } else {
-    throw new Error(`Invalid this`);
-  }
-}
-
-function RegisterThis<T extends object>(newThis: T, thisList: Set<T>): T {
-  if (!thisList.has(newThis)) {
-    thisList.add(newThis);
-    for (const _this of thisList) {
-      thisMap.set(_this, newThis);
-    }
-  }
-  return newThis;
-}
-
-
-
-/*----------------------------*/
-
 export interface IClassBuilder {
   build(): Constructor;
 }
@@ -162,9 +104,11 @@ export interface IClassBuilderOptions {
 }
 
 export type IClassBuilderCreateContextThis = (_this: object) => object;
+export type IClassBuilderCreateContextSuper = (_this: object, superClass: IClassBuilder) => IInstance<object, object>;
 
 export interface IClassBuilderCreateContext {
   $this: IClassBuilderCreateContextThis;
+  $super: IClassBuilderCreateContextSuper;
 }
 
 export type IClassBuilderCreate = (context: IClassBuilderCreateContext) => IClassBuilderOptions;
@@ -186,6 +130,7 @@ export interface IClassBuilderPrivate {
 
   cookedStatic: object;
   cookedPrototype: object;
+  classes: Function[];
 }
 
 export interface IClassBuilderInternal extends IClassBuilder {
@@ -199,91 +144,108 @@ export function ConstructClassBuilder(
   ConstructClassWithPrivateMembers(instance, CLASS_BUILDER_PRIVATE);
   const privates: IClassBuilderPrivate = (instance as IClassBuilderInternal)[CLASS_BUILDER_PRIVATE];
 
-  const context: IClassBuilderCreateContext = {
-    $this: $this // INFO could ensure than _this is an instanceof this class
+  const $$this: IClassBuilderCreateContextThis = (_this: object): object => {
+    _this = $this(_this);
+    if (privates.classes.some(_class => IsInstanceOf(_this, _class))) {
+      return _this;
+    } else {
+      throw new TypeError(`'this' is not an instance of '${ privates.name }'`)
+    }
   };
+
+  const $$super: IClassBuilderCreateContextSuper = (_this: object, superClass: IClassBuilder): IInstance<object, object> => {
+    return new Instance($$this(_this), (superClass as IClassBuilderInternal)[CLASS_BUILDER_PRIVATE].cookedPrototype);
+  };
+
+  const context: IClassBuilderCreateContext = {
+    $this: $$this,
+    $super: $$super
+  };
+
   const options: IClassBuilderOptions = create(context);
 
-  if (IsObject(options)) {
-
-    let construct: IClassBuilderConstructOptions;
-
-    if (options.construct === void 0) {
-      construct = {};
-    } else if (IsObject(options.construct)) {
-      construct = options.construct;
-    } else {
-      throw new TypeError(`Expected object or void as options.construct`);
-    }
-
-    if (typeof options.name === 'string') {
-      privates.name = options.name;
-    } else {
-      throw new TypeError(`Expected string as options.name`);
-    }
-
-    if (options.static === void 0) {
-      privates.static = {};
-    } else if (IsObject(options.static)) {
-      privates.static = options.static;
-    } else {
-      throw new TypeError(`Expected object or void as options.static`);
-    }
-
-    if (options.prototype === void 0) {
-      privates.prototype = {};
-    } else if (IsObject(options.prototype)) {
-      privates.prototype = options.prototype;
-    } else {
-      throw new TypeError(`Expected object or void as options.prototype`);
-    }
-
-    if (options.extends === void 0) {
-      privates.extends = [];
-    } else if (IsIterable(options.extends)) {
-      privates.extends = Array.from(options.extends);
-      if (privates.extends.some(superClass => !(superClass instanceof ClassBuilder))) {
-        throw new TypeError(`Expected iterable of ClassBuilder as options.extends`);
-      }
-    } else {
-      throw new TypeError(`Expected iterable or void as options.extends`);
-    }
-
-
-    if (construct.preInit === void 0) {
-      privates.preInit = (...args) => args;
-    } else if (typeof construct.preInit === 'function') {
-      privates.preInit = construct.preInit;
-    } else {
-      throw new TypeError(`Expected function or void as options.construct.preInit`);
-    }
-
-    if (construct.supers === void 0) {
-      if (privates.extends.length > 0) {
-        throw new Error(`If options.extends is present and greater than 0, options.construct.supers must be provided`);
-      } else {
-        privates.supers = () => [];
-      }
-    } else if (typeof construct.supers === 'function') {
-      privates.supers = construct.supers;
-    } else {
-      throw new TypeError(`Expected function or void as options.construct.supers`);
-    }
-
-    if (construct.init === void 0) {
-      privates.init = () => {};
-    } else if (typeof construct.init === 'function') {
-      privates.init = construct.init;
-    } else {
-      throw new TypeError(`Expected function or void as options.construct.init`);
-    }
-
-    privates.cookedStatic = ClassBuilderBuildCookedStatic(instance, {});
-    privates.cookedPrototype = ClassBuilderBuildCookedPrototype(instance, {});
-
-  } else {
+  if (!IsObject(options)) {
     throw new TypeError(`Expected object as return of 'create'`);
   }
+  let construct: IClassBuilderConstructOptions;
+
+  if (options.construct === void 0) {
+    construct = {};
+  } else if (IsObject(options.construct)) {
+    construct = options.construct;
+  } else {
+    throw new TypeError(`Expected object or void as options.construct`);
+  }
+
+  if (typeof options.name === 'string') {
+    privates.name = options.name;
+  } else {
+    throw new TypeError(`Expected string as options.name`);
+  }
+
+  if (options.static === void 0) {
+    privates.static = {};
+  } else if (IsObject(options.static)) {
+    privates.static = options.static;
+  } else {
+    throw new TypeError(`Expected object or void as options.static`);
+  }
+  // Object.freeze(privates.static);
+
+  if (options.prototype === void 0) {
+    privates.prototype = {};
+  } else if (IsObject(options.prototype)) {
+    privates.prototype = options.prototype;
+  } else {
+    throw new TypeError(`Expected object or void as options.prototype`);
+  }
+  // Object.freeze(privates.prototype);
+
+  if (options.extends === void 0) {
+    privates.extends = [];
+  } else if (IsIterable(options.extends)) {
+    privates.extends = Array.from(options.extends);
+    if (privates.extends.some(superClass => !(superClass instanceof ClassBuilder))) {
+      throw new TypeError(`Expected iterable of ClassBuilder as options.extends`);
+    }
+  } else {
+    throw new TypeError(`Expected iterable or void as options.extends`);
+  }
+
+
+  if (construct.preInit === void 0) {
+    privates.preInit = (...args) => args;
+  } else if (typeof construct.preInit === 'function') {
+    privates.preInit = construct.preInit;
+  } else {
+    throw new TypeError(`Expected function or void as options.construct.preInit`);
+  }
+
+  if (construct.supers === void 0) {
+    if (privates.extends.length > 0) {
+      throw new Error(`If options.extends is present and greater than 0, options.construct.supers must be provided`);
+    } else {
+      privates.supers = () => [];
+    }
+  } else if (typeof construct.supers === 'function') {
+    privates.supers = construct.supers;
+  } else {
+    throw new TypeError(`Expected function or void as options.construct.supers`);
+  }
+
+  if (construct.init === void 0) {
+    privates.init = () => {
+    };
+  } else if (typeof construct.init === 'function') {
+    privates.init = construct.init;
+  } else {
+    throw new TypeError(`Expected function or void as options.construct.init`);
+  }
+
+  privates.cookedStatic = ClassBuilderBuildCookedStatic(instance, {});
+  privates.cookedPrototype = ClassBuilderBuildCookedPrototype(instance, {});
+
+  privates.classes = [];
 }
 
 export function IsClassBuilder(value: any): value is IClassBuilder {
@@ -300,11 +262,11 @@ export function IsClassBuilder(value: any): value is IClassBuilder {
 export function ClassBuilderBuildStatic<T extends object>(instance: IClassBuilder, target: T): T {
   const privates: IClassBuilderPrivate = (instance as IClassBuilderInternal)[CLASS_BUILDER_PRIVATE];
 
-  CopyDescriptors(privates.static, target);
-
   for (let i = 0, l = privates.extends.length; i < l; i++) {
     ClassBuilderBuildStatic<T>(privates.extends[i], target);
   }
+
+  CopyDescriptors(privates.static, target, 'resolve');
 
   return target;
 }
@@ -312,11 +274,11 @@ export function ClassBuilderBuildStatic<T extends object>(instance: IClassBuilde
 export function ClassBuilderBuildCookedStatic<T extends object>(instance: IClassBuilder, target: T): T {
   const privates: IClassBuilderPrivate = (instance as IClassBuilderInternal)[CLASS_BUILDER_PRIVATE];
 
-  CopyDescriptors(privates.static, target);
-
   for (let i = 0, l = privates.extends.length; i < l; i++) {
-    CopyDescriptors((privates.extends[i] as IClassBuilderInternal)[CLASS_BUILDER_PRIVATE].cookedStatic, target);
+    CopyDescriptors((privates.extends[i] as IClassBuilderInternal)[CLASS_BUILDER_PRIVATE].cookedStatic, target, 'resolve');
   }
+
+  CopyDescriptors(privates.static, target, 'resolve');
 
   return target;
 }
@@ -324,11 +286,11 @@ export function ClassBuilderBuildCookedStatic<T extends object>(instance: IClass
 export function ClassBuilderBuildPrototype<T extends object>(instance: IClassBuilder, target: T): T {
   const privates: IClassBuilderPrivate = (instance as IClassBuilderInternal)[CLASS_BUILDER_PRIVATE];
 
-  CopyDescriptors(privates.prototype, target);
-
   for (let i = 0, l = privates.extends.length; i < l; i++) {
     ClassBuilderBuildPrototype<T>(privates.extends[i], target);
   }
+
+  CopyDescriptors(privates.prototype, target, 'resolve');
 
   return target;
 }
@@ -336,11 +298,11 @@ export function ClassBuilderBuildPrototype<T extends object>(instance: IClassBui
 export function ClassBuilderBuildCookedPrototype<T extends object>(instance: IClassBuilder, target: T): T {
   const privates: IClassBuilderPrivate = (instance as IClassBuilderInternal)[CLASS_BUILDER_PRIVATE];
 
-  CopyDescriptors(privates.prototype, target);
-
   for (let i = 0, l = privates.extends.length; i < l; i++) {
-    CopyDescriptors((privates.extends[i] as IClassBuilderInternal)[CLASS_BUILDER_PRIVATE].cookedPrototype, target);
+    CopyDescriptors((privates.extends[i] as IClassBuilderInternal)[CLASS_BUILDER_PRIVATE].cookedPrototype, target, 'resolve');
   }
+
+  CopyDescriptors(privates.prototype, target, 'resolve');
 
   return target;
 }
@@ -377,6 +339,19 @@ export function ClassBuilderBuildConstructor(instance: IClassBuilder, _this: obj
   return _this;
 }
 
+export function ClassBuilderSetInstanceOf(instance: IClassBuilder, _class: Function): void {
+  const privates: IClassBuilderPrivate = (instance as IClassBuilderInternal)[CLASS_BUILDER_PRIVATE];
+
+  for (let i = 0, l = privates.classes.length; i < l; i++) {
+    SetInstanceOf(privates.classes[i], _class);
+  }
+
+  for (let i = 0, l = privates.extends.length; i < l; i++) {
+    ClassBuilderSetInstanceOf(privates.extends[i], _class);
+  }
+}
+
+
 
 export function ClassBuilderBuild(instance: IClassBuilder): Constructor {
   const privates: IClassBuilderPrivate = (instance as IClassBuilderInternal)[CLASS_BUILDER_PRIVATE];
@@ -390,7 +365,7 @@ export function ClassBuilderBuild(instance: IClassBuilder): Constructor {
   };
 
   // set static
-  CopyDescriptors(privates.cookedStatic, _class);
+  CopyDescriptors(privates.cookedStatic, _class, 'resolve');
 
   // set name
   SetFunctionName(_class, privates.name);
@@ -403,9 +378,28 @@ export function ClassBuilderBuild(instance: IClassBuilder): Constructor {
   CopyDescriptors(privates.cookedPrototype, _class.prototype);
   SetConstructor(_class.prototype, _class);
 
+
+  ClassBuilderSetInstanceOf(instance, _class);
+
+  privates.classes.push(_class);
+
   return _class as any;
 }
 
+export function ClassBuilderIsInstanceOf(instance: IClassBuilder, superClass: IClassBuilder | Function): boolean {
+  const privates: IClassBuilderPrivate = (instance as IClassBuilderInternal)[CLASS_BUILDER_PRIVATE];
+  if (IsClassBuilder(superClass)) {
+    return (superClass === instance)
+      || privates.extends.some((_extend: IClassBuilder) => {
+        return ClassBuilderIsInstanceOf(_extend, superClass);
+      });
+  } else {
+    return privates.classes.includes(superClass)
+      || privates.extends.some((_extend: IClassBuilder) => {
+        return ClassBuilderIsInstanceOf(_extend, superClass);
+      });
+  }
+}
 
 
 
@@ -416,6 +410,10 @@ export class ClassBuilder implements IClassBuilder {
 
   build(): Constructor {
     return ClassBuilderBuild(this);
+  }
+
+  isInstanceOf(superClass: IClassBuilder | Function): boolean {
+    return ClassBuilderIsInstanceOf(this, superClass);
   }
 }
 
@@ -488,6 +486,7 @@ export interface ZPrototype {
 // TODO:
 // - privates
 // - supers
+// - instanceof
 
 
 export async function testClasses() {
@@ -507,26 +506,29 @@ export async function testClasses() {
         init(a: string) {
           console.log('construct A', arguments);
           ($this(this) as any).a_prop = a;
-          // this.a_prop = a;
         },
       },
       prototype: {
         a_method(arg: string): string {
-          // $super(this, 0).prop('a')
-          return arg + ($this(this) as any).a_prop;
+          return arg + '-' + ($this(this) as any).a_prop;
+        },
+        shared_method(): string {
+          return 'a';
         },
       }
     };
   });
 
-  // const $classA = _classA.build();
+  const $classA: any = _classA.build();
   // const instanceA = new $classA('hello');
   //
   // console.log($classA);
   // console.log(instanceA);
 
+  (window as any).$classA = $classA;
 
-  const _classB = new ClassBuilder(({ $this }) => {
+
+  const _classB = new ClassBuilder(({ $this, $super }) => {
     return {
       name: 'classB',
       static: {
@@ -546,12 +548,15 @@ export async function testClasses() {
       },
       prototype: {
         b_method(arg: number): number {
-          // $super(this, 0).prop('a')
+          // $super(this, _classA).prop('a')
           return arg + ($this(this) as any).b_prop;
+        },
+        shared_method(): string {
+          return 'b-' + $super(this, _classA).prop('shared_method')();
         },
       },
       extends: [
-        _classA
+        _classA,
       ]
     };
   });
@@ -559,14 +564,25 @@ export async function testClasses() {
   // console.log(_classB);
 
 
-  const $classB = _classB.build();
+  const $classB: any = _classB.build();
   const instanceB = new $classB(10);
 
   console.log($classB);
   console.log(instanceB);
 
-
   (window as any).$classB = $classB;
   (window as any).instanceB = instanceB;
+
+  await assert(() => _classB.isInstanceOf(_classA));
+  await assert(() => _classB.isInstanceOf($classA));
+  await assert(() => (instanceB instanceof $classA));
+  await assert(() => ($classB.b_static === 'b_static'));
+  await assert(() => ($classB.a_static === 'a_static'));
+  await assert(() => (instanceB.b_prop === 10));
+  await assert(() => (instanceB.a_prop === 'value-from-b'));
+  await assert(() => (instanceB.b_method(3) === 13));
+  await assert(() => (instanceB.a_method('a-call') === 'a-call-value-from-b'));
+  await assert(() => (instanceB.shared_method() === 'a-b'));
+  await assertFails(() => instanceB.b_method.call(null, 3));
 
 }

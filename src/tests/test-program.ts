@@ -1,7 +1,8 @@
 export type Callback<TArgs extends any[] = any[], TReturn = any> = (...args: TArgs) => TReturn;
 
-
 export type WorkerCallback<TArgs extends any[] = any, TReturn = any> = Callback<TArgs, IWorkerCallbackReturnType | TReturn>;
+
+export type WorkerTransferable = Transferable | OffscreenCanvas;
 
 export type InferWorkerCallbackArguments<CB extends WorkerCallback> = Parameters<CB>;
 
@@ -9,7 +10,7 @@ export type InferWorkerCallbackReturnType<CB extends WorkerCallback> =
   CB extends (...args: any[]) => infer TReturn
     ? TReturn extends {
       result: infer TResult;
-      transferable?: Transferable[];
+      transferable?: WorkerTransferable[];
     }
     ? TResult
     : TReturn
@@ -18,8 +19,11 @@ export type InferWorkerCallbackReturnType<CB extends WorkerCallback> =
 
 export interface IWorkerCallbackReturnType {
   result: any;
-  transferable?: Transferable[];
+  transferable?: WorkerTransferable[];
 }
+
+
+declare const requestIdleCallback: (cb: (deadline: { timeRemaining(): number; didTimeout: boolean; }) => void, options?: { timeout?: number; }) => void;
 
 
 // const cb1 = () => {
@@ -146,7 +150,7 @@ export class Program<CB extends WorkerCallback> {
     this._runPromise = Promise.resolve(void 0) as any;
   }
 
-  run(args: InferWorkerCallbackArguments<CB>, transferable: Transferable[] = []): Promise<InferWorkerCallbackReturnType<CB>> {
+  run(args: InferWorkerCallbackArguments<CB>, transferable: WorkerTransferable[] = []): Promise<InferWorkerCallbackReturnType<CB>> {
     this._runPromise = this._runPromise
       .then(() => {
         return new Promise<InferWorkerCallbackReturnType<CB>>((resolve: any, reject: any) => {
@@ -171,7 +175,7 @@ export class Program<CB extends WorkerCallback> {
             }
           };
           this._worker.addEventListener('message', onmessage);
-          this._worker.postMessage(args, transferable);
+          this._worker.postMessage(args, transferable as Transferable[]);
         });
       });
 
@@ -326,12 +330,109 @@ export async function testProgram6() {
   render(canvas, image);
 }
 
+export async function testProgram7() {
+  console.log('program 7');
+
+  const createCanvas = (): HTMLCanvasElement => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1000;
+    canvas.height = 1000;
+    canvas.style.width = `${ canvas.width }px`;
+    canvas.style.height = `${ canvas.height }px`;
+    canvas.style.border = `2px solid black`;
+    document.body.appendChild(canvas);
+    return canvas;
+  };
+
+  const cb = (canvas: OffscreenCanvas, count: number) => {
+    const ctx: OffscreenCanvasRenderingContext2D = canvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
+    const size: number = 20;
+
+    for (let i = 0; i < count; i++) {
+      ctx.fillStyle = `rgb(${ Math.floor(Math.random() * 256) }, ${ Math.floor(Math.random() * 256) }, ${ Math.floor(Math.random() * 256) })`;
+      ctx.fillRect(Math.floor(Math.random() * canvas.width), Math.floor(Math.random() * canvas.height), size, size);
+    }
+  };
+
+  const count: number = 1e6;
+
+  let canvas = createCanvas();
+  let offscreen = canvas.transferControlToOffscreen();
+
+  console.time('normal');
+  cb(offscreen, count);
+  console.timeEnd('normal');
+  // canvas.remove();
+
+  canvas = createCanvas();
+  offscreen = canvas.transferControlToOffscreen();
+  const program = new Program(cb);
+  let promise: any;
+  console.time('worker-in');
+  console.time('worker-out');
+  promise = program.run([offscreen, count], [offscreen]);
+  console.timeEnd('worker-out');
+  await promise;
+  console.timeEnd('worker-in');
+}
+
+export async function testProgram8() {
+  console.log('program 8');
+
+  const createCanvas = (): HTMLCanvasElement => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1000;
+    canvas.height = 1000;
+    canvas.style.width = `${ canvas.width }px`;
+    canvas.style.height = `${ canvas.height }px`;
+    canvas.style.border = `2px solid black`;
+    document.body.appendChild(canvas);
+    return canvas;
+  };
+
+  const cb = (canvas: OffscreenCanvas, count: number) => {
+    return new Promise<void>((resolve: any, reject: any) => {
+      const ctx: OffscreenCanvasRenderingContext2D = canvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
+      const size: number = 20;
+
+      function loop(ctx: OffscreenCanvasRenderingContext2D, i: number, count: number) {
+        if (i < count) {
+          requestIdleCallback((deadline) => {
+            while (deadline.timeRemaining() > 5) {
+              i++;
+              ctx.fillStyle = `rgb(${ Math.floor(Math.random() * 256) }, ${ Math.floor(Math.random() * 256) }, ${ Math.floor(Math.random() * 256) })`;
+              ctx.fillRect(Math.floor(Math.random() * canvas.width), Math.floor(Math.random() * canvas.height), size, size);
+            }
+            loop(ctx, i, count);
+          });
+        } else {
+          resolve();
+        }
+      }
+
+      loop(ctx, 0, count);
+    });
+
+  };
+
+  const count: number = 1e6;
+
+  const canvas = createCanvas();
+  const offscreen = canvas.transferControlToOffscreen();
+  console.time('normal');
+  await cb(offscreen, count);
+  console.timeEnd('normal');
+}
+
+
 export async function testProgram() {
   // await testProgram1();
   // await testProgram2();
   // await testProgram3();
   // await testProgram4();
   // await testProgram5();
-  await testProgram6();
+  // await testProgram6();
+  // await testProgram7();
+  await testProgram8();
 }
 

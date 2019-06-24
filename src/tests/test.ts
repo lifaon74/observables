@@ -10,7 +10,7 @@ import { WebSocketIO } from '../observables/io/websocket-observable/implementati
 import { UnionToIntersection } from '../classes/types';
 import { reducePipe } from '../operators/pipes/reducePipe';
 import { flattenPipe } from '../operators/pipes/flattenPipe';
-import { assertFails, assertObservableEmits } from '../classes/asserts';
+import { assertFailsSync, assertObservableEmits } from '../classes/asserts';
 import { FromIterableObservable } from '../observables/from/iterable/implementation';
 import { noop } from '../helpers';
 import { FromRXJSObservable } from '../observables/from/rxjs/implementation';
@@ -196,7 +196,7 @@ async function testFromIterableObservable() {
     [0, 1, 2, 3]
   );
 
-  assertFails(() => values1.pipeTo(noop).activate());
+  assertFailsSync(() => values1.pipeTo(noop).activate());
 
   const values2 = new FromIterableObservable([0, 1, 2, 3][Symbol.iterator](), { nextObservers: 'cache' });
 
@@ -253,7 +253,7 @@ async function testFromRXJSObservable() {
     notifications
   );
 
-  assertFails(() => values1.pipeTo(noop).activate());
+  assertFailsSync(() => values1.pipeTo(noop).activate());
 
   const values2 = new FromRXJSObservable<number, undefined>(rxObservable, { nextObservers: 'cache' });
 
@@ -383,7 +383,7 @@ export async function test() {
   // testSignalingServer();
   // testPromises();
   // testClasses();
-  testProgram();
+  // testProgram();
 }
 
 

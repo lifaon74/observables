@@ -29,7 +29,7 @@ export function SetInstanceOf(source: Function, destination: Function): void {
   ((destination as any)[INSTANCE_OF_SYMBOL] as Set<Function>).add(source);
 }
 
-export function IsInstanceOf(instance: Function, _class: Function): void {
+export function IsInstanceOf(instance: any, _class: Function): void {
   return (instance instanceof _class) || (
     (instance.constructor && (INSTANCE_OF_SYMBOL in instance.constructor))
       ? (instance.constructor as any)[INSTANCE_OF_SYMBOL].has(_class)
