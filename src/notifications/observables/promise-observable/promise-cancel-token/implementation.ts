@@ -10,8 +10,8 @@ import { NotificationsObserver } from '../../../core/notifications-observer/impl
 import { Reason } from '../../../../misc/reason/implementation';
 import { INotification } from '../../../core/notification/interfaces';
 import { IsObject, noop } from '../../../../helpers';
-import { TPromiseOrValue, TPromiseType } from '../../../../promises/interfaces';
-import { Finally, PromiseTry } from '../../../..';
+import { TPromiseType } from '../../../../promises/interfaces';
+import { Finally, PromiseTry } from '../../../../promises/helpers';
 
 
 export const PROMISE_CANCEL_TOKEN_PRIVATE = Symbol('promise-cancel-token-private');
