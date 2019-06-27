@@ -14,7 +14,7 @@ import { Observer } from '../../core/observer/implementation';
 import { INotificationsObserver } from '../../notifications/core/notifications-observer/interfaces';
 import { TPromiseOrValue } from '../../promises/interfaces';
 
-export type TBasePromiseObservableNotification<T> = TPromiseObservableNotification<T, any, any>;
+export type TBasePromiseObservableNotification<T> = Partial<TPromiseObservableNotification<T, any, any>>;
 export type TValueOrNotificationType<T> = T | TBasePromiseObservableNotification<T>;
 
 /**

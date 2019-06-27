@@ -42,6 +42,7 @@ paths.package = [
   'LICENSE',
 ];
 
+const fileExt = 'js';
 
 
 function compileTs(buildOptions) {
@@ -56,6 +57,7 @@ function compileTs(buildOptions) {
       .pipe(tsProject())
       .on('error', gutil.log)
       .pipe(gulpPlugins.sourcemaps.write())
+      // .pipe(gulpPlugins.extReplace('.mjs'))
       .pipe(gulp.dest($path.join(paths.destination)));
   };
 }
@@ -80,7 +82,7 @@ function bundle(buildOptions) {
 
   return function _bundle() {
     return gulp.src([
-      $path.join(base, '**', '*.js'),
+      $path.join(base, '**', '*.' + fileExt),
     ], { base: base })
       .pipe(gulpPlugins.rollup({
         input: $path.join(paths.destination, buildOptions.rollup.main),
@@ -126,7 +128,7 @@ function buildProd() {
       }),
       bundle({
         rollup: {
-          main: 'public.js',
+          main: 'public.' + fileExt,
           format: 'umd',
           name: 'Observables',
           outputPostFix: 'umd.esnext'
@@ -134,12 +136,20 @@ function buildProd() {
       }),
       bundle({
         rollup: {
-          main: 'core/public.js',
+          main: 'core/public.' + fileExt,
           format: 'umd',
           name: 'Observables',
           outputPostFix: 'core.umd.esnext'
         }
-      })
+      }),
+      // bundle({
+      //   rollup: {
+      //     main: 'private.' + fileExt,
+      //     format: 'umd',
+      //     name: 'PrivateObservables',
+      //     outputPostFix: 'umd.esnext'
+      //   }
+      // }),
     ),
     // buildAndBundle({
     //   ts: {
@@ -165,7 +175,7 @@ const configs = {
       target: 'esnext',
     },
     rollup: {
-      main: 'app.js',
+      main: 'app.' + fileExt,
       format: 'es',
     }
   }
