@@ -119,10 +119,10 @@ export interface IPromiseCancelToken extends INotificationsObservable<IPromiseCa
 
 
 /*
-Full example:
+// Full example:
 
 export function promiseCancelTokenExample(): Promise<void> {
-  const token = new PromiseCancelToken();
+  const token: IPromiseCancelToken = new PromiseCancelToken();
   // 1) wrapFetchArguments => ensures fetch will be aborted when token is cancelled
   // 2) wrapPromise => ensures fetch won't resolve if token is cancelled
   return token.wrapPromise(fetch(...token.wrapFetchArguments('http://domain.com/request1')))
@@ -134,7 +134,7 @@ export function promiseCancelTokenExample(): Promise<void> {
       // continue...
     }));
 }
- */
+*/
 
 
 

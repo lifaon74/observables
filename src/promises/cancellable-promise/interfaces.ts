@@ -1,9 +1,5 @@
-import {
-  IPromiseCancelToken
-} from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
-import {
-  TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion
-} from '../interfaces';
+import { IPromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import { TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion } from '../interfaces';
 
 
 export type TCancellablePromiseCreateCallback<T> = (this: ICancellablePromise<T>, resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void, token: IPromiseCancelToken) => void;
@@ -12,43 +8,127 @@ export type TCancellablePromiseCreateCallback<T> = (this: ICancellablePromise<T>
 
 export interface ICancellablePromiseConstructor {
 
+  // Equivalent of Promise.resolve
   resolve(): ICancellablePromise<void>;
   resolve<T>(value: TPromiseOrValue<T>, token?: IPromiseCancelToken): ICancellablePromise<T>;
 
+  // Equivalent of Promise.reject
   reject<T = never>(reason?: any, token?: IPromiseCancelToken): ICancellablePromise<T>;
 
+  /**
+   * Creates a CancellablePromise from the result of 'callback':
+   *  - kind of new Promise(_ => _(callback()))
+   * @param callback
+   * @param token
+   */
   try<T>(callback: (this: ICancellablePromise<T>, token: IPromiseCancelToken) => TPromiseOrValue<T>, token?: IPromiseCancelToken): ICancellablePromise<T>;
 
+  // Equivalent of Promise.race
   race<TTuple extends TPromiseOrValue<any>[]>(values: TTuple, token?: IPromiseCancelToken): ICancellablePromise<TPromiseOrValueTupleToValueUnion<TTuple>>;
+
+  /**
+   * Equivalent of Promise.race but gets the values though a callback instead.
+   * Useful to race without providing a token to the CancellablePromise
+   * @param callback
+   * @param token
+   */
   raceCallback<TTuple extends TPromiseOrValue<any>[]>(callback: (this: ICancellablePromise<TPromiseOrValueTupleToValueUnion<TTuple>>, token: IPromiseCancelToken) => TTuple, token?: IPromiseCancelToken): ICancellablePromise<TPromiseOrValueTupleToValueUnion<TTuple>>;
 
+  // Equivalent of Promise.all
   all<TTuple extends TPromiseOrValue<any>[]>(values: TTuple, token?: IPromiseCancelToken): ICancellablePromise<TPromiseOrValueTupleToValueTuple<TTuple>>;
+
+  // Equivalent of Promise.all with the same behaviour of 'raceCallback'
   allCallback<TTuple extends TPromiseOrValue<any>[]>(callback: (this: ICancellablePromise<TPromiseOrValueTupleToValueTuple<TTuple>>, token: IPromiseCancelToken) => TTuple, token?: IPromiseCancelToken): ICancellablePromise<TPromiseOrValueTupleToValueTuple<TTuple>>;
 
+  /**
+   * Equivalent of window.fetch:
+   *  - aborts the fetch request if the token is cancelled
+   *  - returns a CancellablePromise instead of a Promise
+   * @param requestInfo
+   * @param requestInit
+   * @param token
+   */
   fetch(requestInfo: RequestInfo, requestInit?: RequestInit, token?: IPromiseCancelToken): ICancellablePromise<Response>;
 
+  /**
+   * Just like `new CancellablePromise(...args)`,
+   * but if 'promiseOrCallback' is a CancellablePromise with the same token returns it (promiseOrCallback) instead of creating a new one
+   * @param promiseOrCallback
+   * @param token
+   */
   of<T>(promiseOrCallback: Promise<T> | TCancellablePromiseCreateCallback<T>, token?: IPromiseCancelToken): ICancellablePromise<T>;
 
 
+  /**
+   * Creates a new CancellablePromise from an exiting promise or the same function you may provide to a Promise.
+   * @param promiseOrCallback
+   * @param token
+   */
   new<T>(promiseOrCallback: Promise<T> | TCancellablePromiseCreateCallback<T>, token?: IPromiseCancelToken): ICancellablePromise<T>;
 }
 
-export interface ICancellablePromise<T> extends Promise<T> {
-  readonly promise: Promise<T>;
-  readonly token: IPromiseCancelToken;
 
+/**
+ * A CancellablePromise is a Promise we may cancel at any time.
+ * If the CancellablePromise is cancelled:
+ *  - 'then', 'catch', and 'finally' won't be called and 'promise' will never resolve
+ *  - 'cancelled' is called whatever its place in the promise chain (won't wait on provided promise to resolve)
+ */
+export interface ICancellablePromise<T> extends Promise<T> {
+  readonly promise: Promise<T>; // a promised wrapped by the CancellablePromise's token. May never resolve if token is cancelled.
+  readonly token: IPromiseCancelToken; // the PromiseCancelToken associated with this CancellablePromise
+
+  /**
+   * Equivalent of the 'then' of a Promise:
+   *  - provides the token in both callbacks
+   *  - wraps 'onFulfilled' and 'onRejected' with the token (may never be called if token is cancelled)
+   * @param onFulfilled
+   * @param onRejected
+   */
   then<TResult1 = T, TResult2 = never>(
     onFulfilled?: ((this: this, value: T, token: IPromiseCancelToken) => TPromiseOrValue<TResult1>) | undefined | null,
     onRejected?: ((this: this, reason: any, token: IPromiseCancelToken) => TPromiseOrValue<TResult2>) | undefined | null
   ): ICancellablePromise<TResult1 | TResult2>;
 
+  /**
+   * Equivalent of the 'catch' of a Promise:
+   *  - same behaviour as previously mentioned (may never be called)
+   * @param onRejected
+   */
   catch<TResult = never>(
     onRejected?: ((this: this, reason: any, token: IPromiseCancelToken) => TPromiseOrValue<TResult>) | undefined | null
   ): ICancellablePromise<T | TResult>;
 
+  /**
+   * Equivalent of the 'catch' of a Promise:
+   *   - same behaviour as previously mentioned (may never be called)
+   * @param onFinally
+   */
   finally(onFinally?: ((this: this, token: IPromiseCancelToken) => void) | undefined | null): ICancellablePromise<T>;
 
+
+  /**
+   * Kind of 'finally' but handles the cancelled state:
+   *  - if/when the token is cancelled, every following 'cancelled' handlers (including this one) in the promise chain will be called immediately.
+   *  - promise remains cancelled
+   * @param onCancelled
+   */
   cancelled(onCancelled: ((this: this, token: IPromiseCancelToken) => void) | undefined | null): ICancellablePromise<T>;
 
 }
+
+/*
+// Example
+
+export function cancellablePromiseExample(): ICancellablePromise<void> {
+  return CancellablePromise.fetch('http://domain.com/request1')
+    .then((response: Response) => {
+      return response.json();
+    })
+    .then((json: any) => {
+      console.log(json);
+      // continue...
+    });
+}
+*/
 

@@ -1,6 +1,6 @@
 {
   "name": "@lifaon/observables",
-  "version": "1.2.2",
+  "version": "1.2.5",
   "description": "Better observables for everyone",
   "main": "bundle/public.umd.esnext.min.js",
   "module": "index.js",
@@ -13,7 +13,7 @@
     "minify": "npm run minify.hard && npm run minify.soft",
     "minify.hard": "npm run pre-minify && npm run min.esnext.hard && npm run min.core.hard",
     "minify.soft": "npm run min.esnext.soft && npm run min.core.soft",
-    "pre-minify": "node pre-minify.js",
+    "pre-minify": "node scripts/pre-minify.js",
     "min.esnext.hard": "uglifyjs ./dist/bundle/public.umd.esnext.pre-min.js -o ./dist/bundle/public.umd.esnext.min.hard.js -c inline=false -m",
     "min.esnext.soft": "uglifyjs ./dist/bundle/public.umd.esnext.js -o ./dist/bundle/public.umd.esnext.min.js -c inline=false -m",
     "min.core.hard": "uglifyjs ./dist/bundle/public.core.umd.esnext.pre-min.js -o ./dist/bundle/public.core.umd.esnext.min.hard.js -c inline=false -m",

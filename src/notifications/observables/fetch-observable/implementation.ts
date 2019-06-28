@@ -5,7 +5,7 @@ import { IPromiseCancelToken } from '../promise-observable/promise-cancel-token/
 import { INotificationsObservable } from '../../core/notifications-observable/interfaces';
 import { promisePipe } from '../../../operators/pipes/promisePipe';
 import { IsObject } from '../../../helpers';
-import { TPromiseOrValue } from '../../..';
+import { TPromiseOrValue } from '../../../promises/interfaces';
 
 export const FETCH_OBSERVABLE_PRIVATE = Symbol('fetch-observable-private');
 

@@ -3,7 +3,11 @@ import { IsSubSet } from '../../classes/types';
 
 /** TYPES **/
 
-export type TPromiseStatus = 'fulfilled' | 'rejected' | 'pending' | 'resolving';
+export type TPromiseStatus =
+  'fulfilled' // promise is fulfilled
+  | 'rejected' // promise is rejected
+  | 'pending' // promise is neither resolved nor resolving
+  | 'resolving'; // promise is resolving => its final state is not known yet, but the promise's resolve/reject functions can't be called anymore
 
 export type TDeferredPromiseRaceReturn<TTuple extends TPromiseOrValue<any>[], TReference, TReturn> =
   true extends {
@@ -21,27 +25,6 @@ export type TDeferredPromiseAllReturn<TTuple extends TPromiseOrValue<any>[], TRe
 
 /** INTERFACES **/
 
-export interface IDeferredPromiseConstructor {
-
-  readonly FULFILLED: 'fulfilled';
-  readonly REJECTED: 'rejected';
-  readonly PENDING: 'pending';
-
-  resolve(): IDeferredPromise<void>;
-
-  resolve<T>(value: TPromiseOrValue<T>,): IDeferredPromise<T>;
-
-  reject<T = never>(reason?: any,): IDeferredPromise<T>;
-
-  try<T>(callback: () => TPromiseOrValue<T>): IDeferredPromise<T>;
-
-  race<TTuple extends TPromiseOrValue<any>[]>(values: TTuple): IDeferredPromise<TPromiseOrValueTupleToValueUnion<TTuple>>;
-
-  all<TTuple extends TPromiseOrValue<any>[]>(values: TTuple): Promise<TPromiseOrValueTupleToValueTuple<TTuple>>;
-
-  new<T>(callback?: (deferred: IDeferredPromise<T>) => any): IDeferredPromise<T>;
-}
-
 export interface IDeferredPromiseCodes {
   readonly FULFILLED: 'fulfilled';
   readonly REJECTED: 'rejected';
@@ -49,34 +32,127 @@ export interface IDeferredPromiseCodes {
   readonly RESOLVING: 'resolving';
 }
 
+export interface IDeferredPromiseConstructor extends IDeferredPromiseCodes{
+
+  // Equivalent of Promise.resolve
+  resolve(): IDeferredPromise<void>;
+  resolve<T>(value: TPromiseOrValue<T>,): IDeferredPromise<T>;
+
+  // Equivalent of Promise.reject
+  reject<T = never>(reason?: any,): IDeferredPromise<T>;
+
+  // Equivalent of new Promise(_ => _(callback())
+  try<T>(callback: () => TPromiseOrValue<T>): IDeferredPromise<T>;
+
+  // Equivalent of Promise.race
+  race<TTuple extends TPromiseOrValue<any>[]>(values: TTuple): IDeferredPromise<TPromiseOrValueTupleToValueUnion<TTuple>>;
+
+  // Equivalent of Promise.all
+  all<TTuple extends TPromiseOrValue<any>[]>(values: TTuple): Promise<TPromiseOrValueTupleToValueTuple<TTuple>>;
+
+  /**
+   * Creates a new DeferredPromise.
+   * You may provide a 'callback' providing a 'deferred' argument (referencing this DeferredPromise)
+   * If 'callback' throws, the DeferredPromise is rejected
+   * @param callback
+   */
+  new<T>(callback?: (deferred: IDeferredPromise<T>) => any): IDeferredPromise<T>;
+}
+
+
+/**
+ * A DeferredPromise is a Promise exposing its resolve/reject functions
+ */
 export interface IDeferredPromise<T> extends IDeferredPromiseCodes, Promise<T> {
-  readonly status: TPromiseStatus;
-  readonly promise: Promise<T>;
+  readonly status: TPromiseStatus; // the status of this DeferredPromise
+  readonly promise: Promise<T>; // a promise resolved when this DeferredPromise will resolve
 
+  /**
+   * INFO: resolve, reject, try, race, and all will resolve this DeferredPromise.
+   * The DeferredPromise will enter in a 'resolving' state
+   * Trying to call one of these functions after the DeferredPromise leaved its 'pending' state will throw an Error
+   */
 
+  // Resolves this DeferredPromise with value
   resolve(value?: TPromiseOrValue<T>): this;
 
+  // Rejects this DeferredPromise with value
   reject(reason?: any): this;
 
+  /**
+   * Resolves this DeferredPromise with the result of 'callback':
+   *  - kind of this.resolve(new Promise(_ => _(callback())))
+   * @param callback
+   */
   try(callback: () => TPromiseOrValue<T>): this;
 
+  /**
+   * Resolves this DeferredPromise with the first value/promise to resolve from 'values'
+   * @param values
+   */
   race<TTuple extends TPromiseOrValue<any>[]>(values: TTuple): TDeferredPromiseRaceReturn<TTuple, T, this>;
 
+  /**
+   * Resolves this DeferredPromise when all 'values' are resolved
+   * @param values
+   */
   all<TTuple extends TPromiseOrValue<any>[]>(values: TTuple): TDeferredPromiseAllReturn<TTuple, T, this>;
 
 
+  // Equivalent of the 'then' of a Promise
   then<TResult1 = T, TResult2 = never>(
     onFulfilled?: ((value: T) => TPromiseOrValue<TResult1>) | undefined | null,
     onRejected?: ((reason: any) => TPromiseOrValue<TResult2>) | undefined | null
   ): IDeferredPromise<TResult1 | TResult2>;
 
+  // Equivalent of the 'catch' of a Promise
   catch<TResult = never>(
     onRejected?: ((reason: any) => TPromiseOrValue<TResult>) | undefined | null
   ): IDeferredPromise<T | TResult>;
 
+  // Equivalent of the 'finally' of a Promise
   finally(onFinally?: (() => void) | undefined | null): IDeferredPromise<T>;
 
 }
+
+/*
+// Example
+
+export async function deferredPromiseExample(): Promise<void> {
+  function iterable(): AsyncIterableIterator<number> {
+    const deferredQueue: DeferredPromise<IteratorResult<number>>[] = [];
+
+    let i: number = 0;
+    setInterval(() => {
+      if (deferredQueue.length > 0) {
+        deferredQueue[0].resolve({
+          value: i,
+          done: false,
+        });
+        i++;
+        deferredQueue.splice(0, 1);
+      }
+    }, 500);
+
+    return {
+      next: (): Promise<IteratorResult<number>> => {
+        const deferred: IDeferredPromise<IteratorResult<number>> = new DeferredPromise<IteratorResult<number>>();
+        deferredQueue.push(deferred);
+        return deferred;
+      },
+      [Symbol.asyncIterator]() {
+        return this;
+      }
+    };
+  }
+
+  for await (const value of iterable()) {
+    console.log(value); // prints 0, 1, 2, 3, ... every 500ms
+  }
+}
+*/
+
+
 
 // const v: unknown = null;
 //

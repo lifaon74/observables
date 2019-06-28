@@ -128,7 +128,7 @@ const observer = listen<KeyboardEvent>(target, 'keydown')
   }))).activate();
 ```
 
-### Example: WOT subscription ###
+### Example: WOT subscription - WARN - Draft spec - following example is not up to date ###
 This example can be found here: https://w3c.github.io/wot-scripting-api/#example-4-consume-a-thing
 ```ts
 try {
@@ -234,6 +234,8 @@ A more complete example may be found here: [wot-temperature-example](./examples/
 
 
 ### API ###
+
+Every methods and attributes are commented on the source file. In case you'll require more details.
 
 #### Observable
 ```ts
@@ -420,7 +422,7 @@ More details on ObservableObserver bellow.
 ```ts
 observedBy<O extends TObserverOrCallback<any>[]>(...observers: O): TObservableObservedByResultNonCyclic<O, T, this>; // returns this
 ```
-Tells all the *observers* to observe this Observable.
+Asks all the *observers* to observe this Observable.
 
 ##### clearObservers
 ```ts
@@ -430,11 +432,25 @@ Detaches (*unobserve*) all the *observers* of this Observable.
 
 Equivalent of:
 ```ts
-// don't for loop because if we remove the first observer,
-// the observers' array is shifted on the left (second become first, etc...)
-// instead we just have to continuously remove the first element until the array is empty
+// WARN: don't 'for loop' to removes observers !
+// THIS IS WRONG:
+for (let i = 0; i < observable.observers.length; i++) {
+  observable.observers.item(i).unobserve(observable);
+}
+
+// if we remove the first observer, the observers' array is shifted on the left (second become first, etc...),
+// so when index will be 1, it will actually target and remove the original third observer instead of the original second.
+// the proper implementation requires simply to continuously remove the first element until the array is empty.
+
+// INSTEAD DO:
 while (observable.observers.length > 0) {
   observable.observers.item(0).unobserve(observable);
+}
+
+// Or at least, in a less efficient way, clone observable.observers before iterating over it:
+const observers = Array.from(observable.observers);
+for (let i = 0; i < observers.length; i++) {
+  observers[i].unobserve(observable);
 }
 ```
     
@@ -993,11 +1009,20 @@ setTimeout(() => {
 }, 5000);
 ```
 
+**INFO:** For NodeJS's EventEmitter, the equivalent is NodeJSEventsObservable.
 
 #### PromiseObservable
 
 ##### PromiseCancelToken
 ```ts
+type TCancelStrategy =
+  'resolve' // resolve the promise with void
+  | 'reject' // reject the promise with the Token's reason
+  | 'never' // (default) never resolve the promise, it stays in a pending state forever
+  ;
+
+type TOnCancelled = ((this: IPromiseCancelToken) => TPromiseOrValue<void>) | undefined | null;
+
 interface IPromiseCancelTokenKeyValueMap {
   cancel: any;
 }
@@ -1016,19 +1041,28 @@ interface IPromiseCancelToken extends INotificationsObservable<IPromiseCancelTok
   // creates an AbortController linked with this Token
   toAbortController(): AbortController;
 
-  /**
-   * Links this Token with an AbortController
-   *  If the AbortController aborts, the Token is cancelled
-   *  If the Token is cancelled, aborts the AbortController
-   */
+  // links this Token with an AbortController
   linkWithAbortController(controller: AbortController): () => void;
 
-  /**
-   * Links this Token with an AbortSignal
-   *  If the AbortSignal aborts, the Token is cancelled
-   *  WARN: cannot cancel a AbortSignal if the Token is cancelled, prefer using linkWithAbortController instead
-   */
+  // links this Token with an AbortSignal
   linkWithAbortSignal(signal: AbortSignal): () => void;
+  
+  // wraps a promise with a this Token
+  wrapPromise<T>(
+    promise: Promise<T>,
+    strategy?: TCancelStrategy,
+    onCancelled?: TOnCancelled,
+  ): Promise<T | void>;
+  
+  // wraps a function with this Token
+  wrapFunction<CB extends (...args: any[]) => any>(
+    callback: CB,
+    strategy?: TCancelStrategy,
+    onCancelled?: TOnCancelled,
+  ): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>> | void>;
+  
+  // wraps the fetch arguments with this Token
+  wrapFetchArguments(requestInfo: RequestInfo, requestInit?: RequestInit): [RequestInfo, RequestInit | undefined];
 }
 
 ```
@@ -1082,6 +1116,41 @@ const token = new PromiseCancelToken();
 fetch('some-url', { signal: token.toAbortController().signal });
 
 token.cancel(new Error('Promise cancelled')); // aborts the fetch
+```
+
+###### wrapPromise / wrapFunction / wrapFetchArguments
+
+Wraps a promise, function or fetch argument to properly handle the cancel state of the Token.
+
+*Example:*
+```ts
+function promiseCancelTokenExample(): Promise<void> {
+  const token: IPromiseCancelToken = new PromiseCancelToken();
+  // 1) wrapFetchArguments => ensures fetch will be aborted when token is cancelled
+  // 2) wrapPromise => ensures fetch won't resolve if token is cancelled
+  return token.wrapPromise(fetch(...token.wrapFetchArguments('http://domain.com/request1')))
+    .then(token.wrapFunction(function toJSON(response: Response) { // 3) ensures 'toJSON' is called only if token is not cancelled
+      return response.json(); // 'wrapPromise' not required because we immediately return a promise inside 'wrapFunction'
+    }))
+    .then(token.wrapFunction(function next(json: any) { // 4) ensures 'next' is called only if token is not cancelled
+      console.log(json);
+      // continue...
+    }));
+}
+```
+
+**INFO:** You may also use the `CancellablePromise`
+```ts
+function cancellablePromiseExample(): ICancellablePromise<void> {
+  return CancellablePromise.fetch('http://domain.com/request1')
+    .then((response: Response) => {
+      return response.json();
+    })
+    .then((json: any) => {
+      console.log(json);
+      // continue...
+    });
+}
 ```
 
 

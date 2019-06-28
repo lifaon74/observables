@@ -1,15 +1,23 @@
 import { IObservable } from '../../../core/observable/interfaces';
+import { IAsyncIteratorOfObservable } from './interfaces';
+import { AsyncIteratorOfObservable } from './implementation';
 
 
 /**
- * Observes an Observable through a Promise.
- *  If the Observable sends a Notification, 'complete' or 'error' is expected as "name", and the promise is resolved of rejected.
- *  If the Observable sends a value, the promise is resolved with this value.
+ * Observes an Observable through an AsyncIterator.
+ *  When the Observable emits a value, the AsyncIterator.next()'s Promise is resolved
  * @param observable
- * @param strategy
- * @return a tuple: The Promise, and a PromiseCancelToken.
  */
 export function toAsyncIterable<T>(observable: IObservable<T>): IAsyncIteratorOfObservable<T> {
-  throw 'TODO';
+  return new AsyncIteratorOfObservable<T>(observable);
 }
+
+// Example:
+// async function test() {
+//   for await(const value of toAsyncIterable<number>(new FromIterableObservable<number>([1, 2, 3]))) {
+//     console.log(value);
+//   }
+//   // outputs: 1, 2, 3
+// }
+
 

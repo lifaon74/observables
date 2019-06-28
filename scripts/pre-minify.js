@@ -1,4 +1,5 @@
 const $fs = require('fs').promises;
+const $path = require('path');
 
 function escape(string) {
     return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -131,8 +132,8 @@ async function run(input, output) {
 }
 
 Promise.all([
-    run('./dist/bundle/public.core.umd.esnext.js', './dist/bundle/public.core.umd.esnext.pre-min.js'),
-    run('./dist/bundle/public.umd.esnext.js', './dist/bundle/public.umd.esnext.pre-min.js'),
+    run($path.join(__dirname, './dist/bundle/public.core.umd.esnext.js', './dist/bundle/public.core.umd.esnext.pre-min.js')),
+    run($path.join(__dirname, './dist/bundle/public.umd.esnext.js', './dist/bundle/public.umd.esnext.pre-min.js')),
 ]).then(() => {
     console.log('done');
 });

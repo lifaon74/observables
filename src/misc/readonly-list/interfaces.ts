@@ -34,10 +34,10 @@ export interface IReadonlyListConstructor {
 export interface IReadonlyList<T> extends IReadonlyTuple<T[]> {
   concat(...items: (T | ConcatArray<T>)[]): T[];
 
-  reverse(): T[]; // generate new array
+  reverse(): T[]; // generates new array
   slice(start?: number, end?: number): T[];
 
-  sort(compareFn?: (a: T, b: T) => number): T[]; // generate new array
+  sort(compareFn?: (a: T, b: T) => number): T[]; // generates new array
   every(callback: (value: T, index: number, array: T[]) => boolean, thisArg?: any): boolean;
 
   some(callback: (value: T, index: number, array: T[]) => boolean, thisArg?: any): boolean;

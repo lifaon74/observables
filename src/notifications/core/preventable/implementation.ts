@@ -39,6 +39,7 @@ export class Preventable<N extends string> implements IPreventable<N> {
   }
 }
 
+/*------------------------*/
 
 export class BasicPreventable extends Preventable<'default'> implements IBasicPreventable {
 
