@@ -11,6 +11,21 @@ export type TOnCancelled = ((this: IPromiseCancelToken) => TPromiseOrValue<void>
 
 export interface IPromiseCancelTokenConstructor {
   new(): IPromiseCancelToken;
+
+  /**
+   * Builds a new PromiseCancelToken from a list of PromiseCancelTokens:
+   *  - if one of the provided 'tokens' is cancelled, cancel this Token with the cancelled token's reason
+   * @param tokens
+   * @Example:
+   *  function run(token: PromiseCancelToken) {
+   *    const userClickCloseToken = new PromiseCancelToken();
+   *    document.querySelector(`.close-button`).addEventListener('click', () => userClickCloseToken.cancel(new Reason('clicked on close')));
+   *
+   *    const _token: PromiseCancelToken = PromiseCancelToken.merge(token, userClickCloseToken);
+   *    return _token.wrapPromise(fetch(..._token.wrapFetchArguments('http://domain.com/request1')));
+   *  }
+   */
+  of(...tokens: IPromiseCancelToken[]): IPromiseCancelToken;
 }
 
 export interface IPromiseCancelTokenKeyValueMap {

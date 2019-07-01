@@ -4,7 +4,9 @@ import {
 } from '../../../core/notifications-observable/implementation';
 import { INotificationsObserver } from '../../../core/notifications-observer/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
-import { IPromiseCancelToken, IPromiseCancelTokenKeyValueMap, TCancelStrategy, TOnCancelled } from './interfaces';
+import {
+  IPromiseCancelToken, IPromiseCancelTokenConstructor, IPromiseCancelTokenKeyValueMap, TCancelStrategy, TOnCancelled
+} from './interfaces';
 import { ObservableEmitAll } from '../../../../core/observable/implementation';
 import { NotificationsObserver } from '../../../core/notifications-observer/implementation';
 import { Reason } from '../../../../misc/reason/implementation';
@@ -325,7 +327,7 @@ export function PromiseCancelTokenWrapPromise<T>(
 }
 
 export function PromiseCancelTokenWrapFunction<CB extends (...args: any[]) => any>(
-  token: PromiseCancelToken,
+  token: IPromiseCancelToken,
   callback: CB,
   strategy?: TCancelStrategy,
   onCancelled?: TOnCancelled,
@@ -338,7 +340,43 @@ export function PromiseCancelTokenWrapFunction<CB extends (...args: any[]) => an
   };
 }
 
+
+export function PromiseCancelTokenOf(
+  constructor: IPromiseCancelTokenConstructor,
+  tokens: IPromiseCancelToken[],
+): IPromiseCancelToken {
+  const token: IPromiseCancelToken = new constructor();
+
+  const index: number = tokens.findIndex(_ => _.cancelled);
+
+  if (index === -1) {
+    const clear = () => {
+      tokenObserver.deactivate();
+      tokensObserver.forEach(_ => _.deactivate());
+    };
+
+    const cancel = (reason: any) => {
+      clear();
+      token.cancel(reason);
+    };
+
+    const tokenObserver = token.addListener('cancel', clear);
+    const tokensObserver = tokens.map(_ => _.addListener('cancel', cancel));
+    tokenObserver.activate();
+    tokensObserver.forEach(_ => _.activate());
+  } else {
+    token.cancel(tokens[index].reason);
+  }
+
+  return token;
+}
+
+
 export class PromiseCancelToken extends NotificationsObservable<IPromiseCancelTokenKeyValueMap> implements IPromiseCancelToken {
+
+  static of(...tokens: IPromiseCancelToken[]): IPromiseCancelToken {
+    return PromiseCancelTokenOf(this, tokens);
+  }
 
   constructor() {
     super();
