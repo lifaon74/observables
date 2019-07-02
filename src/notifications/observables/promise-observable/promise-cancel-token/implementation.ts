@@ -319,11 +319,22 @@ export function PromiseCancelTokenWrapPromise<T>(
   onCancelled?: TOnCancelled,
 ): Promise<T | void> {
   return RaceCancelled<T>(token, promise)
-    .then(...Finally<T>(() => {
+    .then<T | void, never | void>((value: T) => {
       return token.cancelled
         ? ApplyOnCancelCallback(token, strategy, onCancelled)
-        : Promise.resolve();
-    }));
+        : value;
+    }, (error: any) => {
+      if (token.cancelled) {
+        return ApplyOnCancelCallback(token, strategy, onCancelled);
+      } else {
+        throw error;
+      }
+    });
+    // .then(...Finally<T>(() => {
+    //   return token.cancelled
+    //     ? ApplyOnCancelCallback(token, strategy, onCancelled)
+    //     : Promise.resolve();
+    // }));
 }
 
 export function PromiseCancelTokenWrapFunction<CB extends (...args: any[]) => any>(
