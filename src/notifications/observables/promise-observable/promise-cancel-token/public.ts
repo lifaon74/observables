@@ -4,5 +4,5 @@ export {
   PromiseCancelTokenObserver,
   CancelNotification,
   PromiseCancelError,
-  IsPromiseCancelToken
+  IsPromiseCancelToken,
 } from './implementation';

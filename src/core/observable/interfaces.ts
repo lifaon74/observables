@@ -22,11 +22,13 @@ export type TObservablePipeToObserverResult<TInputObserver extends IObserver<any
 
 // if an Observer's callback supports the types of an Observable, returns an Observer composed with this callback, else returns never
 export type TObservablePipeToCallbackResult<TInputCallback extends (value: any) => void, TReferenceObserverValue> =
-  TInputCallback extends (value: infer T) => void
-    ? IsSubSet<TReferenceObserverValue, T> extends true
-      ? IObserver<T>
-      : never
-    : never;
+  TInputCallback extends () => void
+    ? IObserver<void>
+    : TInputCallback extends (value: infer T) => void
+      ? IsSubSet<TReferenceObserverValue, T> extends true
+        ? IObserver<T>
+        : never
+      : never;
 
 // if an ObservableObserver's Observer supports the types of an Observable, returns the ObservableObserver's Observable, else returns never
 export type TObservablePipeThroughResult<TInputObservableObserver extends IObservableObserver<IObserver<any>, IObservable<any>>, TReferenceObserverValue> =
@@ -120,6 +122,9 @@ export interface IObservable<T> {
 
   // like "pipeTo" but returns this instead
   observedBy<O extends TObserverOrCallback<any>[]>(...observers: O): TObservableObservedByResultNonCyclic<O, T, this>; // returns this
+
+  // detaches all the observers observing this observable
+  clearObservers(): this;
 }
 
 export type TObserverOrCallback<T> = IObserver<T> | ((value: T) => void);

@@ -1,4 +1,3 @@
-
 export function ConstructClassWithPrivateMembers(instance: any, symbol: symbol): void {
   Object.defineProperty(instance, symbol, {
     value: {},

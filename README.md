@@ -28,6 +28,42 @@ You may also use unpkg: `https://unpkg.com/@lifaon/observables`
 As comparision the rxjs core is: ![npm bundle size](https://img.shields.io/bundlephobia/minzip/rxjs.svg)
  (4 times bigger than this core), and the full bundle <span style="color: #1062A4">**27KB**</span>. Of course less operators are available in this project.
  
+### Quick example: Observing Keyboard Events ###
+Using the *Observable* constructor, we can create a function which returns an observable stream of events with a specific type for any EventTarget.
+```ts
+function listen<T extends Event>(target: EventTarget, name: string) {
+ return new Observable<Event>((context: IObservableContext<Event>) => {
+   const listener = (event: T) => context.emit(event);
+   return {
+     // everytime an Observer wants to receive data from this Observable, this method will be called
+     onObserved() {
+       if (context.observable.observers.length === 1) { // if its the first observer to observe this observable, create a listener
+         target.addEventListener(name, listener);
+       }
+     },
+     // everytime an Observer wants to stop to receive data from this Observable, this method will be called
+     onUnobserved() {
+       if (!context.observable.observed) { // if there's no more Observers for this Observable, we can stop the listener.
+         target.removeEventListener(name, listener);
+       }
+     }
+   };
+ });
+}
+```
+
+Then we can observe this stream and log the pressed keys.
+
+```ts
+const observer = listen<KeyboardEvent>(target, 'keydown')
+ .pipeTo(
+   new Observer<KeyboardEvent>((value: KeyboardEvent) => {
+     console.log(`Received key command: ${ value.key }`)
+   })
+ )
+ .activate(); // by default, the observer is not activated, let's activated it
+```
+ 
 ### Motivation ###
 
 After using RXJS for a while (and a lot), I noticed some recurrent problems I faced:
@@ -69,132 +105,196 @@ and leaves this state (enters *deactivated*) if no more Observers are observing 
 
 As an image, we may compare an Observable with a source (emits data),
 an ObservableObserver with a pipe (transforms/transfers data)
-and a Observer with a sink (receives and process data).
+and a Observer with a sink (receives and processes data).
 
 To compare with RXJS, an Observer is both a RX.Observer and a RX.Subscription.
 
+### Main differences between this spec and RXJS ###
 
-### Example: Observing Keyboard Events ###
-Using the *Observable* constructor, we can create a function which returns an observable stream of events with a specific type for any EventTarget.
+**Here, Observables haven't any state: exit the *'complete'* and *'error'* state of the RXJS's Observables**
+- Why ? Because for some "observables" (like timers, events or mqtt subscriptions), there is never a 'complete' or 'error' state. Just a stream a values which never end. 
+- For "observables" with a final state (like promises or iterables), we may use a notifications system instead, emitting both
+a value and its type (further explanations later). Moreover, it allows us to emit extra states if required (ex: 'aborted', 'pending', etc...)
+
+**RXJS's Observer and a RXJS's Subscription are joined in one entity: Observer.**
+- Only one reference (on the Observer) is required to subscribe/unsubscribe to the stream of data =>
+  less variables for the user, easier return for the functions (one observer vs the tuple [observable, subscription])
+- With an Observer we may subscribe/unsubscribe many times with the same object where the RXJS's Subscription is unique.
+
+**RXJS promotes a lot its operators, where this spec try to limit their usage**
+- The amount of RXJS's operators is extremely huge: it confuse new users and may discourage them.
+- A pipe consumes a lot of CPU and memory usage: it requires to create underlying Observable and Observer (sophisticated classes and structures).
+  Creating these objects consumes memory and forces data to pass though complex and longer code.
+  For production environment with thousand if not millions of Observables and pipes, this is not optimal.
+- Solution ? Use native code inside the functions receiving the values:
+  - instead of `filter`, use `if`.
+  - instead of `map`, transform the incoming value to a different one.
+  - etc...
+
+Most of the RXJS operators are just syntax sugar with important impact on the performance.
+*it's an computationally inefficient manner to use the pipes*, where [cpu budget is a thing](https://www.google.com/search?q=js%20cpu%20budget) (ex: [The cost of javascript](https://medium.com/@addyosmani/the-cost-of-javascript-in-2018-7d8950fbb5d4)).
+
+You may easily replace them with far faster native code in 99% of the cases:
+
 ```ts
-function listen<T extends Event>(target: EventTarget, name: string) {
-  return new Observable<Event>((context: ObservableContext<Event>) => {
-    const listener = (event: T) => context.emit(event);
-    return {
-      // everytime an Observer wants to receive data from this Observable, this method will be called
-      onObserved() {
-        if (context.observable.observers.length === 1) { // if its the first observer to observe this observable, create a listener
-          target.addEventListener(name, listener);
-        }
-      },
-      // everytime an Observer wants to stop to receive data from this Observable, this method will be called
-      onUnobserved() {
-        if (!context.observable.observed) { // if there's no more Observers for this Observable, we can stop the listener.
-          target.removeEventListener(name, listener);
-        }
-      }
-    };
+// DONT
+source
+  .pipe(filter(num => num % 2 === 0)) // heck! you created a new Observable and Observer under the hood and a longer execution path for your data
+  .subscribe(val => console.log(`Even number: ${val}`));
+
+// DO
+source
+  .subscribe(val => {
+    if (num % 2 === 0) {
+      console.log(`Even number: ${val}`)
+    }
   });
+```
+
+---
+
+### A longer example: Ambient light sensor ###
+
+Here's an example of an Observable based on the AmbientLightSensor
+
+<details>
+<summary>show</summary>
+<p>
+
+```ts
+function sensorExample() {
+
+  interface AmbientLightObservableEventsMap {
+    'error': Error;
+    'value': number;
+  }
+
+  /**
+   * An Observable based on an AmbientLightSensor.
+   * Emits the illuminance
+   */
+  class AmbientLightObservable extends NotificationsObservable<AmbientLightObservableEventsMap> {
+
+    /**
+     * Ensures permission is granted
+     */
+    static create(): Promise<AmbientLightObservable> {
+      return navigator.permissions.query({ name: 'ambient-light-sensor' })
+        .then((result: PermissionStatus) => {
+          if (result.state === 'denied') {
+            throw new Error(`Permission to use ambient light sensor is denied.`);
+          } else {
+            return new AmbientLightObservable();
+          }
+        });
+    }
+
+    constructor(options: { frequency: number } = { frequency: 10 }) {
+      super((context: INotificationsObservableContext<AmbientLightObservableEventsMap>) => {
+        // @ts-ignore - because AmbientLightSensor is draft
+        const sensor: AmbientLightSensor = new AmbientLightSensor(options);
+
+        const valueListener = () => context.dispatch('value', sensor.illuminance);
+        // @ts-ignore - because SensorErrorEvent is draft
+        const errorListener = (event: SensorErrorEvent) => context.dispatch('error', event.error);
+
+        return {
+          onObserved() {
+            if (context.observable.observers.length === 1) {
+              sensor.addEventListener('reading', valueListener);
+              sensor.addEventListener('error', errorListener);
+              sensor.start();
+            }
+          },
+          onUnobserved() {
+            if (!context.observable.observed) {
+              sensor.removeEventListener('reading', valueListener);
+              sensor.removeEventListener('error', errorListener);
+              sensor.stop();
+            }
+          }
+        };
+      });
+    }
+  }
+
+  return AmbientLightObservable.create()// or new AmbientLightObservable()
+    .then((ambientLightObservable: AmbientLightObservable) => {
+
+      // observes incoming values and log it in the DOM
+      const ambientLightObserver = ambientLightObservable
+        .addListener('value', (illuminance: number) => {
+          const div = document.createElement('div');
+          div.innerText = `${ illuminance }lux`;
+          document.body.appendChild(div);
+        });
+
+      // observes errors and log it in the DOM if any
+      ambientLightObservable
+        .addListener('error', (error: Error) => {
+          const div = document.createElement('div');
+          div.innerText = `[ERROR]: ${ error.message }`;
+          document.body.appendChild(div);
+        }).activate();
+
+      // creates a "toggle sensor" button
+      const button = document.createElement('button');
+      button.innerText = 'activate';
+      button.style.margin = `10px`;
+      document.body.appendChild(button);
+
+      // on click, toggle ambientLightObserver
+      button.addEventListener('click', () => {
+        if (ambientLightObserver.activated) {
+          button.innerText = 'activate';
+          ambientLightObserver.deactivate();
+        } else {
+          button.innerText = 'deactivate';
+          ambientLightObserver.activate();
+        }
+      });
+
+      const div = document.createElement('div');
+      div.innerText = `illuminance:`;
+      document.body.appendChild(div);
+    })
+    .catch((error: any) => {
+      const div = document.createElement('div');
+      div.innerText = `[ERROR]: ${ error.message }`;
+      document.body.appendChild(div);
+    });
 }
 ```
 
-Then we can observe this stream and log the pressed keys.
+</p>
+</details>
 
+As you may see, its surprisingly simple to subscribe/unsubscribe by maintaining only one reference,
+where RXJS requires to keep both the observable and the subscription.
 ```ts
-const observer = listen<KeyboardEvent>(target, 'keydown')
-  .pipeTo(new Observer<KeyboardEvent>((value: KeyboardEvent) => {
-    console.log(`Received key command: ${value.key}`)
-  })).activate(); // don't forget to activate the observer !
+button.addEventListener('click', () => {
+  if (ambientLightObserver.activated) {
+    button.innerText = 'activate';
+    ambientLightObserver.deactivate();
+  } else {
+    button.innerText = 'deactivate';
+    ambientLightObserver.activate();
+  }
+});
 ```
 
-In my opinions, RXJS operators are useful for lazy development but most of them are not really necessary.
-They introduce a bigger level of complexity, a bigger bundle size, and slower code execution,
-where you could simply do the filtering, mapping, error check, etc... directly into the destination in 99% of the cases (`.subscribe({ next(value) { /* filter here */ })`).
-Only complex ones should be used.
-
+In the context of IoT and sensors, Observables may be extremely useful:
 ```ts
-const keyMapping = (cb: (value: string) => void) => {
-  const keyCommands: any = { '38': 'up', '40': 'down' };
-  return (event: KeyboardEvent) => {
-    if (event.keyCode in keyCommands) {
-      cb(keyCommands[event.keyCode]);
-    }
-  };
-};
-
-const observer = listen<KeyboardEvent>(target, 'keydown')
-  .pipeTo(new Observer<KeyboardEvent>(keyMapping((value: string) => {
-    console.log(`Received key command: ${value}`)
-  }))).activate();
+interface SmartElectricOutlet {
+  state: Observerable<'on' | 'off'>;
+  current: Observerable<number>;
+  voltage: Observerable<number>;  
+  watts: Observerable<number>;  
+  wattHours: Observerable<number>;
+}
 ```
 
-### Example: WOT subscription ###
-This example can be found here: https://w3c.github.io/wot-scripting-api/#example-4-consume-a-thing
-```ts
-try {
-  let subscription = wot.discover({ method: "local" }).subscribe(
-    td => {
-      let thing = wot.consume(td);
-      console.log("Thing " + thing.name + " has been consumed.");
-      let subscription = thing["temperature"].subscribe(function(value) {
-          console.log("Temperature: " + value);
-        });
-      thing.actions["startMeasurement"].invoke({ units: "Celsius" })
-        .then(() => { console.log("Temperature measurement started."); })
-        .catch(e => {
-           console.log("Error starting measurement.");
-           subscription.unsubscribe();
-         })
-    },
-    error => { console.log("Discovery error: " + error.message); },
-    () => { console.log("Discovery finished successfully");}
-  );
-} catch(error) {
-  console.log("Error: " + error.message);
-};
-```
-
-Could be written like so:
-
-```ts
-const discoverObservable = wot.discover({ method: 'local' })
-  .on('thing-description', (td: string) => {
-    const thing = wot.consume(td);
-    console.log('Thing ' + thing.name + ' has been consumed.');
-
-    const temperatureObserver = thing['temperature']
-      .pipeTo((value: any) => {
-        console.log('Temperature: ' + value);
-      }).activate();
-      
-    thing.actions['startMeasurement'].invoke({ units: 'Celsius' })
-      .then(() => {
-        console.log('Temperature measurement started.');
-      })
-      .catch(() => {
-        console.log('Error starting measurement.');
-        temperatureObserver.deactivate();
-      });
-  })
-  .on('error', (error: Error) => {
-    console.log('Discovery error: ' + error.message);
-  })
-  .on('complete', () => {
-    console.log('Discovery finished successfully');
-    while (discoverObservable.observers.length > 0) { // clear the observers
-      discoverObservable.observers.item(0).unobserve(discoverObservable);
-    }
-  })
-;
-```
-
-With this specification it is extremely easy to activate/deactivate an observed value, and clear all the resources properly.
-
-On the contrary, in the first example, with RXJS like Observable, we need a reference on `thing['temperature']` and `subscription`,
-everytime we want to activate/deactivate the Observable. With this proposal, just providing `temperatureObserver`
-would do the job.
-
-A more complete example may be found here: [wot-temperature-example](./examples/wot-temperature-example.md)
+---
 
 ### Table of contents ###
 <!-- toc -->
@@ -205,6 +305,7 @@ A more complete example may be found here: [wot-temperature-example](./examples/
     + [pipeThrough](#pipethrough)
     + [pipe](#pipe)
     + [observedBy](#observedby)
+    + [clearObservers](#clearobservers)
   * [Observer](#observer)
     + [Construct](#construct-1)
     + [emit](#emit)
@@ -225,16 +326,20 @@ A more complete example may be found here: [wot-temperature-example](./examples/
       - [on / off](#on--off)
       - [matches](#matches)
     + [NotificationsObserver](#notificationsobserver)
-  * [EventsObservable](#eventobservable)
+  * [EventsObservable](#eventsobservable)
   * [PromiseObservable](#promiseobservable)
     + [PromiseCancelToken](#promisecanceltoken)
+      - [of (static)](#of-static)
       - [cancel](#cancel)
       - [toAbortController / linkWithAbortController / linkWithAbortSignal](#toabortcontroller--linkwithabortcontroller--linkwithabortsignal)
+      - [wrapPromise / wrapFunction / wrapFetchArguments](#wrappromise--wrapfunction--wrapfetcharguments)
     + [PromiseObservable](#promiseobservable-1)
     + [FetchObservable](#fetchobservable)
 
 
 ### API ###
+
+Every methods and attributes are commented on the source files, in case you require more details.
 
 #### Observable
 ```ts
@@ -263,6 +368,9 @@ interface IObservable<T> {
 
   // like "pipeTo" but returns this instead
   observedBy<O extends TObserverOrCallback<any>[]>(...observers: O): TObservableObservedByResultNonCyclic<O, T, this>; // returns this
+  
+  // detaches all the observers observing this observable
+  clearObservers(): this;
 }
 
 type TObserverOrCallback<T> = IObserver<T> | ((value: T) => void);
@@ -418,10 +526,38 @@ More details on ObservableObserver bellow.
 ```ts
 observedBy<O extends TObserverOrCallback<any>[]>(...observers: O): TObservableObservedByResultNonCyclic<O, T, this>; // returns this
 ```
-Tells all the *observers* to observe this Observable.
+Asks all the *observers* to observe this Observable.
 
+##### clearObservers
+```ts
+clearObservers(): this;
+```
+Detaches (*unobserve*) all the *observers* of this Observable.
 
+Equivalent of:
+```ts
+// WARN: don't 'for loop' to removes observers !
+// THIS IS WRONG:
+for (let i = 0; i < observable.observers.length; i++) {
+  observable.observers.item(i).unobserve(observable);
+}
 
+// if we remove the first observer, the observers' array is shifted on the left (second become first, etc...),
+// so when index will be 1, it will actually target and remove the original third observer instead of the original second.
+// the proper implementation requires simply to continuously remove the first element until the array is empty.
+
+// INSTEAD DO:
+while (observable.observers.length > 0) {
+  observable.observers.item(0).unobserve(observable);
+}
+
+// Or at least, in a less efficient way, clone observable.observers before iterating over it:
+const observers = Array.from(observable.observers);
+for (let i = 0; i < observers.length; i++) {
+  observers[i].unobserve(observable);
+}
+```
+    
 ---
 
 
@@ -748,7 +884,7 @@ Notifications (also called *events* sometimes) are one frequent and common usage
 - Even promises may be considered as emitting notifications (*fulfilled*, *rejected*)
 
 A Notification is simply an object with a name and an optional value.
-It serves as instructing about an update of a state or about an event.
+It provides information about a new state, or even transmits an event.
 
 
 ```ts
@@ -775,7 +911,7 @@ We may use Observables to emit Notifications and Observers to filter them by nam
 ***KeyValueMap***
 
 First you need to know that NotificationsObservable are typed with a `KeyValueMap`.
-It's simply an interface where the keys are the notifications' name, and the values, the associated value's type for this name.
+It is simply an interface where the keys are the notifications' name; and the values, the associated value's type for this name.
 
 ```ts
 type KeyValueMap<TKVMap, T> = {
@@ -858,6 +994,26 @@ removeListener<K extends KeyValueMapKeys<TKVMap>>(name: K, callback?: (value: TK
 ```
 Removes all NotificationsObservers matching `name` and `callback` from this Observable.
 If `callback` is omitted, removes all NotificationsObservers matching `name`.
+
+**INFO**: `removeListener` uses the function `matches` which is less efficient than keeping a reference on the matching Observer(s).
+
+```ts
+const listener = (event: MouseEvent) => {
+ console.log('click', event);
+};
+
+const observable = new EventsObservable<WindowEventMap>(window);
+const observer = observable.addListener('click', listener);
+observer.activate();
+  
+// ... later ...
+
+// prefer
+observer.deactivate();
+
+// instead of 
+observable.removeListener('click', listener);
+```
 
 
 ###### on / off
@@ -977,17 +1133,29 @@ setTimeout(() => {
 }, 5000);
 ```
 
+**INFO:** For NodeJS's EventEmitter, the equivalent is NodeJSEventsObservable.
 
 #### PromiseObservable
 
 ##### PromiseCancelToken
 ```ts
+type TCancelStrategy =
+  'resolve' // resolve the promise with void
+  | 'reject' // reject the promise with the Token's reason
+  | 'never' // (default) never resolve the promise, it stays in a pending state forever
+  ;
+
+type TOnCancelled = ((this: IPromiseCancelToken) => TPromiseOrValue<void>) | undefined | null;
+
 interface IPromiseCancelTokenKeyValueMap {
   cancel: any;
 }
 
 interface IPromiseCancelTokenConstructor {
   new(): IPromiseCancelToken;
+  
+  // builds a new PromiseCancelToken from a list of PromiseCancelTokens
+  of(...tokens: IPromiseCancelToken[]): IPromiseCancelToken;
 }
 
 interface IPromiseCancelToken extends INotificationsObservable<IPromiseCancelTokenKeyValueMap> {
@@ -1000,19 +1168,28 @@ interface IPromiseCancelToken extends INotificationsObservable<IPromiseCancelTok
   // creates an AbortController linked with this Token
   toAbortController(): AbortController;
 
-  /**
-   * Links this Token with an AbortController
-   *  If the AbortController aborts, the Token is cancelled
-   *  If the Token is cancelled, aborts the AbortController
-   */
+  // links this Token with an AbortController
   linkWithAbortController(controller: AbortController): () => void;
 
-  /**
-   * Links this Token with an AbortSignal
-   *  If the AbortSignal aborts, the Token is cancelled
-   *  WARN: cannot cancel a AbortSignal if the Token is cancelled, prefer using linkWithAbortController instead
-   */
+  // links this Token with an AbortSignal
   linkWithAbortSignal(signal: AbortSignal): () => void;
+  
+  // wraps a promise with a this Token
+  wrapPromise<T>(
+    promise: Promise<T>,
+    strategy?: TCancelStrategy,
+    onCancelled?: TOnCancelled,
+  ): Promise<T | void>;
+  
+  // wraps a function with this Token
+  wrapFunction<CB extends (...args: any[]) => any>(
+    callback: CB,
+    strategy?: TCancelStrategy,
+    onCancelled?: TOnCancelled,
+  ): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>> | void>;
+  
+  // wraps the fetch arguments with this Token
+  wrapFetchArguments(requestInfo: RequestInfo, requestInit?: RequestInit): [RequestInfo, RequestInit | undefined];
 }
 
 ```
@@ -1042,6 +1219,13 @@ token.cancel(new Error('Promise cancelled'));
 Promises don't have any 'cancelled' state or a way to dispatch/handle it natively.
 For this reason a PromiseCancelToken may be used and **MUST** be checked in every then/catch to avoid unnecessary work.
 
+###### of (static)
+```ts
+of(...tokens: IPromiseCancelToken[]): IPromiseCancelToken;
+```
+Creates a new PromiseCancelToken from a list of PromiseCancelTokens:
+if one of the provided `tokens` is cancelled, cancel this Token with the cancelled token's reason.
+
 ###### cancel
 ```ts
 cancel(reason?: any): void;
@@ -1066,6 +1250,41 @@ const token = new PromiseCancelToken();
 fetch('some-url', { signal: token.toAbortController().signal });
 
 token.cancel(new Error('Promise cancelled')); // aborts the fetch
+```
+
+###### wrapPromise / wrapFunction / wrapFetchArguments
+
+Wraps a promise, function or fetch argument to properly handle the cancel state of the Token.
+
+*Example:*
+```ts
+function promiseCancelTokenExample(): Promise<void> {
+  const token: IPromiseCancelToken = new PromiseCancelToken();
+  // 1) wrapFetchArguments => ensures fetch will be aborted when token is cancelled
+  // 2) wrapPromise => ensures fetch won't resolve if token is cancelled
+  return token.wrapPromise(fetch(...token.wrapFetchArguments('http://domain.com/request1')))
+    .then(token.wrapFunction(function toJSON(response: Response) { // 3) ensures 'toJSON' is called only if token is not cancelled
+      return response.json(); // 'wrapPromise' not required because we immediately return a promise inside 'wrapFunction'
+    }))
+    .then(token.wrapFunction(function next(json: any) { // 4) ensures 'next' is called only if token is not cancelled
+      console.log(json);
+      // continue...
+    }));
+}
+```
+
+**INFO:** You may also use the `CancellablePromise`
+```ts
+function cancellablePromiseExample(): ICancellablePromise<void> {
+  return CancellablePromise.fetch('http://domain.com/request1')
+    .then((response: Response) => {
+      return response.json();
+    })
+    .then((json: any) => {
+      console.log(json);
+      // continue...
+    });
+}
 ```
 
 

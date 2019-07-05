@@ -25,10 +25,10 @@
     "noLib": false,
     "pretty": true,
 
-    "removeComments": true,
+    "removeComments": false,
     "sourceMap": false,
 
-    "strictNullChecks": false,
+    "strictNullChecks": true,
 
     "moduleResolution": "node",
 

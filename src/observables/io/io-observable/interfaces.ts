@@ -8,8 +8,8 @@ import { IObservable, TObservableConstructorArgs } from '../../../core/observabl
 import { KeyValueMapConstraint } from '../../../notifications/core/interfaces';
 
 export interface IInputOutputKeyValueMap {
-  activate: undefined;
-  deactivate: undefined;
+  activate: void;
+  deactivate: void;
   error: Error;
 }
 
@@ -25,6 +25,17 @@ export interface IInputOutputConstructor {
     observable: TObservable,
     observer: TObserver,
   ): IInputOutput<TKVMap, TObservable, TObserver>;
+}
+
+
+export type TInputOutputConstructorArgsSimple<TObservable extends IObservable<any>, TObserver extends IObserver<any>> =
+  [TObservable, TObserver];
+
+export interface IInputOutputConstructorSimple {
+  new<TObservable extends IObservable<any>, TObserver extends IObserver<any>>(
+    observable: TObservable,
+    observer: TObserver,
+  ): IInputOutput<IInputOutputKeyValueMap, TObservable, TObserver>;
 }
 
 export interface IInputOutputSuperClass<TKVMap extends IOKeyValueMapGenericConstraint<TKVMap>> extends INotificationsObservable<TKVMap>, IActivable {
@@ -55,11 +66,12 @@ export type TInputOutputBaseOptionsForSuperResult<TKVMap extends IOKeyValueMapGe
   TActivableConstructorArgs,
   TNotificationsObservableConstructorArgs<TKVMap>,
   TObservableConstructorArgs<KeyValueMapToNotifications<TKVMap>>
-  ];
+];
 
-export type TInputOutputBaseOptionsForSuperResultNonStrict<TKVMap extends IOKeyValueMapGenericConstraint<TKVMap>, TObservable extends IObservable<any>, TObserver extends IObserver<any>> = [
-  TInputOutputConstructorArgs<TKVMap, TObservable, TObserver>,
+export type TInputOutputBaseOptionsForSuperResultSimple<TObservable extends IObservable<any>, TObserver extends IObserver<any>> = [
+  TInputOutputConstructorArgsSimple<TObservable, TObserver>,
   TActivableConstructorArgs,
-  TNotificationsObservableConstructorArgs<any>,
-  TObservableConstructorArgs<KeyValueMapToNotifications<any>>
-  ];
+  TNotificationsObservableConstructorArgs<IInputOutputKeyValueMap>,
+  TObservableConstructorArgs<any>
+];
+

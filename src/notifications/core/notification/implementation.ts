@@ -14,7 +14,7 @@ export interface INotificationInternal<TName extends string, TValue> extends INo
   [NOTIFICATION_PRIVATE]: INotificationPrivate<TName, TValue>;
 }
 
-export function ConstructNotification<TName extends string, TValue>(notification: INotification<TName, TValue>, name: TName, value: TValue = void 0): void {
+export function ConstructNotification<TName extends string, TValue>(notification: INotification<TName, TValue>, name: TName, value: TValue): void {
   ConstructClassWithPrivateMembers(notification, NOTIFICATION_PRIVATE);
   (notification as INotificationInternal<TName, TValue>)[NOTIFICATION_PRIVATE].name = name;
   (notification as INotificationInternal<TName, TValue>)[NOTIFICATION_PRIVATE].value = value;
@@ -31,7 +31,7 @@ export class Notification<TName extends string, TValue> implements INotification
     return new Notification<TName, TEvent>(event.type as TName, event);
   }
 
-  constructor(name: TName, value?: TValue) {
+  constructor(name: TName, value: TValue) {
     ConstructNotification<TName, TValue>(this, name, value);
   }
 
@@ -43,10 +43,10 @@ export class Notification<TName extends string, TValue> implements INotification
     return ((this as unknown) as INotificationInternal<TName, TValue>)[NOTIFICATION_PRIVATE].value;
   }
 
-  toJSON(): INotification<TName, TValue> {
+  toJSON(): Pick<INotification<TName, TValue>, 'name' | 'value'> {
     return {
       name: this.name,
       value: this.value,
-    } as INotification<TName, TValue>;
+    };
   }
 }

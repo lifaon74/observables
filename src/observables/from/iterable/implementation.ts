@@ -4,12 +4,10 @@ import {
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../../helpers';
 import {
-  IFromObservable, IFromObservableConstructor, IFromObservableContext, TFromObservableCompleteAction
+  IFromObservable, IFromObservableCompleteOptions, IFromObservableConstructor, IFromObservableContext
 } from '../interfaces';
 import { ObservableFactory } from '../../../core/observable/implementation';
-import {
-  FROM_OBSERVABLE_PRIVATE, FromObservableFactory, IFromObservableInternal, IsFromObservableConstructor
-} from '../implementation';
+import { FromObservableFactory, IFromObservableInternal, IsFromObservableConstructor } from '../implementation';
 import {
   Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
 } from '../../../classes/factory';
@@ -20,6 +18,7 @@ export const FROM_ITERABLE_OBSERVABLE_PRIVATE = Symbol('from-iterable-observable
 
 export interface IFromIterableObservablePrivate<T> {
   context: IFromObservableContext<T>;
+  pending: boolean;
   iterable: Iterable<T>;
 }
 
@@ -34,15 +33,17 @@ export function ConstructFromIterableObservable<T>(
 ): void {
   ConstructClassWithPrivateMembers(observable, FROM_ITERABLE_OBSERVABLE_PRIVATE);
   (observable as IFromIterableObservableInternal<T>)[FROM_ITERABLE_OBSERVABLE_PRIVATE].context = context;
+  (observable as IFromIterableObservableInternal<T>)[FROM_ITERABLE_OBSERVABLE_PRIVATE].pending = true;
   (observable as IFromIterableObservableInternal<T>)[FROM_ITERABLE_OBSERVABLE_PRIVATE].iterable = iterable;
 }
 
 export function IsFromIterableObservable(value: any): value is IFromIterableObservable<any> {
   return IsObject(value)
-    && value.hasOwnProperty(FROM_ITERABLE_OBSERVABLE_PRIVATE);
+    && value.hasOwnProperty(FROM_ITERABLE_OBSERVABLE_PRIVATE as symbol);
 }
 
 const IS_FROM_ITERABLE_OBSERVABLE_CONSTRUCTOR = Symbol('is-from-iterable-observable-constructor');
+
 export function IsFromIterableObservableConstructor(value: any): boolean {
   return (typeof value === 'function')
     && HasFactoryWaterMark(value, IS_FROM_ITERABLE_OBSERVABLE_CONSTRUCTOR);
@@ -50,8 +51,8 @@ export function IsFromIterableObservableConstructor(value: any): boolean {
 
 
 export function FromIterableObservableOnObserved<T>(observable: IFromIterableObservable<T>): void {
-  if ((observable as IFromIterableObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].state === 'awaiting') {
-    (observable as IFromIterableObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].state = 'emitting';
+  if ((observable as IFromIterableObservableInternal<T>)[FROM_ITERABLE_OBSERVABLE_PRIVATE].pending) {
+    (observable as IFromIterableObservableInternal<T>)[FROM_ITERABLE_OBSERVABLE_PRIVATE].pending = false;
 
     const iterator: Iterator<T> = (observable as IFromIterableObservableInternal<T>)[FROM_ITERABLE_OBSERVABLE_PRIVATE].iterable[Symbol.iterator]();
     let result: IteratorResult<T>;
@@ -72,8 +73,8 @@ export function PureFromIterableObservableFactory<TBase extends Constructor<IFro
 
   return class FromIterableObservable extends superClass implements IFromIterableObservable<T> {
     constructor(...args: any[]) {
-      const [iterable, onComplete]: TFromIterableObservableConstructorArgs<T> = args[0];
-      let context: IFromObservableContext<T> = void 0;
+      const [iterable, onCompleteOptions]: TFromIterableObservableConstructorArgs<T> = args[0];
+      let context: IFromObservableContext<T>;
       super(...setSuperArgs(args.slice(1), [
         (_context: IFromObservableContext<T>) => {
           context = _context;
@@ -82,8 +83,9 @@ export function PureFromIterableObservableFactory<TBase extends Constructor<IFro
               FromIterableObservableOnObserved<T>(this);
             }
           };
-        }, onComplete
+        }, onCompleteOptions
       ]));
+      // @ts-ignore
       ConstructFromIterableObservable<T>(this, context, iterable);
     }
   };
@@ -100,7 +102,7 @@ export function FromIterableObservableFactory<TBase extends Constructor<IFromObs
 }
 
 export function FromIterableObservableBaseFactory<TBase extends Constructor>(superClass: TBase) {
-  return MakeFactory<IFromIterableObservableConstructor, [IFromObservableConstructor,  IObservableConstructor], TBase>(PureFromIterableObservableFactory, [FromObservableFactory, ObservableFactory], superClass, {
+  return MakeFactory<IFromIterableObservableConstructor, [IFromObservableConstructor, IObservableConstructor], TBase>(PureFromIterableObservableFactory, [FromObservableFactory, ObservableFactory], superClass, {
     name: 'FromIterableObservable',
     instanceOf: FromIterableObservable,
     waterMarks: [IS_FROM_ITERABLE_OBSERVABLE_CONSTRUCTOR,],
@@ -108,7 +110,7 @@ export function FromIterableObservableBaseFactory<TBase extends Constructor>(sup
 }
 
 FromIterableObservable = class FromIterableObservable extends FromIterableObservableBaseFactory<ObjectConstructor>(Object) {
-  constructor(iterable: Iterable<any>, onComplete?: TFromObservableCompleteAction) {
-    super([iterable, onComplete], [], []);
+  constructor(iterable: Iterable<any>, onCompleteOptions?: IFromObservableCompleteOptions) {
+    super([iterable, onCompleteOptions], [], []);
   }
 } as IFromIterableObservableConstructor;

@@ -38,7 +38,7 @@ export class CyclicTypedVectorArray<T extends TArrayBufferView> {
       this.index.write(this.vectorLength, force ? this.vectorLength : 0);
       this.array.set(input, index);
     } else {
-      throw new Error(`Expected an input with length: ${this.vectorLength}`);
+      throw new Error(`Expected an input with length: ${ this.vectorLength }`);
     }
   }
 
@@ -52,21 +52,24 @@ export class CyclicTypedVectorArray<T extends TArrayBufferView> {
   }
 
   toTypedArray(array?: T): T {
+    let _array: T;
     const readable: number = this.readable();
-    if (array == void 0) {
-      array = new (this.array.constructor as any)(readable);
+    if (array === void 0) {
+      _array = new (this.array.constructor as any)(readable);
     } else if (array.length < readable) {
       throw new Error(`Requires bigger array.`);
+    } else {
+      _array = array;
     }
 
     if (this.index.writeIndex >= this.index.readIndex) {
-      array.set(this.array.subarray(this.index.readIndex, this.index.writeIndex));
+      _array.set(this.array.subarray(this.index.readIndex, this.index.writeIndex));
     } else {
-      array.set(this.array.subarray(this.index.readIndex, this.index.length));
-      array.set(this.array.subarray(0, this.index.writeIndex), this.index.length - this.index.readIndex);
+      _array.set(this.array.subarray(this.index.readIndex, this.index.length));
+      _array.set(this.array.subarray(0, this.index.writeIndex), this.index.length - this.index.readIndex);
     }
-    return (array.length > readable)
-      ? array.subarray(0, readable) as T
-      : array;
+    return (_array.length > readable)
+      ? _array.subarray(0, readable) as T
+      : _array;
   }
 }

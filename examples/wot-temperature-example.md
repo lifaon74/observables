@@ -1,5 +1,11 @@
 # How to listen to a temperature sensor
 
+---
+
+**OUT OF DATE** due to draft spec, waiting for stable release. Example remains interesting to understand Observables.
+
+---
+
 This example will show you how to create a simple Observable for a temperature sensor (WoT).
 
 ### WoT introduction 
@@ -55,7 +61,7 @@ function temperatureObservable(thing: ConsumedThing): IObservable<number> {
 
 ### 2) Implementation with Pipe (better)
 
-Remember we I said that Pipes should be used everytime we pipe data from one observable to another ?
+Remember when I said that Pipes should be used everytime we pipe data from one observable to another ?
 
 Here we pipe data from `thing['temperature']` (an Observable) to another (the returned one).
 

@@ -1,18 +1,15 @@
-import { IFromObservableBase, TFromObservableCompleteAction } from '../interfaces';
+import { IFromObservableBase, IFromObservableCompleteOptions } from '../interfaces';
 import { Observable as RXObservable } from 'rxjs';
 import {
-  INotificationsObservable, KeyValueMapToNotifications
+  INotificationsObservable, INotificationsObservableBasicKeyValueMap, KeyValueMapToNotifications
 } from '../../../notifications/core/notifications-observable/interfaces';
 
 /** TYPES **/
 
-export type TFromRXJSObservableConstructorArgs<TValue, TError> = [RXObservable<TValue>, TFromObservableCompleteAction]
-| [RXObservable<TValue>];
+export type TFromRXJSObservableConstructorArgs<TValue, TError> = [RXObservable<TValue>, IFromObservableCompleteOptions]
+  | [RXObservable<TValue>];
 
-export interface IFromRXJSObservableNotificationKeyValueMap<TValue, TError> {
-  next: TValue;
-  error: TError;
-  complete: void;
+export interface IFromRXJSObservableNotificationKeyValueMap<TValue, TError> extends INotificationsObservableBasicKeyValueMap<TValue, TError> {
 }
 
 export type TFromRXJSObservableNotifications<TValue, TError> = KeyValueMapToNotifications<IFromRXJSObservableNotificationKeyValueMap<TValue, TError>>;
@@ -21,7 +18,7 @@ export type TFromRXJSObservableNotifications<TValue, TError> = KeyValueMapToNoti
 /** INTERFACES **/
 
 export interface IFromRXJSObservableConstructor {
-  new<TValue, TError>(rxObservable: RXObservable<TValue>, onComplete?: TFromObservableCompleteAction): IFromRXJSObservable<TValue, TError>;
+  new<TValue, TError>(rxObservable: RXObservable<TValue>, onCompleteOptions?: IFromObservableCompleteOptions): IFromRXJSObservable<TValue, TError>;
 }
 
 export interface INotificationsFromObservable<TValue, TError> extends IFromObservableBase, INotificationsObservable<IFromRXJSObservableNotificationKeyValueMap<TValue, TError>> {

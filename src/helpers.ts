@@ -1,5 +1,5 @@
-
-export function noop() {}
+export function noop() {
+}
 
 export function EnumToString<T>(values: T[]): string {
   let string: string = '';
@@ -7,7 +7,7 @@ export function EnumToString<T>(values: T[]): string {
     if (i > 0) {
       string += (i === (l - 1)) ? ' or ' : ',';
     }
-    string += `'${values[i]}'`;
+    string += `'${ values[i] }'`;
   }
   return string;
 }
@@ -29,6 +29,10 @@ export function MathClosestTo(targetValue: number, ...values: number[]): number 
 
 export function IsObject(value: any): value is object {
   return (typeof value === 'object') && (value !== null);
+}
+
+export function IsArray(value: any): value is Iterable<any> {
+  return Array.isArray(value);
 }
 
 export function IsIterable(value: any): value is Iterable<any> {

@@ -10,3 +10,5 @@ export * from './periodPipe';
 export * from './promisePipe';
 export * from './reducePipe';
 export * from './throttlePipe';
+export * from './mapNotificationsPipe';
+export * from './aggregateNotificationsPipe';

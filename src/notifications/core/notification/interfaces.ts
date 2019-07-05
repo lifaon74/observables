@@ -10,7 +10,7 @@ export interface INotificationConstructor {
   // converts an Event to a Notification
   fromEvent<TName extends string = string, TEvent extends Event = Event>(event: TEvent): INotification<TName, TEvent>;
 
-  new<TName extends string, TValue>(name: TName, value?: TValue): INotification<TName, TValue>;
+  new<TName extends string, TValue>(name: TName, value: TValue): INotification<TName, TValue>;
 }
 
 /**
@@ -23,5 +23,5 @@ export interface INotification<TName extends string, TValue> {
   readonly name: TName;
   readonly value: TValue;
 
-  toJSON(): INotification<TName, TValue>;
+  toJSON(): Pick<INotification<TName, TValue>, 'name' | 'value'>;
 }

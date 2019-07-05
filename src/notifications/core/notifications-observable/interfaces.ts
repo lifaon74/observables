@@ -55,28 +55,36 @@ export type KeyValueMapToNotificationsObserversLikeGeneric<TKVMap extends KeyVal
 export type TNotificationsObservablePipeToObserverResult<TInputObserver extends INotificationsObserver<string, any>, TKVMap extends KeyValueMapGenericConstraint<TKVMap>> =
   TInputObserver extends INotificationsObserver<infer TName, infer TValue>
     ? IsIntersecting<TName, KeyValueMapKeys<TKVMap>> extends true
-      ? IsSubSet<TKVMap[Extract<KeyValueMapKeys<TKVMap>, TName>], TValue> extends true
-        ? INotificationsObserver<TName, TValue>
-        : never
+    ? IsSubSet<TKVMap[Extract<KeyValueMapKeys<TKVMap>, TName>], TValue> extends true
+      ? INotificationsObserver<TName, TValue>
       : never
+    : never
     : never;
 
 
 export type TNotificationsObservablePipeThroughResult<TInputObservableObserver extends IObservableObserver<INotificationsObserver<any, any>, IObservable<any>>, TKVMap extends KeyValueMapGenericConstraint<TKVMap>> =
   TInputObservableObserver extends IObservableObserver<INotificationsObserver<infer TName, infer TValue>, infer TObservable>
     ? IsIntersecting<TName, KeyValueMapKeys<TKVMap>> extends true
-      ? IsSubSet<TKVMap[Extract<KeyValueMapKeys<TKVMap>, TName>], TValue> extends true
-        ? TObservable
-        : never
+    ? IsSubSet<TKVMap[Extract<KeyValueMapKeys<TKVMap>, TName>], TValue> extends true
+      ? TObservable
       : never
+    : never
     : never;
 
 
 export type TNotificationsObservableHook<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> = IObservableHook<KeyValueMapToNotifications<TKVMap>>;
 
 
-export type TNotificationsObservableConstructorArgs<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> = [(context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)] | [];
+export type TNotificationsObservableConstructorArgs<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> =
+  [(context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)]
+  | [];
 
+
+export interface INotificationsObservableBasicKeyValueMap<TValue, TError = any> {
+  next: TValue;
+  complete: undefined;
+  error: TError;
+}
 
 /** INTERFACES **/
 
@@ -96,10 +104,13 @@ export interface INotificationsObservableTypedConstructor<TKVMap extends KeyValu
 export interface INotificationsObservable<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> extends IObservable<KeyValueMapToNotifications<TKVMap>> {
 
   pipeTo<NO extends INotificationsObserver<any, any>>(observer: NO): TNotificationsObservablePipeToObserverResult<NO, TKVMap>;
+
   pipeTo<O extends IObserver<any>>(observer: O): TObservablePipeToObserverResult<O, KeyValueMapToNotifications<TKVMap>>;
+
   pipeTo<C extends (value: any) => void>(callback: C): TObservablePipeToCallbackResult<C, KeyValueMapToNotifications<TKVMap>>;
 
   pipeThrough<OO extends IObservableObserver<INotificationsObserver<any, any>, IObservable<any>>>(observableObserver: OO): TNotificationsObservablePipeThroughResult<OO, TKVMap>;
+
   pipeThrough<OO extends IObservableObserver<IObserver<any>, IObservable<any>>>(observableObserver: OO): TObservablePipeThroughResult<OO, KeyValueMapToNotifications<TKVMap>>;
 
 
@@ -124,7 +135,6 @@ export interface IBaseNotificationsObservable<TName extends string, TValue> exte
 }
 
 
-
 export interface INotificationsObservableContextConstructor {
   // creates a NotificationsObservableContext
   new<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(observable: INotificationsObservable<TKVMap>): INotificationsObservableContext<TKVMap>;
@@ -132,7 +142,9 @@ export interface INotificationsObservableContextConstructor {
 
 export interface INotificationsObservableContext<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> extends IObservableContextBase<KeyValueMapToNotifications<TKVMap>> {
   readonly observable: INotificationsObservable<TKVMap>;
+
   emit(value: KeyValueMapToNotifications<TKVMap>): void;
-  dispatch<K extends KeyValueMapKeys<TKVMap>>(name: K, value?: TKVMap[K]): void;
+
+  dispatch<K extends KeyValueMapKeys<TKVMap>>(name: K, value: TKVMap[K]): void;
 }
 

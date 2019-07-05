@@ -1,4 +1,6 @@
-import { IDeferredPromise, TDeferredPromiseAllReturn, TDeferredPromiseRaceReturn, TPromiseStatus } from './interfaces';
+import {
+  IDeferredPromise, IDeferredPromiseCodes, TDeferredPromiseAllReturn, TDeferredPromiseRaceReturn, TPromiseStatus
+} from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject, noop } from '../../helpers';
 import { TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion } from '../interfaces';
@@ -42,7 +44,11 @@ export function ConstructDeferredPromise<T>(
     };
 
     if (callback !== void 0) {
-      callback.call(this, this);
+      try {
+        callback.call(instance, instance);
+      } catch (error) {
+        privates.reject(error);
+      }
     }
   }).then((value: T) => {
     privates.status = 'fulfilled';
@@ -59,49 +65,49 @@ export function IsDeferredPromise(value: any): value is IDeferredPromise<any> {
     && value.hasOwnProperty(DEFERRED_PROMISE_PRIVATE);
 }
 
-
-export function DeferredPromiseResolve<T>(instance: IDeferredPromise<T>, value?: TPromiseOrValue<T>): void {
+function EnsuresDeferredPromiseIsPending<T>(instance: IDeferredPromise<T>, methodName: string, callback: () => void): void {
   if ((instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].status === 'pending') {
-    (instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].resolve(value);
+    callback();
   } else {
-    throw new Error(`Cannot call 'resolve' on a DeferredPromise in state '${(instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].status}'`);
+    throw new Error(`Cannot call '${ name }' on a DeferredPromise in state '${ (instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].status }'`);
   }
 }
 
+
+export function DeferredPromiseResolve<T>(instance: IDeferredPromise<T>, value?: TPromiseOrValue<T>): void {
+  EnsuresDeferredPromiseIsPending<T>(instance, 'resolve', () => {
+    (instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].resolve(value);
+  });
+}
+
 export function DeferredPromiseReject<T>(instance: IDeferredPromise<T>, reason?: any): void {
-  if ((instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].status === 'pending') {
+  EnsuresDeferredPromiseIsPending<T>(instance, 'reject', () => {
     (instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].reject(reason);
-  } else {
-    throw new Error(`Cannot call 'reject' on a DeferredPromise in state '${(instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].status}'`);
-  }
+  });
 }
 
 export function DeferredPromiseTry<T>(instance: IDeferredPromise<T>, callback: () => TPromiseOrValue<T>): void {
   if (typeof callback !== 'function') {
     throw new TypeError(`Expected function as callback`);
-  } else if ((instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].status === 'pending') {
-    (instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].resolve(new Promise<T>((resolve: any) => {
-      resolve(callback());
-    }));
   } else {
-    throw new Error(`Cannot call 'try' on a DeferredPromise in state '${(instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].status}'`);
+    EnsuresDeferredPromiseIsPending<T>(instance, 'try', () => {
+      (instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].resolve(new Promise<T>((resolve: any) => {
+        resolve(callback.call(instance));
+      }));
+    });
   }
 }
 
 export function DeferredPromiseRace<T>(instance: IDeferredPromise<T>, values: TPromiseOrValue<any>[]): void {
-  if ((instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].status === 'pending') {
+  EnsuresDeferredPromiseIsPending<T>(instance, 'race', () => {
     (instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].resolve(Promise.race(values) as unknown as Promise<T>);
-  } else {
-    throw new Error(`Cannot call 'race' on a DeferredPromise in state '${(instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].status}'`);
-  }
+  });
 }
 
 export function DeferredPromiseAll<T>(instance: IDeferredPromise<T>, values: TPromiseOrValue<any>[]): void {
-  if ((instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].status === 'pending') {
+  EnsuresDeferredPromiseIsPending<T>(instance, 'all', () => {
     (instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].resolve(Promise.all(values) as unknown as Promise<T>);
-  } else {
-    throw new Error(`Cannot call 'all' on a DeferredPromise in state '${(instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].status}'`);
-  }
+  });
 }
 
 
@@ -113,8 +119,13 @@ export function DeferredPromiseThen<T, TResult1 = T, TResult2 = never>(
   return new DeferredPromise<TResult1 | TResult2>((deferred: DeferredPromise<TResult1 | TResult2>) => {
     (instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].promise
       .then((result: T) => {
-        DeferredPromiseTry<TResult1 | TResult2>(deferred, () => onFulfilled(result));
-        // deferred.try(() => onFulfilled(result));
+        if (typeof onFulfilled === 'function') {
+          DeferredPromiseTry<TResult1 | TResult2>(deferred, () => onFulfilled(result));
+          // deferred.try(() => onFulfilled(result));
+        } else{
+          DeferredPromiseResolve<TResult1 | TResult2>(deferred, result as unknown as (TResult1 | TResult2));
+          // deferred.resolve(result);
+        }
       }, (reason: any) => {
         if (typeof onRejected === 'function') {
           DeferredPromiseTry<TResult1 | TResult2>(deferred, () => onRejected(reason));
@@ -137,8 +148,13 @@ export function DeferredPromiseCatch<T, TResult = never>(
         DeferredPromiseResolve<T | TResult>(deferred, result);
         // deferred.resolve(result);
       }, (reason: any) => {
-        DeferredPromiseTry<T | TResult>(deferred, () => onRejected(reason));
-        // deferred.try(() => onRejected(reason));
+        if (typeof onRejected === 'function') {
+          DeferredPromiseTry<T | TResult>(deferred, () => onRejected(reason));
+          // deferred.try(() => onRejected(reason));
+        } else {
+          DeferredPromiseReject<T | TResult>(deferred, reason);
+          // deferred.reject(reason);
+        }
       });
   });
 }
@@ -146,15 +162,13 @@ export function DeferredPromiseCatch<T, TResult = never>(
 
 export function DeferredPromiseFinally<T>(
   instance: IDeferredPromise<T>,
-  onFinally?: (() => void) | undefined | null
+  onFinally: (() => void) | undefined | null
 ): IDeferredPromise<T> {
-  if (typeof onFinally !== 'function') {
-    onFinally = noop;
-  }
+  const _onFinally: () => void = (typeof onFinally === 'function') ? onFinally : noop;
   return new DeferredPromise<T>((deferred: DeferredPromise<T>) => {
     (instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].promise
       .then((result: T) => {
-        return new Promise<void>(resolve => resolve(onFinally()))
+        return new Promise<void>(resolve => resolve(_onFinally()))
           .then(
             () => {
               DeferredPromiseResolve<T>(deferred, result);
@@ -166,7 +180,7 @@ export function DeferredPromiseFinally<T>(
             }
           );
       }, (reason: any) => {
-        return new Promise<void>(resolve => resolve(onFinally()))
+        return new Promise<void>(resolve => resolve(_onFinally()))
           .then(
             () => {
               DeferredPromiseReject<T>(deferred, reason);
@@ -181,13 +195,46 @@ export function DeferredPromiseFinally<T>(
   });
 }
 
+export class DeferredPromiseCodes implements IDeferredPromiseCodes {
+  static get FULFILLED(): 'fulfilled' {
+    return 'fulfilled';
+  }
 
-export class DeferredPromise<T> implements IDeferredPromise<T> {
+  static get REJECTED(): 'rejected' {
+    return 'rejected';
+  }
+
+  static get PENDING(): 'pending' {
+    return 'pending';
+  }
+
+  static get RESOLVING(): 'resolving' {
+    return 'resolving';
+  }
+
+  get FULFILLED(): 'fulfilled' {
+    return 'fulfilled';
+  }
+
+  get REJECTED(): 'rejected' {
+    return 'rejected';
+  }
+
+  get PENDING(): 'pending' {
+    return 'pending';
+  }
+
+  get RESOLVING(): 'resolving' {
+    return 'resolving';
+  }
+}
+
+export class DeferredPromise<T> extends DeferredPromiseCodes implements IDeferredPromise<T> {
 
   static resolve(): DeferredPromise<void>;
   static resolve<T>(value: TPromiseOrValue<T>): DeferredPromise<T>;
-  static resolve<T>(value?: TPromiseOrValue<T>): DeferredPromise<T> {
-    return new DeferredPromise<T>().resolve(value);
+  static resolve<T>(value?: TPromiseOrValue<T>): DeferredPromise<T | void> {
+    return new DeferredPromise<T | void>().resolve(value);
   }
 
   static reject<T = never>(reason?: any): DeferredPromise<T> {
@@ -208,6 +255,7 @@ export class DeferredPromise<T> implements IDeferredPromise<T> {
 
 
   constructor(callback?: (deferred: IDeferredPromise<T>) => any) {
+    super();
     ConstructDeferredPromise(this, callback);
   }
 
@@ -268,17 +316,3 @@ export class DeferredPromise<T> implements IDeferredPromise<T> {
   }
 }
 
-
-// export function testDeferredPromise() {
-//   const a = new DeferredPromise();
-//   a
-//     .then((value: number) => {
-//       console.log('1', value);
-//       return value * 2;
-//     })
-//     .then((value: number) => {
-//       console.log('2', value);
-//     });
-//
-//   a.resolve(1);
-// }

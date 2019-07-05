@@ -21,7 +21,7 @@ import { Pipe } from '../core/observable-observer/implementation';
 import { IsObserver, Observer } from '../core/observer/public';
 import { assertFunctionObservableEmits, assertObservableEmits } from '../classes/asserts';
 import { IsObject } from '../helpers';
-import { LinkPromiseCancelTokenWithFetchArguments } from '../notifications/observables/fetch-observable/implementation';
+import { LinkPromiseCancelTokenWithFetchArguments } from '../notifications/observables/promise-observable/promise-cancel-token/implementation';
 
 export type TObservableOrValue<T> = IObservable<T> | T;
 export type TObservableOrValueToValueType<T extends TObservableOrValue<any>> = T extends IObservable<infer R> ? R : T;
@@ -36,8 +36,9 @@ export type TObservableOrValues<T extends any[]> = {
 export type TObservableOrValuesNonStrict<T extends any[]> = Array<any> & TObservableOrValues<T>;
 
 
-export type CastToObservable<T> = (T extends IObservable<any> ? T : IObservable<T>);
-
+// export type CastToObservable<T> = (T extends IObservable<any> ? T : IObservable<T>);
+export type CastToObservableValue<T> = (T extends IObservable<infer V> ? V : T);
+export type CastToObservable<T> = IObservable<CastToObservableValue<T>>;
 
 // export type CastToObservablesTuple<T extends ([any, boolean] | Any)[]> = {
 //   // [K in keyof T]: T[K] extends IObservable<any> ? T[K] : IObservable<T[K] extends [infer V, boolean] ? V : T[K]>;
@@ -79,13 +80,17 @@ export function $observables<T extends any[]>(...inputs: T): CastToObservables<T
 }
 
 
-export function $source<T>(input: TSourceOrValue<T> = void 0): ISource<T> {
+export function $source<T>(input?: TSourceOrValue<T>): ISource<T> {
   if (IsSource(input)) {
     return input;
   } else if (IsObservable(input)) {
     throw new Error(`Cannot convert an input of type Observable to a Source`);
   } else {
-    return new Source<T>().emit(input as T);
+    const source: ISource<T> = new Source<T>();
+    if (arguments.length > 0) {
+      source.emit(input as T);
+    }
+    return source;
   }
 }
 
@@ -276,14 +281,15 @@ export function $string(parts: TemplateStringsArray | string[], ...args: TObserv
 }
 
 
-type TFetchFunction<T> = (token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit: RequestInit) => Promise<T>;
-export function $fetch<T>(requestInfo: TObservableOrValue<RequestInfo>, requestInit?: TObservableOrValue<RequestInit>): IAsyncFunctionObservable<TFetchFunction<T>> {
-  return new AsyncFunctionObservable<TFetchFunction<T>>(_fetch, [$observable(requestInfo), $observable(requestInit)]);
+type TFetchFunction<T> = (token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit?: RequestInit) => Promise<T>;
+
+export function $fetch<T>(requestInfo: TObservableOrValue<RequestInfo>, requestInit?: TObservableOrValue<RequestInit | undefined>): IAsyncFunctionObservable<TFetchFunction<T>> {
+  return new AsyncFunctionObservable<TFetchFunction<T>>(_fetch, [$observable(requestInfo), $observable<RequestInit | undefined>(requestInit)]);
 }
 
-export function _fetch<T>(token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit: RequestInit): Promise<T> {
+export function _fetch<T>(token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit?: RequestInit): Promise<T> {
   return fetch(requestInfo, LinkPromiseCancelTokenWithFetchArguments(token, requestInfo, requestInit))
-    .then<T>((response: Response) =>{
+    .then<T>((response: Response) => {
       if (token.cancelled) {
         throw token.reason;
       } else {
@@ -349,16 +355,15 @@ export function $property<TOutput>(input: TObservableOrValue<any>, ...propertyNa
 }
 
 
-
 export type TValueToDeepSource<T> =
   T extends IObservable<any>
     ? T
     : ISource<
         T extends object
-        ? {
-          [K in keyof T]: TValueToDeepSource<T[K]>;
-        }
-        : T
+          ? {
+            [K in keyof T]: TValueToDeepSource<T[K]>;
+          }
+          : T
       >;
 
 export function ValueToDeepSource<T>(input: TObservableOrValue<T>): TValueToDeepSource<T> {
@@ -419,10 +424,10 @@ async function test$property(): Promise<void> {
   /**
    * LIMITS: emitted values are not reflected on the object
    */
-  observableObject.value.a1.emit(ValueToDeepSource({ b1: 'a1-b1-v2' }).value);
-  observableObject.emit(ValueToDeepSource({ a: 'a' }).value);
-  observableObject.emit(ValueToDeepSource({ a1: { b1: 'a1-b1-v3' }}).value);
-  console.log(observableObject.value.a1.value.b1.value);
+  // (observableObject.value as any).a1.emit(ValueToDeepSource({ b1: 'a1-b1-v2' }).value);
+  // observableObject.emit(ValueToDeepSource({ a: 'a' }).value);
+  // observableObject.emit(ValueToDeepSource({ a1: { b1: 'a1-b1-v3' } }).value);
+  // console.log(observableObject.value.a1.value.b1.value);
 }
 
 
@@ -442,12 +447,12 @@ export async function testMisc(): Promise<void> {
 
   await assertObservableEmits(
     $source(1),
-      [1]
+    [1]
   );
 
   await assertObservableEmits(
     $function((a: number, b: number) => (a + b), [$expression(() => 1), $source(2)]),
-      [Number.NaN, 3]
+    [Number.NaN, 3]
   );
 
   await assertObservableEmits(
@@ -499,8 +504,8 @@ export async function testMisc(): Promise<void> {
 
   await assertFunctionObservableEmits(
     [1, true],
-    $string`value 0: ${$source()}, value 1: ${$source()}`,
-    [`value 0: ${1}, value 1: ${true}`]
+    $string`value 0: ${ $source() }, value 1: ${ $source() }`,
+    [`value 0: ${ 1 }, value 1: ${ true }`]
   );
 
   // $async();

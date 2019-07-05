@@ -4,7 +4,7 @@ import { IObservable, IObservableContext } from '../src/core/observable/interfac
 import { Observable } from '../src/core/observable/implementation';
 import { Pipe } from '../src/core/observable-observer/implementation';
 import { IObserver } from '../src/core/observer/interfaces';
-import { IPipeContext } from '../src/core/observable-observer/interfaces';
+import { IPipeContext, TPipeContextBase } from '../src/core/observable-observer/interfaces';
 
 
 interface WotDiscoverKVMap {
@@ -49,13 +49,14 @@ function example1() {
         }).activate();
 
       // toggle temperatureObserver button
-      document.querySelector('button').addEventListener('click', () => {
-        if (temperatureObserver.activated) {
-          temperatureObserver.deactivate();
-        } else {
-          temperatureObserver.activate();
-        }
-      });
+      (document.querySelector('button') as HTMLElement)
+        .addEventListener('click', () => {
+          if (temperatureObserver.activated) {
+            temperatureObserver.deactivate();
+          } else {
+            temperatureObserver.activate();
+          }
+        });
 
       thing.actions['startMeasurement'].invoke({ units: 'Celsius' })
         .then(() => {
@@ -71,9 +72,7 @@ function example1() {
     })
     .on('complete', () => {
       console.log('Discovery finished successfully');
-      while (discoverObservable.observers.length > 0) { // clear the observers
-        discoverObservable.observers.item(0).unobserve(discoverObservable);
-      }
+      discoverObservable.clearObservers();
     })
   ;
 }
@@ -108,7 +107,7 @@ function example2() {
 
   function temperatureObservableUsingPipe(thing: WotConsumedThing): IObservable<number> {
     return thing['temperature']
-      .pipeThrough(Pipe.create<number, number>((context: IPipeContext<number, number>) => {
+      .pipeThrough(Pipe.create<number, number>((context: TPipeContextBase<number, number>) => {
         return {
           onObserved(): void {
             if (context.pipe.observable.observers.length === 1) {

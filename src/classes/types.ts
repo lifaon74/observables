@@ -1,4 +1,3 @@
-
 // kind of any, but different => sometimes better for inference
 export type Any = boolean | string | number | object | symbol | null | undefined | any[];
 
@@ -37,7 +36,6 @@ export type SuperSet<T, U> = {
 };
 
 
-
 export type Extends<A, B> = Clone<A> extends B
   ? true
   : false;
@@ -53,12 +51,16 @@ export type And<A, B> = A extends true
   : false;
 
 
-
 export type TObject = { [key in any]: any };
 
 // https://github.com/Microsoft/TypeScript/issues/26223
 // https://github.com/ksxnodemodules/typescript-tuple/blob/master/lib/utils.ts
 
+
+
+export type ToTuple<T> = {
+  [K in Extract<keyof T, number>]: T[K];
+};
 
 export type IsEmptyTuple<Tuple extends any[]> = Tuple extends [] ? true : false;
 
@@ -170,8 +172,6 @@ export type TupleConcat<Left extends any[], Right extends any[]> = {
 // const a: TupleReverse<any[]>;
 
 
-
-
 export type TupleEquals<T, S> =
   [T] extends [S] ? (
     [S] extends [T] ? true : false
@@ -201,7 +201,6 @@ export type TupleLast<Tuple extends any[], Default = never> = {
   ]
 
 
-
 // const a: TupleShift<[1, 2]>;
 // const a: TupleUnshift<[1, 2], 3>;
 // const a: TupleLast<[1, 2]>;
@@ -222,13 +221,14 @@ type Equals<T, S> =
     ) : false;
 
 
-export type IsSubSet<TSet, TReferenceSet> = Clone<TSet> extends TReferenceSet
+// export type IsSubSet<TSet, TReferenceSet> = Clone<TSet> extends TReferenceSet
+export type IsSubSet<TSet, TReferenceSet> = [TSet] extends [TReferenceSet]
   ? true
   : false;
 
 export type IsSuperSet<TSet, TReferenceSet> = IsSubSet<TReferenceSet, TSet>;
 
-export type IsEqualSet<TSet1, TSet2> = Clone<TSet1> extends TSet2
+export type IsEqualSet<TSet1, TSet2> = [TSet1] extends [TSet2]
   ? Clone<TSet2> extends TSet1
     ? true
     : false
@@ -248,31 +248,31 @@ export type IsEqualSet<TSet1, TSet2> = Clone<TSet1> extends TSet2
 
 export type IsIntersecting<TSet, TReferenceSet> =
   true extends (
-    TSet extends TReferenceSet
-      ? true
-      : TReferenceSet extends TSet
+      TSet extends TReferenceSet
+        ? true
+        : TReferenceSet extends TSet
         ? true
         : false
-  )
+      )
     ? true
     : false;
 
 
 export type IsIntersection<T> = //  extends PropertyKey
-    Clone<T> extends T
-        ? false
-        : true;
+  Clone<T> extends T
+    ? false
+    : true;
 
 export type IsUnion<T> =
-    Clone<T> extends UnionToIntersection<T>
-        ? false
-        : Not<IsIntersection<T>>;
+  [T] extends [UnionToIntersection<T>]
+    ? false
+    : Not<IsIntersection<T>>;
 
 export type IsSingleton<T> =
   Clone<T> extends T
-      ? Clone<T> extends UnionToIntersection<T>
-        ? true
-        : false
+    ? [T] extends [UnionToIntersection<T>]
+      ? true
+      : false
     : false;
 
 export type IsType<TargetType, T> =
@@ -287,11 +287,23 @@ export type IsType<TargetType, T> =
     : true;
 
 
-const y0: IsType<string, any> = false;
-const y1: IsType<string, 'a'> = false;
-const y2: IsType<string , string> = true;
-const y3: IsType<string , 'a' | string> = true;
-const y4: IsType<string , 'a' | 'b'> = false;
+// export type IsReadonly<T extends object, K extends keyof T> = T extends {
+//   readonly [P in K]: T[P];
+// } ? true : false;
+//
+//
+// const a1: { a: string } extends { readonly a: string } ? true : false = true;
+// const a2: { readonly a: string } extends { a: string } ? true : false = true;
+// const a3: readonly [string] extends [string] ? true : false = false;
+// const a4: [string] extends readonly [string] ? true : false = true;
+// const a5: readonly [string] extends readonly [string] ? true : false = true;
+// // const a: IsReadonly<{ a: string }, 'a'> = false;
+
+// const y0: IsType<string, any> = false;
+// const y1: IsType<string, 'a'> = false;
+// const y2: IsType<string , string> = true;
+// const y3: IsType<string , 'a' | string> = true;
+// const y4: IsType<string , 'a' | 'b'> = false;
 
 // const b0: IsSubSet<'a', 'a' | 'b'> = true;
 // const b1: IsSubSet<'a' | 'b', 'a' | 'b' | 'c'> = true;
@@ -300,7 +312,8 @@ const y4: IsType<string , 'a' | 'b'> = false;
 // const b4: IsSubSet<'a' | 'b', string> = true;
 // const b5: IsSubSet<string, 'a' | 'b'> = false;
 // const b6: IsSubSet<'a' | 'b', 'a' | 'b'> = true;
-//
+// const b7: IsSubSet<Uint8Array, Uint8Array> = true;
+
 // const a0: IsSuperSet<'a' | 'b', 'a'> = true;
 // const a1: IsSuperSet<'a' | 'b' | 'c', 'a' | 'b'> = true;
 // const a2: IsSuperSet<'a' | 'b', 'a' | 'b' | 'c'> = false;
@@ -331,11 +344,10 @@ const y4: IsType<string , 'a' | 'b'> = false;
 // const s0: IsSingleton<'a'> = true;
 // const s1: IsSingleton<'a' | 'b'> = false;
 // const s2: IsSingleton<'a' & 'b'> = false;
-
+//
 // const z0: IsType<any, any> = true;
 // const z1: IsType<any, 'a'> = false;
 // const z2: IsType<any, 'a' | any> = true;
-
 
 
 // const a: keyof ('a' & 'b');

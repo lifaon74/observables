@@ -18,8 +18,6 @@ import {
 import { KeyValueMapKeys, KeyValueMapValues } from '../../../core/interfaces';
 import { IObserver } from '../../../../core/observer/interfaces';
 
-;
-
 
 // export abstract class Gesture {
 //   public readonly name: string;
@@ -166,7 +164,6 @@ export class SwipeEvent extends Event implements ISwipeEvent {
 }
 
 
-
 /*-----------------------*/
 
 export const SWIPE_OBSERVABLE_PRIVATE = Symbol('swipe-observable-private');
@@ -250,7 +247,6 @@ export function SwipeObservableOnTouchMove<TTarget extends EventTarget>(observab
  *  = abs(a * (Cx - Ax) + b * (Cy - Ay)) / sqrt(...)
  * @param observable
  * @param event
- * @constructor
  */
 export function SwipeObservableOnTouchEnd<TTarget extends EventTarget>(observable: ISwipeObservable<TTarget>, event: TouchEvent): void {
   if (event.touches.length === 1) {
@@ -276,7 +272,7 @@ export function SwipeObservableOnTouchEnd<TTarget extends EventTarget>(observabl
 
           // console.log(a, b, d_ab);
 
-          for (let i = 3; i < lastIndex; i += 3)  {
+          for (let i = 3; i < lastIndex; i += 3) {
             const d: number = Math.abs(a * (positions[i + 1] - positions[1]) + b * (positions[i + 2] - positions[2])) / d_ab;
             noise += d * d;
           }
@@ -298,8 +294,8 @@ export function SwipeObservableOnTouchEnd<TTarget extends EventTarget>(observabl
 
 export function SwipeObservableOnObserved<TTarget extends EventTarget>(observable: ISwipeObservable<TTarget>, observer: IObserver<KeyValueMapToNotifications<ISwipeObservableKeyValueMap>>): void {
   const nameAndCallback: KeyValueMapToNotificationsObserversLikeGeneric<ISwipeObservableKeyValueMap> | null = ExtractObserverNameAndCallback<KeyValueMapKeys<ISwipeObservableKeyValueMap>, KeyValueMapValues<ISwipeObservableKeyValueMap>>(observer);
-  if ((observer instanceof NotificationsObserver) && (nameAndCallback.name !== 'swipe')){
-    throw new TypeError(`Cannot observe an SwipeObservable, with a NotificationsObserver having name '${nameAndCallback.name}'. Expected 'swipe'.`);
+  if ((nameAndCallback !== null) && (nameAndCallback.name !== 'swipe')) {
+    throw new TypeError(`Cannot observe an SwipeObservable, with a NotificationsObserver having name '${ nameAndCallback.name }'. Expected 'swipe'.`);
   }
 
   if ((observable as ISwipeObservableInternal<TTarget>)[OBSERVABLE_PRIVATE].observers.length === 1) {
@@ -323,7 +319,7 @@ export class SwipeObservable<TTarget extends EventTarget = EventTarget> extends 
         onUnobserved: () => {
           SwipeObservableOnUnobserved<TTarget>(this);
         }
-      }
+      };
     });
     ConstructSwipeObservable<TTarget>(this, target);
   }
@@ -332,7 +328,6 @@ export class SwipeObservable<TTarget extends EventTarget = EventTarget> extends 
     return ((this as unknown) as ISwipeObservableInternal<TTarget>)[SWIPE_OBSERVABLE_PRIVATE].target;
   }
 }
-
 
 
 export function testSwipeObservable(): void {

@@ -13,6 +13,6 @@ export interface ITimerObservableConstructor {
  *    console.log(new Date());
  *  }).activate();
  */
-export interface ITimerObservable extends IObservable<undefined> {
+export interface ITimerObservable extends IObservable<void> {
   readonly period: number;
 }

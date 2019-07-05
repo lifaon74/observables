@@ -33,16 +33,16 @@ export function ConstructObservable<T>(
   InitObservableHook(
     observable,
     (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE],
+    NewObservableContext,
     create,
-    NewObservableContext
   );
   (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers = [];
-  (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers = new ReadonlyList<IObserver<T>>((observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers);
+  // (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers = new ReadonlyList<IObserver<T>>((observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers);
 }
 
 export function IsObservable(value: any): value is IObservable<any> {
   return IsObject(value)
-    && value.hasOwnProperty(OBSERVABLE_PRIVATE);
+    && value.hasOwnProperty(OBSERVABLE_PRIVATE as symbol);
 }
 
 const IS_OBSERVABLE_CONSTRUCTOR = Symbol('is-observable-constructor');
@@ -122,9 +122,12 @@ export function ObservableEmitAll<T>(observable: IObservable<T>, value: T): void
 }
 
 export function ObservableClearObservers<T>(observable: IObservable<T>): void {
-  while (observable.observers.length > 0) {
-    observable.observers.item(0).unobserve(observable);
+  while ((observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length > 0) {
+    (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers[0].unobserve(observable);
   }
+  // while (observable.observers.length > 0) {
+  //   observable.observers.item(0).unobserve(observable);
+  // }
 }
 
 
@@ -139,9 +142,9 @@ function PureObservableFactory<TBase extends Constructor>(superClass: TBase) {
     }
 
     get observers(): IReadonlyList<IObserver<T>> {
-      // if (((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers === void 0) {
-      //   ((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers = new ReadonlyList<IObserver<T>>(((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers);
-      // }
+      if (((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers === void 0) {
+        ((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers = new ReadonlyList<IObserver<T>>(((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers);
+      }
       return ((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers;
     }
 
@@ -170,6 +173,11 @@ function PureObservableFactory<TBase extends Constructor>(superClass: TBase) {
       ObservableObservedBy<T>(this, observers);
       return (this as unknown) as TObservableObservedByResultNonCyclic<O, T, this>;
     }
+
+    clearObservers(): this {
+      ObservableClearObservers<T>(this);
+      return this;
+    }
   };
 }
 
@@ -188,7 +196,6 @@ Observable = class Observable extends ObservableFactory<ObjectConstructor>(Objec
     super([create]);
   }
 } as IObservableConstructor;
-
 
 
 // export class Observable<T> implements IObservable<T> {

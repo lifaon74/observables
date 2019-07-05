@@ -19,9 +19,9 @@ export function IsReason(value: any): value is IReason<any> {
     && value.hasOwnProperty(REASON_PRIVATE);
 }
 
-export class Reason<T = undefined> implements IReason<T>{
+export class Reason<T = void> implements IReason<T> {
 
-  constructor(message: string, code?: T) {
+  constructor(message: string, code: T) {
     ConstructClassWithPrivateMembers(this, REASON_PRIVATE);
     ((this as unknown) as ReasonInternal<T>)[REASON_PRIVATE].message = message;
     ((this as unknown) as ReasonInternal<T>)[REASON_PRIVATE].code = code;
@@ -33,5 +33,12 @@ export class Reason<T = undefined> implements IReason<T>{
 
   get code(): T {
     return ((this as unknown) as ReasonInternal<T>)[REASON_PRIVATE].code;
+  }
+
+  toJSON(): Pick<IReason<T>, 'message' | 'code'> {
+    return {
+      message: this.message,
+      code: this.code,
+    };
   }
 }

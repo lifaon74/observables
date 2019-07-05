@@ -3,12 +3,14 @@ import {
 } from '../../core/observable/interfaces';
 import {
   AllowObservableContextBaseConstruct, IObservableContextBaseInternal, IObservableInternal, IsObservableLikeConstructor,
+  Observable,
   OBSERVABLE_CONTEXT_BASE_PRIVATE, ObservableClearObservers, ObservableContextBase, ObservableEmitAll, ObservableFactory
 } from '../../core/observable/implementation';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import {
-  IFromObservable, IFromObservableConstructor, IFromObservableContext, IFromObservableContextConstructor,
-  TFromObservableCompleteAction, TFromObservableConstructorArgs, TFromObservableState
+  IFromObservable, IFromObservableCompleteOptions, IFromObservableConstructor, IFromObservableContext,
+  IFromObservableContextConstructor,
+  TFromObservableCompleteNextObserversAction, TFromObservableConstructorArgs
 } from './interfaces';
 import { IsObject } from '../../helpers';
 import {
@@ -23,9 +25,13 @@ export const FROM_OBSERVABLE_PRIVATE = Symbol('from-observable-private');
 
 export interface IFromObservablePrivate<T> extends IObservableHookPrivate<T> {
   context: IObservableContext<T>;
-  onComplete: TFromObservableCompleteAction;
-  state: TFromObservableState;
   values: T[];
+
+  nextObserversActionOnComplete: TFromObservableCompleteNextObserversAction;
+  clearOnComplete: boolean;
+  complete: boolean;
+  completeObservable: IObservable<void>;
+  completeObservableContext: IObservableContext<void>;
 }
 
 export interface IFromObservableInternal<T> extends IFromObservable<T>, IObservableInternal<T> {
@@ -37,21 +43,43 @@ export function ConstructFromObservable<T>(
   observable: IFromObservable<T>,
   context: IObservableContext<T>,
   create?: (context: IFromObservableContext<T>) => (IObservableHook<T> | void),
-  onComplete?: TFromObservableCompleteAction
+  onCompleteOptions: IFromObservableCompleteOptions = {}
 ): void {
   ConstructClassWithPrivateMembers(observable, FROM_OBSERVABLE_PRIVATE);
+  const privates: IFromObservablePrivate<T> = (observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE];
+
   InitObservableHook(
     observable,
-    (observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE],
+    privates,
+    NewFromObservableContext,
     create,
-    NewFromObservableContext
   );
-  (observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].context = context;
-  (observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].onComplete = NormalizeFromObservableCompleteAction(onComplete);
-  (observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].state = 'awaiting';
-  (observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].values = [];
-}
 
+  privates.context = context;
+  privates.values = [];
+
+  if (IsObject(onCompleteOptions)) {
+    privates.nextObserversActionOnComplete = NormalizeFromObservableCompleteNextObserversAction(onCompleteOptions.nextObservers);
+    privates.clearOnComplete = Boolean(onCompleteOptions.clear);
+  } else {
+    throw new TypeError(`Expected object or void as onCompleteOptions`);
+  }
+
+
+  privates.complete = false;
+
+  // privates.completeObservable = new Observable<void>((context: IObservableContext<void>) => {
+  //   privates.completeObservableContext = context;
+  //   return {
+  //     onObserved: (observer: IObserver<void>) => {
+  //       if (privates.complete) {
+  //         observer.emit();
+  //       }
+  //     }
+  //   };
+  // });
+
+}
 
 
 export function IsFromObservable(value: any): value is IFromObservable<any> {
@@ -60,34 +88,34 @@ export function IsFromObservable(value: any): value is IFromObservable<any> {
 }
 
 const IS_FROM_OBSERVABLE_CONSTRUCTOR = Symbol('is-from-observable-constructor');
+
 export function IsFromObservableConstructor(value: any): boolean {
   return (typeof value === 'function') && ((value === FromObservable) || HasFactoryWaterMark(value, IS_FROM_OBSERVABLE_CONSTRUCTOR));
 }
 
 
-export function NormalizeFromObservableCompleteAction(action?: TFromObservableCompleteAction): TFromObservableCompleteAction {
+export function NormalizeFromObservableCompleteNextObserversAction(action?: TFromObservableCompleteNextObserversAction): TFromObservableCompleteNextObserversAction {
   switch (action) {
     case void 0:
-      return 'clear-strict';
-    case 'noop':
+      return 'throw';
+    case 'never':
     case 'cache':
-    case 'clear':
-    case 'clear-strict':
+    case 'throw':
       return action;
     default:
-      throw new TypeError(`Expected 'noop', 'cache', 'clear' or 'clear-strict' as onComplete`);
+      throw new TypeError(`Expected 'throw', 'cache', 'throw' as onCompleteNextObserversAction`);
   }
 }
 
 
 export function FromObservableOnObserved<T>(observable: IFromObservable<T>, observer: IObserver<T>): void {
   const privates: IFromObservablePrivate<T> = (observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE];
-  if (privates.state === 'complete') {
-    if (privates.onComplete === 'clear-strict') {
+  if (privates.complete) {
+    if (privates.nextObserversActionOnComplete === 'throw') {
       throw new Error(`Cannot observe this Observable because it is in a 'complete' state.`);
-    } else if (privates.onComplete === 'cache') {
+    } else if (privates.nextObserversActionOnComplete === 'cache') {
       for (let i = 0, l = privates.values.length; i < l; i++) {
-        ObservableEmitAll<T>(observable, privates.values[i]);
+        observer.emit(privates.values[i]);
       }
     }
   }
@@ -100,10 +128,10 @@ export function FromObservableOnUnobserved<T>(observable: IFromObservable<T>, ob
 
 
 export function FromObservableEmit<T>(observable: IFromObservable<T>, value: T): void {
-  if ((observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].state === 'complete') {
+  if ((observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].complete) {
     throw new Error(`Cannot emit values from this Observable because it is in a 'complete' state.`);
   } else {
-    if ((observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].onComplete === 'cache') {
+    if ((observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].nextObserversActionOnComplete === 'cache') {
       (observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].values.push(value);
     }
     ObservableEmitAll<T>(observable, value);
@@ -111,13 +139,38 @@ export function FromObservableEmit<T>(observable: IFromObservable<T>, value: T):
 }
 
 export function FromObservableComplete<T>(observable: IFromObservable<T>): void {
-  (observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].state = 'complete';
+  const privates: IFromObservablePrivate<T> = (observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE];
+  if (privates.complete) {
+    throw new Error(`Observable already in a 'complete' state.`);
+  } else {
+    privates.complete = true;
+    if (privates.completeObservableContext !== void 0) {
+      privates.completeObservableContext.emit();
+    }
 
-  if (((observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].onComplete === 'clear') || ((observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].onComplete === 'clear-strict')) {
-    setTimeout(() => {
-      ObservableClearObservers<T>(observable);
-    }, 0);
+    if (privates.clearOnComplete) {
+      setTimeout(() => {
+        ObservableClearObservers<T>(observable);
+      }, 0);
+    }
   }
+}
+
+export function FromObservableGetCompleteObservable<T>(observable: IFromObservable<T>): IObservable<void> {
+  const privates: IFromObservablePrivate<T> = (observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE];
+  if (privates.completeObservable === void 0) {
+    privates.completeObservable = new Observable<void>((context: IObservableContext<void>) => {
+      privates.completeObservableContext = context;
+      return {
+        onObserved: (observer: IObserver<void>) => {
+          if (privates.complete) {
+            observer.emit();
+          }
+        }
+      };
+    });
+  }
+  return privates.completeObservable;
 }
 
 
@@ -130,8 +183,8 @@ function PureFromObservableFactory<TBase extends Constructor<IObservable<any>>>(
 
   return class FromObservable extends superClass implements IFromObservable<T> {
     constructor(...args: any[]) {
-      const [create, onComplete]: TFromObservableConstructorArgs<T> = args[0];
-      let context: IObservableContext<T> = void 0;
+      const [create, onCompleteOptions]: TFromObservableConstructorArgs<T> = args[0];
+      let context: IObservableContext<T>;
       super(...setSuperArgs(args.slice(1), [
         (_context: IObservableContext<T>) => {
           context = _context;
@@ -145,11 +198,17 @@ function PureFromObservableFactory<TBase extends Constructor<IObservable<any>>>(
           };
         }
       ]));
-      ConstructFromObservable<T>(this, context, create, onComplete);
+      // @ts-ignore
+      ConstructFromObservable<T>(this, context, create, onCompleteOptions);
     }
 
     get complete(): boolean {
-      return ((this as unknown) as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].state === 'complete';
+      return ((this as unknown) as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].complete;
+    }
+
+    get onComplete(): IObservable<void> {
+      return FromObservableGetCompleteObservable<T>(this);
+      // return ((this as unknown) as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE].completeObservable;
     }
   };
 }
@@ -172,9 +231,9 @@ export function FromObservableBaseFactory<TBase extends Constructor>(superClass:
   });
 }
 
-FromObservable =  class FromObservable extends FromObservableBaseFactory<ObjectConstructor>(Object) {
-  constructor(create?: (context: IFromObservableContext<any>) => (IObservableHook<any> | void), onComplete?: TFromObservableCompleteAction) {
-    super([create, onComplete], []);
+FromObservable = class FromObservable extends FromObservableBaseFactory<ObjectConstructor>(Object) {
+  constructor(create?: (context: IFromObservableContext<any>) => (IObservableHook<any> | void), onCompleteOptions?: IFromObservableCompleteOptions) {
+    super([create, onCompleteOptions], []);
   }
 } as IFromObservableConstructor;
 
@@ -184,7 +243,7 @@ FromObservable =  class FromObservable extends FromObservableBaseFactory<ObjectC
 
 export function NewFromObservableContext<T>(observable: IFromObservable<T>): IFromObservableContext<T> {
   AllowObservableContextBaseConstruct(true);
-  const context: IFromObservableContext<T> = new((FromObservableContext as any) as IFromObservableContextConstructor)<T>(observable);
+  const context: IFromObservableContext<T> = new ((FromObservableContext as any) as IFromObservableContextConstructor)<T>(observable);
   AllowObservableContextBaseConstruct(false);
   return context;
 }

@@ -46,9 +46,9 @@ export function TimerObservableOnUnobserved(observable: ITimerObservable): void 
 }
 
 
-export class TimerObservable extends Observable<undefined> implements ITimerObservable {
+export class TimerObservable extends Observable<void> implements ITimerObservable {
   constructor(period: number) {
-    let context: IObservableContext<undefined> = void 0;
+    let context: IObservableContext<void>;
     super((_context: IObservableContext<void>) => {
       context = _context;
       return {
@@ -60,6 +60,7 @@ export class TimerObservable extends Observable<undefined> implements ITimerObse
         }
       };
     });
+    // @ts-ignore
     ConstructTimerObservable(this, context, period);
   }
 

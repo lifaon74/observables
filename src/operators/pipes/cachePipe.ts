@@ -29,7 +29,7 @@ export function cachePipe<T>(cacheSize: number = 128): IPipe<IObserver<T>, IObse
       },
       onObserved(observer: IObserver<T>): void {
         const index: number = Math.max(
-          readIndexes.has(observer) ? readIndexes.get(observer) : 0,
+          readIndexes.has(observer) ? readIndexes.get(observer) as number : 0,
           writeIndex - cacheSize
         );
         if (index < writeIndex) {

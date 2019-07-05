@@ -18,12 +18,8 @@ import { IPromiseCancelToken } from '../../../notifications/observables/promise-
 import {
   PromiseCancelReason, PromiseCancelToken
 } from '../../../notifications/observables/promise-observable/promise-cancel-token/implementation';
-import {
-  FUNCTION_OBSERVABLE_PRIVATE, FunctionObservable, IFunctionObservableInternal
-} from '../function-observable/implementation';
-import { IFunctionObservable } from '../function-observable/interfaces';
+import { FUNCTION_OBSERVABLE_PRIVATE, IFunctionObservableInternal } from '../function-observable/implementation';
 import { IsObject } from '../../../helpers';
-import { VALUE_OBSERVABLE_PRIVATE } from '../value-observable/implementation';
 import { HasFactoryWaterMark } from '../../../classes/factory';
 
 
@@ -76,10 +72,11 @@ export function ConstructAsyncFunctionObservable<T extends TAsyncFunctionObserva
 
 export function IsAsyncFunctionObservable(value: any): value is IAsyncFunctionObservable<any> {
   return IsObject(value)
-    && value.hasOwnProperty(ASYNC_FUNCTION_OBSERVABLE_PRIVATE);
+    && value.hasOwnProperty(ASYNC_FUNCTION_OBSERVABLE_PRIVATE as symbol);
 }
 
 const IS_ASYNC_FUNCTION_OBSERVABLE_CONSTRUCTOR = Symbol('is-async-function-observable-constructor');
+
 export function IsAsyncFunctionObservableConstructor(value: any, direct?: boolean): boolean {
   return (typeof value === 'function') && ((value === AsyncFunctionObservable) || HasFactoryWaterMark(value, IS_ASYNC_FUNCTION_OBSERVABLE_CONSTRUCTOR, direct));
 }
@@ -122,7 +119,7 @@ export function AsyncFunctionObservablePause<T extends TAsyncFunctionObservableF
 export function AsyncFunctionObservableResume<T extends TAsyncFunctionObservableFactory>(observable: IAsyncFunctionObservable<T>): Promise<void> {
   const argumentsObserverPauseCount: number = ((observable as unknown) as IFunctionObservableInternal<T>)[FUNCTION_OBSERVABLE_PRIVATE].argumentsObserverPauseCount;
   ((observable as unknown) as IFunctionObservableInternal<T>)[FUNCTION_OBSERVABLE_PRIVATE].argumentsObserverPauseCount = -1;
-  if (((observable as unknown) as IFunctionObservableInternal<T>)[FUNCTION_OBSERVABLE_PRIVATE].argumentsObserverCount == argumentsObserverPauseCount) {
+  if (((observable as unknown) as IFunctionObservableInternal<T>)[FUNCTION_OBSERVABLE_PRIVATE].argumentsObserverCount === argumentsObserverPauseCount) {
     return Promise.resolve();
   } else {
     return AsyncFunctionObservableCallFactory<T>(observable);
@@ -150,7 +147,7 @@ export class AsyncFunctionObservable<T extends TAsyncFunctionObservableFactory> 
   }
 
   constructor(factory: T, args: TAsyncFunctionObservableParameters<T>) {
-    let context: IAsyncValueObservableContext<TAsyncFunctionObservableValue<T>> = void 0;
+    let context: IAsyncValueObservableContext<TAsyncFunctionObservableValue<T>>;
     super((_context: IAsyncValueObservableContext<TAsyncFunctionObservableValue<T>>) => {
       context = _context;
       return {
@@ -162,6 +159,7 @@ export class AsyncFunctionObservable<T extends TAsyncFunctionObservableFactory> 
         },
       };
     });
+    // @ts-ignore
     ConstructAsyncFunctionObservable<T>(this, context, factory, args);
   }
 

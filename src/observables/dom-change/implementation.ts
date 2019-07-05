@@ -49,7 +49,7 @@ export function DOMChangeObservableOnUnobserved(observable: IDOMChangeObservable
 
 export class DOMChangeObservable extends Observable<void> implements IDOMChangeObservable {
   constructor() {
-    let context: IObservableContext<void> = void 0;
+    let context: IObservableContext<void>;
     super((_context: IObservableContext<void>) => {
       context = _context;
       return {
@@ -61,6 +61,7 @@ export class DOMChangeObservable extends Observable<void> implements IDOMChangeO
         }
       };
     });
+    // @ts-ignore
     ConstructDOMChangeObservable(this, context);
   }
 }

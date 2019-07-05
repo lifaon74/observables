@@ -108,12 +108,7 @@ const observable = new EventsObservable<WindowEventMap>(window)
 
 // after 5s, stops observing the observable
 setTimeout(() => {
-  // don't for loop because if we remove the first observer,
-  // the observers' array is shifted on the left (second become first, etc...)
-  // instead we just have to continuously remove the first element until the array is empty
-  while (observable.observers.length > 0) {
-    observable.observers.item(0).unobserve();
-  }
+  observable.clearObservers();
 }, 5000);
 ```
 

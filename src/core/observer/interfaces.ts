@@ -26,7 +26,7 @@ export type TObserverObserveResultNonCyclic<TObservables extends IObservable<any
 
 
 export type TObserverUnObserveResult<TObservables extends IObservable<any>[], TObserver extends IObserver<any>> = TObserverObserveResult<TObservables, TObserver>;
-export type TObserverUnObserveResultNonCyclic<TObservables extends IObservable<any>[], TReferenceObservableValue, TReturn> =TObserverObserveResultNonCyclic<TObservables, TReferenceObservableValue, TReturn>;
+export type TObserverUnObserveResultNonCyclic<TObservables extends IObservable<any>[], TReferenceObservableValue, TReturn> = TObserverObserveResultNonCyclic<TObservables, TReferenceObservableValue, TReturn>;
 
 export type TObserverConstructorArgs<T> = [(value: T, observable?: IObservable<T>) => void];
 

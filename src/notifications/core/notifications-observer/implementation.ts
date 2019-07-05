@@ -35,7 +35,7 @@ export function NotificationsObserverEmit<TName extends string, TValue>(observer
  */
 export function IsNotificationsObserver(value: any): value is INotificationsObserver<string, any> {
   return IsObject(value)
-    && (NOTIFICATIONS_OBSERVER_PRIVATE in value);
+    && value.hasOwnProperty(NOTIFICATIONS_OBSERVER_PRIVATE as symbol);
 }
 
 export function IsNotificationsObserverLike(value: any): value is INotificationsObserverLike<string, any> {

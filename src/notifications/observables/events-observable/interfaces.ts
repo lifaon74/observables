@@ -9,15 +9,15 @@ export type EventsObservableKeyValueMapGeneric = {
 export type EventKeyValueMapConstraint<TKVMap extends object> = KeyValueMapConstraint<TKVMap, EventsObservableKeyValueMapGeneric>;
 
 
-
 export interface PureEventTarget {
   addEventListener(type: string, listener: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions): void;
+
   removeEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: EventListenerOptions | boolean): void;
 }
 
 
 export type TargetToEventMap =
-    [AbortSignal, AbortSignalEventMap]
+  [AbortSignal, AbortSignalEventMap]
   | [AbstractWorker, AbstractWorkerEventMap] // -
   | [Animation, AnimationEventMap]
   | [ApplicationCache, ApplicationCacheEventMap]
@@ -85,7 +85,7 @@ export type TargetToEventMap =
   | [XMLHttpRequest, XMLHttpRequestEventMap]
   | [XMLHttpRequestEventTarget, XMLHttpRequestEventTargetEventMap]
   | [XMLHttpRequestUpload, XMLHttpRequestEventTargetEventMap]
-;
+  ;
 
 export type Targets<A = TargetToEventMap> =
   A extends [infer TTarget, any]
@@ -185,9 +185,9 @@ export interface IEventsObservableConstructor {
   // new(target: XMLHttpRequestUpload, name?: KeyValueMapKeys<XMLHttpRequestEventTargetEventMap> | null): IEventsObservable<XMLHttpRequestEventTargetEventMap, XMLHttpRequestUpload>;
 
   new<TTarget extends Targets>(target: TTarget): CastTargetToEventsObservable<TTarget>;
+
   new<TKVMap extends EventKeyValueMapConstraint<TKVMap>, TTarget extends PureEventTarget = PureEventTarget>(target: TTarget, name?: KeyValueMapKeys<TKVMap> | null): IEventsObservable<TKVMap, TTarget>;
 }
-
 
 
 /**
@@ -212,6 +212,7 @@ export interface IEventsObservable<TKVMap extends EventKeyValueMapConstraint<TKV
 //   .on('resize', () => {
 //   });
 
+// const a: AbortSignalEventMap extends { [key: string]: Event } ? true : false;
 // const b: IEventsObservable<AbortSignalEventMap> = null;
 // const b: IEventsObservable<AbortSignalEventMap & AbstractWorkerEventMap> = null;
 // const b: IEventsObservable<{ a: 1 }> = null;

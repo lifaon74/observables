@@ -9,9 +9,43 @@ import { toPromise } from '../operators/to/toPromise';
 import { IFunctionObservable } from '../observables/distinct/function-observable/interfaces';
 import { ISource } from '../observables/distinct/source/interfaces';
 
-export function eq(a: any, b: any) {
+export function eq(a: any, b: any): boolean {
   return Object.is(a, b)
     || (JSON.stringify(a) === JSON.stringify(b));
+}
+
+export function fails(cb: () => any | Promise<any>): Promise<boolean> {
+  return new Promise<boolean>(resolve => resolve(cb()))
+    .then(() => false, () => true);
+}
+
+
+export function assert(cb: () => boolean | Promise<boolean>, message: string = cb.toString()): Promise<void> {
+  return new Promise<boolean>(resolve => resolve(cb()))
+    .then((result: boolean) => {
+      if (!result) {
+        new Error(`Assert failed: ${ message }`);
+      }
+    });
+}
+
+export function assertFails(cb: () => any | Promise<any>, message: string = cb.toString()): Promise<void> {
+  return assert(() => fails(cb), `expected to fail - ${ message }`);
+}
+
+
+
+
+
+
+
+export function failsSync(cb: () => void): boolean {
+  try {
+    cb();
+    return false;
+  } catch (e) {
+    return true;
+  }
 }
 
 export function observableAssert(values: any[], timeout: number = 100, equalFunction: (a: any, b: any) => boolean = eq): [(value: any) => void, Promise<void>] {
@@ -25,10 +59,10 @@ export function observableAssert(values: any[], timeout: number = 100, equalFunc
         if (equalFunction(value, values[index])) {
           index++;
         } else {
-          reject(new Error(`Received value ${value} (#${index}), expected ${values[index]}`));
+          reject(new Error(`Received value ${ value } (#${ index }), expected ${ values[index] }`));
         }
       } else {
-        reject(new Error(`Received more than ${index} values`));
+        reject(new Error(`Received more than ${ index } values`));
       }
     },
     Promise.race([
@@ -54,8 +88,8 @@ export function assertPipe(values: any[], timeout?: number): IPipe<IObserver<any
   return new Pipe(() => {
     return {
       observer: new Observer<any>(observer),
-      observable: new PromiseObservable(() => promise)
-    }
+      observable: new PromiseObservable<void, any, any>(() => promise)
+    };
   });
 }
 
@@ -65,30 +99,22 @@ export function assertObservableEmits(observable: IObservable<any>, values: any[
   );
 }
 
-export function assertFunctionObservableEmits(valuesToEmit: any[], observable: IFunctionObservable<any>, values: any[], timeout?: number): Promise<void> {
+export function assertFunctionObservableEmits(valuesToEmit: any[], observable: IFunctionObservable<(...args: any[]) => void>, values: any[], timeout?: number): Promise<void> {
   const [observer, promise] = observableAssert(values, timeout);
   observable
     .observedBy(new Observer(observer).activate())
-    .run(function() {
-      for (let i = 0; i < valuesToEmit.length; i++) {
-        (this.args.item(i) as ISource<any>).emit(valuesToEmit[i]);
-      }
-    });
+    .run(() => {
+        for (let i = 0; i < valuesToEmit.length; i++) {
+          (observable.args.item(i) as ISource<any>).emit(valuesToEmit[i]);
+        }
+      });
   return promise;
 }
 
 
-export function testFails(cb: () => void): boolean {
-  try {
-    cb();
-    return false;
-  } catch (e) {
-    return true;
-  }
-}
 
-export function assertFails(cb: () => void): void {
-  if (!testFails(cb)) {
+export function assertFailsSync(cb: () => void): void {
+  if (!failsSync(cb)) {
     console.log(cb.toString());
     throw new Error(`Expected to fail`);
   }

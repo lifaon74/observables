@@ -1,14 +1,14 @@
 import {
   IInputOutput, IInputOutputBaseConstructor, IInputOutputBaseOptions, IInputOutputConstructor, IInputOutputKeyValueMap,
-  IInputOutputSuperClass,
-  IOKeyValueMapGenericConstraint, TInputOutputBaseOptionsForSuperResult, TInputOutputBaseOptionsForSuperResultNonStrict,
-  TInputOutputConstructorArgs
+  IInputOutputConstructorSimple,
+  IInputOutputSuperClass, IOKeyValueMapGenericConstraint, TInputOutputBaseOptionsForSuperResult,
+  TInputOutputBaseOptionsForSuperResultSimple, TInputOutputConstructorArgs
 } from './interfaces';
 import { IObservable, IObservableConstructor } from '../../../core/observable/interfaces';
 import { IObserver } from '../../../core/observer/interfaces';
-import { Constructor, HasFactoryWaterMark, MakeFactory } from '../../../classes/factory';
+import { Constructor, HasFactoryWaterMark, MakeFactory, TMakeFactoryClass } from '../../../classes/factory';
 import {
-  INotificationsObservableConstructor, KeyValueMapToNotifications
+  INotificationsObservableTypedConstructor, KeyValueMapToNotifications
 } from '../../../notifications/core/notifications-observable/interfaces';
 import { IObservablePrivate, OBSERVABLE_PRIVATE, ObservableFactory } from '../../../core/observable/implementation';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
@@ -48,10 +48,11 @@ export function ConstructInputOutput<TKVMap extends IOKeyValueMapGenericConstrai
 
 export function IsInputOutput(value: any): value is IInputOutput<IInputOutputKeyValueMap, any, any> {
   return IsObject(value)
-    && value.hasOwnProperty(INPUT_OUTPUT_PRIVATE);
+    && value.hasOwnProperty(INPUT_OUTPUT_PRIVATE as symbol);
 }
 
 const IS_INPUT_OUTPUT_CONSTRUCTOR = Symbol('is-input-output-constructor');
+
 export function IsInputOutputConstructor(value: any, direct?: boolean): boolean {
   return (typeof value === 'function')
     && HasFactoryWaterMark(value, IS_INPUT_OUTPUT_CONSTRUCTOR, direct);
@@ -64,7 +65,7 @@ function PureInputOutputFactory<TBase extends Constructor<IInputOutputSuperClass
   type TObserver = IObserver<any>;
 
   if (!IsNotificationsObservableConstructor(superClass, false)) {
-    throw new TypeError(`Expected Observables' constructor as superClass`);
+    throw new TypeError(`Expected NotificationsObservables' constructor as superClass`);
   }
 
   if (!IsActivableConstructor(superClass, false)) {
@@ -91,7 +92,7 @@ function PureInputOutputFactory<TBase extends Constructor<IInputOutputSuperClass
 export let InputOutput: IInputOutputBaseConstructor;
 
 export function InputOutputFactory<TBase extends Constructor<IInputOutputSuperClass<IInputOutputKeyValueMap>>>(superClass: TBase) {
-  return MakeFactory<IInputOutputConstructor, [], TBase>(PureInputOutputFactory, [], superClass, {
+  return MakeFactory<IInputOutputConstructorSimple, [], TBase>(PureInputOutputFactory, [], superClass, {
     name: 'InputOutput',
     instanceOf: InputOutput,
     waterMarks: [IS_INPUT_OUTPUT_CONSTRUCTOR],
@@ -99,7 +100,7 @@ export function InputOutputFactory<TBase extends Constructor<IInputOutputSuperCl
 }
 
 export function InputOutputBaseFactory<TBase extends Constructor>(superClass: TBase) {
-  return MakeFactory<IInputOutputConstructor, [IActivableConstructor, INotificationsObservableConstructor, IObservableConstructor], TBase>(PureInputOutputFactory, [ActivableFactory, NotificationsObservableFactory, ObservableFactory], superClass, {
+  return MakeFactory<IInputOutputConstructorSimple, [IActivableConstructor, INotificationsObservableTypedConstructor<IInputOutputKeyValueMap>, IObservableConstructor], TBase>(PureInputOutputFactory, [ActivableFactory, NotificationsObservableFactory, ObservableFactory], superClass, {
     name: 'InputOutput',
     instanceOf: InputOutput,
     waterMarks: [IS_INPUT_OUTPUT_CONSTRUCTOR],
@@ -126,9 +127,10 @@ export function InputOutputBaseOptionsForSuper<TKVMap extends IOKeyValueMapGener
   ];
 }
 
-InputOutput = class InputOutput<TKVMap extends IOKeyValueMapGenericConstraint<TKVMap>, TObservable extends IObservable<any>, TObserver extends IObserver<any>> extends InputOutputBaseFactory<ObjectConstructor>(Object) {
-  constructor(options: IInputOutputBaseOptions<TKVMap, TObservable, TObserver>) {
-    super(...InputOutputBaseOptionsForSuper<TKVMap, TObservable, TObserver>(options) as TInputOutputBaseOptionsForSuperResultNonStrict<TKVMap, TObservable, TObserver>);
+InputOutput = class InputOutput<TObservable extends IObservable<any>, TObserver extends IObserver<any>> extends InputOutputBaseFactory<ObjectConstructor>(Object) {
+  constructor(options: IInputOutputBaseOptions<IInputOutputKeyValueMap, TObservable, TObserver>) {
+    super(...InputOutputBaseOptionsForSuper<IInputOutputKeyValueMap, TObservable, TObserver>(options) as TInputOutputBaseOptionsForSuperResultSimple<TObservable, TObserver>);
   }
 } as IInputOutputBaseConstructor;
+
 

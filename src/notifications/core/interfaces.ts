@@ -1,4 +1,3 @@
-
 // export type KeyValueMap<TKVMap extends { [key: string]: T }, T> =
 //   any extends TKVMap
 //     ? never
@@ -29,14 +28,18 @@
 //     : never;
 
 
+export type KeyValueMapNonStrict<TKVMap extends object> = {
+  [K in keyof TKVMap]: TKVMap[K]
+};
 
 export type KeyValueMap<TKVMap extends object> = {
-    [K in Extract<keyof TKVMap, string>]: TKVMap[K];
-    // [K in keyof TKVMap]: TKVMap[K];
+  [K in Extract<keyof TKVMap, string>]: TKVMap[K];
 };
 
 export type KeyValueMapConstraint<TKVMap extends object, TKVMapRef extends object> = KeyValueMap<TKVMap> extends TKVMap
-  ? KeyValueMap<TKVMap> extends TKVMapRef
+  ? [KeyValueMapNonStrict<TKVMap>] extends [TKVMapRef]
+    //? KeyValueMap<TKVMap> extends TKVMapRef
+    // ? Clone<TKVMap> extends TKVMapRef
     ? KeyValueMap<TKVMap>
     : never
   : never;
@@ -50,6 +53,17 @@ export type KeyValueMapGenericConstraint<TKVMap extends object> = KeyValueMapCon
 export type KVRecord<T extends string, V> = Record<Extract<T, string>, V>;
 // export type KVRecord<T extends string, V> = Record<Extract<string, string>, V>;
 
+
+// interface A<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> {
+//
+// }
+//
+// type Z<T> = Record<Extract<T, string>, 'b'> extends { [key: string]: any } ? true : false;
+// const z: Z<number>;
+//
+// interface B<C extends string> extends A<Record<Extract<C, string>, 'b'>> {
+//
+// }
 
 //
 // class A<TKVMap extends KeyValueMapConstraint<TKVMap, { load: Event }>> {

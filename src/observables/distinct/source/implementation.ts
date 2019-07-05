@@ -41,18 +41,19 @@ export function SourceEmit<T>(source: ISource<T>, value: T): void {
 
 export class Source<T> extends ValueObservable<T> implements ISource<T> {
   constructor() {
-    let context: IValueObservableContext<T> = void 0;
+    let context: IValueObservableContext<T>;
     super((_context: IValueObservableContext<T>) => {
       context = _context;
     });
+    // @ts-ignore
     ConstructSource<T>(this, context);
   }
 
-  get value(): T {
+  get value(): T | undefined {
     return ((this as unknown) as ISourceInternal<T>)[VALUE_OBSERVABLE_PRIVATE].value;
   }
 
-  valueOf(): T {
+  valueOf(): T | undefined {
     return ((this as unknown) as ISourceInternal<T>)[VALUE_OBSERVABLE_PRIVATE].value;
   }
 
@@ -90,14 +91,15 @@ export function AsyncSourceEmit<T, S extends IAsyncSource<T>>(source: S, promise
 
 export class AsyncSource<T> extends AsyncValueObservable<T> implements IAsyncSource<T> {
   constructor() {
-    let context: IAsyncValueObservableContext<T> = void 0;
+    let context: IAsyncValueObservableContext<T>;
     super((_context: IAsyncValueObservableContext<T>) => {
       context = _context;
     });
+    // @ts-ignore
     ConstructAsyncSource<T>(this, context);
   }
 
-  get promise(): Promise<T> {
+  get promise(): Promise<T> | null {
     return ((this as unknown) as IAsyncSourceInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].promise;
   }
 

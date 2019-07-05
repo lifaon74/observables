@@ -5,7 +5,7 @@ import { ReadonlyList } from '../../../misc/readonly-list/implementation';
 import { EventsObservable } from '../../../notifications/observables/events-observable/implementation';
 import { IEventsObservable } from '../../../notifications/observables/events-observable/interfaces';
 import {
-  INotificationsObservableContext, KeyValueMapToNotificationsObservers
+  INotificationsObservableContext, KeyValueMapToNotifications, KeyValueMapToNotificationsObservers
 } from '../../../notifications/core/notifications-observable/interfaces';
 import { Observable, ObservableClearObservers } from '../../../core/observable/implementation';
 import { IObservable, IObservableContext } from '../../../core/observable/interfaces';
@@ -78,7 +78,7 @@ export function WebSocketIOActivate(instance: IWebSocketIO): Promise<void> {
     privates.webSocket.binaryType = privates.binaryType;
     privates.webSocketListener = new EventsObservable<WebSocketEventMap>(privates.webSocket)
       .on('open', () => {
-        privates.stateContext.dispatch('activate');
+        privates.stateContext.dispatch('activate', void 0);
         resolve();
       })
       .on('error', () => {
@@ -100,15 +100,16 @@ export function WebSocketIOActivate(instance: IWebSocketIO): Promise<void> {
 
 export function WebSocketIODeactivate(instance: IWebSocketIO): Promise<void> {
   const privates: IWebSocketIOPrivate = (instance as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE];
-  if (privates.webSocket.readyState !== WebSocket.CLOSING) {
-    privates.webSocket.close();
+  const webSocket: WebSocket = privates.webSocket as WebSocket;
+  if (webSocket.readyState !== WebSocket.CLOSING) {
+    webSocket.close();
   }
-  return CloseWebSocket(privates.webSocket)
+  return CloseWebSocket(webSocket)
     .then(() => {
       privates.webSocket = null;
-      ObservableClearObservers(privates.webSocketListener);
+      ObservableClearObservers<KeyValueMapToNotifications<WebSocketEventMap>>(privates.webSocketListener as IEventsObservable<WebSocketEventMap>);
       privates.webSocketListener = null;
-      privates.stateContext.dispatch('deactivate');
+      privates.stateContext.dispatch('deactivate', void 0);
     });
 }
 
@@ -164,18 +165,20 @@ export function CloseWebSocket(webSocket: WebSocket): Promise<void> {
 
 
 export function WebSocketIOGetProtocol(instance: IWebSocketIO): string | null {
-  return ((instance as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE].webSocket === null)
+  const privates: IWebSocketIOPrivate = (instance as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE];
+  return (privates.webSocket === null)
     ? null
-    : (instance as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE].webSocket.protocol;
+    : privates.webSocket.protocol;
 }
 
 export function WebSocketIOSetBinaryType(instance: IWebSocketIO, binaryType: BinaryType): void {
+  const privates: IWebSocketIOPrivate = (instance as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE];
   switch (binaryType) {
     case 'blob':
     case 'arraybuffer':
-      (instance as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE].binaryType = binaryType;
-      if ((instance as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE].webSocket !== null) {
-        (instance as IWebSocketIOInternal)[WEBSOCKET_IO_PRIVATE].webSocket.binaryType = binaryType;
+      privates.binaryType = binaryType;
+      if (privates.webSocket !== null) {
+        privates.webSocket.binaryType = binaryType;
       }
       break;
     default:
@@ -230,8 +233,8 @@ export function WebSocketIOSetBinaryType(instance: IWebSocketIO, binaryType: Bin
 export class WebSocketIO extends InputOutput<IWebSocketIOKeyValueMap, IObservable<TWebSocketData>, IObserver<TWebSocketData>> implements IWebSocketIO {
 
   constructor(url: string, options?: IWebSocketIOOptions) {
-    let inContext: IObservableContext<TWebSocketData> = void 0;
-    let stateContext: INotificationsObservableContext<IWebSocketIOKeyValueMap> = void 0;
+    let inContext: IObservableContext<TWebSocketData>;
+    let stateContext: INotificationsObservableContext<IWebSocketIOKeyValueMap>;
 
     super({
       observable: new Observable<TWebSocketData>((context: IObservableContext<TWebSocketData>) => {
@@ -277,6 +280,8 @@ export class WebSocketIO extends InputOutput<IWebSocketIOKeyValueMap, IObservabl
     //     }
     //   ],
     //   []);
+
+    // @ts-ignore
     ConstructWebSocketIO(this, inContext, stateContext, url, options);
   }
 

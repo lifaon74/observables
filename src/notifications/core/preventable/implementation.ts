@@ -19,7 +19,7 @@ export function ConstructPreventable<N extends string>(preventable: IPreventable
 
 export function IsPreventable(value: any): value is IPreventable<string> {
   return IsObject(value)
-    && (PREVENTABLE_PRIVATE in value);
+    && value.hasOwnProperty(PREVENTABLE_PRIVATE as symbol);
 }
 
 
@@ -39,6 +39,7 @@ export class Preventable<N extends string> implements IPreventable<N> {
   }
 }
 
+/*------------------------*/
 
 export class BasicPreventable extends Preventable<'default'> implements IBasicPreventable {
 

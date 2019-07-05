@@ -1,67 +1,38 @@
-import { ReadonlyList } from './misc/readonly-list/implementation';
-import { Observable } from './core/observable/implementation';
-import { Observer } from './core/observer/implementation';
+import { Observable } from '../../core/observable/implementation';
+import { Observer } from '../../core/observer/implementation';
 import {
   NotificationsObservable, NotificationsObservableContext
-} from './notifications/core/notifications-observable/implementation';
-import { NotificationsObserver } from './notifications/core/notifications-observer/implementation';
-import { EventsObservable } from './notifications/observables/events-observable/implementation';
-import { FetchObservable } from './notifications/observables/fetch-observable/implementation';
-import { toCancellablePromiseTuple, toPromise } from './operators/to/toPromise';
+} from '../../notifications/core/notifications-observable/implementation';
+import { NotificationsObserver } from '../../notifications/core/notifications-observer/implementation';
+import { EventsObservable } from '../../notifications/observables/events-observable/implementation';
+import { FetchObservable } from '../../notifications/observables/fetch-observable/implementation';
+import { toCancellablePromiseTuple, toPromise } from '../../operators/to/toPromise';
 import {
   PromiseCancelReason, PromiseCancelToken
-} from './notifications/observables/promise-observable/promise-cancel-token/implementation';
-import { TCancellablePromiseTuple } from './notifications/observables/promise-observable/interfaces';
-import { Reason } from './misc/reason/implementation';
-import { PromiseObservable } from './notifications/observables/promise-observable/implementation';
-import { IObserver } from './core/observer/interfaces';
-import { Pipe } from './core/observable-observer/implementation';
+} from '../../notifications/observables/promise-observable/promise-cancel-token/implementation';
+import { TCancellablePromiseTuple } from '../../notifications/observables/promise-observable/interfaces';
+import { Reason } from '../../misc/reason/implementation';
+import { PromiseObservable } from '../../notifications/observables/promise-observable/implementation';
+import { IObserver } from '../../core/observer/interfaces';
+import { Pipe } from '../../core/observable-observer/implementation';
 import {
   INotificationsObservable, INotificationsObservableContext
-} from './notifications/core/notifications-observable/interfaces';
-import { IObservableObserver, IPipe } from './core/observable-observer/interfaces';
-import { IObservable, IObservableContext } from './core/observable/interfaces';
-import { promisePipe } from './operators/pipes/promisePipe';
-import { mapPipe } from './operators/pipes/mapPipe';
-import { TimerObservable } from './observables/timer-observable/implementation';
-import { AsyncSource, Source } from './observables/distinct/source/implementation';
-import { ISource } from './observables/distinct/source/interfaces';
-import { KeyValueMapKeys, KeyValueMapValues } from './notifications/core/interfaces';
-import { INotification } from './notifications/core/notification/interfaces';
-import { Notification } from './notifications/core/notification/implementation';
-import { WebSocketIO } from './observables/io/websocket-observable/implementation';
-import { INotificationsObserver } from './notifications/core/notifications-observer/interfaces';
-import { FunctionObservable } from './observables/distinct/function-observable/implementation';
-import { Expression } from './observables/distinct/expression/implementation';
-import { $equal, $expression, $string } from './operators/misc';
-import { IPromiseCancelToken } from './notifications/observables/promise-observable/promise-cancel-token/interfaces';
-import { UnionToIntersection } from './classes/types';
-import { EventKeyValueMapConstraint } from './notifications/observables/events-observable/interfaces';
-import { reducePipe } from './operators/pipes/reducePipe';
-import { flattenPipe } from './operators/pipes/flattenPipe';
-import { assertFails, assertObservableEmits } from './classes/asserts';
-import { FromIterableObservable } from './observables/from/iterable/implementation';
-import { noop } from './helpers';
-import { FromRXJSObservable } from './observables/from/rxjs/implementation';
-import { testPerformances } from './test-performances';
+} from '../../notifications/core/notifications-observable/interfaces';
+import { IObservableObserver, IPipe, TPipeContextBase } from '../../core/observable-observer/interfaces';
+import { IObservable, IObservableContext } from '../../core/observable/interfaces';
+import { promisePipe } from '../../operators/pipes/promisePipe';
+import { TimerObservable } from '../../observables/timer-observable/implementation';
+import { Source } from '../../observables/distinct/source/implementation';
+import { ISource } from '../../observables/distinct/source/interfaces';
+import { KeyValueMapKeys, KeyValueMapValues } from '../../notifications/core/interfaces';
+import { INotification } from '../../notifications/core/notification/interfaces';
+import { INotificationsObserver } from '../../notifications/core/notifications-observer/interfaces';
+import { FunctionObservable } from '../../observables/distinct/function-observable/implementation';
+import { Expression } from '../../observables/distinct/expression/implementation';
+import { $equal, $expression, $string } from '../../operators/misc';
+import { IPromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import { EventKeyValueMapConstraint } from '../../notifications/observables/events-observable/interfaces';
 
-function testReadOnlyList() {
-  const list = new ReadonlyList<number>([0, 1, 2, 3]);
-  for (let i = 0; i < list.length; i++) {
-    if (list.item(i) !== i) {
-      throw new Error(`list.item(${i}) !== ${i}`);
-    }
-  }
-
-  let i: number = 0;
-  for (const value of Array.from(list)) {
-    if (value !== i) {
-      throw new Error(`iterable[${i}] !== ${i}`);
-    }
-    i++;
-  }
-
-}
 
 /**
  * EXAMPLES
@@ -167,7 +138,7 @@ function timerObservableExample1(): void {
   const observer = new TimerObservable(1000)
     .pipeTo(() => {
       count++;
-      console.log(`count: ${count}`);
+      console.log(`count: ${ count }`);
       if (count >= 10) {
         observer.deactivate();
       }
@@ -186,30 +157,30 @@ function observeNotificationsObservable(): void {
   // 1) use 'addListener' to listen to 'mousemove' on X axis
   const observer1 = createEventNotificationsObservable<WindowEventMap>(window, 'mousemove')
     .addListener('mousemove', (event: MouseEvent) => {
-      console.log(`x: ${event.clientX}`);
+      console.log(`x: ${ event.clientX }`);
     }).activate(); // WARN: don't forget to activate the observer !
 
   // 2) use 'pipeTo' and NotificationsObserver (is strictly equal to 'addListener')
   const observer2 = createEventNotificationsObservable<WindowEventMap>(window, 'mousemove')
     .pipeTo<INotificationsObserver<'mousemove', MouseEvent>>(new NotificationsObserver<'mousemove', MouseEvent>('mousemove', (event: MouseEvent) => {
-      console.log(`y: ${event.clientY}`);
+      console.log(`y: ${ event.clientY }`);
     })).activate();
 
   // 3) use standard Observer
   const observer3 = createEventNotificationsObservable(window, 'click')
     .pipeTo(new Observer<INotification<'click', MouseEvent>>((notification: INotification<'click', MouseEvent>) => {
       if (notification.name === 'click') {
-        console.log(`click => x: ${notification.value.clientX}, x: ${notification.value.clientY}`);
+        console.log(`click => x: ${ notification.value.clientX }, x: ${ notification.value.clientY }`);
       }
     })).activate();
 
   // 4) use 'on' which is strictly equal to 'addListener' but returns the observable instead of the observer
   const observable = createEventNotificationsObservable(window, 'mousedown')
     .on('mousedown', (event: MouseEvent) => {
-      console.log(`mousedown => x: ${event.clientX}`);
+      console.log(`mousedown => x: ${ event.clientX }`);
     })
     .on('mousedown', (event: MouseEvent) => { // great way to chain listeners
-      console.log(`mousedown => y: ${event.clientY}`);
+      console.log(`mousedown => y: ${ event.clientY }`);
     }); // INFO: the observers are automatically activated with 'on'
 
 
@@ -227,10 +198,10 @@ function observeNotificationsObservable(): void {
 function eventsObservableExample1(): void {
   const observable = new EventsObservable<WindowEventMap>(window)
     .on('click', (event: MouseEvent) => {
-      console.log(`click => button: ${event.button}`);
+      console.log(`click => button: ${ event.button }`);
     })
     .on('mousemove', (event: MouseEvent) => {
-      console.log(`mousemove => x: ${event.clientX}, x: ${event.clientY}`);
+      console.log(`mousemove => x: ${ event.clientX }, x: ${ event.clientY }`);
     });
 
   // or
@@ -258,7 +229,7 @@ function eventsObservableExample1(): void {
 function eventsObservableExample2(): void {
   const observer = new EventsObservable(window, 'mousemove')
     .pipeTo(new Observer((notification: INotification<'mousemove', MouseEvent>) => {
-      console.log(`x: ${notification.value.clientX}, x: ${notification.value.clientY}`);
+      console.log(`x: ${ notification.value.clientX }, x: ${ notification.value.clientY }`);
     })).activate();
 
   setTimeout(() => {
@@ -268,26 +239,18 @@ function eventsObservableExample2(): void {
 
 function promiseCancelTokenFetchExample1(): void {
   function loadNews(page: number, token: IPromiseCancelToken = new PromiseCancelToken()): Promise<void> {
-    return fetch(`https://my-domain/api/news?page${page}`, { signal: token.toAbortController().signal })
-      .then((response: Response) => {
-        if (token.cancelled) {
-          throw token.reason;
-        } else {
-          return response.json();
-        }
-      })
-      .then((news: any) => {
-        if (token.cancelled) {
-          throw token.reason;
-        } else {
-          // render news in DOM for example
-        }
-      });
+    return token.wrapPromise(fetch(`https://my-domain/api/news?page${ page }`, { signal: token.toAbortController().signal }))
+      .then(token.wrapFunction((response: Response) => {
+        return response.json();
+      }))
+      .then(token.wrapFunction((news: any) => {
+        // render news in DOM for example
+      }));
   }
 
   let page: number = 0;
   let token: IPromiseCancelToken;
-  document.querySelector('button')
+  (document.querySelector('button') as HTMLElement)
     .addEventListener(`click`, () => {
       if (token !== void 0) {
         token.cancel(new PromiseCancelReason('Manual cancel'));
@@ -313,7 +276,7 @@ function createHttpRequest(url: string, token: IPromiseCancelToken = new Promise
           resolve(request.responseText);
         })
         .on('error', () => {
-          reject(new Error(`Failed to fetch data: ${request.statusText}`));
+          reject(new Error(`Failed to fetch data: ${ request.statusText }`));
         })
         .on('abort', () => {
           reject(token.reason || new PromiseCancelReason());
@@ -464,21 +427,21 @@ function fetchObservableExample1(): void {
 /**
  * Example how to cast an Observable to a Promise
  */
-function observableToPromiseExample1(): void {
+async function observableToPromiseExample1(): Promise<void> {
 
-  function observePromise(promise: Promise<Response>, token?: PromiseCancelToken): Promise<void> {
+  function observePromise(name: string, promise: Promise<Response>, token?: PromiseCancelToken): Promise<void> {
     return promise
       .then((response: Response) => {
         if (token && token.cancelled) {
-          console.warn('cancel', token.reason);
+          console.warn(`cancel '${ name }'`, token.reason);
         } else {
-          console.log(response);
+          console.log(name, response);
         }
       }, (error: any) => {
         if (token && token.cancelled) {
-          console.warn('cancel', token.reason);
+          console.warn(`cancel '${ name }'`, token.reason);
         } else {
-          console.error('error', error);
+          console.error(`error '${ name }'`, error);
         }
       });
   }
@@ -486,15 +449,15 @@ function observableToPromiseExample1(): void {
   const url1: string = 'https://server.test-cors.org/server?id=643798&enable=true&status=200&credentials=false&response_headers=Access-Control-Allow-Origin%3A%20*'; // valid cors url
   const url2: string = 'https://invalid url'; // invalid  url
 
-  observePromise(toPromise<Response>(new FetchObservable(url1))); // will complete
-  observePromise(toPromise<Response>(new FetchObservable(url2))); // will error
+  observePromise('fetch url 1', toPromise<Response>(new FetchObservable(url1))); // will complete
+  observePromise('fetch url 2', toPromise<Response>(new FetchObservable(url2))); // will error
 
   const abortController: AbortController = new AbortController();
-  observePromise(toPromise<Response>(new FetchObservable(url1, { signal: abortController.signal }))); // will cancel
+  observePromise('fetch url with abort controller without token', toPromise<Response>(new FetchObservable(url1, { signal: abortController.signal }), 'reject')); // will cancel
   abortController.abort();
 
   // provides PromiseCancelToken too, to detect cancellation
-  observePromise(...toCancellablePromiseTuple<Response>(new FetchObservable(url1, { signal: abortController.signal }))); // will cancel
+  observePromise('fetch url with abort controller with token', ...toCancellablePromiseTuple<Response>(new FetchObservable(url1, { signal: abortController.signal }), 'reject')); // will cancel
 }
 
 
@@ -512,70 +475,6 @@ function observableObserverExampple1(): void {
   }
 }
 
-function typeTest() {
-  type a = 'a' | 'b';
-  type b = 'a' | 'b' | 'c';
-  type c = 'a';
-  type d = 'd';
-
-  type inter_a = 'a' & 'b';
-  type inter_b = 'a' & 'b' & 'c';
-  type inter_c = 'a';
-  type inter_d = 'd';
-
-
-  // expect B super set of A
-  function foo<A extends string, B extends string>(v: UnionToIntersection<A>): B {
-    return v as any;
-  }
-
-  const v: unknown = null;
-
-  // const k: O<a> = { a: 'a', b: 'b' };
-  // const k: (a & b) = 'b';
-  // const k: keyof { [key in a]: void };
-  // const k: T<a, b> = 'c';
-  // const k: UnionToIntersection<a> = 'a' as unknown as a;
-  // const k: keyof { a: 1, b: never };
-
-  // (a & b) extends b => true
-  // (b & a) extends b => true
-  // (a & b) extends a => true
-  // (a & b) extends c => false
-  // (a & b) extends d => false
-  // ('a' | 'b' | 'c') extends ('a' | 'b') => false
-  // ('a' | 'b' | 'c') extends ('a' | 'b' | 'c') => true
-  // ('a' & 'b' & 'c') extends ('a' & 'b') => true
-  // ('a' & 'b') extends ('a') => true
-  // ('a') extends ('a' & 'b') => false
-
-  // string extends ('a' & 'b') => false
-  // ('a' & 'b') extends string => true
-
-  // string extends ('a' | 'b') => false
-  // ('a' | 'b') extends string => true
-
-  // ('a' | 'b' | 'c') extends ('a' & 'b') => false
-  // ('a' | 'b') extends ('a' & 'b') => false
-  // ('a') extends ('a' & 'b') => false
-  // (('a' & 'b') | ('a' & 'b' & 'c')) extends ('a' & 'b') => true
-  // ('a' & 'b') extends ('a' | 'b') => true
-
-  // const k: (string extends ('a' | 'b') ? boolean : never) = null;
-  // const k: Record<a, void> & Record<b, void> = null;
-  // k.c = void 0;
-
-
-  // const r0 = foo<a, a>(v as inter_a); // valid
-  // const r1 = foo<a, b>(v as inter_b); // valid
-  // const r2 = foo<a, c>(v as inter_c); // valid
-  // const r3 = foo<a, d>(v as inter_d); // valid
-  //
-  // const ra = foo<a, a>(v as a); // valid
-  // const rb = foo<a, b>(v as b); // valid
-  // const rc = foo<a, c>(v as c); // invalid
-  // const rd = foo<a, d>(v as d); // invalid
-}
 
 function pipeExample1() {
   function map<Tin, Tout>(transform: (value: Tin) => Tout): IPipe<IObserver<Tin>, IObservable<Tout>> {
@@ -616,7 +515,7 @@ function pipeExample2() {
 
 function pipeExample3() {
   // create a map pipe which transform incoming data into numbers
-  const pipe = Pipe.create<any, number>((context) => {
+  const pipe = Pipe.create<any, number>((context: TPipeContextBase<any, number>) => {
     return {
       onEmit(value: any) {
         context.emit(Number(value));
@@ -638,35 +537,6 @@ function pipeExample3() {
   emitter.observer.emit('2'); // 2
   emitter.observer.emit(void 0); // NaN
 }
-
-
-
-export function testSource() {
-  const source = new Source<number>().emit(0);
-
-  source.pipeTo((value: number) => {
-    console.log(value);
-  }).activate(); // print 0
-
-  source.emit(1); // print 1
-  source.emit(1); // nothing to print
-  source.emit(2); // print 2
-}
-
-export async function testAsyncSource() {
-  const source = await new AsyncSource<number>().emit(Promise.resolve(0));
-
-  source.pipeTo((value: number) => {
-    console.log(value);
-  }).activate(); // print 0
-
-  await source.emit(Promise.resolve(1)); // print 1
-  await source.emit(Promise.resolve(1)); // nothing to print
-  await source.emit(Promise.resolve(2)); // print 2
-}
-
-
-
 
 
 function functionObservableExample1() {
@@ -702,12 +572,11 @@ function functionObservableExample1() {
     }).activate();
 
 
-  $string`a${a}b${a}c${$expression(() => window.location.href)}`
+  $string`a${ a }b${ a }c${ $expression(() => window.location.href) }`
     .pipeTo((value: string) => {
       console.log('str', value);
     }).activate();
 }
-
 
 
 function expressionExample1() {
@@ -730,207 +599,111 @@ function expressionExample1() {
 
 
 
-async function testFromIterableObservable() {
-  const values1 = new FromIterableObservable([0, 1, 2, 3]);
+function sensorExample1() {
 
-  await assertObservableEmits(
-    values1,
-    [0, 1, 2, 3]
-  );
-
-  assertFails(() =>  values1.pipeTo(noop).activate());
-
-  const values2 = new FromIterableObservable([0, 1, 2, 3][Symbol.iterator](), 'cache');
-
-  await assertObservableEmits(
-    values2,
-    [0, 1, 2, 3]
-  );
-
-  await assertObservableEmits(
-    values2,
-    [0, 1, 2, 3]
-  );
-}
-
-async function testReducePipe() {
-  await assertObservableEmits(
-    new FromIterableObservable([0, 1, 2, 3])
-      .pipeThrough(reducePipe<number>((a, b) => (a + b), 0)),
-    [0, 1, 3, 6]
-  );
-}
-
-async function testFlattenPipe() {
-  await assertObservableEmits(
-    new FromIterableObservable([[0, 1], [2, 3]])
-      .pipeThrough(flattenPipe<number>()),
-    [0, 1, 2, 3]
-  );
-}
-
-
-
-
-async function testFromRXJSObservable() {
-  function loadScript(src: string): Promise<void> {
-    return new Promise((resolve: any, reject: any) => {
-      const script: HTMLScriptElement = document.createElement('script');
-
-      const clear = () => {
-        script.removeEventListener('load', onLoad);
-        script.removeEventListener('error', onLoad);
-        document.head.removeChild(script);
-      };
-
-      const onLoad = () => {
-        clear();
-        resolve();
-      };
-
-      const onError = () => {
-        clear();
-        reject(new URIError(`The script '${src.substring(0, 300)}' didn't load correctly.`));
-      };
-
-      script.addEventListener('load', onLoad);
-      script.addEventListener('error', onError);
-
-      script.src = src;
-
-      document.head.appendChild(script);
-    });
+  interface AmbientLightObservableEventsMap {
+    'error': Error;
+    'value': number;
   }
 
-  function loadUMDScript<T>(src: string, name: string): Promise<T> {
-    // (window as any).exports = {};
-    // (window as any).module = {
-    //   exports: (window as any).exports
-    // };
-    if (name in (window as any)) {
-      return Promise.reject(new Error(`The global object already contains a property with name '${name}'.`));
-    } else {
-      return loadScript(src)
-        .then(() => {
-          if (name in (window as any)) {
-            const module: any = (window as any)[name];
-            delete (window as any)[name];
-            return module;
+  /**
+   * An Observable based on an AmbientLightSensor.
+   * Emits the illuminance
+   */
+  class AmbientLightObservable extends NotificationsObservable<AmbientLightObservableEventsMap> {
+
+    /**
+     * Ensures permission is granted
+     */
+    static create(): Promise<AmbientLightObservable> {
+      return navigator.permissions.query({ name: 'ambient-light-sensor' })
+        .then((result: PermissionStatus) => {
+          if (result.state === 'denied') {
+            throw new Error(`Permission to use ambient light sensor is denied.`);
           } else {
-            throw new Error(`No exported UMD name '${name}'.`)
+            return new AmbientLightObservable();
           }
         });
     }
 
-  }
+    constructor(options: { frequency: number } = { frequency: 10 }) {
+      super((context: INotificationsObservableContext<AmbientLightObservableEventsMap>) => {
+        // @ts-ignore - because AmbientLightSensor is draft
+        const sensor: AmbientLightSensor = new AmbientLightSensor(options);
 
-  const rxjs: any = await loadUMDScript( 'https://unpkg.com/rxjs@6.4.0/bundles/rxjs.umd.js', 'rxjs');
-  // await loadScript( 'https://unpkg.com/rxjs@6.4.0/bundles/rxjs.umd.min.js');
+        const valueListener = () => context.dispatch('value', sensor.illuminance);
+        // @ts-ignore - because SensorErrorEvent is draft
+        const errorListener = (event: SensorErrorEvent) => context.dispatch('error', event.error);
 
-  const { range, operators: { map, filter }} = rxjs;
-
-  const notifications = [
-    new Notification('next', 0),
-    new Notification('next', 1),
-    new Notification('next', 2),
-    new Notification('next', 3),
-    new Notification('complete'),
-  ];
-
-  const rxObservable = range(0, 7).pipe(
-    filter((x: number) => x % 2 === 0),
-    map((x: number) => x  / 2)
-  ); // 0, 1, 2, 3
-
-  const values1 = new FromRXJSObservable<number, undefined>(rxObservable);
-
-  await assertObservableEmits(
-    values1,
-    notifications
-  );
-
-  assertFails(() =>  values1.pipeTo(noop).activate());
-
-  const values2 = new FromRXJSObservable<number, undefined>(rxObservable, 'cache');
-
-  await assertObservableEmits(
-    values2,
-    notifications
-  );
-
-  await assertObservableEmits(
-    values2,
-    notifications
-  );
-
-}
-
-
-export function testWebSocket() {
-
-  // wss://echo.websocket.org
-  const ws = new WebSocketIO('wss://echo.websocket.org');
-  ws.in.pipeTo((value: any) => {
-    console.log('in:', value);
-  }).activate();
-
-  const emitter = new TimerObservable(1000)
-    .pipe(mapPipe<void, string>(() => `value-${Math.random()}`)).observable
-    .pipeTo(ws.out);
-
-  const clear = () => {
-    ws.deactivate()
-      .then(() => {
-        Array.from(ws.observers).forEach(_ => _.disconnect());
+        return {
+          onObserved() {
+            if (context.observable.observers.length === 1) {
+              sensor.addEventListener('reading', valueListener);
+              sensor.addEventListener('error', errorListener);
+              sensor.start();
+            }
+          },
+          onUnobserved() {
+            if (!context.observable.observed) {
+              sensor.removeEventListener('reading', valueListener);
+              sensor.removeEventListener('error', errorListener);
+              sensor.stop();
+            }
+          }
+        };
       });
-  };
+    }
+  }
 
-  ws.on('activate', () => {
-    console.timeEnd('ws activate');
-    emitter.activate();
-    setTimeout(clear, 5000);
-  });
+  return AmbientLightObservable.create()// or new AmbientLightObservable()
+    .then((ambientLightObservable: AmbientLightObservable) => {
 
-  ws.on('error', (error: Error) => {
-    console.error('ws error', error);
-  });
+      // observes incoming values and log it in the DOM
+      const ambientLightObserver = ambientLightObservable
+        .addListener('value', (illuminance: number) => {
+          const div = document.createElement('div');
+          div.innerText = `${ illuminance }lux`;
+          document.body.appendChild(div);
+        });
 
-  ws.on('deactivate', () => {
-    console.log('ws deactivate');
-    emitter.deactivate();
-  });
+      // observes errors and log it in the DOM if any
+      ambientLightObservable
+        .addListener('error', (error: Error) => {
+          const div = document.createElement('div');
+          div.innerText = `[ERROR]: ${ error.message }`;
+          document.body.appendChild(div);
+        }).activate();
 
-  console.time('ws activate');
-  ws.activate();
+      // creates a "toggle sensor" button
+      const button = document.createElement('button');
+      button.innerText = 'activate';
+      button.style.margin = `10px`;
+      document.body.appendChild(button);
+
+      // on click, toggle ambientLightObserver
+      button.addEventListener('click', () => {
+        if (ambientLightObserver.activated) {
+          button.innerText = 'activate';
+          ambientLightObserver.deactivate();
+        } else {
+          button.innerText = 'deactivate';
+          ambientLightObserver.activate();
+        }
+      });
+
+      const div = document.createElement('div');
+      div.innerText = `illuminance:`;
+      document.body.appendChild(div);
+    })
+    .catch((error: any) => {
+      const div = document.createElement('div');
+      div.innerText = `[ERROR]: ${ error.message }`;
+      document.body.appendChild(div);
+    });
 }
 
-export function testInstanceof() {
-  const a = new NotificationsObservable();
-  if (!(a instanceof Observable)) {
-    throw new Error(`!(a instanceof Observable)`)
-  }
 
-  const b = new EventsObservable(window);
-  if (!(b instanceof Observable)) {
-    throw new Error(`!(b instanceof Observable)`)
-  }
-
-  const c = new Source();
-  if (!(c instanceof Observable)) {
-    throw new Error(`!(c instanceof Observable)`)
-  }
-
-  const d = new WebSocketIO('');
-  if (!(d instanceof Observable)) {
-    throw new Error(`!(d instanceof Observable)`)
-  }
-}
-
-
-
-export async function test() {
-  // testReadOnlyList();
-
+export async function testExamples() {
   // timerObservableExample1();
   // observeTimerObservable();
   // observeNotificationsObservable();
@@ -944,24 +717,12 @@ export async function test() {
   // pipeExample2();
   // pipeExample3();
 
-  // testSource();
-  // testAsyncSource();
-
   // functionObservableExample1();
   // expressionExample1();
 
-  // await testFromIterableObservable();
-  // await testReducePipe();
-  // await testFlattenPipe();
-  //
-  // await testFromRXJSObservable();
-
-  testWebSocket();
-  // testMisc();
-  // testFactoryV2();
-  // testInstanceof();
-  // testPerformances();
+  sensorExample1();
 }
+
 
 
 

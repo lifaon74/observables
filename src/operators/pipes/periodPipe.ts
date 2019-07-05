@@ -14,7 +14,7 @@ import { IObserver } from '../../core/observer/interfaces';
 export function periodDynamicPipe<T>(period: (value: T) => number): IPipe<IObserver<T>, IObservable<T>> {
   return Pipe.create<T, T>((context: TPipeContextBase<T, T>) => {
     let timer: any | null = null;
-    let previousValue: T | undefined = void 0;
+    let previousValue: T;
     let hasValue: boolean = false;
 
     const onEmit = (value: T): void => {

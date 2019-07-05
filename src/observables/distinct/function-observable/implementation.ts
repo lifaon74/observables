@@ -70,6 +70,7 @@ export function IsFunctionObservable(value: any): value is IFunctionObservable<a
 }
 
 const IS_FUNCTION_OBSERVABLE_CONSTRUCTOR = Symbol('is-function-observable-constructor');
+
 export function IsFunctionObservableConstructor(value: any, direct?: boolean): boolean {
   return (typeof value === 'function') && ((value === FunctionObservable) || HasFactoryWaterMark(value, IS_FUNCTION_OBSERVABLE_CONSTRUCTOR, direct));
 }
@@ -155,7 +156,7 @@ export class FunctionObservable<T extends TFunctionObservableFactory> extends Va
   }
 
   constructor(factory: T, args: TFunctionObservableParameters<T>) {
-    let context: IValueObservableContext<TFunctionObservableValue<T>> = void 0;
+    let context: IValueObservableContext<TFunctionObservableValue<T>>;
     super((_context: IValueObservableContext<TFunctionObservableValue<T>>) => {
       context = _context;
       return {
@@ -167,6 +168,7 @@ export class FunctionObservable<T extends TFunctionObservableFactory> extends Va
         },
       };
     });
+    // @ts-ignore
     ConstructFunctionObservable<T>(this, context, factory, args);
   }
 

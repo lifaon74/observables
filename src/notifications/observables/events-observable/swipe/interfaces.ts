@@ -1,7 +1,15 @@
 import { INotificationsObservable } from '../../../core/notifications-observable/interfaces';
 
 // export type TSwipeEventDirection = 'top-bottom' | 'bottom-top' | 'left-right' | 'right-left';
-export type TSwipeEventDirection = 'top' | 'bottom' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+export type TSwipeEventDirection =
+  'top'
+  | 'bottom'
+  | 'left'
+  | 'right'
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-right';
 
 export interface ISwipeEventInit extends EventInit {
   angle: number;
