@@ -598,6 +598,111 @@ function expressionExample1() {
 }
 
 
+
+function sensorExample1() {
+
+  interface AmbientLightObservableEventsMap {
+    'error': Error;
+    'value': number;
+  }
+
+  /**
+   * An Observable based on an AmbientLightSensor.
+   * Emits the illuminance
+   */
+  class AmbientLightObservable extends NotificationsObservable<AmbientLightObservableEventsMap> {
+
+    /**
+     * Ensures permission is granted
+     */
+    static create(): Promise<AmbientLightObservable> {
+      return navigator.permissions.query({ name: 'ambient-light-sensor' })
+        .then((result: PermissionStatus) => {
+          if (result.state === 'denied') {
+            throw new Error(`Permission to use ambient light sensor is denied.`);
+          } else {
+            return new AmbientLightObservable();
+          }
+        });
+    }
+
+    constructor(options: { frequency: number } = { frequency: 10 }) {
+      super((context: INotificationsObservableContext<AmbientLightObservableEventsMap>) => {
+        // @ts-ignore - because AmbientLightSensor is draft
+        const sensor: AmbientLightSensor = new AmbientLightSensor(options);
+
+        const valueListener = () => context.dispatch('value', sensor.illuminance);
+        // @ts-ignore - because SensorErrorEvent is draft
+        const errorListener = (event: SensorErrorEvent) => context.dispatch('error', event.error);
+
+        return {
+          onObserved() {
+            if (context.observable.observers.length === 1) {
+              sensor.addEventListener('reading', valueListener);
+              sensor.addEventListener('error', errorListener);
+              sensor.start();
+            }
+          },
+          onUnobserved() {
+            if (!context.observable.observed) {
+              sensor.removeEventListener('reading', valueListener);
+              sensor.removeEventListener('error', errorListener);
+              sensor.stop();
+            }
+          }
+        };
+      });
+    }
+  }
+
+  return AmbientLightObservable.create()// or new AmbientLightObservable()
+    .then((ambientLightObservable: AmbientLightObservable) => {
+
+      // observes incoming values and log it in the DOM
+      const ambientLightObserver = ambientLightObservable
+        .addListener('value', (illuminance: number) => {
+          const div = document.createElement('div');
+          div.innerText = `${ illuminance }lux`;
+          document.body.appendChild(div);
+        });
+
+      // observes errors and log it in the DOM if any
+      ambientLightObservable
+        .addListener('error', (error: Error) => {
+          const div = document.createElement('div');
+          div.innerText = `[ERROR]: ${ error.message }`;
+          document.body.appendChild(div);
+        }).activate();
+
+      // creates a "toggle sensor" button
+      const button = document.createElement('button');
+      button.innerText = 'activate';
+      button.style.margin = `10px`;
+      document.body.appendChild(button);
+
+      // on click, toggle ambientLightObserver
+      button.addEventListener('click', () => {
+        if (ambientLightObserver.activated) {
+          button.innerText = 'activate';
+          ambientLightObserver.deactivate();
+        } else {
+          button.innerText = 'deactivate';
+          ambientLightObserver.activate();
+        }
+      });
+
+      const div = document.createElement('div');
+      div.innerText = `illuminance:`;
+      document.body.appendChild(div);
+    })
+    .catch((error: any) => {
+      const div = document.createElement('div');
+      div.innerText = `[ERROR]: ${ error.message }`;
+      document.body.appendChild(div);
+    });
+}
+
+
 export async function testExamples() {
   // timerObservableExample1();
   // observeTimerObservable();
@@ -606,7 +711,7 @@ export async function testExamples() {
   // promiseCancelTokenExample1();
   // promiseObservableExample1();
   // fetchObservableExample1();
-  observableToPromiseExample1();
+  // observableToPromiseExample1();
 
   // pipeExample1();
   // pipeExample2();
@@ -614,6 +719,8 @@ export async function testExamples() {
 
   // functionObservableExample1();
   // expressionExample1();
+
+  sensorExample1();
 }
 
 

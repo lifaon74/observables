@@ -74,6 +74,9 @@ export function AsyncValueObservableOnUnobserved<T>(observable: IAsyncValueObser
   (observable as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].onUnobserveHook(observer);
 }
 
+/**
+ * TODO maybe emits should be chained (awaiting for previous emit) instead of cancelled
+ */
 export function AsyncValueObservableEmit<T>(observable: IAsyncValueObservable<T>, promise: Promise<T>, token: IPromiseCancelToken = new PromiseCancelToken()): Promise<void> {
   const privates: IAsyncValueObservablePrivate<T> = ((observable as unknown) as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE];
 

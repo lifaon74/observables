@@ -78,7 +78,7 @@ To compare with RXJS, an Observer is both a RX.Observer and a RX.Subscription.
 Using the *Observable* constructor, we can create a function which returns an observable stream of events with a specific type for any EventTarget.
 ```ts
 function listen<T extends Event>(target: EventTarget, name: string) {
-  return new Observable<Event>((context: ObservableContext<Event>) => {
+  return new Observable<Event>((context: IObservableContext<Event>) => {
     const listener = (event: T) => context.emit(event);
     return {
       // everytime an Observer wants to receive data from this Observable, this method will be called
@@ -128,71 +128,148 @@ const observer = listen<KeyboardEvent>(target, 'keydown')
   }))).activate();
 ```
 
-### Example: WOT subscription - WARN - Draft spec - following example is not up to date ###
-This example can be found here: https://w3c.github.io/wot-scripting-api/#example-4-consume-a-thing
+### Example: Ambient light sensor ###
+
+Here's an example of an Observable based on the AmbientLightSensor
+
+<details>
+<summary>show</summary>
+<p>
+
 ```ts
-try {
-  let subscription = wot.discover({ method: "local" }).subscribe(
-    td => {
-      let thing = wot.consume(td);
-      console.log("Thing " + thing.name + " has been consumed.");
-      let subscription = thing["temperature"].subscribe(function(value) {
-          console.log("Temperature: " + value);
+function sensorExample() {
+
+  interface AmbientLightObservableEventsMap {
+    'error': Error;
+    'value': number;
+  }
+
+  /**
+   * An Observable based on an AmbientLightSensor.
+   * Emits the illuminance
+   */
+  class AmbientLightObservable extends NotificationsObservable<AmbientLightObservableEventsMap> {
+
+    /**
+     * Ensures permission is granted
+     */
+    static create(): Promise<AmbientLightObservable> {
+      return navigator.permissions.query({ name: 'ambient-light-sensor' })
+        .then((result: PermissionStatus) => {
+          if (result.state === 'denied') {
+            throw new Error(`Permission to use ambient light sensor is denied.`);
+          } else {
+            return new AmbientLightObservable();
+          }
         });
-      thing.actions["startMeasurement"].invoke({ units: "Celsius" })
-        .then(() => { console.log("Temperature measurement started."); })
-        .catch(e => {
-           console.log("Error starting measurement.");
-           subscription.unsubscribe();
-         })
-    },
-    error => { console.log("Discovery error: " + error.message); },
-    () => { console.log("Discovery finished successfully");}
-  );
-} catch(error) {
-  console.log("Error: " + error.message);
-};
-```
+    }
 
-Could be written like so:
+    constructor(options: { frequency: number } = { frequency: 10 }) {
+      super((context: INotificationsObservableContext<AmbientLightObservableEventsMap>) => {
+        // @ts-ignore - because AmbientLightSensor is draft
+        const sensor: AmbientLightSensor = new AmbientLightSensor(options);
 
-```ts
-const discoverObservable = wot.discover({ method: 'local' })
-  .on('thing-description', (td: string) => {
-    const thing = wot.consume(td);
-    console.log('Thing ' + thing.name + ' has been consumed.');
+        const valueListener = () => context.dispatch('value', sensor.illuminance);
+        // @ts-ignore - because SensorErrorEvent is draft
+        const errorListener = (event: SensorErrorEvent) => context.dispatch('error', event.error);
 
-    const temperatureObserver = thing['temperature']
-      .pipeTo((value: any) => {
-        console.log('Temperature: ' + value);
-      }).activate();
-      
-    thing.actions['startMeasurement'].invoke({ units: 'Celsius' })
-      .then(() => {
-        console.log('Temperature measurement started.');
-      })
-      .catch(() => {
-        console.log('Error starting measurement.');
-        temperatureObserver.deactivate();
+        return {
+          onObserved() {
+            if (context.observable.observers.length === 1) {
+              sensor.addEventListener('reading', valueListener);
+              sensor.addEventListener('error', errorListener);
+              sensor.start();
+            }
+          },
+          onUnobserved() {
+            if (!context.observable.observed) {
+              sensor.removeEventListener('reading', valueListener);
+              sensor.removeEventListener('error', errorListener);
+              sensor.stop();
+            }
+          }
+        };
       });
-  })
-  .on('error', (error: Error) => {
-    console.log('Discovery error: ' + error.message);
-  })
-  .on('complete', () => {
-    console.log('Discovery finished successfully');
-    discoverObservable.clearObservers();
-  })
-;
+    }
+  }
+
+  return AmbientLightObservable.create()// or new AmbientLightObservable()
+    .then((ambientLightObservable: AmbientLightObservable) => {
+
+      // observes incoming values and log it in the DOM
+      const ambientLightObserver = ambientLightObservable
+        .addListener('value', (illuminance: number) => {
+          const div = document.createElement('div');
+          div.innerText = `${ illuminance }lux`;
+          document.body.appendChild(div);
+        });
+
+      // observes errors and log it in the DOM if any
+      ambientLightObservable
+        .addListener('error', (error: Error) => {
+          const div = document.createElement('div');
+          div.innerText = `[ERROR]: ${ error.message }`;
+          document.body.appendChild(div);
+        }).activate();
+
+      // creates a "toggle sensor" button
+      const button = document.createElement('button');
+      button.innerText = 'activate';
+      button.style.margin = `10px`;
+      document.body.appendChild(button);
+
+      // on click, toggle ambientLightObserver
+      button.addEventListener('click', () => {
+        if (ambientLightObserver.activated) {
+          button.innerText = 'activate';
+          ambientLightObserver.deactivate();
+        } else {
+          button.innerText = 'deactivate';
+          ambientLightObserver.activate();
+        }
+      });
+
+      const div = document.createElement('div');
+      div.innerText = `illuminance:`;
+      document.body.appendChild(div);
+    })
+    .catch((error: any) => {
+      const div = document.createElement('div');
+      div.innerText = `[ERROR]: ${ error.message }`;
+      document.body.appendChild(div);
+    });
+}
 ```
 
-With this specification it is extremely easy to activate/deactivate an observed value, and clear all the resources properly.
+</p>
+</details>
 
-On the contrary, in the first example, with RXJS like Observable, we need a reference on `thing['temperature']` and `subscription`,
-everytime we want to activate/deactivate the Observable. With this proposal, just providing `temperatureObserver`
-would do the job.
+As you may see, its surprisingly simple to subscribe/unsubscribe by maintaining only one reference,
+where RXJS requires to keep both the observable and the subscription.
+```ts
+button.addEventListener('click', () => {
+  if (ambientLightObserver.activated) {
+    button.innerText = 'activate';
+    ambientLightObserver.deactivate();
+  } else {
+    button.innerText = 'deactivate';
+    ambientLightObserver.activate();
+  }
+});
+```
 
-A more complete example may be found here: [wot-temperature-example](./examples/wot-temperature-example.md)
+In the context of IoT and sensors it may be extremely useful:
+```ts
+interface SmartElectricOutlet {
+  state: Observerable<'on' | 'off'>;
+  current: Observerable<number>;
+  voltage: Observerable<number>;  
+  watts: Observerable<number>;  
+  wattHours: Observerable<number>;
+}
+```
+
+
 
 ### Table of contents ###
 <!-- toc -->
@@ -235,7 +312,7 @@ A more complete example may be found here: [wot-temperature-example](./examples/
 
 ### API ###
 
-Every methods and attributes are commented on the source file. In case you'll require more details.
+Every methods and attributes are commented on the source files, in case you require more details.
 
 #### Observable
 ```ts

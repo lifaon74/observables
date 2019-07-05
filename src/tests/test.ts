@@ -359,7 +359,7 @@ export function testInstanceof() {
 
 
 export async function test() {
-  // await testExamples();
+  await testExamples();
 
   // testReadOnlyList();
   // testSource();
