@@ -2,7 +2,7 @@ import { Notification } from '../../core/notification/implementation';
 import { IPromiseCancelToken } from './promise-cancel-token/interfaces';
 import {
   IPromiseNotificationKeyValueMap, IPromiseObservable, IPromiseObservableClearOptions, IPromiseObservableOptions,
-  TCancellablePromiseTuple, TPromiseObservableNotification
+  TPromiseObservableNotification
 } from './interfaces';
 import {
   INotificationsObservablePrivate, NOTIFICATIONS_OBSERVABLE_PRIVATE, NotificationsObservable
@@ -14,6 +14,8 @@ import { PromiseCancelToken } from './promise-cancel-token/implementation';
 import { Reason } from '../../../misc/reason/implementation';
 import { IsObject } from '../../../helpers';
 import { INotificationsObserver } from '../../core/notifications-observer/interfaces';
+import { ICancellablePromiseTuple } from '../../../promises/interfaces';
+
 
 
 /**
@@ -63,7 +65,7 @@ export interface IPromiseObservablePrivate<TFulfilled, TErrored, TCancelled> {
   clear: IPromiseObservableClearOptions;
   promise: Promise<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>> | null; // cached promise
   token: IPromiseCancelToken | null; // cancel token associated with the cached promise
-  observerToPromiseMap: WeakMap<IObserver<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>, TCancellablePromiseTuple<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>>;
+  observerToPromiseMap: WeakMap<IObserver<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>, ICancellablePromiseTuple<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>>;
 }
 
 export interface IPromiseObservableInternal<TFulfilled, TErrored, TCancelled> extends IPromiseObservable<TFulfilled, TErrored, TCancelled> {
@@ -105,7 +107,7 @@ export function ConstructPromiseObservable<TFulfilled, TErrored, TCancelled>(
   privates.token = null;
   privates.observerToPromiseMap = new WeakMap<
     IObserver<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>,
-    TCancellablePromiseTuple<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>
+    ICancellablePromiseTuple<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>
   >();
 }
 
@@ -141,7 +143,7 @@ export function PromiseObservableOnObserved<TFulfilled, TErrored, TCancelled>(ob
     token = privates.token as IPromiseCancelToken;
   }
 
-  privates.observerToPromiseMap.set(observer, [promise, token]);
+  privates.observerToPromiseMap.set(observer, { promise, token });
 
   promise
     .then((notification: TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>) => { // promise resolved (fulfilled, rejected or cancelled)
@@ -173,7 +175,7 @@ export function PromiseObservableOnUnobserved<TFulfilled, TErrored, TCancelled>(
   ) { // => promise can be cancelled
     privates.token.cancel(new Reason(`Observer stopped observing this promise`, 'CANCEL'));
   } else if (privates.observerToPromiseMap.has(observer)) { // promise still pending for this observer
-    const [promise, token]: TCancellablePromiseTuple<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>> = privates.observerToPromiseMap.get(observer) as TCancellablePromiseTuple<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>;
+    const { promise, token }: ICancellablePromiseTuple<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>> = privates.observerToPromiseMap.get(observer) as ICancellablePromiseTuple<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>;
     privates.observerToPromiseMap.delete(observer);
     if (promise !== privates.promise) { // promise not shared => it can be cancelled
       token.cancel(new Reason(`Observer stopped observing this promise`, 'CANCEL'));

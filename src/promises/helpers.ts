@@ -1,5 +1,7 @@
 import { IsObject } from '../helpers';
-import { TPromiseCreateCallback, TPromiseOrValue } from './interfaces';
+import { ICancellablePromiseTuple, TPromiseCreateCallback, TPromiseOrValue } from './interfaces';
+import { IPromiseCancelToken } from '../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+
 
 export function IsPromiseLike(value: any): value is Promise<any> {
   return IsPromiseLikeBase(value)
@@ -78,4 +80,8 @@ export function AllSettled<T>(promises: Iterable<Promise<T>>): Promise<AllSettle
         );
     })
   );
+}
+
+export function SpreadCancellablePromiseTuple<T>({ promise, token }: ICancellablePromiseTuple<T>): [Promise<T>, IPromiseCancelToken] {
+  return [promise, token ];
 }

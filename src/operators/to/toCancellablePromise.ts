@@ -12,7 +12,8 @@ import { CancellablePromise } from '../../promises/cancellable-promise/implement
  * @return a CancellablePromise
  */
 export function toCancellablePromise<T>(observable: IObservable<TBasePromiseObservableNotification<T>> | IObservable<T>): ICancellablePromise<T> {
-  return new CancellablePromise<T>(...toCancellablePromiseTuple(observable));
+  const { promise, token } = toCancellablePromiseTuple(observable);
+  return new CancellablePromise<T>(promise, token);
 
 }
 

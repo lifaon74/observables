@@ -1,5 +1,5 @@
 import {
-  TCancellablePromiseTuple, TPromiseObservableNotification
+  TPromiseObservableNotification
 } from '../../notifications/observables/promise-observable/interfaces';
 import { Notification } from '../../notifications/core/notification/implementation';
 import { IObservable } from '../../core/observable/interfaces';
@@ -12,7 +12,7 @@ import {
 } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
 import { Observer } from '../../core/observer/implementation';
 import { INotificationsObserver } from '../../notifications/core/notifications-observer/interfaces';
-import { TPromiseOrValue } from '../../promises/interfaces';
+import { ICancellablePromiseTuple, TPromiseOrValue } from '../../promises/interfaces';
 
 export type TBasePromiseObservableNotification<T> = TPromiseObservableNotification<T, any, any>;
 export type TValueOrNotificationType<T> = T | TBasePromiseObservableNotification<T>;
@@ -25,10 +25,10 @@ export type TValueOrNotificationType<T> = T | TBasePromiseObservableNotification
  * @param strategy
  * @return a tuple: The Promise, and a PromiseCancelToken.
  */
-export function toCancellablePromiseTuple<T>(observable: IObservable<TBasePromiseObservableNotification<T>> | IObservable<T>, strategy?: TCancelStrategy): TCancellablePromiseTuple<T> {
+export function toCancellablePromiseTuple<T>(observable: IObservable<TBasePromiseObservableNotification<T>> | IObservable<T>, strategy?: TCancelStrategy): ICancellablePromiseTuple<T> {
   const token: IPromiseCancelToken = new PromiseCancelToken();
-  return [
-    new Promise<T>((resolve: any, reject: any) => {
+  return {
+    promise: new Promise<T>((resolve: any, reject: any) => {
       if (token.cancelled) {
         resolve(ApplyCancelStrategy(token, strategy));
       } else {
@@ -74,10 +74,10 @@ export function toCancellablePromiseTuple<T>(observable: IObservable<TBasePromis
         }).activate();
       }
     }),
-    token
-  ];
+    token: token
+  };
 }
 
 export function toPromise<T>(observable: IObservable<TBasePromiseObservableNotification<T>> | IObservable<T>, strategy?: TCancelStrategy): Promise<T> {
-  return toCancellablePromiseTuple<T>(observable, strategy)[0];
+  return toCancellablePromiseTuple<T>(observable, strategy).promise;
 }

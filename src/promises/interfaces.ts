@@ -1,3 +1,5 @@
+import { IPromiseCancelToken } from '../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+
 export type TPromiseType<P> = P extends PromiseLike<infer T>
   ? T extends PromiseLike<any>
     ? never
@@ -14,3 +16,9 @@ export type TPromiseOrValueTupleToValueTuple<TTuple extends TPromiseOrValue<any>
 };
 
 export type TPromiseOrValueTupleToValueUnion<TTuple extends TPromiseOrValue<any>[]> = TPromiseOrValueTupleToValueTuple<TTuple>[Extract<keyof TTuple, number>];
+
+// export type TCancellablePromiseTuple<T> = [Promise<T>, IPromiseCancelToken];
+export type ICancellablePromiseTuple<T> = {
+  promise: Promise<T>,
+  token: IPromiseCancelToken,
+};

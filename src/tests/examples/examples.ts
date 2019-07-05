@@ -10,7 +10,6 @@ import { toCancellablePromiseTuple, toPromise } from '../../operators/to/toPromi
 import {
   PromiseCancelReason, PromiseCancelToken
 } from '../../notifications/observables/promise-observable/promise-cancel-token/implementation';
-import { TCancellablePromiseTuple } from '../../notifications/observables/promise-observable/interfaces';
 import { Reason } from '../../misc/reason/implementation';
 import { PromiseObservable } from '../../notifications/observables/promise-observable/implementation';
 import { IObserver } from '../../core/observer/interfaces';
@@ -32,6 +31,8 @@ import { Expression } from '../../observables/distinct/expression/implementation
 import { $equal, $expression, $string } from '../../operators/misc';
 import { IPromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
 import { EventKeyValueMapConstraint } from '../../notifications/observables/events-observable/interfaces';
+import { ICancellablePromiseTuple } from '../../promises/interfaces';
+import { SpreadCancellablePromiseTuple } from '../../promises/helpers';
 
 
 /**
@@ -267,9 +268,9 @@ function promiseCancelTokenFetchExample1(): void {
  * @param url
  * @param token - optional PromiseCancelToken, will be returned in the tuple
  */
-function createHttpRequest(url: string, token: IPromiseCancelToken = new PromiseCancelToken()): TCancellablePromiseTuple<string> {
-  return [
-    new Promise<string>((resolve, reject) => {
+function createHttpRequest(url: string, token: IPromiseCancelToken = new PromiseCancelToken()): ICancellablePromiseTuple<string> {
+  return {
+    promise: new Promise<string>((resolve, reject) => {
       const request = new XMLHttpRequest(); // create an XMLHttpRequest
       new EventsObservable<XMLHttpRequestEventMap>(request) // creates an EventsObservable for this request
         .on('load', () => { // when the request is finished, resolve the promise
@@ -289,15 +290,15 @@ function createHttpRequest(url: string, token: IPromiseCancelToken = new Promise
       request.open('GET', url, true);
       request.send();
     }),
-    token
-  ];
+    token: token
+  };
 }
 
 /**
  * Demo how to use a PromiseCancelToken
  */
 function promiseCancelTokenExample1(): void {
-  const [promise, token] = createHttpRequest('https://server.test-cors.org/server?id=643798&enable=true&status=200&credentials=false&response_headers=Access-Control-Allow-Origin%3A%20*');
+  const { promise, token } = createHttpRequest('https://server.test-cors.org/server?id=643798&enable=true&status=200&credentials=false&response_headers=Access-Control-Allow-Origin%3A%20*');
   promise
     .then((content: string) => {
       if (!token.cancelled) {
@@ -457,7 +458,7 @@ async function observableToPromiseExample1(): Promise<void> {
   abortController.abort();
 
   // provides PromiseCancelToken too, to detect cancellation
-  observePromise('fetch url with abort controller with token', ...toCancellablePromiseTuple<Response>(new FetchObservable(url1, { signal: abortController.signal }), 'reject')); // will cancel
+  observePromise('fetch url with abort controller with token', ...SpreadCancellablePromiseTuple(toCancellablePromiseTuple<Response>(new FetchObservable(url1, { signal: abortController.signal }), 'reject'))); // will cancel
 }
 
 
