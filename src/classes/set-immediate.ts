@@ -121,9 +121,21 @@ function GetRegisterImmediateImplementation(global: any): TRegisterImmediate {
 }
 
 
-const registerImmediate: TRegisterImmediate = GetRegisterImmediateImplementation(
-  (typeof self === 'undefined') ? ((typeof global === 'undefined') ? this : global) : self
-);
+declare const __magic__: any;
+
+const globalThis: any = (function () {
+  Object.defineProperty(Object.prototype, '__magic__', {
+    get: function () {
+      return this;
+    },
+    configurable: true // This makes it possible to `delete` the getter later.
+  });
+  const globalThis = __magic__;
+  delete (Object.prototype as any)['__magic__'];
+  return globalThis;
+}());
+
+const registerImmediate: TRegisterImmediate = GetRegisterImmediateImplementation(globalThis);
 
 let nextHandle: number = 1;
 
