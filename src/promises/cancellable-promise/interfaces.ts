@@ -1,8 +1,13 @@
 import {
   IPromiseCancelToken, TCancelStrategy
 } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
-import { TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion } from '../interfaces';
+import {
+  TPromiseOrValue, TPromiseOrValueFactoryTupleToValueUnion, TPromiseOrValueTupleToValueTuple,
+  TPromiseOrValueTupleToValueUnion
+} from '../interfaces';
 
+
+export type TCancellablePromiseRaceFactory<T> = (token: IPromiseCancelToken) => TPromiseOrValue<T>;
 
 export type TCancellablePromiseCreateCallback<T> = (this: ICancellablePromise<T>, resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void, token: IPromiseCancelToken) => void;
 
@@ -37,6 +42,27 @@ export interface ICancellablePromiseConstructor {
    * @param strategy
    */
   raceCallback<TTuple extends TPromiseOrValue<any>[]>(callback: (this: ICancellablePromise<TPromiseOrValueTupleToValueUnion<TTuple>>, token: IPromiseCancelToken) => TTuple, token?: IPromiseCancelToken, strategy?: TCancelStrategy): ICancellablePromise<TPromiseOrValueTupleToValueUnion<TTuple>>;
+
+  /**
+   * Equivalent of Promise.race but get the values though a list of factories instead.
+   * As soon one of the factories resolves, the tokens provided for all the others are cancelled.
+   * Useful to race and cancel unused promises.
+   * @param factories
+   * @param token
+   * @param strategy
+   * @example: run 4 parallel delay promises, as soon as one resolves, cancel all the others
+   *  CancellablePromise.raceCancellable(Array.from({ length: 4 }, (value: void, index: number) => {
+   *    return (token: IPromiseCancelToken) => {
+   *      return $delay(index * 1000, token)
+   *        .cancelled((token: IPromiseCancelToken) => {
+   *          console.log(`index: ${ index } cancelled: ${ token.reason.message }`);
+   *        });
+   *    };
+   *  }));
+   *  // 0 will resolve first and 1, 2, 3 will be cancelled
+   *
+   */
+  raceCancellable<TTuple extends TCancellablePromiseRaceFactory<any>[]>(factories: TTuple, token?: IPromiseCancelToken, strategy?: TCancelStrategy): ICancellablePromise<TPromiseOrValueFactoryTupleToValueUnion<TTuple>>;
 
   // Equivalent of Promise.all
   all<TTuple extends TPromiseOrValue<any>[]>(values: TTuple, token?: IPromiseCancelToken, strategy?: TCancelStrategy): ICancellablePromise<TPromiseOrValueTupleToValueTuple<TTuple>>;
