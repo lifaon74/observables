@@ -1165,6 +1165,9 @@ interface IPromiseCancelToken extends INotificationsObservable<IPromiseCancelTok
   // cancels the Token and notify the Promise to stop its job.
   cancel(reason?: any): void;
 
+  // links this Token with some others tokens
+  linkWithToken(...tokens: IPromiseCancelToken[]): () => void;
+  
   // creates an AbortController linked with this Token
   toAbortController(): AbortController;
 
@@ -1233,6 +1236,33 @@ cancel(reason?: any): void;
 Calls this function to notify a promise it has been cancelled:
 - emits a *Notification<'cancel', any>*
 - enters in a *canceled* state
+
+###### linkWithToken
+```ts
+linkWithToken(...tokens: IPromiseCancelToken[]): () => void;
+```
+
+Links this PromiseCancelToken with an AbortController which may be used in `fetch` for example.
+
+
+*Example:* Abortable fetch with timeout
+```ts
+function doRequestWithTimeout(url: string, timeout: number = 60000, token?: PromiseCancelToken) {
+  const _token = new PromiseCancelToken();
+
+  setTimeout(() => {
+    _token.cancel(new Reason(`Timeout reached`, 'TIMEOUT'));
+  }, timeout);
+
+  if (token !== void 0) {
+    _token.linkWithToken(token);
+  }
+
+  return _token.wrapPromise(fetch(..._token.wrapFetchArguments(url)));
+}
+```
+
+*INFO:* linkWith<name> methods return an undo function: calling this function will undo the link.
 
 ###### toAbortController / linkWithAbortController / linkWithAbortSignal
 ```ts

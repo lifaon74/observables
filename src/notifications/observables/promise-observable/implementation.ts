@@ -143,7 +143,10 @@ export function PromiseObservableOnObserved<TFulfilled, TErrored, TCancelled>(ob
     token = privates.token as IPromiseCancelToken;
   }
 
-  privates.observerToPromiseMap.set(observer, { promise, token });
+  privates.observerToPromiseMap.set(observer, {
+    promise: promise,
+    token: token,
+  });
 
   promise
     .then((notification: TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>) => { // promise resolved (fulfilled, rejected or cancelled)
@@ -186,18 +189,10 @@ export function PromiseObservableOnUnobserved<TFulfilled, TErrored, TCancelled>(
 
 export function PromiseObservableFromPromise<TFulfilled, TErrored, TCancelled>(promise: Promise<TFulfilled>, token?: IPromiseCancelToken, options?: IPromiseObservableOptions): IPromiseObservable<TFulfilled, TErrored, TCancelled> {
   return new PromiseObservable<TFulfilled, TErrored, TCancelled>((_token: IPromiseCancelToken) => {
-    if (token === void 0) {
-      return promise;
-    } else {
-      const tokenObserver: INotificationsObserver<'cancel', any> = token.addListener('cancel', (reason: any) => {
-        _token.cancel(reason);
-      }).activate();
-
-      return promise
-        .finally(() => {
-          tokenObserver.deactivate();
-        });
+    if (token !== void 0) {
+      _token.linkWithToken(token);
     }
+    return promise;
   }, options);
 }
 
@@ -227,3 +222,18 @@ export class PromiseObservable<TFulfilled, TErrored, TCancelled> extends Notific
 }
 
 
+/*
+function doRequestWithTimeout(timeout: number = 60000, token?: PromiseCancelToken) {
+  const _token = new PromiseCancelToken();
+
+  setTimeout(() => {
+    _token.cancel(new Reason(`Timeout reached`, 'TIMEOUT'));
+  }, timeout);
+
+  if (token !== void 0) {
+    _token.linkWithToken(token);
+  }
+
+  return _token.wrapPromise(fetch(..._token.wrapFetchArguments('http://domain.com/request1')));
+}
+*/

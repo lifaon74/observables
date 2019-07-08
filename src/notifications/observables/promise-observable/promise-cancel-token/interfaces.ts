@@ -15,15 +15,7 @@ export interface IPromiseCancelTokenConstructor {
   /**
    * Builds a new PromiseCancelToken from a list of PromiseCancelTokens:
    *  - if one of the provided 'tokens' is cancelled, cancel this Token with the cancelled token's reason
-   * @param tokens
-   * @Example:
-   *  function run(token: PromiseCancelToken) {
-   *    const userClickCloseToken = new PromiseCancelToken();
-   *    document.querySelector(`.close-button`).addEventListener('click', () => userClickCloseToken.cancel(new Reason('clicked on close')));
-   *
-   *    const _token: PromiseCancelToken = PromiseCancelToken.merge(token, userClickCloseToken);
-   *    return _token.wrapPromise(fetch(..._token.wrapFetchArguments('http://domain.com/request1')));
-   *  }
+   * Equivalent of the 'linkWithTokens' method
    */
   of(...tokens: IPromiseCancelToken[]): IPromiseCancelToken;
 }
@@ -42,6 +34,24 @@ export interface IPromiseCancelToken extends INotificationsObservable<IPromiseCa
 
   // cancels the Token and notify the Promise to stop its job.
   cancel(reason?: any): void;
+
+  /**
+   * INFO: linkWith<name> methods return an undo function: calling this function will undo the link.
+   */
+
+  /**
+   * Links this Token with some others tokens
+   *  If one of the provided 'tokens' is cancelled, cancel this Token with the cancelled token's reason
+   * @Example:
+   *  function run(token: PromiseCancelToken) {
+   *    const _token = new PromiseCancelToken();
+   *    _token.linkWithToken(token);
+   *    document.querySelector(`.close-button`).addEventListener('click', () => _token.cancel(new Reason('clicked on close')));
+   *    return _token.wrapPromise(fetch(..._token.wrapFetchArguments('http://domain.com/request1')));
+   *  }
+   */
+  linkWithToken(...tokens: IPromiseCancelToken[]): () => void;
+
 
   // creates an AbortController linked with this Token
   toAbortController(): AbortController;

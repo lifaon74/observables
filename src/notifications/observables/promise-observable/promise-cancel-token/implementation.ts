@@ -352,12 +352,10 @@ export function PromiseCancelTokenWrapFunction<CB extends (...args: any[]) => an
 }
 
 
-export function PromiseCancelTokenOf(
-  constructor: IPromiseCancelTokenConstructor,
+export function PromiseCancelTokenLinkWithTokens(
+  token: IPromiseCancelToken,
   tokens: IPromiseCancelToken[],
-): IPromiseCancelToken {
-  const token: IPromiseCancelToken = new constructor();
-
+): () => void {
   const index: number = tokens.findIndex(_ => _.cancelled);
 
   if (index === -1) {
@@ -375,10 +373,19 @@ export function PromiseCancelTokenOf(
     const tokensObserver = tokens.map(_ => _.addListener('cancel', cancel));
     tokenObserver.activate();
     tokensObserver.forEach(_ => _.activate());
+    return clear;
   } else {
     token.cancel(tokens[index].reason);
+    return noop;
   }
+}
 
+export function PromiseCancelTokenOf(
+  constructor: IPromiseCancelTokenConstructor,
+  tokens: IPromiseCancelToken[],
+): IPromiseCancelToken {
+  const token: IPromiseCancelToken = new constructor();
+  PromiseCancelTokenLinkWithTokens(token, tokens);
   return token;
 }
 
@@ -405,6 +412,10 @@ export class PromiseCancelToken extends NotificationsObservable<IPromiseCancelTo
 
   cancel(reason?: any): void {
     PromiseCancelTokenCancel(this, reason);
+  }
+
+  linkWithToken(...tokens: IPromiseCancelToken[]): () => void {
+    return PromiseCancelTokenLinkWithTokens(this, tokens);
   }
 
   toAbortController(): AbortController {
