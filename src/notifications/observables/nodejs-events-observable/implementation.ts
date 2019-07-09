@@ -25,11 +25,12 @@ export interface INodeJSEventsObservableInternal<TKVMap extends NodeJSEventKeyVa
   [NODE_JS_EVENTS_OBSERVABLE_PRIVATE]: INodeJSEventsObservablePrivate<TKVMap, TTarget>;
 }
 
-export function ConstructNodeJSEventsObservable<TKVMap extends NodeJSEventKeyValueMapConstraint<TKVMap>, TTarget extends PureNodeJSEventTarget>(observable: INodeJSEventsObservable<TKVMap, TTarget>, target: TTarget, name: KeyValueMapKeys<TKVMap> | null): void {
-  ConstructClassWithPrivateMembers(observable, NODE_JS_EVENTS_OBSERVABLE_PRIVATE);
-  (observable as INodeJSEventsObservableInternal<TKVMap, TTarget>)[NODE_JS_EVENTS_OBSERVABLE_PRIVATE].target = target;
-  (observable as INodeJSEventsObservableInternal<TKVMap, TTarget>)[NODE_JS_EVENTS_OBSERVABLE_PRIVATE].name = name;
-  (observable as INodeJSEventsObservableInternal<TKVMap, TTarget>)[NODE_JS_EVENTS_OBSERVABLE_PRIVATE].observerListenerMap = new WeakMap<IObserver<KeyValueMapToNotifications<TKVMap>>, (event: KeyValueMapValues<TKVMap>) => void>();
+export function ConstructNodeJSEventsObservable<TKVMap extends NodeJSEventKeyValueMapConstraint<TKVMap>, TTarget extends PureNodeJSEventTarget>(instance: INodeJSEventsObservable<TKVMap, TTarget>, target: TTarget, name: KeyValueMapKeys<TKVMap> | null): void {
+  ConstructClassWithPrivateMembers(instance, NODE_JS_EVENTS_OBSERVABLE_PRIVATE);
+  const privates: INodeJSEventsObservablePrivate<TKVMap, TTarget> = (instance as INodeJSEventsObservableInternal<TKVMap, TTarget>)[NODE_JS_EVENTS_OBSERVABLE_PRIVATE];
+  privates.target = target;
+  privates.name = name;
+  privates.observerListenerMap = new WeakMap<IObserver<KeyValueMapToNotifications<TKVMap>>, (event: KeyValueMapValues<TKVMap>) => void>();
 }
 
 export function IsNodeJSEventsObservable(value: any): value is INodeJSEventsObservable<any> {
@@ -45,8 +46,9 @@ export function NormalizeNodeJSListenerValue(args: any[]): any {
       : args;
 }
 
-export function NodeJSEventsObservableOnObserved<TKVMap extends NodeJSEventKeyValueMapConstraint<TKVMap>, TTarget extends PureNodeJSEventTarget>(observable: INodeJSEventsObservable<TKVMap, TTarget>, observer: IObserver<KeyValueMapToNotifications<TKVMap>>): void {
-  const name: KeyValueMapKeys<TKVMap> | null = (observable as INodeJSEventsObservableInternal<TKVMap, TTarget>)[NODE_JS_EVENTS_OBSERVABLE_PRIVATE].name;
+export function NodeJSEventsObservableOnObserved<TKVMap extends NodeJSEventKeyValueMapConstraint<TKVMap>, TTarget extends PureNodeJSEventTarget>(instance: INodeJSEventsObservable<TKVMap, TTarget>, observer: IObserver<KeyValueMapToNotifications<TKVMap>>): void {
+  const privates: INodeJSEventsObservablePrivate<TKVMap, TTarget> = (instance as INodeJSEventsObservableInternal<TKVMap, TTarget>)[NODE_JS_EVENTS_OBSERVABLE_PRIVATE];
+  const name: KeyValueMapKeys<TKVMap> | null = privates.name;
   let nameAndCallback: KeyValueMapToNotificationsObserversLikeGeneric<TKVMap> | null = ExtractObserverNameAndCallback<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>(observer);
 
   if (nameAndCallback === null) {
@@ -70,12 +72,13 @@ export function NodeJSEventsObservableOnObserved<TKVMap extends NodeJSEventKeyVa
     (nameAndCallback as KeyValueMapToNotificationsObserversLikeGeneric<TKVMap>).callback(NormalizeNodeJSListenerValue(args) as KeyValueMapValues<TKVMap>);
   };
 
-  (observable as INodeJSEventsObservableInternal<TKVMap, TTarget>)[NODE_JS_EVENTS_OBSERVABLE_PRIVATE].observerListenerMap.set(observer, listener);
-  (observable as INodeJSEventsObservableInternal<TKVMap, TTarget>)[NODE_JS_EVENTS_OBSERVABLE_PRIVATE].target.addListener(nameAndCallback.name, listener);
+  privates.observerListenerMap.set(observer, listener);
+  privates.target.addListener(nameAndCallback.name, listener);
 }
 
-export function NodeJSEventsObservableOnUnobserved<TKVMap extends NodeJSEventKeyValueMapConstraint<TKVMap>, TTarget extends PureNodeJSEventTarget>(observable: INodeJSEventsObservable<TKVMap, TTarget>, observer: IObserver<KeyValueMapToNotifications<TKVMap>>): void {
-  const name: KeyValueMapKeys<TKVMap> | null = (observable as INodeJSEventsObservableInternal<TKVMap, TTarget>)[NODE_JS_EVENTS_OBSERVABLE_PRIVATE].name;
+export function NodeJSEventsObservableOnUnobserved<TKVMap extends NodeJSEventKeyValueMapConstraint<TKVMap>, TTarget extends PureNodeJSEventTarget>(instance: INodeJSEventsObservable<TKVMap, TTarget>, observer: IObserver<KeyValueMapToNotifications<TKVMap>>): void {
+  const privates: INodeJSEventsObservablePrivate<TKVMap, TTarget> = (instance as INodeJSEventsObservableInternal<TKVMap, TTarget>)[NODE_JS_EVENTS_OBSERVABLE_PRIVATE];
+  const name: KeyValueMapKeys<TKVMap> | null = privates.name;
   const nameAndCallback: KeyValueMapToNotificationsObserversLikeGeneric<TKVMap> | null = ExtractObserverNameAndCallback<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>(observer);
 
   let _name: string;
@@ -94,11 +97,11 @@ export function NodeJSEventsObservableOnUnobserved<TKVMap extends NodeJSEventKey
     }
   }
 
-  (observable as INodeJSEventsObservableInternal<TKVMap, TTarget>)[NODE_JS_EVENTS_OBSERVABLE_PRIVATE].target.removeListener(
+  privates.target.removeListener(
     _name,
-    (observable as INodeJSEventsObservableInternal<TKVMap, TTarget>)[NODE_JS_EVENTS_OBSERVABLE_PRIVATE].observerListenerMap.get(observer) as (event: KeyValueMapValues<TKVMap>) => void
+    privates.observerListenerMap.get(observer) as (event: KeyValueMapValues<TKVMap>) => void
   );
-  (observable as INodeJSEventsObservableInternal<TKVMap, TTarget>)[NODE_JS_EVENTS_OBSERVABLE_PRIVATE].observerListenerMap.delete(observer);
+  privates.observerListenerMap.delete(observer);
 }
 
 

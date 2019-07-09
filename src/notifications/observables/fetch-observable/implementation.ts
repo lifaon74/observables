@@ -20,13 +20,13 @@ export interface IFetchObservableInternal extends IFetchObservable, IPromiseObse
 }
 
 export function ConstructFetchObservable(
-  observable: IFetchObservable,
+  instance: IFetchObservable,
   requestInfo: RequestInfo,
   requestInit?: RequestInit,
   options: IFetchObservableOptions = {}
 ): void {
-  ConstructClassWithPrivateMembers(observable, FETCH_OBSERVABLE_PRIVATE);
-  const privates: IFetchObservablePrivate = (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE];
+  ConstructClassWithPrivateMembers(instance, FETCH_OBSERVABLE_PRIVATE);
+  const privates: IFetchObservablePrivate = (instance as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE];
 
   if ((typeof requestInfo === 'string') || (requestInfo instanceof Request)) {
     privates.requestInfo = requestInfo;
@@ -58,15 +58,15 @@ export function IsFetchObservable(value: any): value is IFetchObservable {
     && (FETCH_OBSERVABLE_PRIVATE in value);
 }
 
-export function FetchObservablePromiseFactory(observable: IFetchObservable, token: IPromiseCancelToken): Promise<Response> {
-  const privates: IFetchObservablePrivate = (observable as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE];
+export function FetchObservablePromiseFactory(instance: IFetchObservable, token: IPromiseCancelToken): Promise<Response> {
+  const privates: IFetchObservablePrivate = (instance as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE];
   return fetch(...token.wrapFetchArguments(
     privates.requestInfo,
     privates.requestInit,
   ));
 }
 
-export function FetchObservablePromiseTo<T>(observable: IFetchObservable, callback: (response: Response) => TPromiseOrValue<T>): INotificationsObservable<TFetchObservableCastKeyValueMap<T, Error | Response>> {
+export function FetchObservablePromiseTo<T>(instance: IFetchObservable, callback: (response: Response) => TPromiseOrValue<T>): INotificationsObservable<TFetchObservableCastKeyValueMap<T, Error | Response>> {
   return this.pipeThrough(promisePipe<Response, T, Error, any>((response: Response) => {
     if (response.ok) {
       return callback(response);

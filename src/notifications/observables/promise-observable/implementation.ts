@@ -13,13 +13,12 @@ import { IObserver } from '../../../core/observer/interfaces';
 import { PromiseCancelToken } from './promise-cancel-token/implementation';
 import { Reason } from '../../../misc/reason/implementation';
 import { IsObject } from '../../../helpers';
-import { INotificationsObserver } from '../../core/notifications-observer/interfaces';
 import { ICancellablePromiseTuple } from '../../../promises/interfaces';
 
 
 
 /**
- * Waits until the promise is resolved, and then returns a Notification describing its state.
+ * Waits until the promise is resolved, then returns a Notification describing its state.
  * @param promise
  * @param token
  */
@@ -37,7 +36,8 @@ export function PromiseToNotification<TFulfilled, TErrored, TCancelled>(promise:
         .addListener('cancel', () => {
           resolve(new Notification<'cancel', TCancelled>('cancel', token.reason));
           observer.deactivate();
-        }).activate();
+        });
+      observer.activate();
     });
 
     return Promise.race([
@@ -75,7 +75,7 @@ export interface IPromiseObservableInternal<TFulfilled, TErrored, TCancelled> ex
 
 
 export function ConstructPromiseObservable<TFulfilled, TErrored, TCancelled>(
-  observable: IPromiseObservable<TFulfilled, TErrored, TCancelled>,
+  instance: IPromiseObservable<TFulfilled, TErrored, TCancelled>,
   promiseFactory: (token: IPromiseCancelToken) => Promise<TFulfilled>,
   options: IPromiseObservableOptions = {}
 ): void {
@@ -94,8 +94,8 @@ export function ConstructPromiseObservable<TFulfilled, TErrored, TCancelled>(
     throw new TypeError(`Expected object or void as options.clear when creating a PromiseObservable`);
   }
 
-  ConstructClassWithPrivateMembers(observable, PROMISE_OBSERVABLE_PRIVATE);
-  const privates: IPromiseObservablePrivate<TFulfilled, TErrored, TCancelled> = (observable as TInternal)[PROMISE_OBSERVABLE_PRIVATE];
+  ConstructClassWithPrivateMembers(instance, PROMISE_OBSERVABLE_PRIVATE);
+  const privates: IPromiseObservablePrivate<TFulfilled, TErrored, TCancelled> = (instance as TInternal)[PROMISE_OBSERVABLE_PRIVATE];
   privates.promiseFactory = promiseFactory;
   privates.clear = {
     immediate: (clear.immediate === void 0) ? false : Boolean(clear.immediate),
@@ -113,19 +113,19 @@ export function ConstructPromiseObservable<TFulfilled, TErrored, TCancelled>(
 
 export function IsPromiseObservable(value: any): value is IPromiseObservable<any, any, any> {
   return IsObject(value)
-    && value.hasOwnProperty(PROMISE_OBSERVABLE_PRIVATE);
+    && value.hasOwnProperty(PROMISE_OBSERVABLE_PRIVATE as symbol);
 }
 
-export function PromiseObservableClearCachedPromise<TFulfilled, TErrored, TCancelled>(observable: IPromiseObservable<TFulfilled, TErrored, TCancelled>): void {
+export function PromiseObservableClearCachedPromise<TFulfilled, TErrored, TCancelled>(instance: IPromiseObservable<TFulfilled, TErrored, TCancelled>): void {
   type TInternal = IPromiseObservableInternal<TFulfilled, TErrored, TCancelled>;
-  (observable as TInternal)[PROMISE_OBSERVABLE_PRIVATE].promise = null;
-  (observable as TInternal)[PROMISE_OBSERVABLE_PRIVATE].token = null;
+  (instance as TInternal)[PROMISE_OBSERVABLE_PRIVATE].promise = null;
+  (instance as TInternal)[PROMISE_OBSERVABLE_PRIVATE].token = null;
 }
 
 
-export function PromiseObservableOnObserved<TFulfilled, TErrored, TCancelled>(observable: IPromiseObservable<TFulfilled, TErrored, TCancelled>, observer: IObserver<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>): void {
+export function PromiseObservableOnObserved<TFulfilled, TErrored, TCancelled>(instance: IPromiseObservable<TFulfilled, TErrored, TCancelled>, observer: IObserver<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>): void {
   type TInternal = IPromiseObservableInternal<TFulfilled, TErrored, TCancelled>;
-  const privates: IPromiseObservablePrivate<TFulfilled, TErrored, TCancelled> = (observable as TInternal)[PROMISE_OBSERVABLE_PRIVATE];
+  const privates: IPromiseObservablePrivate<TFulfilled, TErrored, TCancelled> = (instance as TInternal)[PROMISE_OBSERVABLE_PRIVATE];
 
   // fix token and promise in case promiseFactory calls clearCachedPromise
   let promise: Promise<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>> | null;
@@ -158,7 +158,7 @@ export function PromiseObservableOnObserved<TFulfilled, TErrored, TCancelled>(ob
           || (privates.clear.cancel && (notification.name === 'cancel'))
         )
       ) {
-        PromiseObservableClearCachedPromise<TFulfilled, TErrored, TCancelled>(observable);
+        PromiseObservableClearCachedPromise<TFulfilled, TErrored, TCancelled>(instance);
       }
 
       if (privates.observerToPromiseMap.has(observer)) {
@@ -168,13 +168,13 @@ export function PromiseObservableOnObserved<TFulfilled, TErrored, TCancelled>(ob
     });
 }
 
-export function PromiseObservableOnUnobserved<TFulfilled, TErrored, TCancelled>(observable: IPromiseObservable<TFulfilled, TErrored, TCancelled>, observer: IObserver<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>): void {
+export function PromiseObservableOnUnobserved<TFulfilled, TErrored, TCancelled>(instance: IPromiseObservable<TFulfilled, TErrored, TCancelled>, observer: IObserver<TPromiseObservableNotification<TFulfilled, TErrored, TCancelled>>): void {
   type TInternal = IPromiseObservableInternal<TFulfilled, TErrored, TCancelled>;
-  const privates: IPromiseObservablePrivate<TFulfilled, TErrored, TCancelled> = (observable as TInternal)[PROMISE_OBSERVABLE_PRIVATE];
+  const privates: IPromiseObservablePrivate<TFulfilled, TErrored, TCancelled> = (instance as TInternal)[PROMISE_OBSERVABLE_PRIVATE];
 
   if (
     (privates.token !== null) // shared promise pending
-    && (!observable.observed) // no more observer
+    && (!instance.observed) // no more observer
   ) { // => promise can be cancelled
     privates.token.cancel(new Reason(`Observer stopped observing this promise`, 'CANCEL'));
   } else if (privates.observerToPromiseMap.has(observer)) { // promise still pending for this observer

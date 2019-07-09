@@ -1,5 +1,5 @@
 import { INotification } from '../notification/interfaces';
-import { IObserverPrivate, Observer, OBSERVER_PRIVATE, } from '../../../core/observer/implementation';
+import { Observer, } from '../../../core/observer/implementation';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { INotificationsObserver, INotificationsObserverLike, TNotificationsObserverCallback } from './interfaces';
 import { IsObject } from '../../../helpers';
@@ -13,20 +13,14 @@ export interface INotificationsObserverPrivate<TName extends string, TValue> {
 }
 
 export interface INotificationsObserverInternal<TName extends string, TValue> extends INotificationsObserver<TName, TValue> {
-  [OBSERVER_PRIVATE]: IObserverPrivate<INotification<TName, TValue>>;
   [NOTIFICATIONS_OBSERVER_PRIVATE]: INotificationsObserverPrivate<TName, TValue>;
 }
 
-export function ConstructNotificationsObserver<TName extends string, TValue>(observer: INotificationsObserver<TName, TValue>, name: TName, callback: TNotificationsObserverCallback<TValue>): void {
-  ConstructClassWithPrivateMembers(observer, NOTIFICATIONS_OBSERVER_PRIVATE);
-  (observer as INotificationsObserverInternal<TName, TValue>)[NOTIFICATIONS_OBSERVER_PRIVATE].name = name;
-  (observer as INotificationsObserverInternal<TName, TValue>)[NOTIFICATIONS_OBSERVER_PRIVATE].callback = callback.bind(observer);
-}
-
-export function NotificationsObserverEmit<TName extends string, TValue>(observer: INotificationsObserver<TName, TValue>, notification: INotification<TName, TValue>): void {
-  if (notification.name === (observer as INotificationsObserverInternal<TName, TValue>)[NOTIFICATIONS_OBSERVER_PRIVATE].name) {
-    (observer as INotificationsObserverInternal<TName, TValue>)[NOTIFICATIONS_OBSERVER_PRIVATE].callback(notification.value);
-  }
+export function ConstructNotificationsObserver<TName extends string, TValue>(instance: INotificationsObserver<TName, TValue>, name: TName, callback: TNotificationsObserverCallback<TValue>): void {
+  ConstructClassWithPrivateMembers(instance, NOTIFICATIONS_OBSERVER_PRIVATE);
+  const privates: INotificationsObserverPrivate<TName, TValue> = (instance as INotificationsObserverInternal<TName, TValue>)[NOTIFICATIONS_OBSERVER_PRIVATE];
+  privates.name = name;
+  privates.callback = callback.bind(instance);
 }
 
 /**
@@ -45,25 +39,49 @@ export function IsNotificationsObserverLike(value: any): value is INotifications
 }
 
 
-export function ExtractObserverNameAndCallback<TName extends string, TValue>(observer: any): INotificationsObserverLike<TName, TValue> | null {
-  if (NOTIFICATIONS_OBSERVER_PRIVATE in observer) {
-    return (observer as INotificationsObserverInternal<TName, TValue>)[NOTIFICATIONS_OBSERVER_PRIVATE];
+export function ExtractObserverNameAndCallback<TName extends string, TValue>(value: any): INotificationsObserverLike<TName, TValue> | null {
+  if (!IsObject(value)) {
+    return null;
+  } else if (NOTIFICATIONS_OBSERVER_PRIVATE in value) {
+    return (value as INotificationsObserverInternal<TName, TValue>)[NOTIFICATIONS_OBSERVER_PRIVATE];
   } else if (
-    (typeof observer.name === 'string')
-    && (typeof observer.callback === 'function')
+    (typeof (value as any).name === 'string')
+    && (typeof (value as any).callback === 'function')
   ) {
-    return observer;
+    return value as INotificationsObserverLike<TName, TValue>;
   } else {
     return null;
   }
 }
+
+
+export function NotificationsObserverEmit<TName extends string, TValue>(instance: INotificationsObserver<TName, TValue>, notification: INotification<TName, TValue>): void {
+  const privates: INotificationsObserverPrivate<TName, TValue> = (instance as INotificationsObserverInternal<TName, TValue>)[NOTIFICATIONS_OBSERVER_PRIVATE];
+  if (notification.name === privates.name) {
+    privates.callback(notification.value);
+  }
+}
+
+export function NotificationsObserverMatches<TName extends string, TValue>(
+  instance: INotificationsObserver<TName, TValue>,
+  name: string,
+  callback?: TNotificationsObserverCallback<any>,
+): boolean {
+  const privates: INotificationsObserverPrivate<TName, TValue> = (instance as INotificationsObserverInternal<TName, TValue>)[NOTIFICATIONS_OBSERVER_PRIVATE];
+  return (privates.name === name)
+    && (
+      (callback === void 0)
+      || (privates.callback === callback)
+    );
+}
+
 
 export class NotificationsObserver<TName extends string, TValue> extends Observer<INotification<TName, TValue>> implements INotificationsObserver<TName, TValue> {
 
   constructor(name: TName, callback: TNotificationsObserverCallback<TValue>) {
     super((notification: INotification<TName, TValue>) => {
       if (notification.name === name) {
-        callback(notification.value);
+        callback.call(this, notification.value);
       }
     });
 
@@ -79,11 +97,7 @@ export class NotificationsObserver<TName extends string, TValue> extends Observe
   }
 
   matches(name: string, callback?: TNotificationsObserverCallback<any>): boolean {
-    return (((this as unknown) as INotificationsObserverInternal<TName, TValue>)[NOTIFICATIONS_OBSERVER_PRIVATE].name === name)
-      && (
-        (callback === void 0)
-        || (((this as unknown) as INotificationsObserverInternal<TName, TValue>)[NOTIFICATIONS_OBSERVER_PRIVATE].callback === callback)
-      );
+    return NotificationsObserverMatches<TName, TValue>(this, name, callback);
   }
 }
 

@@ -7,7 +7,7 @@ import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPr
 import { ReadonlyList } from '../../misc/readonly-list/implementation';
 import { IObserver } from '../observer/interfaces';
 import { IReadonlyList } from '../../misc/readonly-list/interfaces';
-import { IObserverInternal, Observer, OBSERVER_PRIVATE } from '../observer/implementation';
+import { IObserverInternal, Observer, OBSERVER_PRIVATE, IsObserver } from '../observer/implementation';
 import { IObservableObserver } from '../observable-observer/interfaces';
 import { InitObservableHook, IObservableHookPrivate } from './hook';
 import { Constructor, HasFactoryWaterMark, MakeFactory } from '../../classes/factory';
@@ -26,18 +26,19 @@ export interface IObservableInternal<T> extends IObservable<T> {
 }
 
 export function ConstructObservable<T>(
-  observable: IObservable<T>,
+  instance: IObservable<T>,
   create?: (context: IObservableContext<T>) => (IObservableHook<T> | void),
 ): void {
-  ConstructClassWithPrivateMembers(observable, OBSERVABLE_PRIVATE);
+  ConstructClassWithPrivateMembers(instance, OBSERVABLE_PRIVATE);
+  const privates: IObservablePrivate<T> = (instance as IObservableInternal<T>)[OBSERVABLE_PRIVATE];
   InitObservableHook(
-    observable,
-    (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE],
+    instance,
+    privates,
     NewObservableContext,
     create,
   );
-  (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers = [];
-  // (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers = new ReadonlyList<IObserver<T>>((observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers);
+  privates.observers = [];
+  // privates.readOnlyObservers = new ReadonlyList<IObserver<T>>(privates.observers);
 }
 
 export function IsObservable(value: any): value is IObservable<any> {
@@ -72,64 +73,74 @@ export function IsObservableLikeConstructor(value: any, direct?: boolean): value
 }
 
 
-export function ObservableIsFreshlyObserved<T>(observable: IObservable<T>): boolean {
-  return (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length === 1;
+export function ObservableIsFreshlyObserved<T>(instance: IObservable<T>): boolean {
+  return (instance as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length === 1;
 }
 
-export function ObservableIsObserved<T>(observable: IObservable<T>): boolean {
-  return (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length > 0;
+export function ObservableIsObserved<T>(instance: IObservable<T>): boolean {
+  return (instance as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length > 0;
 }
 
-export function ObservableIsNotObserved<T>(observable: IObservable<T>): boolean {
-  return (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length === 0;
+export function ObservableIsNotObserved<T>(instance: IObservable<T>): boolean {
+  return (instance as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length === 0;
 }
 
 
-export function ObservablePipe<T>(observable: IObservable<T>, observerOrCallback: IObserver<any> | ((value: any) => void)): IObserver<any> {
+export function ObservablePipe<T>(instance: IObservable<T>, observerOrCallback: IObserver<any> | ((value: any) => void)): IObserver<any> {
   let observer: IObserver<any>;
   if (typeof observerOrCallback === 'function') {
     observer = new Observer<T>(observerOrCallback);
-  } else if (IsObject(observerOrCallback)) {
+  } else if (IsObserver(observerOrCallback)) {
     observer = observerOrCallback;
   } else {
     throw new TypeError(`Expected Observer or function.`);
   }
-  return observer.observe(observable);
+  return observer.observe(instance);
 }
 
-export function ObservableObservedBy<T>(observable: IObservable<T>, observers: TObserverOrCallback<T>[]): void {
+export function ObservableObservedBy<T>(instance: IObservable<T>, observers: TObserverOrCallback<T>[]): void {
   for (let i = 0, l = observers.length; i < l; i++) {
-    ObservablePipe<T>(observable, observers[i]);
+    ObservablePipe<T>(instance, observers[i]);
   }
 }
 
 
-export function LinkObservableAndObserver<T>(observable: IObservable<T>, observer: IObserver<T>): void {
-  (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.push(observer);
-  (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].onObserveHook(observer);
+export function LinkObservableAndObserver<T>(instance: IObservable<T>, observer: IObserver<T>): void {
+  const privates: IObservablePrivate<T> = (instance as IObservableInternal<T>)[OBSERVABLE_PRIVATE];
+  privates.observers.push(observer);
+  privates.onObserveHook(observer);
 }
 
-export function UnLinkObservableAndObserver<T>(observable: IObservable<T>, observer: IObserver<T>): void {
-  (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.splice((observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.indexOf(observer), 1);
-  (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].onUnobserveHook(observer);
+export function UnLinkObservableAndObserver<T>(instance: IObservable<T>, observer: IObserver<T>): void {
+  const privates: IObservablePrivate<T> = (instance as IObservableInternal<T>)[OBSERVABLE_PRIVATE];
+  privates.observers.splice(privates.observers.indexOf(observer), 1);
+  privates.onUnobserveHook(observer);
 }
 
-export function ObservableEmitAll<T>(observable: IObservable<T>, value: T): void {
-  const observers: IObserver<T>[] = (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.slice(); // shallow copy in case observers mutate
+export function ObservableEmitAll<T>(instance: IObservable<T>, value: T): void {
+  const observers: IObserver<T>[] = (instance as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.slice(); // shallow copy in case observers mutate
   for (let i = 0, l = observers.length; i < l; i++) {
-    (observers[i] as IObserverInternal<T>)[OBSERVER_PRIVATE].onEmit(value, observable);
+    (observers[i] as IObserverInternal<T>)[OBSERVER_PRIVATE].onEmit(value, instance);
   }
 }
 
-export function ObservableClearObservers<T>(observable: IObservable<T>): void {
-  while ((observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length > 0) {
-    (observable as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers[0].unobserve(observable);
+export function ObservableClearObservers<T>(instance: IObservable<T>): void {
+  while ((instance as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length > 0) {
+    (instance as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers[0].unobserve(instance);
   }
-  // while (observable.observers.length > 0) {
-  //   observable.observers.item(0).unobserve(observable);
+  // while (instance.observers.length > 0) {
+  //   instance.observers.item(0).unobserve(instance);
   // }
 }
 
+
+export function ObservableGetObservers<T>(instance: IObservable<T>): IReadonlyList<IObserver<T>> {
+  const privates: IObservablePrivate<T> = (instance as IObservableInternal<T>)[OBSERVABLE_PRIVATE];
+  if (privates.readOnlyObservers === void 0) {
+    privates.readOnlyObservers = new ReadonlyList<IObserver<T>>(privates.observers);
+  }
+  return privates.readOnlyObservers;
+}
 
 function PureObservableFactory<TBase extends Constructor>(superClass: TBase) {
   type T = any;
@@ -142,10 +153,7 @@ function PureObservableFactory<TBase extends Constructor>(superClass: TBase) {
     }
 
     get observers(): IReadonlyList<IObserver<T>> {
-      if (((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers === void 0) {
-        ((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers = new ReadonlyList<IObserver<T>>(((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers);
-      }
-      return ((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers;
+      return ObservableGetObservers<T>(this);
     }
 
     get observed(): boolean {
@@ -198,42 +206,6 @@ Observable = class Observable extends ObservableFactory<ObjectConstructor>(Objec
 } as IObservableConstructor;
 
 
-// export class Observable<T> implements IObservable<T> {
-//   constructor(create?: (context: IObservableContext<any>) => (IObservableHook<any> | void)) {
-//     ConstructObservable<T>(this, create);
-//   }
-//
-//   get observers(): IReadonlyList<IObserver<T>> {
-//     return ((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].readOnlyObservers;
-//   }
-//
-//   get observed(): boolean {
-//     return (((this as unknown) as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length > 0);
-//   }
-//
-//
-//   pipeTo<O extends IObserver<T>>(observer: O): O;
-//   pipeTo(callback: (value: T) => void): IObserver<T>;
-//   pipeTo<O extends IObserver<T> = IObserver<T>>(observerOrCallback: O | ((value: T) => void)): O {
-//     return ObservablePipe<T, O>(this, observerOrCallback);
-//   }
-//
-//   pipeThrough<O extends IObservableObserver<IObserver<T>, IObservable<any>>>(observableObserver: O): O['observable'] {
-//     ObservablePipe<T, O['observer']>(this, observableObserver.observer);
-//     return observableObserver.observable;
-//   }
-//
-//   pipe<O extends IObservableObserver<IObserver<T>, IObservable<any>>>(observableObserver: O): O {
-//     ObservablePipe<T, O['observer']>(this, observableObserver.observer);
-//     return observableObserver;
-//   }
-//
-//   observedBy(...observers: TObserverOrCallback<T>[]): this {
-//     return ObservableObservedBy<T, this>(this, observers);
-//   }
-// }
-
-
 /* ---------------------------------- */
 
 
@@ -253,10 +225,10 @@ export function AllowObservableContextBaseConstruct(allow: boolean): void {
   ALLOW_OBSERVABLE_CONTEXT_BASE_CONSTRUCT = allow;
 }
 
-export function ConstructObservableContextBase<T>(context: IObservableContextBase<T>, observable: IObservable<T>): void {
+export function ConstructObservableContextBase<T>(instance: IObservableContextBase<T>, observable: IObservable<T>): void {
   if (ALLOW_OBSERVABLE_CONTEXT_BASE_CONSTRUCT) {
-    ConstructClassWithPrivateMembers(context, OBSERVABLE_CONTEXT_BASE_PRIVATE);
-    (context as IObservableContextBaseInternal<T>)[OBSERVABLE_CONTEXT_BASE_PRIVATE].observable = observable;
+    ConstructClassWithPrivateMembers(instance, OBSERVABLE_CONTEXT_BASE_PRIVATE);
+    (instance as IObservableContextBaseInternal<T>)[OBSERVABLE_CONTEXT_BASE_PRIVATE].observable = observable;
   } else {
     throw new TypeError('Illegal constructor');
   }
@@ -286,8 +258,8 @@ export function NewObservableContext<T>(observable: IObservable<T>): IObservable
   return context;
 }
 
-export function ObservableContextEmit<T>(context: IObservableContextBase<T>, value: T): void {
-  ObservableEmitAll<T>((context as IObservableContextBaseInternal<T>)[OBSERVABLE_CONTEXT_BASE_PRIVATE].observable, value);
+export function ObservableContextEmit<T>(instance: IObservableContextBase<T>, value: T): void {
+  ObservableEmitAll<T>((instance as IObservableContextBaseInternal<T>)[OBSERVABLE_CONTEXT_BASE_PRIVATE].observable, value);
 }
 
 export class ObservableContext<T> extends ObservableContextBase<T> implements IObservableContext<T> {

@@ -18,30 +18,33 @@ export interface ITimerObservableInternal extends ITimerObservable {
 }
 
 
-export function ConstructTimerObservable(observable: ITimerObservable, context: IObservableContext<undefined>, period: number): void {
-  ConstructClassWithPrivateMembers(observable, TIMER_OBSERVABLE_PRIVATE);
-  (observable as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE].context = context;
-  (observable as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE].period = period;
-  (observable as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE].timer = null;
+export function ConstructTimerObservable(instance: ITimerObservable, context: IObservableContext<undefined>, period: number): void {
+  ConstructClassWithPrivateMembers(instance, TIMER_OBSERVABLE_PRIVATE);
+  const privates: ITimerObservablePrivate = (instance as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE];
+  privates.context = context;
+  privates.period = period;
+  privates.timer = null;
 }
 
 export function IsTimerObservable(value: any): value is ITimerObservable {
   return IsObject(value)
-    && value.hasOwnProperty(TIMER_OBSERVABLE_PRIVATE);
+    && value.hasOwnProperty(TIMER_OBSERVABLE_PRIVATE as symbol);
 }
 
-export function TimerObservableOnObserved(observable: ITimerObservable): void {
-  if ((observable as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE].timer === null) {
-    (observable as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE].timer = setInterval(() => {
-      (observable as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE].context.emit(void 0);
-    }, (observable as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE].period);
+export function TimerObservableOnObserved(instance: ITimerObservable): void {
+  const privates: ITimerObservablePrivate = (instance as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE];
+  if (privates.timer === null) {
+    privates.timer = setInterval(() => {
+      privates.context.emit(void 0);
+    }, privates.period);
   }
 }
 
-export function TimerObservableOnUnobserved(observable: ITimerObservable): void {
-  if (!observable.observed) {
-    clearInterval((observable as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE].timer);
-    (observable as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE].timer = null;
+export function TimerObservableOnUnobserved(instance: ITimerObservable): void {
+  if (!instance.observed) {
+    const privates: ITimerObservablePrivate = (instance as ITimerObservableInternal)[TIMER_OBSERVABLE_PRIVATE];
+    clearInterval(privates.timer);
+    privates.timer = null;
   }
 }
 

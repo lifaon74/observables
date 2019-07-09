@@ -7,18 +7,18 @@ import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/Class
 import {
   IPromiseCancelToken, IPromiseCancelTokenConstructor, IPromiseCancelTokenKeyValueMap, TCancelStrategy, TOnCancelled
 } from './interfaces';
-import { ObservableEmitAll } from '../../../../core/observable/implementation';
 import { NotificationsObserver } from '../../../core/notifications-observer/implementation';
 import { Reason } from '../../../../misc/reason/implementation';
-import { INotification } from '../../../core/notification/interfaces';
 import { IsObject, noop } from '../../../../helpers';
 import { TPromiseType } from '../../../../promises/interfaces';
 import { Finally, PromiseTry } from '../../../../promises/helpers';
+import { INotificationsObservableContext } from '../../../core/notifications-observable/interfaces';
 
 
 export const PROMISE_CANCEL_TOKEN_PRIVATE = Symbol('promise-cancel-token-private');
 
 export interface IPromiseCancelTokenPrivate {
+  context: INotificationsObservableContext<IPromiseCancelTokenKeyValueMap>;
   cancelled: boolean;
   reason: any | undefined;
 }
@@ -28,10 +28,15 @@ export interface IPromiseCancelTokenInternal extends IPromiseCancelToken, INotif
 }
 
 
-export function ConstructPromiseCancelToken(token: IPromiseCancelToken): void {
-  ConstructClassWithPrivateMembers(token, PROMISE_CANCEL_TOKEN_PRIVATE);
-  (token as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].cancelled = false;
-  (token as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].reason = void 0;
+export function ConstructPromiseCancelToken(
+  instance: IPromiseCancelToken,
+  context: INotificationsObservableContext<IPromiseCancelTokenKeyValueMap>
+): void {
+  ConstructClassWithPrivateMembers(instance, PROMISE_CANCEL_TOKEN_PRIVATE);
+  const privates: IPromiseCancelTokenPrivate = (instance as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE];
+  privates.context = context;
+  privates.cancelled = false;
+  privates.reason = void 0;
 }
 
 export function IsPromiseCancelToken(value: any): value is IPromiseCancelToken {
@@ -39,11 +44,12 @@ export function IsPromiseCancelToken(value: any): value is IPromiseCancelToken {
     && (PROMISE_CANCEL_TOKEN_PRIVATE in value);
 }
 
-export function PromiseCancelTokenCancel(token: IPromiseCancelToken, reason: any = void 0): void {
-  if (!(token as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].cancelled) {
-    (token as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].cancelled = true;
-    (token as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].reason = reason;
-    ObservableEmitAll<INotification<'cancel', any>>(token, new CancelNotification(reason));
+export function PromiseCancelTokenCancel(instance: IPromiseCancelToken, reason: any = void 0): void {
+  const privates: IPromiseCancelTokenPrivate = (instance as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE];
+  if (!privates.cancelled) {
+    privates.cancelled = true;
+    privates.reason = reason;
+    privates.context.emit(new CancelNotification(reason));
   }
 }
 
@@ -76,20 +82,20 @@ export function ExtractSignalFromFetchArguments(requestInfo: RequestInfo, reques
 /**
  * Links a PromiseCancelToken with the fetch arguments.
  * Returns the modified RequestInit
- * @param token
+ * @param instance
  * @param requestInfo
  * @param requestInit
  */
-export function LinkPromiseCancelTokenWithFetchArguments(token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit?: RequestInit): RequestInit | undefined {
+export function LinkPromiseCancelTokenWithFetchArguments(instance: IPromiseCancelToken, requestInfo: RequestInfo, requestInit?: RequestInit): RequestInit | undefined {
   if (IsObject(globalThis) && ('AbortController' in globalThis)) {
     const signal: AbortSignal | null = ExtractSignalFromFetchArguments(requestInfo, requestInit);
     if (signal === null) {
-      const controller: AbortController = token.toAbortController();
+      const controller: AbortController = instance.toAbortController();
       // shallow copy of RequestInit
       requestInit = (requestInit === void 0) ? {} : Object.assign({}, requestInit);
       requestInit.signal = controller.signal;
     } else {
-      token.linkWithAbortSignal(signal);
+      instance.linkWithAbortSignal(signal);
     }
   }
   return requestInit;
@@ -97,13 +103,13 @@ export function LinkPromiseCancelTokenWithFetchArguments(token: IPromiseCancelTo
 
 /**
  * Just like the previous functions, but simplifies fetch calls:
- *  fetch(...LinkPromiseCancelTokenWithFetchArgumentsSpread(token, requestInfo, requestInit))
- * @param token
+ *  fetch(...LinkPromiseCancelTokenWithFetchArgumentsSpread(instance, requestInfo, requestInit))
+ * @param instance
  * @param requestInfo
  * @param requestInit
  */
-export function LinkPromiseCancelTokenWithFetchArgumentsSpread(token: IPromiseCancelToken, requestInfo: RequestInfo, requestInit?: RequestInit): [RequestInfo, RequestInit | undefined] {
-  return [requestInfo, LinkPromiseCancelTokenWithFetchArguments(token, requestInfo, requestInit)];
+export function LinkPromiseCancelTokenWithFetchArgumentsSpread(instance: IPromiseCancelToken, requestInfo: RequestInfo, requestInit?: RequestInit): [RequestInfo, RequestInit | undefined] {
+  return [requestInfo, LinkPromiseCancelTokenWithFetchArguments(instance, requestInfo, requestInit)];
 }
 
 
@@ -114,19 +120,19 @@ export function LinkPromiseCancelTokenWithFetchArgumentsSpread(token: IPromiseCa
 /**
  * Links a PromiseCancelToken with an AbortController.
  * Returns a function, when invoked => undo the link
- * @param token
+ * @param instance
  * @param controller
  */
-export function PromiseCancelTokenLinkWithAbortController(token: IPromiseCancelToken, controller: AbortController): () => void {
+export function PromiseCancelTokenLinkWithAbortController(instance: IPromiseCancelToken, controller: AbortController): () => void {
   if (controller.signal.aborted) {
-    if ((token as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].cancelled) {
+    if ((instance as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].cancelled) {
       // both cancelled => do nothing
     } else {
-      token.cancel(new PromiseCancelReason(`AbortController aborted`));
+      instance.cancel(new PromiseCancelReason(`AbortController aborted`));
     }
     return () => {
     };
-  } else if ((token as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].cancelled) {
+  } else if ((instance as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].cancelled) {
     controller.abort();
     return () => {
     };
@@ -136,7 +142,7 @@ export function PromiseCancelTokenLinkWithAbortController(token: IPromiseCancelT
       tokenCancelListener.deactivate();
     };
 
-    const tokenCancelListener: INotificationsObserver<'cancel', any> = token.addListener('cancel', () => {
+    const tokenCancelListener: INotificationsObserver<'cancel', any> = instance.addListener('cancel', () => {
       // PromiseCancelToken has been cancelled first
       clear();
       controller.abort();
@@ -146,7 +152,7 @@ export function PromiseCancelTokenLinkWithAbortController(token: IPromiseCancelT
     const onControllerAborted = () => {
       // controller has been cancelled first
       clear();
-      token.cancel(new PromiseCancelReason(`AbortController aborted`));
+      instance.cancel(new PromiseCancelReason(`AbortController aborted`));
     };
 
     controller.signal.addEventListener('abort', onControllerAborted, false);
@@ -160,19 +166,19 @@ export function PromiseCancelTokenLinkWithAbortController(token: IPromiseCancelT
  * Links a PromiseCancelToken with an AbortSignal
  *  If the AbortSignal aborts, the Token is cancelled
  *  WARN: cannot cancel a AbortSignal if the Token is cancelled
- * @param token
+ * @param instance
  * @param signal
  */
-export function PromiseCancelTokenLinkWithAbortSignal(token: IPromiseCancelToken, signal: AbortSignal): () => void {
+export function PromiseCancelTokenLinkWithAbortSignal(instance: IPromiseCancelToken, signal: AbortSignal): () => void {
   if (signal.aborted) {
-    if ((token as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].cancelled) {
+    if ((instance as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].cancelled) {
       // both cancelled => do nothing
     } else {
-      token.cancel(new PromiseCancelReason(`AbortSignal aborted`));
+      instance.cancel(new PromiseCancelReason(`AbortSignal aborted`));
     }
     return () => {
     };
-  } else if ((token as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].cancelled) {
+  } else if ((instance as IPromiseCancelTokenInternal)[PROMISE_CANCEL_TOKEN_PRIVATE].cancelled) {
     throw new Error(`Trying to link a cancelled PromiseCancelToken with a non aborted signal.`);
   } else {
     const clear = () => {
@@ -180,7 +186,7 @@ export function PromiseCancelTokenLinkWithAbortSignal(token: IPromiseCancelToken
       tokenCancelListener.deactivate();
     };
 
-    const tokenCancelListener: INotificationsObserver<'cancel', any> = token.addListener('cancel', () => {
+    const tokenCancelListener: INotificationsObserver<'cancel', any> = instance.addListener('cancel', () => {
       clear();
       throw new Error(`A PromiseCancelToken linked with an AbortSignal has been cancelled. But a AbortSignal is not directly cancellable.`);
     }).activate();
@@ -188,7 +194,7 @@ export function PromiseCancelTokenLinkWithAbortSignal(token: IPromiseCancelToken
     const onControllerAborted = () => {
       // controller has been cancelled first
       clear();
-      token.cancel(new PromiseCancelReason(`AbortSignal aborted`));
+      instance.cancel(new PromiseCancelReason(`AbortSignal aborted`));
     };
 
     signal.addEventListener('abort', onControllerAborted, false);
@@ -236,18 +242,18 @@ export function PromiseCancelTokenLinkWithAbortSignal(token: IPromiseCancelToken
  * Returns a Promise with a cancel strategy:
  *  - never: never resolves
  *  - resolve: resolves with undefined
- *  - reject: rejects with token.reason
- * @param token
+ *  - reject: rejects with instance.reason
+ * @param instance
  * @param strategy
  */
-export function ApplyCancelStrategy(token: IPromiseCancelToken, strategy: TCancelStrategy = 'never'): Promise<void> {
+export function ApplyCancelStrategy(instance: IPromiseCancelToken, strategy: TCancelStrategy = 'never'): Promise<void> {
   switch (strategy) {
     case 'never':
       return new Promise<never>(noop);
     case 'resolve':
       return Promise.resolve();
     case 'reject':
-      return Promise.reject(token.reason);
+      return Promise.reject(instance.reason);
     default:
       throw new TypeError(`Unexpected strategy: ${ strategy }`);
   }
@@ -255,39 +261,39 @@ export function ApplyCancelStrategy(token: IPromiseCancelToken, strategy: TCance
 
 /**
  * If present, apply the onCancelled function and when resolved, the cancel strategy
- * @param token
+ * @param instance
  * @param strategy
  * @param onCancelled
  */
 export function ApplyOnCancelCallback(
-  token: IPromiseCancelToken,
+  instance: IPromiseCancelToken,
   strategy?: TCancelStrategy,
   onCancelled?: TOnCancelled,
 ): Promise<void> {
   const promise: Promise<void> = (typeof onCancelled === 'function')
-    ? PromiseTry<void>(() => onCancelled.call(token))
+    ? PromiseTry<void>(() => onCancelled.call(instance))
     : Promise.resolve();
 
-  return promise.then(() => ApplyCancelStrategy(token, strategy));
+  return promise.then(() => ApplyCancelStrategy(instance, strategy));
 }
 
 /**
- * Returns a Promise resolving as soon as 'promise' is resolved or 'token' is cancelled
- * @param token
+ * Returns a Promise resolving as soon as 'promise' is resolved or 'instance' is cancelled
+ * @param instance
  * @param promise
  */
 export function RaceCancelled<T>(
-  token: IPromiseCancelToken,
+  instance: IPromiseCancelToken,
   promise: Promise<T>,
 ): Promise<T | void> {
   let observer: INotificationsObserver<'cancel', void>;
 
   return Promise.race<T | void>([
     new Promise<void>((resolve: any) => {
-      if (token.cancelled) {
+      if (instance.cancelled) {
         resolve();
       } else {
-        observer = token.addListener('cancel', () => {
+        observer = instance.addListener('cancel', () => {
           resolve();
         });
         observer.activate();
@@ -307,53 +313,53 @@ export function RaceCancelled<T>(
  * Races between the promise and a cancelled state.
  *  if cancel first, apply strategy
  *  else pass though promise
- * @param token
+ * @param instance
  * @param promise
  * @param strategy
  * @param onCancelled
  */
 export function PromiseCancelTokenWrapPromise<T>(
-  token: IPromiseCancelToken,
+  instance: IPromiseCancelToken,
   promise: Promise<T>,
   strategy?: TCancelStrategy,
   onCancelled?: TOnCancelled,
 ): Promise<T | void> {
-  return RaceCancelled<T>(token, promise)
+  return RaceCancelled<T>(instance, promise)
     .then<T | void, never | void>((value: T) => {
-      return token.cancelled
-        ? ApplyOnCancelCallback(token, strategy, onCancelled)
+      return instance.cancelled
+        ? ApplyOnCancelCallback(instance, strategy, onCancelled)
         : value;
     }, (error: any) => {
-      if (token.cancelled) {
-        return ApplyOnCancelCallback(token, strategy, onCancelled);
+      if (instance.cancelled) {
+        return ApplyOnCancelCallback(instance, strategy, onCancelled);
       } else {
         throw error;
       }
     });
     // .then(...Finally<T>(() => {
-    //   return token.cancelled
-    //     ? ApplyOnCancelCallback(token, strategy, onCancelled)
+    //   return instance.cancelled
+    //     ? ApplyOnCancelCallback(instance, strategy, onCancelled)
     //     : Promise.resolve();
     // }));
 }
 
 export function PromiseCancelTokenWrapFunction<CB extends (...args: any[]) => any>(
-  token: IPromiseCancelToken,
+  instance: IPromiseCancelToken,
   callback: CB,
   strategy?: TCancelStrategy,
   onCancelled?: TOnCancelled,
 ): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>> | void> {
   type T = TPromiseType<ReturnType<CB>>;
   return function (...args: Parameters<CB>): Promise<T | void> {
-    return token.cancelled
-      ? ApplyOnCancelCallback(token, strategy, onCancelled)
-      : PromiseCancelTokenWrapPromise<T>(token, PromiseTry<T>(() => callback.apply(null, args)), strategy, onCancelled);
+    return instance.cancelled
+      ? ApplyOnCancelCallback(instance, strategy, onCancelled)
+      : PromiseCancelTokenWrapPromise<T>(instance, PromiseTry<T>(() => callback.apply(null, args)), strategy, onCancelled);
   };
 }
 
 
 export function PromiseCancelTokenLinkWithTokens(
-  token: IPromiseCancelToken,
+  instance: IPromiseCancelToken,
   tokens: IPromiseCancelToken[],
 ): () => void {
   const index: number = tokens.findIndex(_ => _.cancelled);
@@ -366,16 +372,16 @@ export function PromiseCancelTokenLinkWithTokens(
 
     const cancel = (reason: any) => {
       clear();
-      token.cancel(reason);
+      instance.cancel(reason);
     };
 
-    const tokenObserver = token.addListener('cancel', clear);
+    const tokenObserver = instance.addListener('cancel', clear);
     const tokensObserver = tokens.map(_ => _.addListener('cancel', cancel));
     tokenObserver.activate();
     tokensObserver.forEach(_ => _.activate());
     return clear;
   } else {
-    token.cancel(tokens[index].reason);
+    instance.cancel(tokens[index].reason);
     return noop;
   }
 }
@@ -384,9 +390,9 @@ export function PromiseCancelTokenOf(
   constructor: IPromiseCancelTokenConstructor,
   tokens: IPromiseCancelToken[],
 ): IPromiseCancelToken {
-  const token: IPromiseCancelToken = new constructor();
-  PromiseCancelTokenLinkWithTokens(token, tokens);
-  return token;
+  const instance: IPromiseCancelToken = new constructor();
+  PromiseCancelTokenLinkWithTokens(instance, tokens);
+  return instance;
 }
 
 
@@ -397,8 +403,20 @@ export class PromiseCancelToken extends NotificationsObservable<IPromiseCancelTo
   }
 
   constructor() {
-    super();
-    ConstructPromiseCancelToken(this);
+    let context: INotificationsObservableContext<IPromiseCancelTokenKeyValueMap>;
+    super((_context: INotificationsObservableContext<IPromiseCancelTokenKeyValueMap>) => {
+      context = _context;
+      // return {
+      //   onObserved: () => {
+      //     DOMChangeObservableOnObserved(this);
+      //   },
+      //   onUnobserved: () => {
+      //     DOMChangeObservableOnUnobserved(this);
+      //   }
+      // };
+    });
+    // @ts-ignore
+    ConstructPromiseCancelToken(this, context);
   }
 
   get cancelled(): boolean {

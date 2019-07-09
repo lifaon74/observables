@@ -1,5 +1,6 @@
 import {
-  IObservableObserver, IPipe, IPipeContext, IPipeContextConstructor, IPipeHook, TObservableObserverActivateMode
+  IObservableObserver, IPipe, IPipeConstructor, IPipeContext, IPipeContextConstructor, IPipeHook,
+  TObservableObserverActivateMode
 } from './interfaces';
 import { IObservable, ObservableType } from '../observable/interfaces';
 import { IObserver, ObserverType } from '../observer/interfaces';
@@ -29,8 +30,9 @@ export interface IPipeInternal<TObserver extends IObserver<any>, TObservable ext
 
 export function ConstructPipe<TObserver extends IObserver<any>, TObservable extends IObservable<any>>(instance: IPipe<TObserver, TObservable>, create: () => IObservableObserver<TObserver, TObservable>): void {
   ConstructClassWithPrivateMembers(instance, PIPE_PRIVATE);
-  ((instance as unknown) as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].autoActivate = true;
-  ((instance as unknown) as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].autoDeactivate = true;
+  const privates: IPipePrivate<TObserver, TObservable> = (instance as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE];
+  privates.autoActivate = true;
+  privates.autoDeactivate = true;
 
   if (typeof create === 'function') {
     const result: IObservableObserver<TObserver, TObservable> = create.call(instance);
@@ -38,15 +40,15 @@ export function ConstructPipe<TObserver extends IObserver<any>, TObservable exte
     if (IsObject(result)) {
 
       if (OBSERVER_PRIVATE in result.observer) {
-        ((instance as unknown) as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].observer = result.observer;
+        privates.observer = result.observer;
       } else {
         throw new TypeError(`Expected property observer of type Observer in return of Pipe's create function`);
       }
 
       if (OBSERVABLE_PRIVATE in result.observable) {
-        ((instance as unknown) as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].observable = result.observable;
+        privates.observable = result.observable;
         type TValueObservable = ObservableType<TObservable>;
-        const observablePrivates: IObservablePrivate<TValueObservable> = ((((instance as unknown) as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].observable as unknown) as IObservableInternal<TValueObservable>)[OBSERVABLE_PRIVATE];
+        const observablePrivates: IObservablePrivate<TValueObservable> = ((privates.observable as IObservable<TValueObservable>) as IObservableInternal<TValueObservable>)[OBSERVABLE_PRIVATE];
 
         const _onObserveHook = observablePrivates.onObserveHook;
         observablePrivates.onObserveHook = function onObserveHook(observer: IObserver<TValueObservable>) {
@@ -105,36 +107,40 @@ export function PipeDeactivate<TObserver extends IObserver<any>, TObservable ext
 
 
 export function PipeSetAutoActivate<TObserver extends IObserver<any>, TObservable extends IObservable<any>>(instance: IPipe<TObserver, TObservable>, value: boolean): void {
-  if (value !== (instance as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].autoActivate) {
-    (instance as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].autoActivate = value;
+  const privates: IPipePrivate<TObserver, TObservable> = (instance as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE];
+  if (value !== privates.autoActivate) {
+    privates.autoActivate = value;
     PipeUpdateAutoActivate<TObserver, TObservable>(instance);
   }
 }
 
 export function PipeSetAutoDeactivate<TObserver extends IObserver<any>, TObservable extends IObservable<any>>(instance: IPipe<TObserver, TObservable>, value: boolean): void {
-  if (value !== (instance as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].autoDeactivate) {
-    (instance as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].autoDeactivate = value;
+  const privates: IPipePrivate<TObserver, TObservable> = (instance as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE];
+  if (value !== privates.autoDeactivate) {
+    privates.autoDeactivate = value;
     PipeUpdateAutoDeactivate<TObserver, TObservable>(instance);
   }
 }
 
 
 export function PipeUpdateAutoActivate<TObserver extends IObserver<any>, TObservable extends IObservable<any>>(instance: IPipe<TObserver, TObservable>): void {
+  const privates: IPipePrivate<TObserver, TObservable> = (instance as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE];
   if (
-    (instance as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].autoActivate
-    && !(((instance as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].observer as unknown) as IObserverInternal<ObserverType<TObserver>>)[OBSERVER_PRIVATE].activated
-    // && ObservableIsObserved<ObservableType<TObservable>>((instance as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].observable)
-    && ((((instance as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].observable as unknown) as IObservableInternal<ObservableType<TObservable>>)[OBSERVABLE_PRIVATE].observers.length > 0)
+    privates.autoActivate
+    && !((privates.observer as unknown) as IObserverInternal<ObserverType<TObserver>>)[OBSERVER_PRIVATE].activated
+    // && ObservableIsObserved<ObservableType<TObservable>>(privates.observable)
+    && (((privates.observable as unknown) as IObservableInternal<ObservableType<TObservable>>)[OBSERVABLE_PRIVATE].observers.length > 0)
   ) {
     ObserverActivate<ObserverType<TObserver>>(instance.observer);
   }
 }
 
 export function PipeUpdateAutoDeactivate<TObserver extends IObserver<any>, TObservable extends IObservable<any>>(instance: IPipe<TObserver, TObservable>): void {
+  const privates: IPipePrivate<TObserver, TObservable> = (instance as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE];
   if (
-    (instance as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].autoDeactivate
-    && (((instance as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].observer as unknown) as IObserverInternal<ObserverType<TObserver>>)[OBSERVER_PRIVATE].activated
-    && ((((instance as IPipeInternal<TObserver, TObservable>)[PIPE_PRIVATE].observable as unknown) as IObservableInternal<ObservableType<TObservable>>)[OBSERVABLE_PRIVATE].observers.length === 0)
+    privates.autoDeactivate
+    && ((privates.observer as unknown) as IObserverInternal<ObserverType<TObserver>>)[OBSERVER_PRIVATE].activated
+    && (((privates.observable as unknown) as IObservableInternal<ObservableType<TObservable>>)[OBSERVABLE_PRIVATE].observers.length === 0)
   ) {
     ObserverDeactivate<ObserverType<TObserver>>(instance.observer);
   }
@@ -142,6 +148,7 @@ export function PipeUpdateAutoDeactivate<TObserver extends IObserver<any>, TObse
 
 
 export function PipeStaticCreate<TValueObserver, TValueObservable>(
+  constructor: IPipeConstructor,
   create: (context: IPipeContext<IObserver<TValueObserver>, IObservable<TValueObservable>>) => (IPipeHook<IObserver<TValueObserver>, IObservable<TValueObservable>> | void) = noop
 ): IPipe<IObserver<TValueObserver>, IObservable<TValueObservable>> {
 
@@ -155,7 +162,7 @@ export function PipeStaticCreate<TValueObserver, TValueObservable>(
       hook = {};
     }
     if (IsObject(hook)) {
-      const pipe = new Pipe<IObserver<TValueObserver>, IObservable<TValueObservable>>(() => {
+      const pipe = new constructor<IObserver<TValueObserver>, IObservable<TValueObservable>>(() => {
         return {
           observer: new Observer(
             ((hook as IPipeHook<TObserver, TObservable>).onEmit === void 0)
@@ -179,7 +186,7 @@ export class Pipe<TObserver extends IObserver<any>, TObservable extends IObserva
   static create<TValueObserver, TValueObservable = TValueObserver>(
     create?: (context: IPipeContext<IObserver<TValueObserver>, IObservable<TValueObservable>>) => (IPipeHook<IObserver<TValueObserver>, IObservable<TValueObservable>> | void)
   ): IPipe<IObserver<TValueObserver>, IObservable<TValueObservable>> {
-    return PipeStaticCreate<TValueObserver, TValueObservable>(create);
+    return PipeStaticCreate<TValueObserver, TValueObservable>(this, create);
   }
 
   constructor(create: () => IObservableObserver<TObserver, TObservable>) {
@@ -248,28 +255,28 @@ export function NewPipeContext<TObserver extends IObserver<any>, TObservable ext
   return context;
 }
 
-export function ConstructPipeContext<TObserver extends IObserver<any>, TObservable extends IObservable<any>>(context: IPipeContext<TObserver, TObservable>, instance: IPipe<TObserver, TObservable>): void {
+export function ConstructPipeContext<TObserver extends IObserver<any>, TObservable extends IObservable<any>>(instance: IPipeContext<TObserver, TObservable>, pipe: IPipe<TObserver, TObservable>): void {
   if (ALLOW_PIPE_CONTEXT_CONSTRUCT) {
-    ConstructClassWithPrivateMembers(context, PIPE_CONTEXT_PRIVATE);
-    (context as IPipeContextInternal<TObserver, TObservable>)[PIPE_CONTEXT_PRIVATE].pipe = instance;
+    ConstructClassWithPrivateMembers(instance, PIPE_CONTEXT_PRIVATE);
+    (instance as IPipeContextInternal<TObserver, TObservable>)[PIPE_CONTEXT_PRIVATE].pipe = pipe;
   } else {
     throw new TypeError('Illegal constructor');
   }
 }
 
-export function PipeContextEmit<TObserver extends IObserver<any>, TObservable extends IObservable<any>>(context: IPipeContext<TObserver, TObservable>, value: ObservableType<TObservable>): void {
-  if ((context as IPipeContextInternal<TObserver, TObservable>)[PIPE_CONTEXT_PRIVATE].pipe === null) {
+export function PipeContextEmit<TObserver extends IObserver<any>, TObservable extends IObservable<any>>(instance: IPipeContext<TObserver, TObservable>, value: ObservableType<TObservable>): void {
+  if ((instance as IPipeContextInternal<TObserver, TObservable>)[PIPE_CONTEXT_PRIVATE].pipe === null) {
     throw new Error(`Cannot emit any value until pipe is fully created.`);
   } else {
-    ObservableEmitAll<ObservableType<TObservable>>((context as IPipeContextInternal<TObserver, TObservable>)[PIPE_CONTEXT_PRIVATE].pipe.observable, value);
+    ObservableEmitAll<ObservableType<TObservable>>((instance as IPipeContextInternal<TObserver, TObservable>)[PIPE_CONTEXT_PRIVATE].pipe.observable, value);
   }
 }
 
 
 export class PipeContext<TObserver extends IObserver<any>, TObservable extends IObservable<any>> implements IPipeContext<TObserver, TObservable> {
 
-  protected constructor(instance: IPipe<TObserver, TObservable>) {
-    ConstructPipeContext<TObserver, TObservable>(this, instance);
+  protected constructor(pipe: IPipe<TObserver, TObservable>) {
+    ConstructPipeContext<TObserver, TObservable>(this, pipe);
   }
 
   get pipe(): IPipe<TObserver, TObservable> {

@@ -14,15 +14,16 @@ export interface INotificationInternal<TName extends string, TValue> extends INo
   [NOTIFICATION_PRIVATE]: INotificationPrivate<TName, TValue>;
 }
 
-export function ConstructNotification<TName extends string, TValue>(notification: INotification<TName, TValue>, name: TName, value: TValue): void {
-  ConstructClassWithPrivateMembers(notification, NOTIFICATION_PRIVATE);
-  (notification as INotificationInternal<TName, TValue>)[NOTIFICATION_PRIVATE].name = name;
-  (notification as INotificationInternal<TName, TValue>)[NOTIFICATION_PRIVATE].value = value;
+export function ConstructNotification<TName extends string, TValue>(instance: INotification<TName, TValue>, name: TName, value: TValue): void {
+  ConstructClassWithPrivateMembers(instance, NOTIFICATION_PRIVATE);
+  const privates: INotificationPrivate<TName, TValue> = (instance as INotificationInternal<TName, TValue>)[NOTIFICATION_PRIVATE];
+  privates.name = name;
+  privates.value = value;
 }
 
 export function IsNotification(value: any): value is INotification<string, any> {
   return IsObject(value)
-    && value.hasOwnProperty(NOTIFICATION_PRIVATE);
+    && value.hasOwnProperty(NOTIFICATION_PRIVATE as symbol);
 }
 
 export class Notification<TName extends string, TValue> implements INotification<TName, TValue> {

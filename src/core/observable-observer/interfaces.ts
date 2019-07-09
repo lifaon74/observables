@@ -49,7 +49,7 @@ export type TBasePipe<TValueObserver, TValueObservable> = IPipe<IObserver<TValue
 
 export interface IPipeContextConstructor {
   // creates a PipeContext
-  new<TObserver extends IObserver<any>, TObservable extends IObservable<any>>(instance: IPipe<TObserver, TObservable>): IPipeContext<TObserver, TObservable>;
+  new<TObserver extends IObserver<any>, TObservable extends IObservable<any>>(pipe: IPipe<TObserver, TObservable>): IPipeContext<TObserver, TObservable>;
 }
 
 export interface IPipeContext<TObserver extends IObserver<any>, TObservable extends IObservable<any>> {

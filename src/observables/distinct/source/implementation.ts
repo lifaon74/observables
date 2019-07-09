@@ -31,7 +31,7 @@ export function ConstructSource<T>(source: ISource<T>, context: IObservableConte
 
 export function IsSource(value: any): value is ISource<any> {
   return IsObject(value)
-    && value.hasOwnProperty(SOURCE_PRIVATE);
+    && value.hasOwnProperty(SOURCE_PRIVATE as symbol);
 }
 
 export function SourceEmit<T>(source: ISource<T>, value: T): void {

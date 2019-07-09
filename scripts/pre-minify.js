@@ -27,7 +27,7 @@ function compressPrivates(content) {
 
     // console.log(generateName(1000));
     const map = new Map();
-    const reg = /((?:\[[\w]+\])|(?:[pP]rivates))\.([\w]+)/g;
+    const reg = /((?:\[[\w_PRIVATE]+\])|(?:[pP]rivates))\.([\w]+)/g;
     const _content = content.replace(reg, (match, key1, key2) => {
         // console.log(symbol);
 
@@ -88,7 +88,7 @@ function compressGlobals(content) {
         `Array.isArray`,
         `Array.from`,
         `setTimeout`,
-        `Object.defineProperty`
+        `Object.defineProperty`,
     ]);
 
     const functions = new Set([
