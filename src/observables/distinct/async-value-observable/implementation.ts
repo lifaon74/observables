@@ -43,15 +43,17 @@ export function ConstructAsyncValueObservable<T>(
   create?: (context: IAsyncValueObservableContext<T>) => (IObservableHook<T> | void)
 ): void {
   ConstructClassWithPrivateMembers(observable, ASYNC_VALUE_OBSERVABLE_PRIVATE);
+
+  (observable as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].context = context;
+  (observable as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].promise = null;
+  (observable as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].token = null;
+
   InitObservableHook(
     observable,
     (observable as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE],
     NewAsyncValueObservableContext,
     create,
   );
-  (observable as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].context = context;
-  (observable as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].promise = null;
-  (observable as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].token = null;
 }
 
 export function IsAsyncValueObservable(value: any): value is IAsyncValueObservable<any> {

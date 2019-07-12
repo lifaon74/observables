@@ -48,13 +48,6 @@ export function ConstructFromObservable<T>(
   ConstructClassWithPrivateMembers(observable, FROM_OBSERVABLE_PRIVATE);
   const privates: IFromObservablePrivate<T> = (observable as IFromObservableInternal<T>)[FROM_OBSERVABLE_PRIVATE];
 
-  InitObservableHook(
-    observable,
-    privates,
-    NewFromObservableContext,
-    create,
-  );
-
   privates.context = context;
   privates.values = [];
 
@@ -68,17 +61,12 @@ export function ConstructFromObservable<T>(
 
   privates.complete = false;
 
-  // privates.completeObservable = new Observable<void>((context: IObservableContext<void>) => {
-  //   privates.completeObservableContext = context;
-  //   return {
-  //     onObserved: (observer: IObserver<void>) => {
-  //       if (privates.complete) {
-  //         observer.emit();
-  //       }
-  //     }
-  //   };
-  // });
-
+  InitObservableHook(
+    observable,
+    privates,
+    NewFromObservableContext,
+    create,
+  );
 }
 
 

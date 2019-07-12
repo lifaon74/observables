@@ -31,14 +31,14 @@ export function ConstructObservable<T>(
 ): void {
   ConstructClassWithPrivateMembers(instance, OBSERVABLE_PRIVATE);
   const privates: IObservablePrivate<T> = (instance as IObservableInternal<T>)[OBSERVABLE_PRIVATE];
+  privates.observers = [];
+
   InitObservableHook(
     instance,
     privates,
     NewObservableContext,
     create,
   );
-  privates.observers = [];
-  // privates.readOnlyObservers = new ReadonlyList<IObserver<T>>(privates.observers);
 }
 
 export function IsObservable(value: any): value is IObservable<any> {

@@ -8,6 +8,7 @@ import { IObservable } from '../core/observable/interfaces';
 import { toPromise } from '../operators/to/toPromise';
 import { IFunctionObservable } from '../observables/distinct/function-observable/interfaces';
 import { ISource } from '../observables/distinct/source/interfaces';
+import { IsObject } from '../helpers';
 
 export function eq(a: any, b: any): boolean {
   return Object.is(a, b)
@@ -48,13 +49,47 @@ export function failsSync(cb: () => void): boolean {
   }
 }
 
-export function observableAssert(values: any[], timeout: number = 100, equalFunction: (a: any, b: any) => boolean = eq): [(value: any) => void, Promise<void>] {
+export function notificationsEquals(a: any, b: any): boolean {
+  let _a: any;
+  let _b: any;
+
+  if (IsObject(a) && ('name' in a) && ('value' in a)) {
+    _a = a;
+  } else if (Array.isArray(a) && (a.length === 2)) {
+    _a = {
+      name: a[0],
+      value: a[1]
+    };
+  } else {
+    return false;
+  }
+
+  if (IsObject(b) && ('name' in b) && ('value' in b)) {
+    _b = b;
+  } else if (Array.isArray(b) && (b.length === 2)) {
+    _b = {
+      name: b[0],
+      value: b[1]
+    };
+  } else {
+    return false;
+  }
+
+  return (_a.name === _b.name)
+    && eq(_a.value, _b.value);
+}
+
+export function observableAssert(
+  values: any[],
+  timeout: number = 100,
+  equalFunction: (a: any, b: any) => boolean = eq
+): { destination: (value: any) => void, promise: Promise<void> } {
   let index: number = 0;
   let resolve: any;
   let reject: any;
 
-  return [
-    (value: any) => {
+  return {
+    destination: (value: any) => {
       if (index < values.length) {
         if (equalFunction(value, values[index])) {
           index++;
@@ -65,7 +100,7 @@ export function observableAssert(values: any[], timeout: number = 100, equalFunc
         reject(new Error(`Received more than ${ index } values`));
       }
     },
-    Promise.race([
+    promise: Promise.race([
       new Promise<void>((resolve: any) => {
         setTimeout(() => {
           if (index === values.length) {
@@ -80,29 +115,30 @@ export function observableAssert(values: any[], timeout: number = 100, equalFunc
         reject = _reject;
       })
     ])
-  ];
+  };
 }
 
-export function assertPipe(values: any[], timeout?: number): IPipe<IObserver<any>, IPromiseObservable<void, Error, void>> {
-  const [observer, promise] = observableAssert(values, timeout);
+export function assertPipe(values: any[], timeout?: number, equalFunction?: (a: any, b: any) => boolean): IPipe<IObserver<any>, IPromiseObservable<void, Error, void>> {
+  const { destination, promise } = observableAssert(values, timeout, equalFunction);
   return new Pipe(() => {
     return {
-      observer: new Observer<any>(observer),
+      observer: new Observer<any>(destination),
       observable: new PromiseObservable<void, any, any>(() => promise)
     };
   });
 }
 
-export function assertObservableEmits(observable: IObservable<any>, values: any[], timeout?: number): Promise<void> {
+export function assertObservableEmits(observable: IObservable<any>, values: any[], timeout?: number, equalFunction?: (a: any, b: any) => boolean): Promise<void> {
   return toPromise<void>(
-    observable.pipeThrough(assertPipe(values, timeout))
+    observable.pipeThrough(assertPipe(values, timeout, equalFunction))
   );
 }
 
+
 export function assertFunctionObservableEmits(valuesToEmit: any[], observable: IFunctionObservable<(...args: any[]) => void>, values: any[], timeout?: number): Promise<void> {
-  const [observer, promise] = observableAssert(values, timeout);
+  const { destination, promise } = observableAssert(values, timeout);
   observable
-    .observedBy(new Observer(observer).activate())
+    .observedBy(new Observer(destination).activate())
     .run(() => {
         for (let i = 0; i < valuesToEmit.length; i++) {
           (observable.args.item(i) as ISource<any>).emit(valuesToEmit[i]);

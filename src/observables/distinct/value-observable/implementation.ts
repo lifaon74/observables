@@ -38,16 +38,18 @@ export function ConstructValueObservable<T>(
   create?: (context: IValueObservableContext<T>) => IObservableHook<T> | void
 ): void {
   ConstructClassWithPrivateMembers(observable, VALUE_OBSERVABLE_PRIVATE);
+
+  (observable as IValueObservableInternal<T>)[VALUE_OBSERVABLE_PRIVATE].context = context;
+  // (observable as IValueObservableInternal<T>)[VALUE_OBSERVABLE_PRIVATE].value = void 0;
+  (observable as IValueObservableInternal<T>)[VALUE_OBSERVABLE_PRIVATE].count = 0;
+  (observable as IValueObservableInternal<T>)[VALUE_OBSERVABLE_PRIVATE].lastCountPerObserver = new WeakMap<IObserver<T>, number>();
+
   InitObservableHook(
     observable,
     (observable as IValueObservableInternal<T>)[VALUE_OBSERVABLE_PRIVATE],
     NewValueObservableContext,
     create,
   );
-  (observable as IValueObservableInternal<T>)[VALUE_OBSERVABLE_PRIVATE].context = context;
-  // (observable as IValueObservableInternal<T>)[VALUE_OBSERVABLE_PRIVATE].value = void 0;
-  (observable as IValueObservableInternal<T>)[VALUE_OBSERVABLE_PRIVATE].count = 0;
-  (observable as IValueObservableInternal<T>)[VALUE_OBSERVABLE_PRIVATE].lastCountPerObserver = new WeakMap<IObserver<T>, number>();
 }
 
 

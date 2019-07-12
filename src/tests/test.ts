@@ -10,7 +10,7 @@ import { WebSocketIO } from '../observables/io/websocket-observable/implementati
 import { UnionToIntersection } from '../classes/types';
 import { reducePipe } from '../operators/pipes/reducePipe';
 import { flattenPipe } from '../operators/pipes/flattenPipe';
-import { assertFailsSync, assertObservableEmits } from '../classes/asserts';
+import { assert, assertFails, assertFailsSync, assertObservableEmits, notificationsEquals } from '../classes/asserts';
 import { FromIterableObservable } from '../observables/from/iterable/implementation';
 import { noop } from '../helpers';
 import { FromRXJSObservable } from '../observables/from/rxjs/implementation';
@@ -22,6 +22,7 @@ import { toRXJS } from '../operators/to/toRXJS';
 import { testPerformances } from './test-performances';
 import { testClasses } from './test-class';
 import { testProgram } from './test-program';
+import { CompleteStateObservable, ICompleteStateObservable } from '../notifications/observables/complete-state/public';
 
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve: any, reject: any) => {
@@ -358,6 +359,113 @@ export function testInstanceof() {
 }
 
 
+
+export async function testCompleteStateObservable() {
+
+  function assertCompleteStateObservableEmits<T>(observable: ICompleteStateObservable<T>, notifications: [string, T | any][]): Promise<void> {
+    return assertObservableEmits(observable, notifications, 100, notificationsEquals);
+  }
+
+  function testCannotEmitAfterFinalState() {
+    return new Promise<void>((resolve: any, reject: any) => {
+      new CompleteStateObservable<number>((context) => {
+          context.next(1);
+          context.next(2);
+          context.complete();
+          resolve(
+            Promise.all([
+              assertFails(() => context.next(3)),
+              assertFails(() => context.complete()),
+              assertFails(() => context.error())
+            ])
+          );
+      });
+    });
+  }
+
+  async function testOnce() {
+    const observable = new CompleteStateObservable<number>((context) => {
+      return {
+        onObserved(): void {
+          if (context.observable.state === 'emitting') {
+            context.next(1);
+            context.next(2);
+            context.complete();
+          }
+        }
+      }
+    }, { mode: 'once' });
+
+    await assertCompleteStateObservableEmits(observable,[
+      ['next', 1],
+      ['next', 2],
+      ['complete', void 0],
+    ]);
+
+    await assertCompleteStateObservableEmits(observable,[]);
+  }
+
+  async function testCache() {
+    const observable = new CompleteStateObservable<number>((context) => {
+      context.next(1);
+      context.next(2);
+      context.complete();
+    }, { mode: 'cache' });
+
+    await assert(() => (observable.state === 'cached'));
+
+    await assertCompleteStateObservableEmits(observable,[
+      ['next', 1],
+      ['next', 2],
+      ['complete', void 0],
+    ]);
+
+    await assertCompleteStateObservableEmits(observable,[
+      ['next', 1],
+      ['next', 2],
+      ['complete', void 0],
+    ]);
+  }
+
+  async function testCacheFinalState() {
+    const observable = new CompleteStateObservable<number>((context) => {
+      context.next(1);
+      context.next(2);
+      context.error('my-error');
+    }, { mode: 'cache-final-state' });
+
+    await assert(() => (observable.state === 'cached'));
+
+    await assertCompleteStateObservableEmits(observable,[
+      ['error', 'my-error'],
+    ]);
+
+    await assertCompleteStateObservableEmits(observable,[
+      ['error', 'my-error'],
+    ]);
+  }
+
+  async function testThrowAfterComplete() {
+    const observable = new CompleteStateObservable<number>((context) => {
+      context.next(1);
+      context.next(2);
+      context.complete();
+    }, { mode: 'throw-after-complete-observers' });
+
+    await assert(() => (observable.state === 'cached'));
+    await assertFails(() => (observable.pipeTo(() => {}).activate()));
+  }
+
+
+  await testCannotEmitAfterFinalState();
+  await testOnce();
+  await testCache();
+  await testCacheFinalState();
+  await testThrowAfterComplete();
+}
+
+
+
 export async function test() {
   // await testExamples();
 
@@ -372,6 +480,8 @@ export async function test() {
   // await testFromRXJSObservable();
   // await testToRXJSObservable();
 
+  await testCompleteStateObservable();
+
   // testWebSocket();
   // testWEBRTC1();
   // testWEBRTCChat();
@@ -381,7 +491,7 @@ export async function test() {
   // testInstanceof();
   // testPerformances();
   // testSignalingServer();
-  testPromises();
+  // testPromises();
   // testClasses();
   // testProgram();
 }

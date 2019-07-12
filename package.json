@@ -54,7 +54,7 @@
     "rimraf": "^2.6.3",
     "rollup-plugin-node-resolve": "^4.2.4",
     "rxjs": "^6.5.2",
-    "typescript": "^3.5.1",
+    "typescript": "^3.5.3",
     "typescript-tuple": "^2.2.1",
     "uglify-es": "^3.3.9",
     "vinyl-source-stream": "latest"
