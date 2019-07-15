@@ -14,15 +14,12 @@ import { assert, assertFails, assertFailsSync, assertObservableEmits, notificati
 import { FromIterableObservable } from '../observables/from/iterable/implementation';
 import { noop } from '../helpers';
 import { FromRXJSObservable } from '../observables/from/rxjs/implementation';
-import { testSignalingServer } from './webrtc/test-signaling-server';
-import { testPromises } from './test-promises';
 import { Observer } from '../core/observer/public';
-import { testExamples } from './examples/examples';
 import { toRXJS } from '../operators/to/toRXJS';
-import { testPerformances } from './test-performances';
-import { testClasses } from './test-class';
-import { testProgram } from './test-program';
 import { CompleteStateObservable, ICompleteStateObservable } from '../notifications/observables/complete-state/public';
+import { IFileReaderObservable } from '../notifications/observables/complete-state/file-reader/interfaces';
+import { FileReaderObservable } from '../notifications/observables/complete-state/file-reader/implementation';
+import { Progress } from '../misc/progress/implementation';
 
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve: any, reject: any) => {
@@ -412,7 +409,7 @@ export async function testCompleteStateObservable() {
       context.complete();
     }, { mode: 'cache' });
 
-    await assert(() => (observable.state === 'cached'));
+    await assert(() => (observable.state === 'complete'));
 
     await assertCompleteStateObservableEmits(observable,[
       ['next', 1],
@@ -434,7 +431,7 @@ export async function testCompleteStateObservable() {
       context.error('my-error');
     }, { mode: 'cache-final-state' });
 
-    await assert(() => (observable.state === 'cached'));
+    await assert(() => (observable.state === 'complete'));
 
     await assertCompleteStateObservableEmits(observable,[
       ['error', 'my-error'],
@@ -452,7 +449,7 @@ export async function testCompleteStateObservable() {
       context.complete();
     }, { mode: 'throw-after-complete-observers' });
 
-    await assert(() => (observable.state === 'cached'));
+    await assert(() => (observable.state === 'complete'));
     await assertFails(() => (observable.pipeTo(() => {}).activate()));
   }
 
@@ -464,6 +461,43 @@ export async function testCompleteStateObservable() {
   await testThrowAfterComplete();
 }
 
+export async function testFileReaderObservable() {
+
+  // function assertFileReaderObservableEmits<T>(observable: IFileReaderObservable<any>, notifications: [string, T | any][]): Promise<void> {
+  //   return assertObservableEmits(observable, notifications, 100, notificationsEquals);
+  // }
+
+  const blob = new Blob([new Uint8Array([0, 1, 2, 3, 4, 5])]);
+
+  const read = <T extends IFileReaderObservable<any>>(reader: T): T => {
+    return reader
+      .on('progress', (progress: Progress) => {
+        console.log('progress', progress);
+      })
+      .on('next', (value: ArrayBuffer | string) => {
+        console.log('next', (typeof value === 'string') ? value: new Uint8Array(value));
+      })
+      .on('complete', () => {
+        console.log('complete');
+      })
+      .on('error', (error: DOMException) => {
+        console.log('error', error);
+      })
+    ;
+  };
+
+  console.log('cache all');
+  const reader = new FileReaderObservable(blob, { mode: 'cache-final-state' });
+
+  read(reader);
+
+  setTimeout(() => {
+    console.warn('---------------------------');
+    read(reader);
+  }, 1000);
+
+  // reader.clearObservers();
+}
 
 
 export async function test() {
@@ -473,14 +507,15 @@ export async function test() {
   // testSource();
   // testAsyncSource();
 
-  // await testFromIterableObservable();
+  await testFromIterableObservable();
   // await testReducePipe();
   // await testFlattenPipe();
 
   // await testFromRXJSObservable();
   // await testToRXJSObservable();
 
-  await testCompleteStateObservable();
+  // await testCompleteStateObservable();
+  // await testFileReaderObservable();
 
   // testWebSocket();
   // testWEBRTC1();

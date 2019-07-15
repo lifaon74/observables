@@ -36,7 +36,6 @@ export interface ICompleteStateObservablePrivate<T, TKVMap extends CompleteState
   values: KeyValueMapToNotifications<TKVMap>[];
 
   mode: TCompleteStateObservableMode;
-
   state: TCompleteStateObservableState;
 }
 
@@ -116,6 +115,22 @@ function NormalizeCompleteStateObserversMode(action?: TCompleteStateObservableMo
 // }
 
 
+function IsCompleteStateObservableCachingValues<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap>>(instance: ICompleteStateObservable<T, TKVMap>): boolean {
+  return IsCompleteStateObservableCachingValuesMode((instance as ICompleteStateObservableInternal<T, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE].mode);
+}
+
+function IsCompleteStateObservableCachingValuesMode(mode: TCompleteStateObservableMode): boolean {
+  return (
+    (mode === 'cache')
+    || (mode === 'cache-final-state')
+    || (mode === 'cache-all')
+  );
+}
+
+export function CompleteStateObservableClearCache<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap>>(instance: ICompleteStateObservable<T, TKVMap>): void {
+  (instance as ICompleteStateObservableInternal<T, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE].values = [];
+}
+
 export function CompleteStateObservableOnEmit<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap>>(instance: ICompleteStateObservable<T, TKVMap>, notification: KeyValueMapToNotifications<TKVMap>): void {
   const privates: ICompleteStateObservablePrivate<T, TKVMap> = (instance as ICompleteStateObservableInternal<T, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE];
   const isFinalState: boolean = (
@@ -183,14 +198,11 @@ export function CompleteStateObservableOnUnobserved<T, TKVMap extends CompleteSt
 }
 
 export function CompleteStateObservableGetState<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap>>(instance: ICompleteStateObservable<T, TKVMap>): TCompleteStateObservableState {
-  const privates: ICompleteStateObservablePrivate<T, TKVMap> = (instance as ICompleteStateObservableInternal<T, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE];
-  return (
-    (privates.mode === 'cache')
-    || (privates.mode === 'cache-all')
-    || (privates.mode === 'cache-final-state')
-  )
-    ? 'cached'
-    : privates.state;
+  return (instance as ICompleteStateObservableInternal<T, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE].state;
+}
+
+export function CompleteStateObservableGetMode<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap>>(instance: ICompleteStateObservable<T, TKVMap>): TCompleteStateObservableMode {
+  return (instance as ICompleteStateObservableInternal<T, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE].mode;
 }
 
 
@@ -227,6 +239,10 @@ function PureCompleteStateObservableFactory<TBase extends Constructor<INotificat
 
     get state(): TCompleteStateObservableState {
       return CompleteStateObservableGetState<T, TKVMap>(this);
+    }
+
+    get mode(): TCompleteStateObservableMode {
+      return CompleteStateObservableGetMode<T, TKVMap>(this);
     }
   };
 }
@@ -295,5 +311,9 @@ export class CompleteStateObservableContext<T, TKVMap extends CompleteStateKeyVa
 
   error(error?: any): void {
     this.dispatch('error' as KeyValueMapKeys<TKVMap>, error as KeyValueMapValues<TKVMap>);
+  }
+
+  clearCache(): void {
+    CompleteStateObservableClearCache<T, TKVMap>(this.observable);
   }
 }
