@@ -76,12 +76,16 @@ function FileReaderObservableClear<T extends TFileReaderReadType>(instance: IFil
 
 export function FileReaderObservableOnObserved<T extends TFileReaderReadType>(instance: IFileReaderObservable<T>): void {
   const privates: IFileReaderObservablePrivate<T> = (instance as IFileReaderObservableInternal<T>)[FILE_READER_OBSERVABLE_PRIVATE];
-  if ((privates.readerObservable === null) && (instance.state === 'emitting')) {
+  if (
+    (instance.observers.length === 1) // optional check
+    && (privates.readerObservable === null)
+    && (instance.state === 'emitting')
+  ) {
     const reader: FileReader = new FileReader();
     privates.readerObservable = new EventsObservable<FileReaderEventMap, FileReader>(reader)
       .on('load', () => {
         FileReaderObservableClear<T>(instance);
-        privates.context.dispatch('next', reader.result as IFormatsToTypeMap[T]);
+        privates.context.next(reader.result as IFormatsToTypeMap[T]);
         privates.context.complete();
       })
       .on('error', () => {
@@ -113,7 +117,7 @@ export function FileReaderObservableOnUnobserved<T extends TFileReaderReadType>(
   if (!instance.observed) {
     const privates: IFileReaderObservablePrivate<T> = (instance as IFileReaderObservableInternal<T>)[FILE_READER_OBSERVABLE_PRIVATE];
     if (
-      (privates.readerObservable !== null)
+      (privates.readerObservable !== null) // optional check
       && (instance.state === 'emitting')
       && (instance.observers.length === 0)
     ) {

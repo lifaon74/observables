@@ -46,14 +46,21 @@ export type TCompleteStateObservableConstructorArgs<T, TKVMap extends CompleteSt
 
 export interface ICompleteStateObservableConstructor {
   new<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap> = CompleteStateObservableKeyValueMapGeneric<T>>(
-    create: (context: ICompleteStateObservableContext<T, TKVMap>) => (IObservableHook<T> | void),
-    options: ICompleteStateObservableOptions,
+    create?: (context: ICompleteStateObservableContext<T, TKVMap>) => (IObservableHook<T> | void),
+    options?: ICompleteStateObservableOptions,
   ): ICompleteStateObservable<T, TKVMap>;
 }
 
 // INFO double it due to an inference bug
 export interface ICompleteStateObservableConstructor {
   new<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap> = CompleteStateObservableKeyValueMapGeneric<T>>(
+    create?: (context: ICompleteStateObservableContext<T, TKVMap>) => (IObservableHook<T> | void),
+    options?: ICompleteStateObservableOptions,
+  ): ICompleteStateObservable<T, TKVMap>;
+}
+
+export interface ICompleteStateObservableTypedConstructor<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap>> {
+  new(
     create?: (context: ICompleteStateObservableContext<T, TKVMap>) => (IObservableHook<T> | void),
     options?: ICompleteStateObservableOptions,
   ): ICompleteStateObservable<T, TKVMap>;

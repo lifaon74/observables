@@ -11,7 +11,7 @@ import { UnionToIntersection } from '../classes/types';
 import { reducePipe } from '../operators/pipes/reducePipe';
 import { flattenPipe } from '../operators/pipes/flattenPipe';
 import { assert, assertFails, assertFailsSync, assertObservableEmits, notificationsEquals } from '../classes/asserts';
-import { FromIterableObservable } from '../observables/from/iterable/implementation';
+// import { FromIterableObservable } from '../observables/from/iterable/implementation';
 import { noop } from '../helpers';
 import { FromRXJSObservable } from '../observables/from/rxjs/implementation';
 import { Observer } from '../core/observer/public';
@@ -20,6 +20,7 @@ import { CompleteStateObservable, ICompleteStateObservable } from '../notificati
 import { IFileReaderObservable } from '../notifications/observables/complete-state/file-reader/interfaces';
 import { FileReaderObservable } from '../notifications/observables/complete-state/file-reader/implementation';
 import { Progress } from '../misc/progress/implementation';
+import { FromIterableObservable } from '../notifications/observables/complete-state/from/iterable/public';
 
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve: any, reject: any) => {
@@ -187,25 +188,33 @@ export async function testAsyncSource() {
 
 
 async function testFromIterableObservable() {
-  const values1 = new FromIterableObservable([0, 1, 2, 3]);
+  const notifications = [
+    new Notification('next', 0),
+    new Notification('next', 1),
+    new Notification('next', 2),
+    new Notification('next', 3),
+    new Notification('complete', void 0),
+  ];
+
+  const values1 = new FromIterableObservable([0, 1, 2, 3], { mode: 'throw-after-complete-observers' });
 
   await assertObservableEmits(
     values1,
-    [0, 1, 2, 3]
+    notifications
   );
 
-  assertFailsSync(() => values1.pipeTo(noop).activate());
+  await assertFails(() => values1.pipeTo(noop).activate());
 
-  const values2 = new FromIterableObservable([0, 1, 2, 3][Symbol.iterator](), { nextObservers: 'cache' });
+  const values2 = new FromIterableObservable([0, 1, 2, 3][Symbol.iterator](), { mode: 'cache' });
 
   await assertObservableEmits(
     values2,
-    [0, 1, 2, 3]
+    notifications
   );
 
   await assertObservableEmits(
     values2,
-    [0, 1, 2, 3]
+    notifications
   );
 }
 
@@ -268,18 +277,18 @@ async function testFromRXJSObservable() {
 }
 
 async function testToRXJSObservable() {
-  toRXJS<number>(new FromIterableObservable([0, 1, 2, 3, 4]))
-    .subscribe({
-      next: (value: number) => {
-        console.log('next', value);
-      },
-      complete: () => {
-        console.log('complete');
-      },
-      error: (error: any) => {
-        console.log('error', error);
-      }
-    });
+  // toRXJS<number>(new FromIterableObservable([0, 1, 2, 3, 4]))
+  //   .subscribe({
+  //     next: (value: number) => {
+  //       console.log('next', value);
+  //     },
+  //     complete: () => {
+  //       console.log('complete');
+  //     },
+  //     error: (error: any) => {
+  //       console.log('error', error);
+  //     }
+  //   });
 }
 
 
