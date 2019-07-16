@@ -1,5 +1,5 @@
-import { INotificationsObservable } from '../../core/notifications-observable/interfaces';
-import { KeyValueMapConstraint, KeyValueMapKeys } from '../../core/interfaces';
+import { INotificationsObservable } from '../../../core/notifications-observable/interfaces';
+import { KeyValueMapConstraint, KeyValueMapKeys } from '../../../core/interfaces';
 
 
 export type EventsObservableKeyValueMapGeneric = {

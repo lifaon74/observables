@@ -1,5 +1,5 @@
 import { CancellablePromise } from '../promises/cancellable-promise/implementation';
-import { IPromiseCancelToken } from '../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import { IPromiseCancelToken } from '../notifications/observables/complete-state/promise-observable/promise-cancel-token/interfaces';
 import { DeferredPromise } from '../promises/deferred-promise/implementation';
 import { $delay } from '../promises/cancellable-promise/helpers';
 

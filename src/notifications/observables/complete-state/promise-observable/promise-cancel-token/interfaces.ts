@@ -1,5 +1,5 @@
-import { INotificationsObservable } from '../../../core/notifications-observable/interfaces';
-import { TPromiseOrValue, TPromiseType } from '../../../../promises/interfaces';
+import { INotificationsObservable } from '../../../../core/notifications-observable/interfaces';
+import { TPromiseOrValue, TPromiseType } from '../../../../../promises/interfaces';
 
 export type TCancelStrategy =
   'resolve' // resolve the promise with void

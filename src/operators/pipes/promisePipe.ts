@@ -1,13 +1,13 @@
-import { IPromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import { IPromiseCancelToken } from '../../notifications/observables/complete-state/promise-observable/promise-cancel-token/interfaces';
 import { IPipe } from '../../core/observable-observer/interfaces';
 import { IObserver } from '../../core/observer/interfaces';
 import {
-  IPromiseObservable, TPromiseObservableNotification
-} from '../../notifications/observables/promise-observable/interfaces';
+  IPromiseObservable, TPromiseObservableNotifications
+} from '../../notifications/observables/complete-state/promise-observable/interfaces';
 import { Pipe } from '../../core/observable-observer/implementation';
-import { PromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/implementation';
+import { PromiseCancelToken } from '../../notifications/observables/complete-state/promise-observable/promise-cancel-token/implementation';
 import { Observer } from '../../core/observer/implementation';
-import { PromiseObservable } from '../../notifications/observables/promise-observable/implementation';
+import { PromiseObservable } from '../../notifications/observables/complete-state/promise-observable/implementation';
 import { INotification } from '../../notifications/core/notification/interfaces';
 import { TPromiseOrValue } from '../../promises/interfaces';
 
@@ -20,9 +20,9 @@ import { TPromiseOrValue } from '../../promises/interfaces';
 export function promisePipe<TFulfilledIn, TFulfilledOut = TFulfilledIn, TErroredIn = Error, TErroredOut = TErroredIn, TCancelled = any>(
   onFulfilled: (value: TFulfilledIn, token: IPromiseCancelToken) => TPromiseOrValue<TFulfilledOut> = (value: TFulfilledIn) => (value as any),
   onErrored: (error: TErroredIn, token: IPromiseCancelToken) => TPromiseOrValue<TFulfilledOut> = (error: TErroredIn) => Promise.reject(error),
-): IPipe<IObserver<TPromiseObservableNotification<TFulfilledIn, TErroredIn, TCancelled>>,
+): IPipe<IObserver<TPromiseObservableNotifications<TFulfilledIn, TErroredIn, TCancelled>>,
   IPromiseObservable<TFulfilledOut, TErroredOut, TCancelled>> {
-  return new Pipe<IObserver<TPromiseObservableNotification<TFulfilledIn, TErroredIn, TCancelled>>,
+  return new Pipe<IObserver<TPromiseObservableNotifications<TFulfilledIn, TErroredIn, TCancelled>>,
     IPromiseObservable<TFulfilledOut, TErroredOut, TCancelled>>(() => {
     if (typeof onFulfilled !== 'function') {
       throw new TypeError(`Expected function or void as onFulfilled`);
@@ -37,7 +37,7 @@ export function promisePipe<TFulfilledIn, TFulfilledOut = TFulfilledIn, TErrored
     let token: PromiseCancelToken;
 
     return {
-      observer: new Observer<TPromiseObservableNotification<TFulfilledIn, TErroredIn, TCancelled>>((notification: TPromiseObservableNotification<TFulfilledIn, TErroredIn, TCancelled>) => {
+      observer: new Observer<TPromiseObservableNotifications<TFulfilledIn, TErroredIn, TCancelled>>((notification: TPromiseObservableNotifications<TFulfilledIn, TErroredIn, TCancelled>) => {
         if (!token.cancelled) {
           switch (notification.name) {
             case 'complete':

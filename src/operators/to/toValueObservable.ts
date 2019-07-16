@@ -1,4 +1,4 @@
-import { IPromiseObservable } from '../../notifications/observables/promise-observable/interfaces';
+import { IPromiseObservable } from '../../notifications/observables/complete-state/promise-observable/interfaces';
 import { IObservable, IObservableContext } from '../../core/observable/interfaces';
 import { Pipe } from '../../core/observable-observer/implementation';
 import { NotificationsObserver } from '../../notifications/core/notifications-observer/implementation';

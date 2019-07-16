@@ -1,4 +1,4 @@
-import { INotificationsObservable } from '../../../core/notifications-observable/interfaces';
+import { INotificationsObservable } from '../../../../core/notifications-observable/interfaces';
 
 // export type TSwipeEventDirection = 'top-bottom' | 'bottom-top' | 'left-right' | 'right-left';
 export type TSwipeEventDirection =

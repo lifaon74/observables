@@ -4,14 +4,14 @@ import {
   NotificationsObservable, NotificationsObservableContext
 } from '../../notifications/core/notifications-observable/implementation';
 import { NotificationsObserver } from '../../notifications/core/notifications-observer/implementation';
-import { EventsObservable } from '../../notifications/observables/events-observable/implementation';
+import { EventsObservable } from '../../notifications/observables/events/events-observable/implementation';
 import { FetchObservable } from '../../notifications/observables/fetch-observable/implementation';
 import { toCancellablePromiseTuple, toPromise } from '../../operators/to/toPromise';
 import {
   PromiseCancelReason, PromiseCancelToken
-} from '../../notifications/observables/promise-observable/promise-cancel-token/implementation';
+} from '../../notifications/observables/complete-state/promise-observable/promise-cancel-token/implementation';
 import { Reason } from '../../misc/reason/implementation';
-import { PromiseObservable } from '../../notifications/observables/promise-observable/implementation';
+import { PromiseObservable } from '../../notifications/observables/complete-state/promise-observable/implementation';
 import { IObserver } from '../../core/observer/interfaces';
 import { Pipe } from '../../core/observable-observer/implementation';
 import {
@@ -19,7 +19,6 @@ import {
 } from '../../notifications/core/notifications-observable/interfaces';
 import { IObservableObserver, IPipe, TPipeContextBase } from '../../core/observable-observer/interfaces';
 import { IObservable, IObservableContext } from '../../core/observable/interfaces';
-import { promisePipe } from '../../operators/pipes/promisePipe';
 import { TimerObservable } from '../../observables/timer-observable/implementation';
 import { Source } from '../../observables/distinct/source/implementation';
 import { ISource } from '../../observables/distinct/source/interfaces';
@@ -29,8 +28,8 @@ import { INotificationsObserver } from '../../notifications/core/notifications-o
 import { FunctionObservable } from '../../observables/distinct/function-observable/implementation';
 import { Expression } from '../../observables/distinct/expression/implementation';
 import { $equal, $expression, $string } from '../../operators/misc';
-import { IPromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
-import { EventKeyValueMapConstraint } from '../../notifications/observables/events-observable/interfaces';
+import { IPromiseCancelToken } from '../../notifications/observables/complete-state/promise-observable/promise-cancel-token/interfaces';
+import { EventKeyValueMapConstraint } from '../../notifications/observables/events/events-observable/interfaces';
 import { ICancellablePromiseTuple } from '../../promises/interfaces';
 import { SpreadCancellablePromiseTuple } from '../../promises/helpers';
 
@@ -327,7 +326,7 @@ function promiseCancelTokenExample1(): void {
 function promiseObservableExample1(): void {
   // creates an fetch observable from an url
   function http(url: string) {
-    return new PromiseObservable<Response, Error, any>((token: PromiseCancelToken) => {
+    return new PromiseObservable<Response>((token: PromiseCancelToken) => {
       return fetch(url, { signal: token.toAbortController().signal });
     });
   }
@@ -373,9 +372,10 @@ function promiseObservableExample1(): void {
 
   const url: string = 'https://server.test-cors.org/server?id=643798&enable=true&status=200&credentials=false&response_headers=Access-Control-Allow-Origin%3A%20*'; // valid cors url
 
+  console.log('do http');
   const observable = http(url)
-    .pipeThrough(promisePipe((response: Response) => response.json()))
-    .on('complete', (response: Response) => {
+    // .pipeThrough(promisePipe((response: Response) => response.json()))
+    .on('next', (response: Response) => {
       console.log('complete', response);
     })
     .on('error', (reason: any) => {
@@ -396,9 +396,10 @@ function promiseObservableExample1(): void {
  * @param observable
  */
 function observeFetchObservable(observable: FetchObservable): FetchObservable {
-  return observable.on('complete', (response: Response) => {
-    console.log(response);
-  })
+  return observable
+    .on('next', (response: Response) => {
+      console.log(response);
+    })
     .on('error', (error: any) => {
       console.error('error', error);
     })
@@ -710,7 +711,7 @@ export async function testExamples() {
   // observeNotificationsObservable();
   // eventsObservableExample1();
   // promiseCancelTokenExample1();
-  // promiseObservableExample1();
+  promiseObservableExample1();
   // fetchObservableExample1();
   // observableToPromiseExample1();
 
@@ -721,7 +722,7 @@ export async function testExamples() {
   // functionObservableExample1();
   // expressionExample1();
 
-  sensorExample1();
+  // sensorExample1();
 }
 
 

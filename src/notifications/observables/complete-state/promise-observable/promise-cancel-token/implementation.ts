@@ -1,18 +1,18 @@
-import { Notification } from '../../../core/notification/implementation';
+import { Notification } from '../../../../core/notification/implementation';
 import {
   INotificationsObservableInternal, NotificationsObservable
-} from '../../../core/notifications-observable/implementation';
-import { INotificationsObserver } from '../../../core/notifications-observer/interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
+} from '../../../../core/notifications-observable/implementation';
+import { INotificationsObserver } from '../../../../core/notifications-observer/interfaces';
+import { ConstructClassWithPrivateMembers } from '../../../../../misc/helpers/ClassWithPrivateMembers';
 import {
   IPromiseCancelToken, IPromiseCancelTokenConstructor, IPromiseCancelTokenKeyValueMap, TCancelStrategy, TOnCancelled
 } from './interfaces';
-import { NotificationsObserver } from '../../../core/notifications-observer/implementation';
-import { Reason } from '../../../../misc/reason/implementation';
-import { IsObject, noop } from '../../../../helpers';
-import { TPromiseType } from '../../../../promises/interfaces';
-import { Finally, PromiseTry } from '../../../../promises/helpers';
-import { INotificationsObservableContext } from '../../../core/notifications-observable/interfaces';
+import { NotificationsObserver } from '../../../../core/notifications-observer/implementation';
+import { Reason } from '../../../../../misc/reason/implementation';
+import { IsObject, noop } from '../../../../../helpers';
+import { TPromiseType } from '../../../../../promises/interfaces';
+import { Finally, PromiseTry } from '../../../../../promises/helpers';
+import { INotificationsObservableContext } from '../../../../core/notifications-observable/interfaces';
 
 
 export const PROMISE_CANCEL_TOKEN_PRIVATE = Symbol('promise-cancel-token-private');
@@ -353,7 +353,7 @@ export function PromiseCancelTokenWrapFunction<CB extends (...args: any[]) => an
   return function (...args: Parameters<CB>): Promise<T | void> {
     return instance.cancelled
       ? ApplyOnCancelCallback(instance, strategy, onCancelled)
-      : PromiseCancelTokenWrapPromise<T>(instance, PromiseTry<T>(() => callback.apply(null, args)), strategy, onCancelled);
+      : PromiseCancelTokenWrapPromise<T>(instance, PromiseTry<T>(() => callback.apply(this, args)), strategy, onCancelled);
   };
 }
 

@@ -1,9 +1,9 @@
 import { from, merge, Observable as RXObservable, Subscriber as RXSubscriber } from 'rxjs';
-import { FromIterableObservable } from '../observables/from/iterable/implementation';
 import { Observable, ObservableClearObservers } from '../core/observable/implementation';
 import { IObserver, Observer } from '../core/observer/public';
 import { IObservable } from '../core/observable/interfaces';
 import { NotificationsObservable } from '../notifications/core/notifications-observable/public';
+import { FromIterableObservable } from '../notifications/observables/complete-state/from/iterable/public';
 
 /**
  * Test the performances of many observables emitting values from an iterable
@@ -31,7 +31,7 @@ export function testPerformances1() {
   sum = 0;
   for (let i = 0; i < count; i++) {
     new FromIterableObservable([Math.random()][Symbol.iterator]())
-      .pipeTo((v) => (sum += v))
+      .addListener('next', (v) => (sum += v))
       .activate();
   }
 

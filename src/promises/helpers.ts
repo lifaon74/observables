@@ -1,6 +1,6 @@
 import { IsObject } from '../helpers';
 import { ICancellablePromiseTuple, TPromiseCreateCallback, TPromiseOrValue } from './interfaces';
-import { IPromiseCancelToken } from '../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import { IPromiseCancelToken } from '../notifications/observables/complete-state/promise-observable/promise-cancel-token/interfaces';
 
 
 export function IsPromiseLike(value: any): value is Promise<any> {

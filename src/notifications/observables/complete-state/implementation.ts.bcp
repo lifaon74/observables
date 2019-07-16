@@ -1,16 +1,17 @@
-import { InitObservableHook, IObservableHookPrivate } from '../../../core/observable/hook';
+import { InitObservableHook, IObservableHookPrivate, TSimpleObservableHook } from '../../../core/observable/hook';
 import {
-  IObservable, IObservableConstructor, IObservableContextBase, IObservableHook
+  IObservable, IObservableConstructor, IObservableContext, IObservableContextBase, IObservableHook
 } from '../../../core/observable/interfaces';
 import {
   INotificationsObservable, INotificationsObservableContext, INotificationsObservableTypedConstructor,
   KeyValueMapToNotifications, KeyValueMapToNotificationsGeneric
 } from '../../core/notifications-observable/interfaces';
 import {
-  CompleteStateKeyValueMapConstraint, ICompleteStateObservable, ICompleteStateObservableConstructor,
-  ICompleteStateObservableContext, ICompleteStateObservableContextConstructor,
-  ICompleteStateObservableKeyValueMapGeneric, ICompleteStateObservableOptions, ICompleteStateObservableSoftConstructor,
-  TCompleteStateObservableConstructorArgs, TCompleteStateObservableMode, TCompleteStateObservableState
+  CompleteStateKeyValueMapConstraint, ICompleteStateObservableKeyValueMapGeneric, ICompleteStateObservable,
+  ICompleteStateObservableConstructor, ICompleteStateObservableContext, ICompleteStateObservableContextConstructor,
+  ICompleteStateObservableOptions, ICompleteStateObservableSoftConstructor, TCompleteStateObservableConstructorArgs,
+  TCompleteStateObservableMode, TCompleteStateObservableState, TCompleteStateObservableLikeNotifications,
+  TCompleteStateObservableFactory, ICompleteStateObservableHook
 } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { AllowObservableContextBaseConstruct, ObservableFactory } from '../../../core/observable/implementation';
@@ -19,7 +20,7 @@ import {
 } from '../../core/notifications-observable/implementation';
 import { Notification } from '../../core/notification/implementation';
 import { KeyValueMapKeys, KeyValueMapValues } from '../../core/interfaces';
-import { IsObject } from '../../../helpers';
+import { IsObject, noop } from '../../../helpers';
 import {
   Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
 } from '../../../classes/factory';
@@ -36,6 +37,10 @@ export interface ICompleteStateObservablePrivate<T, TKVMap extends CompleteState
 
   mode: TCompleteStateObservableMode;
   state: TCompleteStateObservableState;
+
+  factory: TCompleteStateObservableFactory<T, TKVMap> | void;
+  observerUndoFactory: WeakMap<IObserver<KeyValueMapToNotifications<TKVMap>>, () => void>;
+  sharedUndoFactory: (() => void) | null;
 }
 
 export interface ICompleteStateObservableInternal<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap>> extends ICompleteStateObservable<T, TKVMap> {
@@ -63,14 +68,31 @@ export function ConstructCompleteStateObservable<T, TKVMap extends CompleteState
 
   privates.state = 'emitting';
 
+
+  if (instance.mode === 'every') {
+    privates.observerUndoFactory = new WeakMap<IObserver<KeyValueMapToNotifications<TKVMap>>, () => void>();
+  }
+
+  privates.sharedUndoFactory = null;
+
   type TObservable = KeyValueMapToNotifications<TKVMap>;
 
-  InitObservableHook<TObservable>(
+  const hook: ICompleteStateObservableHook<T, TKVMap> | void = InitObservableHook<TObservable>(
     instance,
     privates,
     NewCompleteStateObservableContext as unknown as (observable: IObservable<TObservable>) => IObservableContextBase<TObservable>,
     create as unknown as (context: IObservableContextBase<TObservable>) => (IObservableHook<TObservable> | void),
   );
+
+  if (hook !== void 0) {
+    if (hook.factory === void 0) {
+      // do nothing
+    } else if (typeof hook.factory === 'function') {
+      privates.factory = hook.factory;
+    } else {
+      throw new TypeError(`Expected function or void as hook.factory`);
+    }
+  }
 }
 
 
@@ -92,12 +114,13 @@ function NormalizeCompleteStateObserversMode(mode?: TCompleteStateObservableMode
       return 'once';
     case 'once':
     case 'uniq':
+    case 'every':
     case 'cache':
     case 'cache-final-state':
     case 'cache-all':
       return mode;
     default:
-      throw new TypeError(`Expected 'once', 'uniq', 'cache', 'cache-final-state' or 'cache-all' as mode`);
+      throw new TypeError(`Expected 'once', 'uniq', 'every', 'cache', 'cache-final-state' or 'cache-all' as mode`);
   }
 }
 
@@ -159,6 +182,7 @@ export function CompleteStateObservableOnEmit<T, TKVMap extends CompleteStateKey
 
       if (isFinalState) {
         privates.state = notification.name as ('complete' | 'error');
+        privates.sharedUndoFactory = null;
       }
     } else {
       throw new TypeError(`Cannot emit a notification with the name '${ notification.name }' when the observable is in '${ privates.state }' state`);
@@ -195,11 +219,51 @@ export function CompleteStateObservableOnObserved<T, TKVMap extends CompleteStat
     observer.emit(privates.values[i]);
   }
 
+  if (privates.factory !== void 0) {
+    if (instance.mode === 'every') {
+      privates.observerUndoFactory.set(observer, privates.factory.call(instance, observer.emit.bind(observer)));
+    } else {
+      if (
+        (instance.observers.length === 1)
+        && (privates.sharedUndoFactory === null) // optional check
+        && (instance.state === 'emitting')
+      ) {
+        privates.sharedUndoFactory = privates.factory.call(instance, privates.context.emit.bind(privates.context));
+      }
+    }
+  }
+
   privates.onObserveHook(observer);
 }
 
 export function CompleteStateObservableOnUnobserved<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap>>(instance: ICompleteStateObservable<T, TKVMap>, observer: IObserver<KeyValueMapToNotifications<TKVMap>>): void {
-  (instance as ICompleteStateObservableInternal<T, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE].onUnobserveHook(observer);
+  const privates: ICompleteStateObservablePrivate<T, TKVMap> = (instance as ICompleteStateObservableInternal<T, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE];
+
+  if (privates.factory !== void 0) {
+    if (instance.mode === 'every') {
+      if (privates.observerUndoFactory.has(observer)) { // optional check (should always be true)
+        if (instance.state === 'emitting') {
+          console.log(instance.state);
+          (privates.observerUndoFactory.get(observer) as (() => void))();
+        }
+        privates.observerUndoFactory.delete(observer);
+      }
+    } else {
+      if (
+        (privates.sharedUndoFactory !== null) // optional check (should always be true, if instance.state === 'emitting')
+        && (instance.state === 'emitting')
+        && !instance.observed
+      ) {
+        console.log(instance.state);
+        // clear the cache because the factory has been aborted, so the cache is inconsistent
+        CompleteStateObservableClearCache<T, TKVMap>(instance);
+        privates.sharedUndoFactory();
+        privates.sharedUndoFactory = null;
+      }
+    }
+  }
+
+  privates.onUnobserveHook(observer);
 }
 
 export function CompleteStateObservableGetState<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap>>(instance: ICompleteStateObservable<T, TKVMap>): TCompleteStateObservableState {

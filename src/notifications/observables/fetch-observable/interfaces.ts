@@ -1,10 +1,10 @@
 import {
-  IPromiseNotificationKeyValueMap, IPromiseObservable, IPromiseObservableOptions
-} from '../promise-observable/interfaces';
+  IPromiseObservableKeyValueMap, IPromiseObservable, IPromiseObservableOptions
+} from '../complete-state/promise-observable/interfaces';
 import { INotificationsObservable } from '../../core/notifications-observable/interfaces';
 
-export type TFetchObservableKeyValueMap<TErrored = Error> = IPromiseNotificationKeyValueMap<Response, TErrored, any>;
-export type TFetchObservableCastKeyValueMap<T, TErrored = Error> = IPromiseNotificationKeyValueMap<T, TErrored, any>;
+export type TFetchObservableKeyValueMap<TErrored = Error> = IPromiseObservableKeyValueMap<Response, TErrored, any>;
+export type TFetchObservableCastKeyValueMap<T, TErrored = Error> = IPromiseObservableKeyValueMap<T, TErrored, any>;
 
 export interface IFetchObservableOptions extends IPromiseObservableOptions{
   // fetch?: typeof fetch;

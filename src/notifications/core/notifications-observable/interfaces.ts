@@ -80,11 +80,6 @@ export type TNotificationsObservableConstructorArgs<TKVMap extends KeyValueMapGe
   | [];
 
 
-export interface INotificationsObservableBasicKeyValueMap<TValue, TError = any> {
-  next: TValue;
-  complete: undefined;
-  error: TError;
-}
 
 /** INTERFACES **/
 

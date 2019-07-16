@@ -1,16 +1,16 @@
 import {
   INotificationsObservableInternal, NotificationsObservable
-} from '../../core/notifications-observable/implementation';
+} from '../../../core/notifications-observable/implementation';
 import { INodeJSEventsObservable, NodeJSEventKeyValueMapConstraint, PureNodeJSEventTarget } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
-import { Notification } from '../../core/notification/implementation';
-import { ExtractObserverNameAndCallback } from '../../core/notifications-observer/implementation';
-import { KeyValueMapKeys, KeyValueMapValues } from '../../core/interfaces';
+import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
+import { Notification } from '../../../core/notification/implementation';
+import { ExtractObserverNameAndCallback } from '../../../core/notifications-observer/implementation';
+import { KeyValueMapKeys, KeyValueMapValues } from '../../../core/interfaces';
 import {
   KeyValueMapToNotifications, KeyValueMapToNotificationsObserversLikeGeneric, TNotificationsObservableHook,
-} from '../../core/notifications-observable/interfaces';
-import { IObserver } from '../../../core/observer/interfaces';
-import { IsObject } from '../../../helpers';
+} from '../../../core/notifications-observable/interfaces';
+import { IObserver } from '../../../../core/observer/interfaces';
+import { IsObject } from '../../../../helpers';
 
 
 export const NODE_JS_EVENTS_OBSERVABLE_PRIVATE = Symbol('node-js-events-observable-private');

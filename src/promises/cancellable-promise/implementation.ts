@@ -1,7 +1,7 @@
 import {
   IPromiseCancelToken, TCancelStrategy,
-} from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
-import { PromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/implementation';
+} from '../../notifications/observables/complete-state/promise-observable/promise-cancel-token/interfaces';
+import { PromiseCancelToken } from '../../notifications/observables/complete-state/promise-observable/promise-cancel-token/implementation';
 import {
   ICancellablePromise, ICancellablePromiseConstructor, TCancellablePromiseCreateCallback, TCancellablePromiseRaceFactory
 } from './interfaces';

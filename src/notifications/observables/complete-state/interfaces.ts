@@ -1,7 +1,7 @@
-import { KeyValueMapConstraint } from '../../core/interfaces';
+import { KeyValueMapConstraint, KeyValueMapGenericConstraint } from '../../core/interfaces';
 import { IObservableHook } from '../../../core/observable/interfaces';
 import {
-  INotificationsObservable, INotificationsObservableContext
+  INotificationsObservable, INotificationsObservableContext, KeyValueMapToNotifications, TNotificationsObservableHook
 } from '../../core/notifications-observable/interfaces';
 
 /**
@@ -9,11 +9,13 @@ import {
  *  INFO: except for 'cache-all', the CompleteStateObservable doesn't care of notifications different than 'next', 'complete' or 'error'
  */
 export type TCompleteStateObservableMode =
-  'once' // (default) doesnt cache any values => after the final state ('complete' or 'error'), no observers will ever receive a value ('next')
+  'once' // (default) does not cache any values => after the final state ('complete' or 'error'), no observers will ever receive a value ('next')
+  | 'uniq' // does not cache any values => after the final state, throws an error if a new observer observes 'next', 'complete' or 'error'.
+  // | 'every' // when a new observer starts observing this observable, send every values until the final state. Every observer will receive the whole list of own emitted notifications.
+    // kind of 'cache' but forces the regeneration of the values
   | 'cache' // caches own notifications ('next', 'complete' and 'error'). Every observer will receive the whole list of own emitted notifications
   | 'cache-final-state' // caches 'complete' or 'error' notification. Every observer will receive this final state notification
   | 'cache-all' // caches all notifications (including ones with a different name than 'next', 'complete' and 'error'). Every observer will receive the whole list of all emitted notifications
-  | 'throw-after-complete-observers' // doesnt cache any values => after the final state, throws an error if a new observer observes 'next', 'complete' or 'error'.
   ;
 export type TCompleteStateObservableState =
   'emitting' // may emit data though 'next'
@@ -25,54 +27,58 @@ export interface ICompleteStateObservableOptions {
   mode?: TCompleteStateObservableMode; // default: 'once'
 }
 
-
-
-export type CompleteStateObservableKeyValueMapGeneric<T> = {
+export type ICompleteStateObservableKeyValueMapGeneric<T> = {
   'next': T;
   'complete': void;
   'error': any;
 };
 
-export type CompleteStateKeyValueMapConstraint<T, TKVMap extends object> = KeyValueMapConstraint<TKVMap, CompleteStateObservableKeyValueMapGeneric<T>>;
+
+export type CompleteStateKeyValueMapConstraint<T, TKVMap extends object> = KeyValueMapConstraint<TKVMap, ICompleteStateObservableKeyValueMapGeneric<T>>;
+
+// what should emit an Observable with a similar behaviour of a CompleteStateObservable
+export type TCompleteStateObservableLikeNotifications<T> = KeyValueMapToNotifications<ICompleteStateObservableKeyValueMapGeneric<T>>;
+
+export interface ICompleteStateObservableHook<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap>> extends TNotificationsObservableHook<TKVMap> {
+}
 
 
-// export type TCompleteStateObservableConstructorArgs<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap>> =
-//   [(context: ICompleteStateObservableContext<T, TKVMap>) => (IObservableHook<T> | void), ICompleteStateObservableOptions]
-//   | [(context: ICompleteStateObservableContext<T, TKVMap>) => (IObservableHook<T> | void)]
-//   | [];
+export type TCompleteStateObservableCreateCallback<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap>> = ((context: ICompleteStateObservableContext<T, TKVMap>) => (ICompleteStateObservableHook<T, TKVMap> | void));
 
 export type TCompleteStateObservableConstructorArgs<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap>> =
-  [((context: ICompleteStateObservableContext<T, TKVMap>) => (IObservableHook<T> | void))?, ICompleteStateObservableOptions?];
+  [TCompleteStateObservableCreateCallback<T, TKVMap>?, ICompleteStateObservableOptions?];
+
+
 
 export interface ICompleteStateObservableConstructor {
-  new<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap> = CompleteStateObservableKeyValueMapGeneric<T>>(
-    create?: (context: ICompleteStateObservableContext<T, TKVMap>) => (IObservableHook<T> | void),
+  new<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap> = ICompleteStateObservableKeyValueMapGeneric<T>>(
+    create?: TCompleteStateObservableCreateCallback<T, TKVMap>,
     options?: ICompleteStateObservableOptions,
   ): ICompleteStateObservable<T, TKVMap>;
 }
 
-// INFO double it due to an inference bug
-export interface ICompleteStateObservableConstructor {
-  new<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap> = CompleteStateObservableKeyValueMapGeneric<T>>(
-    create?: (context: ICompleteStateObservableContext<T, TKVMap>) => (IObservableHook<T> | void),
+export interface ICompleteStateObservableSoftConstructor {
+  new<T>(
+    create?: (context: ICompleteStateObservableKeyValueMapGeneric<T>) => (ICompleteStateObservableHook<T, ICompleteStateObservableKeyValueMapGeneric<T>> | void),
     options?: ICompleteStateObservableOptions,
-  ): ICompleteStateObservable<T, TKVMap>;
+  ): ICompleteStateObservable<T, ICompleteStateObservableKeyValueMapGeneric<T>>;
 }
 
 export interface ICompleteStateObservableTypedConstructor<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap>> {
   new(
-    create?: (context: ICompleteStateObservableContext<T, TKVMap>) => (IObservableHook<T> | void),
+    create?: TCompleteStateObservableCreateCallback<T, TKVMap>,
     options?: ICompleteStateObservableOptions,
   ): ICompleteStateObservable<T, TKVMap>;
 }
 
 // const a: ConstructorParameters<ICompleteStateObservableConstructor>;
+// const b: ConstructorParameters<ICompleteStateObservableSoftConstructor>;
 
 /**
  * A CompleteStateObservable represents an Observable with a final state (complete or errored).
  * This may be useful for streams with a non infinite list of values like iterables, promises, RXJS's Observables, etc...
  */
-export interface ICompleteStateObservable<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap> = CompleteStateObservableKeyValueMapGeneric<T>> extends INotificationsObservable<TKVMap> {
+export interface ICompleteStateObservable<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap> = ICompleteStateObservableKeyValueMapGeneric<T>> extends INotificationsObservable<TKVMap> {
   readonly state: TCompleteStateObservableState;
   readonly mode: TCompleteStateObservableMode;
 }
@@ -84,7 +90,7 @@ export interface ICompleteStateObservableContextConstructor {
   new<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap>>(observable: ICompleteStateObservable<T, TKVMap>): ICompleteStateObservableContext<T, TKVMap>;
 }
 
-export interface ICompleteStateObservableContext<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap> = CompleteStateObservableKeyValueMapGeneric<T>> extends INotificationsObservableContext<TKVMap> {
+export interface ICompleteStateObservableContext<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap> = ICompleteStateObservableKeyValueMapGeneric<T>> extends INotificationsObservableContext<TKVMap> {
   readonly observable: ICompleteStateObservable<T, TKVMap>;
 
   next(value: T): void; // emits Notification('next', value)

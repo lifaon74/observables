@@ -12,7 +12,7 @@ import {
 import {
   Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
 } from '../../../classes/factory';
-import { IPromiseCancelToken } from '../../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import { IPromiseCancelToken } from '../../../notifications/observables/complete-state/promise-observable/promise-cancel-token/interfaces';
 import { IValueObservable, IValueObservableConstructor, IValueObservableContext } from '../value-observable/interfaces';
 import {
   IsValueObservableConstructor, IValueObservableInternal, ValueObservableFactory,
@@ -20,7 +20,7 @@ import {
 import { InitObservableHook, IObservableHookPrivate } from '../../../core/observable/hook';
 import {
   PromiseCancelReason, PromiseCancelToken
-} from '../../../notifications/observables/promise-observable/promise-cancel-token/implementation';
+} from '../../../notifications/observables/complete-state/promise-observable/promise-cancel-token/implementation';
 import { IsObject } from '../../../helpers';
 
 

@@ -1,7 +1,7 @@
 import { ReadonlyList } from '../misc/readonly-list/implementation';
 import { Observable } from '../core/observable/implementation';
 import { NotificationsObservable } from '../notifications/core/notifications-observable/implementation';
-import { EventsObservable } from '../notifications/observables/events-observable/implementation';
+import { EventsObservable } from '../notifications/observables/events/events-observable/implementation';
 import { mapPipe } from '../operators/pipes/mapPipe';
 import { TimerObservable } from '../observables/timer-observable/implementation';
 import { AsyncSource, Source } from '../observables/distinct/source/implementation';
@@ -10,10 +10,9 @@ import { WebSocketIO } from '../observables/io/websocket-observable/implementati
 import { UnionToIntersection } from '../classes/types';
 import { reducePipe } from '../operators/pipes/reducePipe';
 import { flattenPipe } from '../operators/pipes/flattenPipe';
-import { assert, assertFails, assertFailsSync, assertObservableEmits, notificationsEquals } from '../classes/asserts';
+import { assert, assertFails, assertObservableEmits, notificationsEquals } from '../classes/asserts';
 // import { FromIterableObservable } from '../observables/from/iterable/implementation';
 import { noop } from '../helpers';
-import { FromRXJSObservable } from '../observables/from/rxjs/implementation';
 import { Observer } from '../core/observer/public';
 import { toRXJS } from '../operators/to/toRXJS';
 import { CompleteStateObservable, ICompleteStateObservable } from '../notifications/observables/complete-state/public';
@@ -21,6 +20,11 @@ import { IFileReaderObservable } from '../notifications/observables/complete-sta
 import { FileReaderObservable } from '../notifications/observables/complete-state/file-reader/implementation';
 import { Progress } from '../misc/progress/implementation';
 import { FromIterableObservable } from '../notifications/observables/complete-state/from/iterable/public';
+import { FromRXJSObservable } from '../notifications/observables/complete-state/from/rxjs/public';
+import { aggregateNotificationsPipe } from '../operators/pipes/aggregateNotificationsPipe';
+import { toAsyncIterable } from '../operators/to/async-iterator/toAsyncIterable';
+import { clearImmediate, setImmediate } from '../classes/set-immediate';
+import { CompleteStateObservableFactory } from '../notifications/observables/complete-state/factory';
 
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve: any, reject: any) => {
@@ -187,6 +191,159 @@ export async function testAsyncSource() {
 }
 
 
+
+async function testCompleteStateObservable() {
+
+  function assertCompleteStateObservableEmits<T>(observable: ICompleteStateObservable<T>, notifications: [string, T | any][]): Promise<void> {
+    return assertObservableEmits(observable, notifications, 100, notificationsEquals);
+  }
+
+  function testCannotEmitAfterFinalState() {
+    return new Promise<void>((resolve: any, reject: any) => {
+      new CompleteStateObservable<number>((context) => {
+        context.next(1);
+        context.next(2);
+        context.complete();
+        resolve(
+          Promise.all([
+            assertFails(() => context.next(3)),
+            assertFails(() => context.complete()),
+            assertFails(() => context.error())
+          ])
+        );
+      });
+    });
+  }
+
+  async function testOnce() {
+    const observable = new CompleteStateObservable<number>((context) => {
+      return {
+        onObserved(): void {
+          if (context.observable.state === 'emitting') {
+            context.next(1);
+            context.next(2);
+            context.complete();
+          }
+        }
+      }
+    }, { mode: 'once' });
+
+    await assertCompleteStateObservableEmits(observable,[
+      ['next', 1],
+      ['next', 2],
+      ['complete', void 0],
+    ]);
+
+    await assertCompleteStateObservableEmits(observable,[]);
+  }
+
+  async function testEvery() {
+    const observable = new CompleteStateObservable<number>(CompleteStateObservableFactory<number>(
+      function factory(emit: (value: any) => void): () => void {
+        let cancelled: boolean = false;
+        const timer = setImmediate(() => {
+          if (!cancelled) {
+            emit(new Notification<'next', number>('next', 1));
+          }
+          if (!cancelled) {
+            emit(new Notification<'next', number>('next', 2));
+          }
+          if (!cancelled) {
+            emit(new Notification<'complete', void>('complete', void 0));
+          }
+        });
+        return () => {
+          clearImmediate(timer);
+          cancelled = true;
+        };
+      }
+    ), { mode: 'once' });
+
+    await assertCompleteStateObservableEmits(observable,[
+      ['next', 1],
+      ['next', 2],
+      ['complete', void 0],
+    ]);
+
+    await assertCompleteStateObservableEmits(observable,[
+      ['next', 1],
+      ['next', 2],
+      ['complete', void 0],
+    ]);
+
+    const observer = observable.addListener('next', (value: number) => {
+      // console.log('value', value);
+      observer.deactivate();
+    });
+
+    observer.activate();
+
+    // setTimeout(() => {
+    //   observer.deactivate();
+    // }, 200);
+  }
+
+  async function testCache() {
+    const observable = new CompleteStateObservable<number>((context) => {
+      context.next(1);
+      context.next(2);
+      context.complete();
+    }, { mode: 'cache' });
+
+    await assert(() => (observable.state === 'complete'));
+
+    await assertCompleteStateObservableEmits(observable,[
+      ['next', 1],
+      ['next', 2],
+      ['complete', void 0],
+    ]);
+
+    await assertCompleteStateObservableEmits(observable,[
+      ['next', 1],
+      ['next', 2],
+      ['complete', void 0],
+    ]);
+  }
+
+  async function testCacheFinalState() {
+    const observable = new CompleteStateObservable<number>((context) => {
+      context.next(1);
+      context.next(2);
+      context.error('my-error');
+    }, { mode: 'cache-final-state' });
+
+    await assert(() => (observable.state === 'complete'));
+
+    await assertCompleteStateObservableEmits(observable,[
+      ['error', 'my-error'],
+    ]);
+
+    await assertCompleteStateObservableEmits(observable,[
+      ['error', 'my-error'],
+    ]);
+  }
+
+  async function testThrowAfterComplete() {
+    const observable = new CompleteStateObservable<number>((context) => {
+      context.next(1);
+      context.next(2);
+      context.complete();
+    }, { mode: 'uniq' });
+
+    await assert(() => (observable.state === 'complete'));
+    await assertFails(() => (observable.pipeTo(() => {}).activate()));
+  }
+
+
+  await testCannotEmitAfterFinalState();
+  await testOnce();
+  await testEvery();
+  await testCache();
+  await testCacheFinalState();
+  await testThrowAfterComplete();
+}
+
+
 async function testFromIterableObservable() {
   const notifications = [
     new Notification('next', 0),
@@ -196,7 +353,7 @@ async function testFromIterableObservable() {
     new Notification('complete', void 0),
   ];
 
-  const values1 = new FromIterableObservable([0, 1, 2, 3], { mode: 'throw-after-complete-observers' });
+  const values1 = new FromIterableObservable<number>([0, 1, 2, 3], { mode: 'uniq' });
 
   await assertObservableEmits(
     values1,
@@ -205,7 +362,7 @@ async function testFromIterableObservable() {
 
   await assertFails(() => values1.pipeTo(noop).activate());
 
-  const values2 = new FromIterableObservable([0, 1, 2, 3][Symbol.iterator](), { mode: 'cache' });
+  const values2 = new FromIterableObservable<number>([0, 1, 2, 3][Symbol.iterator](), { mode: 'cache' });
 
   await assertObservableEmits(
     values2,
@@ -220,7 +377,8 @@ async function testFromIterableObservable() {
 
 async function testReducePipe() {
   await assertObservableEmits(
-    new FromIterableObservable([0, 1, 2, 3])
+    new FromIterableObservable<number>([0, 1, 2, 3])
+      .pipeThrough(aggregateNotificationsPipe<number>(['next']))
       .pipeThrough(reducePipe<number>((a, b) => (a + b), 0)),
     [0, 1, 3, 6]
   );
@@ -229,6 +387,7 @@ async function testReducePipe() {
 async function testFlattenPipe() {
   await assertObservableEmits(
     new FromIterableObservable([[0, 1], [2, 3]])
+      .pipeThrough(aggregateNotificationsPipe<number>(['next']))
       .pipeThrough(flattenPipe<number>()),
     [0, 1, 2, 3]
   );
@@ -253,16 +412,16 @@ async function testFromRXJSObservable() {
     map((x: number) => x / 2)
   ); // 0, 1, 2, 3
 
-  const values1 = new FromRXJSObservable<number, undefined>(rxObservable);
+  const values1 = new FromRXJSObservable<number>(rxObservable, { mode: 'uniq' });
 
   await assertObservableEmits(
     values1,
     notifications
   );
 
-  assertFailsSync(() => values1.pipeTo(noop).activate());
+  await assertFails(() => values1.pipeTo(noop).activate());
 
-  const values2 = new FromRXJSObservable<number, undefined>(rxObservable, { nextObservers: 'cache' });
+  const values2 = new FromRXJSObservable<number>(rxObservable, { mode: 'cache' });
 
   await assertObservableEmits(
     values2,
@@ -277,18 +436,31 @@ async function testFromRXJSObservable() {
 }
 
 async function testToRXJSObservable() {
-  // toRXJS<number>(new FromIterableObservable([0, 1, 2, 3, 4]))
-  //   .subscribe({
-  //     next: (value: number) => {
-  //       console.log('next', value);
-  //     },
-  //     complete: () => {
-  //       console.log('complete');
-  //     },
-  //     error: (error: any) => {
-  //       console.log('error', error);
-  //     }
-  //   });
+  toRXJS<number>(new FromIterableObservable([0, 1, 2, 3, 4]))
+    .subscribe({
+      next: (value: number) => {
+        console.log('next', value);
+      },
+      complete: () => {
+        console.log('complete');
+      },
+      error: (error: any) => {
+        console.log('error', error);
+      }
+    });
+}
+
+async function testToAsyncIterable() {
+  // for await(const value of toAsyncIterable<number>(new FromIterableObservable<number>([1, 2, 3]))) {
+  //   console.log(value);
+  // }
+  // TODO => problem, FromIterableObservable emits all values immediately where 'next' can only return one
+  const iterator: AsyncIterator<number | undefined> = toAsyncIterable<number>(new FromIterableObservable<number>([1, 2, 3]));
+  let result: IteratorResult<number | undefined>;
+  while (!(result = await iterator.next()).done) {
+    console.log(result.value);
+  }
+  // should output: 1, 2, 3
 }
 
 
@@ -366,109 +538,6 @@ export function testInstanceof() {
 
 
 
-export async function testCompleteStateObservable() {
-
-  function assertCompleteStateObservableEmits<T>(observable: ICompleteStateObservable<T>, notifications: [string, T | any][]): Promise<void> {
-    return assertObservableEmits(observable, notifications, 100, notificationsEquals);
-  }
-
-  function testCannotEmitAfterFinalState() {
-    return new Promise<void>((resolve: any, reject: any) => {
-      new CompleteStateObservable<number>((context) => {
-          context.next(1);
-          context.next(2);
-          context.complete();
-          resolve(
-            Promise.all([
-              assertFails(() => context.next(3)),
-              assertFails(() => context.complete()),
-              assertFails(() => context.error())
-            ])
-          );
-      });
-    });
-  }
-
-  async function testOnce() {
-    const observable = new CompleteStateObservable<number>((context) => {
-      return {
-        onObserved(): void {
-          if (context.observable.state === 'emitting') {
-            context.next(1);
-            context.next(2);
-            context.complete();
-          }
-        }
-      }
-    }, { mode: 'once' });
-
-    await assertCompleteStateObservableEmits(observable,[
-      ['next', 1],
-      ['next', 2],
-      ['complete', void 0],
-    ]);
-
-    await assertCompleteStateObservableEmits(observable,[]);
-  }
-
-  async function testCache() {
-    const observable = new CompleteStateObservable<number>((context) => {
-      context.next(1);
-      context.next(2);
-      context.complete();
-    }, { mode: 'cache' });
-
-    await assert(() => (observable.state === 'complete'));
-
-    await assertCompleteStateObservableEmits(observable,[
-      ['next', 1],
-      ['next', 2],
-      ['complete', void 0],
-    ]);
-
-    await assertCompleteStateObservableEmits(observable,[
-      ['next', 1],
-      ['next', 2],
-      ['complete', void 0],
-    ]);
-  }
-
-  async function testCacheFinalState() {
-    const observable = new CompleteStateObservable<number>((context) => {
-      context.next(1);
-      context.next(2);
-      context.error('my-error');
-    }, { mode: 'cache-final-state' });
-
-    await assert(() => (observable.state === 'complete'));
-
-    await assertCompleteStateObservableEmits(observable,[
-      ['error', 'my-error'],
-    ]);
-
-    await assertCompleteStateObservableEmits(observable,[
-      ['error', 'my-error'],
-    ]);
-  }
-
-  async function testThrowAfterComplete() {
-    const observable = new CompleteStateObservable<number>((context) => {
-      context.next(1);
-      context.next(2);
-      context.complete();
-    }, { mode: 'throw-after-complete-observers' });
-
-    await assert(() => (observable.state === 'complete'));
-    await assertFails(() => (observable.pipeTo(() => {}).activate()));
-  }
-
-
-  await testCannotEmitAfterFinalState();
-  await testOnce();
-  await testCache();
-  await testCacheFinalState();
-  await testThrowAfterComplete();
-}
 
 export async function testFileReaderObservable() {
 
@@ -516,6 +585,7 @@ export async function test() {
   // testSource();
   // testAsyncSource();
 
+  await testCompleteStateObservable();
   await testFromIterableObservable();
   // await testReducePipe();
   // await testFlattenPipe();
@@ -523,7 +593,9 @@ export async function test() {
   // await testFromRXJSObservable();
   // await testToRXJSObservable();
 
-  // await testCompleteStateObservable();
+  // await testToAsyncIterable();
+
+
   // await testFileReaderObservable();
 
   // testWebSocket();

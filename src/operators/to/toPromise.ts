@@ -1,20 +1,20 @@
 import {
-  TPromiseObservableNotification
-} from '../../notifications/observables/promise-observable/interfaces';
+  TPromiseObservableNotifications
+} from '../../notifications/observables/complete-state/promise-observable/interfaces';
 import { Notification } from '../../notifications/core/notification/implementation';
 import { IObservable } from '../../core/observable/interfaces';
 import {
   ApplyCancelStrategy,
   PromiseCancelToken
-} from '../../notifications/observables/promise-observable/promise-cancel-token/implementation';
+} from '../../notifications/observables/complete-state/promise-observable/promise-cancel-token/implementation';
 import {
   IPromiseCancelToken, TCancelStrategy
-} from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+} from '../../notifications/observables/complete-state/promise-observable/promise-cancel-token/interfaces';
 import { Observer } from '../../core/observer/implementation';
 import { INotificationsObserver } from '../../notifications/core/notifications-observer/interfaces';
 import { ICancellablePromiseTuple, TPromiseOrValue } from '../../promises/interfaces';
 
-export type TBasePromiseObservableNotification<T> = TPromiseObservableNotification<T, any, any>;
+export type TBasePromiseObservableNotification<T> = TPromiseObservableNotifications<T, any, any>;
 export type TValueOrNotificationType<T> = T | TBasePromiseObservableNotification<T>;
 
 /**

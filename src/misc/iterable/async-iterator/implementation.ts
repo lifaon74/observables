@@ -68,11 +68,13 @@ export function AsyncIteratorNext<T, U>(instance: IAsyncIterator<T, U>, value: U
                 }
                 return result;
               } else {
+                // AsyncIteratorThrowInternal<T, U>(instance, new TypeError(`iterator.next() returned a non-object value`));
                 privates.done = true;
                 throw new TypeError(`iterator.next() returned a non-object value`);
               }
             },
             (error: any) => {
+              // AsyncIteratorThrowInternal<T, U>(instance, error);
               privates.done = true;
               throw error;
             }
@@ -137,7 +139,6 @@ function PureAsyncIteratorFactory<TBase extends Constructor<any>>(superClass: TB
     constructor(...args: any[]) {
       const [next]: TAsyncIteratorConstructorArgs<T, U> = args[0];
       super(...args.slice(1));
-      // @ts-ignore
       ConstructAsyncIterator(this, next);
     }
 

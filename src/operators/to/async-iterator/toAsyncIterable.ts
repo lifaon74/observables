@@ -1,6 +1,6 @@
-import { IObservable } from '../../../core/observable/interfaces';
-import { IAsyncIteratorOfObservable } from './interfaces';
 import { AsyncIteratorOfObservable } from './implementation';
+import { ICompleteStateObservable } from '../../../notifications/observables/complete-state/interfaces';
+import { IAsyncIteratorOfObservable } from './interfaces';
 
 
 /**
@@ -8,7 +8,7 @@ import { AsyncIteratorOfObservable } from './implementation';
  *  When the Observable emits a value, the AsyncIterator.next()'s Promise is resolved
  * @param observable
  */
-export function toAsyncIterable<T>(observable: IObservable<T>): IAsyncIteratorOfObservable<T> {
+export function toAsyncIterable<T>(observable: ICompleteStateObservable<T>): IAsyncIteratorOfObservable<T> {
   return new AsyncIteratorOfObservable<T>(observable);
 }
 

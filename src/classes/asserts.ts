@@ -1,9 +1,9 @@
 import { IPipe } from '../core/observable-observer/interfaces';
 import { IObserver } from '../core/observer/interfaces';
-import { IPromiseObservable } from '../notifications/observables/promise-observable/interfaces';
+import { IPromiseObservable } from '../notifications/observables/complete-state/promise-observable/interfaces';
 import { Pipe } from '../core/observable-observer/implementation';
 import { Observer } from '../core/observer/implementation';
-import { PromiseObservable } from '../notifications/observables/promise-observable/implementation';
+import { PromiseObservable } from '../notifications/observables/complete-state/promise-observable/implementation';
 import { IObservable } from '../core/observable/interfaces';
 import { toPromise } from '../operators/to/toPromise';
 import { IFunctionObservable } from '../observables/distinct/function-observable/interfaces';
@@ -118,12 +118,12 @@ export function observableAssert(
   };
 }
 
-export function assertPipe(values: any[], timeout?: number, equalFunction?: (a: any, b: any) => boolean): IPipe<IObserver<any>, IPromiseObservable<void, Error, void>> {
+export function assertPipe(values: any[], timeout?: number, equalFunction?: (a: any, b: any) => boolean): IPipe<IObserver<any>, IPromiseObservable<void>> {
   const { destination, promise } = observableAssert(values, timeout, equalFunction);
   return new Pipe(() => {
     return {
       observer: new Observer<any>(destination),
-      observable: new PromiseObservable<void, any, any>(() => promise)
+      observable: new PromiseObservable<void>(() => promise)
     };
   });
 }

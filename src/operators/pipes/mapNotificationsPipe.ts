@@ -11,8 +11,8 @@ import { NotificationsObservable } from '../../notifications/core/notifications-
 import { Pipe } from '../../core/observable-observer/implementation';
 
 /**
- * ObservableObserver: aggregates many notifications by filtering their name - returns a new NotificationsObservable build from outName
- *  - when a notification is received, the pipe emits a new Notification<TKeyOut, KeyValueMapValues<TKVMapIn>> if the notification's name is in inNames
+ * ObservableObserver: aggregates many notifications by filtering their name - returns a new NotificationsObservable build from 'outName'
+ *  - when a notification is received, the pipe emits a new Notification<TKeyOut, KeyValueMapValues<TKVMapIn>> if the notification's name is in 'inNames'
  * @param inNames
  * @param outName
  */

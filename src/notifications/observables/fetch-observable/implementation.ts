@@ -1,7 +1,7 @@
 import { IFetchObservable, IFetchObservableOptions, TFetchObservableCastKeyValueMap } from './interfaces';
-import { IPromiseObservableInternal, PromiseObservable } from '../promise-observable/implementation';
+import { IPromiseObservableInternal, PromiseObservable } from '../complete-state/promise-observable/implementation';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
-import { IPromiseCancelToken } from '../promise-observable/promise-cancel-token/interfaces';
+import { IPromiseCancelToken } from '../complete-state/promise-observable/promise-cancel-token/interfaces';
 import { INotificationsObservable } from '../../core/notifications-observable/interfaces';
 import { promisePipe } from '../../../operators/pipes/promisePipe';
 import { IsObject } from '../../../helpers';

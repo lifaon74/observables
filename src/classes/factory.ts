@@ -96,7 +96,7 @@ export function MakeFactory<TChildClass extends Constructor, TSuperClasses exten
   factories: TMakeFactoryFactories<TSuperClasses>,
   superClass: TBase,
   options: IMakeFactoryOptions = {}
-) {
+): TMakeFactoryClass<TChildClass, TSuperClasses, TBase> {
   let _superClass: any = superClass;
   for (let i = factories.length - 1; i >= 0; i--) {
     _superClass = factories[i](_superClass);
