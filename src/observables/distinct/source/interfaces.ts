@@ -1,5 +1,5 @@
 import { IObservable, IObservableConstructor } from '../../../core/observable/interfaces';
-import { IPromiseCancelToken } from '../../../notifications/observables/complete-state/promise-observable/promise-cancel-token/interfaces';
+import { IPromiseCancelToken } from '../../../notifications/observables/complete-state/promise/promise-cancel-token/interfaces';
 import { IValueObservable } from '../value-observable/interfaces';
 
 

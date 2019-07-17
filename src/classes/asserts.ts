@@ -1,11 +1,13 @@
 import { IPipe } from '../core/observable-observer/interfaces';
 import { IObserver } from '../core/observer/interfaces';
-import { IPromiseObservable } from '../notifications/observables/complete-state/promise-observable/interfaces';
+import { IPromiseObservable } from '../notifications/observables/complete-state/promise/promise-observable/interfaces';
 import { Pipe } from '../core/observable-observer/implementation';
 import { Observer } from '../core/observer/implementation';
-import { PromiseObservable } from '../notifications/observables/complete-state/promise-observable/implementation';
+import { PromiseObservable } from '../notifications/observables/complete-state/promise/promise-observable/implementation';
 import { IObservable } from '../core/observable/interfaces';
-import { toPromise } from '../operators/to/toPromise';
+import {
+  completeStateObservableToPromise, singleCompleteStateObservableToPromise, genericObservableToPromise
+} from '../operators/to/toPromise';
 import { IFunctionObservable } from '../observables/distinct/function-observable/interfaces';
 import { ISource } from '../observables/distinct/source/interfaces';
 import { IsObject } from '../helpers';
@@ -129,7 +131,7 @@ export function assertPipe(values: any[], timeout?: number, equalFunction?: (a: 
 }
 
 export function assertObservableEmits(observable: IObservable<any>, values: any[], timeout?: number, equalFunction?: (a: any, b: any) => boolean): Promise<void> {
-  return toPromise<void>(
+  return singleCompleteStateObservableToPromise(
     observable.pipeThrough(assertPipe(values, timeout, equalFunction))
   );
 }

@@ -1,5 +1,4 @@
-import { KeyValueMapConstraint, KeyValueMapGenericConstraint } from '../../core/interfaces';
-import { IObservableHook } from '../../../core/observable/interfaces';
+import { KeyValueMapConstraint } from '../../core/interfaces';
 import {
   INotificationsObservable, INotificationsObservableContext, KeyValueMapToNotifications, TNotificationsObservableHook
 } from '../../core/notifications-observable/interfaces';
@@ -12,25 +11,32 @@ export type TCompleteStateObservableMode =
   'once' // (default) does not cache any values => after the final state ('complete' or 'error'), no observers will ever receive a value ('next')
   | 'uniq' // does not cache any values => after the final state, throws an error if a new observer observes 'next', 'complete' or 'error'.
   // | 'every' // when a new observer starts observing this observable, send every values until the final state. Every observer will receive the whole list of own emitted notifications.
-    // kind of 'cache' but forces the regeneration of the values
+  // kind of 'cache' but forces the regeneration of the values
   | 'cache' // caches own notifications ('next', 'complete' and 'error'). Every observer will receive the whole list of own emitted notifications
   | 'cache-final-state' // caches 'complete' or 'error' notification. Every observer will receive this final state notification
   | 'cache-all' // caches all notifications (including ones with a different name than 'next', 'complete' and 'error'). Every observer will receive the whole list of all emitted notifications
   ;
-export type TCompleteStateObservableState =
-  'emitting' // may emit data though 'next'
+
+export type TCompleteStateObservableFinalState =
   | 'complete' // context.complete() called, cannot emit anymore data
   | 'error' // context.error(err) called, cannot emit anymore data
   ;
+
+export type TCompleteStateObservableState =
+  'next' // may emit data though 'next'
+  | TCompleteStateObservableFinalState
+  ;
+
 
 export interface ICompleteStateObservableOptions {
   mode?: TCompleteStateObservableMode; // default: 'once'
 }
 
 export type ICompleteStateObservableKeyValueMapGeneric<T> = {
-  'next': T;
-  'complete': void;
-  'error': any;
+  'next': T; // incoming values
+  'complete': void; // when the Observable has no more data to emit
+  'error': any; // when the Observable errored
+  'reset': void; // when the Observable resets => this means than previously received notifications should be discarded
 };
 
 
@@ -47,7 +53,6 @@ export type TCompleteStateObservableCreateCallback<T, TKVMap extends CompleteSta
 
 export type TCompleteStateObservableConstructorArgs<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap>> =
   [TCompleteStateObservableCreateCallback<T, TKVMap>?, ICompleteStateObservableOptions?];
-
 
 
 export interface ICompleteStateObservableConstructor {
@@ -97,7 +102,11 @@ export interface ICompleteStateObservableContext<T, TKVMap extends CompleteState
   complete(): void; // emits Notification('complete', void 0)
   error(error?: any): void; // emits Notification('error', error)
 
-  clearCache(): void; // clears the cache
+  /**
+   * clears the cache, resets the state to 'next' and emits a Notification('reset', void 0)
+   * Should be called only when this Observables is not observed
+   */
+  reset(): void;
 }
 
 

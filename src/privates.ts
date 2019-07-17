@@ -24,9 +24,9 @@ export * from './notifications/core/notifications-observer/implementation';
 export * from './notifications/core/preventable/implementation';
 
 export * from './notifications/observables/events/events-observable/implementation';
-export * from './notifications/observables/fetch-observable/implementation';
+export * from './notifications/observables/complete-state/promise/fetch-observable/implementation';
 export * from './notifications/observables/events/nodejs-events-observable/implementation';
-export * from './notifications/observables/complete-state/promise-observable/implementation';
+export * from './notifications/observables/complete-state/promise/promise-observable/implementation';
 
 export * from './observables/distinct/async-function-observable/implementation';
 export * from './observables/distinct/async-value-observable/implementation';

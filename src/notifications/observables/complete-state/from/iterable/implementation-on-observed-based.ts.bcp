@@ -1,9 +1,9 @@
 import {
-  ICompleteStateObservable, ICompleteStateObservableTypedConstructor
+  ICompleteStateObservable, ICompleteStateObservableContext, ICompleteStateObservableTypedConstructor
 } from '../../interfaces';
 import {
   IFromIterableObservable, IFromIterableObservableConstructor, IFromIterableObservableKeyValueMap,
-  IFromIterableObservableOptions, TFromIterableObservableConstructorArgs, TFromIterableObservableNotifications
+  IFromIterableObservableOptions, TFromIterableObservableConstructorArgs
 } from './interfaces';
 import { CompleteStateObservableFactory, IsCompleteStateObservableConstructor } from '../../implementation';
 import { ObservableFactory } from '../../../../../core/observable/implementation';
@@ -15,14 +15,14 @@ import { ConstructClassWithPrivateMembers } from '../../../../../misc/helpers/Cl
 import { IsObject } from '../../../../../helpers';
 import { NotificationsObservableFactory } from '../../../../core/notifications-observable/implementation';
 import { INotificationsObservableTypedConstructor } from '../../../../core/notifications-observable/interfaces';
-import { clearImmediate, setImmediate } from '../../../../../classes/set-immediate';
-import { Notification } from '../../../../core/notification/implementation';
-import { BuildCompleteStateObservableHookBasedOnSharedFactoryFunction } from '../../factory';
+// import { clearImmediate, setImmediate } from '../../../../../classes/set-immediate';
+// import { Notification } from '../../../../core/notification/implementation';
 
 
 export const FROM_ITERABLE_OBSERVABLE_PRIVATE = Symbol('from-iterable-observable-private');
 
 export interface IFromIterableObservablePrivate<T> {
+  context: ICompleteStateObservableContext<T, IFromIterableObservableKeyValueMap<T>>;
   iterable: Iterable<T>;
 }
 
@@ -32,10 +32,13 @@ export interface IFromIterableObservableInternal<T> extends IFromIterableObserva
 
 export function ConstructFromIterableObservable<T>(
   instance: IFromIterableObservable<T>,
+  context: ICompleteStateObservableContext<T, IFromIterableObservableKeyValueMap<T>>,
   iterable: Iterable<T>,
 ): void {
   ConstructClassWithPrivateMembers(instance, FROM_ITERABLE_OBSERVABLE_PRIVATE);
-  (instance as IFromIterableObservableInternal<T>)[FROM_ITERABLE_OBSERVABLE_PRIVATE].iterable = iterable;
+  const privates: IFromIterableObservablePrivate<T> = (instance as IFromIterableObservableInternal<T>)[FROM_ITERABLE_OBSERVABLE_PRIVATE];
+  privates.context = context;
+  privates.iterable = iterable;
 }
 
 export function IsFromIterableObservable(value: any): value is IFromIterableObservable<any> {
@@ -50,23 +53,44 @@ export function IsFromIterableObservableConstructor(value: any): boolean {
     && HasFactoryWaterMark(value, IS_FROM_ITERABLE_OBSERVABLE_CONSTRUCTOR);
 }
 
-function FromIterableObservableHookBasedOnSharedFactoryFunction<T>(emit: (value: TFromIterableObservableNotifications<T>) => void): () => void {
-  const instance: IFromIterableObservable<T> = this;
-  let cancelled: boolean = false;
-  const timer = setImmediate(() => {
-    const iterator: Iterator<T> = (instance as IFromIterableObservableInternal<T>)[FROM_ITERABLE_OBSERVABLE_PRIVATE].iterable[Symbol.iterator]();
+// function FromIterableObservableEmitValues<T>(
+//   instance: IFromIterableObservable<T>,
+//   emit: (value: TFromIterableObservableNotifications<T>) => void
+// ): () => void {
+//   let cancelled: boolean = false;
+//   const timer = setImmediate(() => {
+//     const iterator: Iterator<T> = (instance as IFromIterableObservableInternal<T>)[FROM_ITERABLE_OBSERVABLE_PRIVATE].iterable[Symbol.iterator]();
+//     let result: IteratorResult<T>;
+//     while (!cancelled && !(result = iterator.next()).done) {
+//       emit(new Notification<'next', T>('next', result.value));
+//     }
+//     if (!cancelled) {
+//       emit(new Notification<'complete', void>('complete', void 0));
+//     }
+//   });
+//   return () => {
+//     clearImmediate(timer);
+//     cancelled = true;
+//   };
+// }
+
+export function FromIterableObservableOnObserved<T>(instance: IFromIterableObservable<T>): void {
+  if (
+    (instance.observers.length === 1)
+    && (instance.state === 'next')
+  ) {
+    const privates: IFromIterableObservablePrivate<T> = (instance as IFromIterableObservableInternal<T>)[FROM_ITERABLE_OBSERVABLE_PRIVATE];
+    const iterator: Iterator<T> = privates.iterable[Symbol.iterator]();
     let result: IteratorResult<T>;
-    while (!cancelled && !(result = iterator.next()).done) {
-      emit(new Notification<'next', T>('next', result.value));
+    while (instance.observed && !(result = iterator.next()).done) {
+      privates.context.next(result.value);
     }
-    if (!cancelled) {
-      emit(new Notification<'complete', void>('complete', void 0));
+    if (instance.observed) {
+      privates.context.complete();
+    } else {
+      privates.context.clearCache();
     }
-  });
-  return () => {
-    clearImmediate(timer);
-    cancelled = true;
-  };
+  }
 }
 
 export function PureFromIterableObservableFactory<TBase extends Constructor<ICompleteStateObservable<any, IFromIterableObservableKeyValueMap<any>>>>(superClass: TBase) {
@@ -79,11 +103,19 @@ export function PureFromIterableObservableFactory<TBase extends Constructor<ICom
   return class FromIterableObservable extends superClass implements IFromIterableObservable<T> {
     constructor(...args: any[]) {
       const [iterable, options]: TFromIterableObservableConstructorArgs<T> = args[0];
+      let context: ICompleteStateObservableContext<T, IFromIterableObservableKeyValueMap<T>>;
       super(...setSuperArgs(args.slice(1), [
-        BuildCompleteStateObservableHookBasedOnSharedFactoryFunction<T, IFromIterableObservableKeyValueMap<T>>(FromIterableObservableHookBasedOnSharedFactoryFunction),
-        options
+        (_context: ICompleteStateObservableContext<T, IFromIterableObservableKeyValueMap<T>>) => {
+          context = _context;
+          return {
+            onObserved(): void {
+              FromIterableObservableOnObserved<T>(this);
+            }
+          };
+        }, options
       ]));
-      ConstructFromIterableObservable<T>(this, iterable);
+      // @ts-ignore
+      ConstructFromIterableObservable<T>(this, context, iterable);
     }
   };
 }

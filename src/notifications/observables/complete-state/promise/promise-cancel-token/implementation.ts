@@ -5,13 +5,14 @@ import {
 import { INotificationsObserver } from '../../../../core/notifications-observer/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../../../misc/helpers/ClassWithPrivateMembers';
 import {
-  IPromiseCancelToken, IPromiseCancelTokenConstructor, IPromiseCancelTokenKeyValueMap, TCancelStrategy, TOnCancelled
+  IPromiseCancelToken, IPromiseCancelTokenConstructor, IPromiseCancelTokenKeyValueMap,
+  TPromiseCancelTokenWarpPromiseCallback, TCancelStrategy, TOnCancelled
 } from './interfaces';
 import { NotificationsObserver } from '../../../../core/notifications-observer/implementation';
 import { Reason } from '../../../../../misc/reason/implementation';
 import { IsObject, noop } from '../../../../../helpers';
-import { TPromiseType } from '../../../../../promises/interfaces';
-import { Finally, PromiseTry } from '../../../../../promises/helpers';
+import { TPromiseOrValue, TPromiseType } from '../../../../../promises/interfaces';
+import { Finally, IsPromiseLikeBase, PromiseTry } from '../../../../../promises/helpers';
 import { INotificationsObservableContext } from '../../../../core/notifications-observable/interfaces';
 
 
@@ -271,7 +272,7 @@ export function ApplyOnCancelCallback(
   onCancelled?: TOnCancelled,
 ): Promise<void> {
   const promise: Promise<void> = (typeof onCancelled === 'function')
-    ? PromiseTry<void>(() => onCancelled.call(instance))
+    ? PromiseTry<void>(() => onCancelled.call(instance, instance.reason))
     : Promise.resolve();
 
   return promise.then(() => ApplyCancelStrategy(instance, strategy));
@@ -343,6 +344,26 @@ export function PromiseCancelTokenWrapPromise<T>(
     // }));
 }
 
+export function PromiseCancelTokenWrapPromiseOrCreate<T>(
+  instance: IPromiseCancelToken,
+  promiseOrCallback: Promise<T> | TPromiseCancelTokenWarpPromiseCallback<T>,
+  strategy?: TCancelStrategy,
+  onCancelled?: TOnCancelled,
+): Promise<T | void> {
+  if (typeof promiseOrCallback === 'function') {
+    // ensures promiseOrCallback is called only if token is not cancelled
+    return PromiseCancelTokenWrapFunction(instance, () => {
+      return new Promise<T>((resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void) => {
+        promiseOrCallback.call(instance, resolve, reject, instance);
+      })
+    }, strategy, onCancelled)();
+  } else if (IsPromiseLikeBase(promiseOrCallback)) {
+    return PromiseCancelTokenWrapPromise<T>(instance, promiseOrCallback, strategy, onCancelled);
+  } else {
+    throw new TypeError(`Expected Promise or function as token.wrapPromise's first argument.`);
+  }
+}
+
 export function PromiseCancelTokenWrapFunction<CB extends (...args: any[]) => any>(
   instance: IPromiseCancelToken,
   callback: CB,
@@ -406,14 +427,6 @@ export class PromiseCancelToken extends NotificationsObservable<IPromiseCancelTo
     let context: INotificationsObservableContext<IPromiseCancelTokenKeyValueMap>;
     super((_context: INotificationsObservableContext<IPromiseCancelTokenKeyValueMap>) => {
       context = _context;
-      // return {
-      //   onObserved: () => {
-      //     DOMChangeObservableOnObserved(this);
-      //   },
-      //   onUnobserved: () => {
-      //     DOMChangeObservableOnUnobserved(this);
-      //   }
-      // };
     });
     // @ts-ignore
     ConstructPromiseCancelToken(this, context);
@@ -451,11 +464,11 @@ export class PromiseCancelToken extends NotificationsObservable<IPromiseCancelTo
   }
 
   wrapPromise<T>(
-    promise: Promise<T>,
+    promiseOrCallback: Promise<T> | TPromiseCancelTokenWarpPromiseCallback<T>,
     strategy?: TCancelStrategy,
     onCancelled?: TOnCancelled,
   ): Promise<T | void> {
-    return PromiseCancelTokenWrapPromise<T>(this, promise, strategy, onCancelled);
+    return PromiseCancelTokenWrapPromiseOrCreate<T>(this, promiseOrCallback, strategy, onCancelled);
   }
 
   wrapFunction<CB extends (...args: any[]) => any>(

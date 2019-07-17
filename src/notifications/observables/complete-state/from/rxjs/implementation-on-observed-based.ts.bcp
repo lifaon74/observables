@@ -1,9 +1,11 @@
 import { Observable as RXObservable, Subscription as RXSubscription } from 'rxjs';
-import { ICompleteStateObservable, ICompleteStateObservableTypedConstructor } from '../../interfaces';
+import {
+  ICompleteStateObservable, ICompleteStateObservableContext, ICompleteStateObservableTypedConstructor
+} from '../../interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../../../misc/helpers/ClassWithPrivateMembers';
 import {
   FromRXJSObservableKeyValueMap, IFromRXJSObservable, IFromRXJSObservableConstructor, IFromRXJSObservableOptions,
-  TFromRXJSObservableConstructorArgs, TFromRXJSObservableNotifications
+  TFromRXJSObservableConstructorArgs
 } from './interfaces';
 import { IsObject } from '../../../../../helpers';
 import {
@@ -14,15 +16,15 @@ import { INotificationsObservableTypedConstructor } from '../../../../core/notif
 import { IObservableConstructor } from '../../../../../core/observable/interfaces';
 import { NotificationsObservableFactory } from '../../../../core/notifications-observable/implementation';
 import { ObservableFactory } from '../../../../../core/observable/implementation';
-import { clearImmediate, setImmediate } from '../../../../../classes/set-immediate';
-import { BuildCompleteStateObservableHookBasedOnSharedFactoryFunction } from '../../factory';
-import { Notification } from '../../../../core/notification/implementation';
+import { setImmediate } from '../../../../../classes/set-immediate';
 
 
 export const FROM_RXJS_OBSERVABLE_PRIVATE = Symbol('from-rxjs-observable-private');
 
 export interface IFromRXJSObservablePrivate<T> {
+  context: ICompleteStateObservableContext<T, FromRXJSObservableKeyValueMap<T>>;
   rxObservable: RXObservable<T>;
+  rxSubscription: RXSubscription | null;
 }
 
 export interface IFromRXJSObservableInternal<T> extends IFromRXJSObservable<T> {
@@ -31,10 +33,14 @@ export interface IFromRXJSObservableInternal<T> extends IFromRXJSObservable<T> {
 
 export function ConstructFromRXJSObservable<T>(
   instance: IFromRXJSObservable<T>,
+  context: ICompleteStateObservableContext<T, FromRXJSObservableKeyValueMap<T>>,
   rxObservable: RXObservable<T>
 ): void {
   ConstructClassWithPrivateMembers(instance, FROM_RXJS_OBSERVABLE_PRIVATE);
-  (instance as IFromRXJSObservableInternal<T>)[FROM_RXJS_OBSERVABLE_PRIVATE].rxObservable = rxObservable;
+  const privates: IFromRXJSObservablePrivate<T> = (instance as IFromRXJSObservableInternal<T>)[FROM_RXJS_OBSERVABLE_PRIVATE];
+  privates.context = context;
+  privates.rxObservable = rxObservable;
+  privates.rxSubscription = null;
 }
 
 export function IsFromRXJSObservable(value: any): value is IFromRXJSObservable<any> {
@@ -51,47 +57,68 @@ export function IsFromRXJSObservableConstructor(value: any): boolean {
 
 
 /**
+ * Properly clear resources when Observable is complete or it has no more Observers
+ * @param instance
+ * @param done
+ */
+function FromRXJSObservableClear<T>(instance: IFromRXJSObservable<T>, done: boolean): void {
+  const privates: IFromRXJSObservablePrivate<T> = (instance as IFromRXJSObservableInternal<T>)[FROM_RXJS_OBSERVABLE_PRIVATE];
+  FromRXJSObservableUnsubscribe<T>(instance);
+  if (!done) {
+    privates.context.clearCache();
+  }
+}
+
+/**
  * Ensures a proper destruction (unsubscribe) of the RXJS's Subscription
- * @param rxSubscriptionCallback
+ * @param observable
  * @param count
  */
-function FromRXJSObservableUnsubscribe<T>(rxSubscriptionCallback: () => (RXSubscription | undefined), count: number = 1): void {
+function FromRXJSObservableUnsubscribe<T>(observable: IFromRXJSObservable<T>, count: number = 1): void {
+  const privates: IFromRXJSObservablePrivate<T> = (observable as IFromRXJSObservableInternal<T>)[FROM_RXJS_OBSERVABLE_PRIVATE];
   if (count >= 0) {
-    const rxSubscription: RXSubscription | undefined = rxSubscriptionCallback();
-    if (rxSubscription === void 0) { // may append if rxObservable is complete before rxSubscription is set
+    if (privates.rxSubscription === null) { // may append if rxObservable is complete before rxSubscription is set
       // in this case, delay the executing until rxSubscription exists
       setImmediate(() => {
-        FromRXJSObservableUnsubscribe<T>(rxSubscriptionCallback, count - 1);
+        FromRXJSObservableUnsubscribe<T>(observable, count - 1);
       });
     } else {
-      rxSubscription.unsubscribe();
+      privates.rxSubscription.unsubscribe();
+      privates.rxSubscription = null;
     }
   }
 }
 
-function FromRXJSObservableHookBasedOnSharedFactoryFunction<T>(emit: (value: TFromRXJSObservableNotifications<T>) => void): () => void {
-  const instance: IFromRXJSObservable<T> = this;
-  let rxSubscription: RXSubscription | undefined;
-  const timer = setImmediate(() => {
-    rxSubscription = (instance as IFromRXJSObservableInternal<T>)[FROM_RXJS_OBSERVABLE_PRIVATE].rxObservable
+
+export function FromRXJSObservableOnObserved<T>(instance: IFromRXJSObservable<T>): void {
+  const privates: IFromRXJSObservablePrivate<T> = (instance as IFromRXJSObservableInternal<T>)[FROM_RXJS_OBSERVABLE_PRIVATE];
+  if (
+    (instance.observers.length === 1)
+    && (instance.state === 'next')
+  ) {
+    privates.rxSubscription = privates.rxObservable
       .subscribe(
         (value: T) => {
-          emit(new Notification<'next', T>('next', value));
+          privates.context.next(value);
         },
         (error: any) => {
-          FromRXJSObservableUnsubscribe<T>(() => rxSubscription);
-          emit(new Notification<'error', any>('error', error));
+          FromRXJSObservableClear<T>(instance, true);
+          privates.context.error(error);
         },
         () => {
-          FromRXJSObservableUnsubscribe<T>(() => rxSubscription);
-          emit(new Notification<'complete', void>('complete', void 0));
+          FromRXJSObservableClear<T>(instance, true);
+          privates.context.complete();
         });
-  });
-  return () => {
-    clearImmediate(timer);
-    FromRXJSObservableUnsubscribe<T>(() => rxSubscription);
-  };
+  }
 }
+
+export function FromRXJSObservableOnUnobserved<T>(instance: IFromRXJSObservable<T>): void {
+  if (!instance.observed) {
+    FromRXJSObservableClear<T>(instance, instance.state !== 'next');
+  }
+}
+
+
 
 
 export function PureFromRXJSObservableFactory<TBase extends Constructor<ICompleteStateObservable<any, FromRXJSObservableKeyValueMap<any>>>>(superClass: TBase) {
@@ -104,11 +131,22 @@ export function PureFromRXJSObservableFactory<TBase extends Constructor<IComplet
   return class FromRXJSObservable extends superClass implements IFromRXJSObservable<T> {
     constructor(...args: any[]) {
       const [rxObservable, options]: TFromRXJSObservableConstructorArgs<T> = args[0];
+      let context: ICompleteStateObservableContext<T, FromRXJSObservableKeyValueMap<T>>;
       super(...setSuperArgs(args.slice(1), [
-        BuildCompleteStateObservableHookBasedOnSharedFactoryFunction<T, FromRXJSObservableKeyValueMap<T>>(FromRXJSObservableHookBasedOnSharedFactoryFunction),
-        options
+        (_context: ICompleteStateObservableContext<T, FromRXJSObservableKeyValueMap<T>>) => {
+          context = _context;
+          return {
+            onObserved(): void {
+              FromRXJSObservableOnObserved<T>(this);
+            },
+            onUnobserved(): void {
+              FromRXJSObservableOnUnobserved<T>(this);
+            }
+          };
+        }, options
       ]));
-      ConstructFromRXJSObservable<T>(this, rxObservable);
+      // @ts-ignore
+      ConstructFromRXJSObservable<T>(this, context, rxObservable);
     }
   };
 }

@@ -24,7 +24,11 @@ import { FromRXJSObservable } from '../notifications/observables/complete-state/
 import { aggregateNotificationsPipe } from '../operators/pipes/aggregateNotificationsPipe';
 import { toAsyncIterable } from '../operators/to/async-iterator/toAsyncIterable';
 import { clearImmediate, setImmediate } from '../classes/set-immediate';
-import { CompleteStateObservableFactory } from '../notifications/observables/complete-state/factory';
+import {
+  BuildCompleteStateObservableHookBasedOnPerObserverFactoryFunction
+} from '../notifications/observables/complete-state/factory';
+import { testExamples } from './examples/examples';
+import { testPromises } from './test-promises';
 
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve: any, reject: any) => {
@@ -219,7 +223,7 @@ async function testCompleteStateObservable() {
     const observable = new CompleteStateObservable<number>((context) => {
       return {
         onObserved(): void {
-          if (context.observable.state === 'emitting') {
+          if (context.observable.state === 'next') {
             context.next(1);
             context.next(2);
             context.complete();
@@ -238,7 +242,7 @@ async function testCompleteStateObservable() {
   }
 
   async function testEvery() {
-    const observable = new CompleteStateObservable<number>(CompleteStateObservableFactory<number>(
+    const observable = new CompleteStateObservable<number>(BuildCompleteStateObservableHookBasedOnPerObserverFactoryFunction<number>(
       function factory(emit: (value: any) => void): () => void {
         let cancelled: boolean = false;
         const timer = setImmediate(() => {
@@ -251,12 +255,13 @@ async function testCompleteStateObservable() {
           if (!cancelled) {
             emit(new Notification<'complete', void>('complete', void 0));
           }
+          emit(new Notification<'next', number>('next', 1));
         });
         return () => {
           clearImmediate(timer);
           cancelled = true;
         };
-      }
+      },
     ), { mode: 'once' });
 
     await assertCompleteStateObservableEmits(observable,[
@@ -272,7 +277,7 @@ async function testCompleteStateObservable() {
     ]);
 
     const observer = observable.addListener('next', (value: number) => {
-      // console.log('value', value);
+      console.log('value', value);
       observer.deactivate();
     });
 
@@ -579,19 +584,20 @@ export async function testFileReaderObservable() {
 
 
 export async function test() {
-  // await testExamples();
+  console.log('1');
+  await testExamples();
 
   // testReadOnlyList();
   // testSource();
   // testAsyncSource();
 
-  await testCompleteStateObservable();
-  await testFromIterableObservable();
+  // await testCompleteStateObservable();
+  // await testFromIterableObservable();
   // await testReducePipe();
   // await testFlattenPipe();
 
   // await testFromRXJSObservable();
-  // await testToRXJSObservable();
+  // await testToRXJSObservable(); // TODO
 
   // await testToAsyncIterable();
 

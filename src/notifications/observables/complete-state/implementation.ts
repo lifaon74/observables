@@ -10,7 +10,8 @@ import {
   CompleteStateKeyValueMapConstraint, ICompleteStateObservable, ICompleteStateObservableConstructor,
   ICompleteStateObservableContext, ICompleteStateObservableContextConstructor,
   ICompleteStateObservableKeyValueMapGeneric, ICompleteStateObservableOptions, ICompleteStateObservableSoftConstructor,
-  TCompleteStateObservableConstructorArgs, TCompleteStateObservableMode, TCompleteStateObservableState
+  TCompleteStateObservableConstructorArgs, TCompleteStateObservableFinalState, TCompleteStateObservableMode,
+  TCompleteStateObservableState
 } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { AllowObservableContextBaseConstruct, ObservableFactory } from '../../../core/observable/implementation';
@@ -61,7 +62,7 @@ export function ConstructCompleteStateObservable<T, TKVMap extends CompleteState
     throw new TypeError(`Expected object or void as onCompleteOptions`);
   }
 
-  privates.state = 'emitting';
+  privates.state = 'next';
 
   type TObservable = KeyValueMapToNotifications<TKVMap>;
 
@@ -86,7 +87,7 @@ export function IsCompleteStateObservableConstructor(value: any): boolean {
 }
 
 
-function NormalizeCompleteStateObserversMode(mode?: TCompleteStateObservableMode): TCompleteStateObservableMode {
+export function NormalizeCompleteStateObserversMode(mode?: TCompleteStateObservableMode): TCompleteStateObservableMode {
   switch (mode) {
     case void 0:
       return 'once';
@@ -101,24 +102,24 @@ function NormalizeCompleteStateObserversMode(mode?: TCompleteStateObservableMode
   }
 }
 
-// function IsCompleteStateObservableFinalNotificationName(name: string): boolean {
-//   return (
-//     (name === 'complete')
-//     || (name === 'error')
-//   );
-// }
-//
-// function IsCompleteStateObservableNotificationName(name: string): boolean {
-//   return (name === 'next')
-//     || IsCompleteStateObservableFinalNotificationName(name);
-// }
+export function IsCompleteStateObservableFinalNotificationName(name: string): boolean {
+  return (
+    (name === 'complete')
+    || (name === 'error')
+  );
+}
+
+export function IsCompleteStateObservableNotificationName(name: string): boolean {
+  return (name === 'next')
+    || IsCompleteStateObservableFinalNotificationName(name);
+}
 
 
-function IsCompleteStateObservableCachingValues<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap>>(instance: ICompleteStateObservable<T, TKVMap>): boolean {
+export function IsCompleteStateObservableCachingValues<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap>>(instance: ICompleteStateObservable<T, TKVMap>): boolean {
   return IsCompleteStateObservableCachingValuesMode((instance as ICompleteStateObservableInternal<T, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE].mode);
 }
 
-function IsCompleteStateObservableCachingValuesMode(mode: TCompleteStateObservableMode): boolean {
+export function IsCompleteStateObservableCachingValuesMode(mode: TCompleteStateObservableMode): boolean {
   return (
     (mode === 'cache')
     || (mode === 'cache-final-state')
@@ -126,8 +127,13 @@ function IsCompleteStateObservableCachingValuesMode(mode: TCompleteStateObservab
   );
 }
 
-export function CompleteStateObservableClearCache<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap>>(instance: ICompleteStateObservable<T, TKVMap>): void {
-  (instance as ICompleteStateObservableInternal<T, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE].values = [];
+// export function CompleteStateObservableReset<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap>>(instance: ICompleteStateObservable<T, TKVMap>): void {
+//   (instance as ICompleteStateObservableInternal<T, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE].state = 'next';
+//   (instance as ICompleteStateObservableInternal<T, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE].values = [];
+// }
+
+export function ThrowCompleteStateObservableCannotEmitAfterFinalState(state: TCompleteStateObservableState, notificationName: string): never {
+  throw new TypeError(`Cannot emit a notification with the name '${ notificationName }' when the observable is in '${ state }' state`);
 }
 
 /**
@@ -137,15 +143,10 @@ export function CompleteStateObservableClearCache<T, TKVMap extends CompleteStat
  */
 export function CompleteStateObservableOnEmit<T, TKVMap extends CompleteStateKeyValueMapConstraint<T, TKVMap>>(instance: ICompleteStateObservable<T, TKVMap>, notification: KeyValueMapToNotifications<TKVMap>): void {
   const privates: ICompleteStateObservablePrivate<T, TKVMap> = (instance as ICompleteStateObservableInternal<T, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE];
-  const isFinalState: boolean = (
-    (notification.name === 'complete')
-    || (notification.name === 'error')
-  );
+  const isFinalState = IsCompleteStateObservableFinalNotificationName(notification.name);
 
-  const isNextState: boolean = (notification.name === 'next');
-
-  if (isFinalState || isNextState) {
-    if (privates.state === 'emitting') {
+  if (isFinalState || (notification.name === 'next')) {
+    if (privates.state === 'next') {
       if (
         (privates.mode === 'cache')
         || (privates.mode === 'cache-all')
@@ -158,11 +159,14 @@ export function CompleteStateObservableOnEmit<T, TKVMap extends CompleteStateKey
       }
 
       if (isFinalState) {
-        privates.state = notification.name as ('complete' | 'error');
+        privates.state = notification.name as TCompleteStateObservableFinalState;
       }
     } else {
-      throw new TypeError(`Cannot emit a notification with the name '${ notification.name }' when the observable is in '${ privates.state }' state`);
+      ThrowCompleteStateObservableCannotEmitAfterFinalState(privates.state, notification.name);
     }
+  } else if (notification.name === 'reset') {
+    privates.state = 'next';
+    privates.values = [];
   } else {
     if (privates.mode === 'cache-all') {
       privates.values.push(notification);
@@ -175,7 +179,7 @@ export function CompleteStateObservableOnObserved<T, TKVMap extends CompleteStat
   const privates: ICompleteStateObservablePrivate<T, TKVMap> = (instance as ICompleteStateObservableInternal<T, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE];
   if (
     (privates.mode === 'uniq')
-    && (privates.state !== 'emitting')
+    && (privates.state !== 'next')
   ) {
     const result: INotificationsObserverLike<string, any> | null = ExtractObserverNameAndCallback<string, any>(observer);
     if (
@@ -321,8 +325,9 @@ export class CompleteStateObservableContext<T, TKVMap extends CompleteStateKeyVa
     this.dispatch('error' as KeyValueMapKeys<TKVMap>, error as KeyValueMapValues<TKVMap>);
   }
 
-  clearCache(): void {
-    CompleteStateObservableClearCache<T, TKVMap>(this.observable);
+  reset(): void {
+    this.dispatch('reset' as KeyValueMapKeys<TKVMap>, void 0 as KeyValueMapValues<TKVMap>);
+    // CompleteStateObservableReset<T, TKVMap>(this.observable);
   }
 }
 

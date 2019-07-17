@@ -5,13 +5,16 @@ import {
 } from '../../notifications/core/notifications-observable/implementation';
 import { NotificationsObserver } from '../../notifications/core/notifications-observer/implementation';
 import { EventsObservable } from '../../notifications/observables/events/events-observable/implementation';
-import { FetchObservable } from '../../notifications/observables/fetch-observable/implementation';
-import { toCancellablePromiseTuple, toPromise } from '../../operators/to/toPromise';
+import { FetchObservable } from '../../notifications/observables/complete-state/promise/fetch-observable/implementation';
+import {
+  completeStateObservableToPromise, singleCompleteStateObservableToCancellablePromiseTuple,
+  singleCompleteStateObservableToPromise, genericObservableToCancellablePromiseTuple, genericObservableToPromise
+} from '../../operators/to/toPromise';
 import {
   PromiseCancelReason, PromiseCancelToken
-} from '../../notifications/observables/complete-state/promise-observable/promise-cancel-token/implementation';
+} from '../../notifications/observables/complete-state/promise/promise-cancel-token/implementation';
 import { Reason } from '../../misc/reason/implementation';
-import { PromiseObservable } from '../../notifications/observables/complete-state/promise-observable/implementation';
+import { PromiseObservable } from '../../notifications/observables/complete-state/promise/promise-observable/implementation';
 import { IObserver } from '../../core/observer/interfaces';
 import { Pipe } from '../../core/observable-observer/implementation';
 import {
@@ -28,7 +31,7 @@ import { INotificationsObserver } from '../../notifications/core/notifications-o
 import { FunctionObservable } from '../../observables/distinct/function-observable/implementation';
 import { Expression } from '../../observables/distinct/expression/implementation';
 import { $equal, $expression, $string } from '../../operators/misc';
-import { IPromiseCancelToken } from '../../notifications/observables/complete-state/promise-observable/promise-cancel-token/interfaces';
+import { IPromiseCancelToken } from '../../notifications/observables/complete-state/promise/promise-cancel-token/interfaces';
 import { EventKeyValueMapConstraint } from '../../notifications/observables/events/events-observable/interfaces';
 import { ICancellablePromiseTuple } from '../../promises/interfaces';
 import { SpreadCancellablePromiseTuple } from '../../promises/helpers';
@@ -451,15 +454,15 @@ async function observableToPromiseExample1(): Promise<void> {
   const url1: string = 'https://server.test-cors.org/server?id=643798&enable=true&status=200&credentials=false&response_headers=Access-Control-Allow-Origin%3A%20*'; // valid cors url
   const url2: string = 'https://invalid url'; // invalid  url
 
-  observePromise('fetch url 1', toPromise<Response>(new FetchObservable(url1))); // will complete
-  observePromise('fetch url 2', toPromise<Response>(new FetchObservable(url2))); // will error
+  observePromise('fetch url 1', singleCompleteStateObservableToPromise(new FetchObservable(url1)) as Promise<Response>); // will complete
+  observePromise('fetch url 2', singleCompleteStateObservableToPromise(new FetchObservable(url2)) as Promise<Response>); // will error
 
   const abortController: AbortController = new AbortController();
-  observePromise('fetch url with abort controller without token', toPromise<Response>(new FetchObservable(url1, { signal: abortController.signal }), 'reject')); // will cancel
+  observePromise('fetch url with abort controller without token', singleCompleteStateObservableToPromise(new FetchObservable(url1, { signal: abortController.signal }), 'reject') as Promise<Response>); // will cancel
   abortController.abort();
 
   // provides PromiseCancelToken too, to detect cancellation
-  observePromise('fetch url with abort controller with token', ...SpreadCancellablePromiseTuple(toCancellablePromiseTuple<Response>(new FetchObservable(url1, { signal: abortController.signal }), 'reject'))); // will cancel
+  observePromise('fetch url with abort controller with token', ...SpreadCancellablePromiseTuple(singleCompleteStateObservableToCancellablePromiseTuple(new FetchObservable(url1, { signal: abortController.signal }), 'reject') as ICancellablePromiseTuple<Response>)); // will cancel
 }
 
 
@@ -711,9 +714,9 @@ export async function testExamples() {
   // observeNotificationsObservable();
   // eventsObservableExample1();
   // promiseCancelTokenExample1();
-  promiseObservableExample1();
+  // promiseObservableExample1();
   // fetchObservableExample1();
-  // observableToPromiseExample1();
+  await observableToPromiseExample1();
 
   // pipeExample1();
   // pipeExample2();

@@ -66,7 +66,7 @@ export function ConstructCompleteStateObservable<T, TKVMap extends CompleteState
     throw new TypeError(`Expected object or void as onCompleteOptions`);
   }
 
-  privates.state = 'emitting';
+  privates.state = 'next';
 
 
   if (instance.mode === 'every') {
@@ -168,7 +168,7 @@ export function CompleteStateObservableOnEmit<T, TKVMap extends CompleteStateKey
   const isNextState: boolean = (notification.name === 'next');
 
   if (isFinalState || isNextState) {
-    if (privates.state === 'emitting') {
+    if (privates.state === 'next') {
       if (
         (privates.mode === 'cache')
         || (privates.mode === 'cache-all')
@@ -199,7 +199,7 @@ export function CompleteStateObservableOnObserved<T, TKVMap extends CompleteStat
   const privates: ICompleteStateObservablePrivate<T, TKVMap> = (instance as ICompleteStateObservableInternal<T, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE];
   if (
     (privates.mode === 'uniq')
-    && (privates.state !== 'emitting')
+    && (privates.state !== 'next')
   ) {
     const result: INotificationsObserverLike<string, any> | null = ExtractObserverNameAndCallback<string, any>(observer);
     if (
@@ -226,7 +226,7 @@ export function CompleteStateObservableOnObserved<T, TKVMap extends CompleteStat
       if (
         (instance.observers.length === 1)
         && (privates.sharedUndoFactory === null) // optional check
-        && (instance.state === 'emitting')
+        && (instance.state === 'next')
       ) {
         privates.sharedUndoFactory = privates.factory.call(instance, privates.context.emit.bind(privates.context));
       }
@@ -242,7 +242,7 @@ export function CompleteStateObservableOnUnobserved<T, TKVMap extends CompleteSt
   if (privates.factory !== void 0) {
     if (instance.mode === 'every') {
       if (privates.observerUndoFactory.has(observer)) { // optional check (should always be true)
-        if (instance.state === 'emitting') {
+        if (instance.state === 'next') {
           console.log(instance.state);
           (privates.observerUndoFactory.get(observer) as (() => void))();
         }
@@ -250,8 +250,8 @@ export function CompleteStateObservableOnUnobserved<T, TKVMap extends CompleteSt
       }
     } else {
       if (
-        (privates.sharedUndoFactory !== null) // optional check (should always be true, if instance.state === 'emitting')
-        && (instance.state === 'emitting')
+        (privates.sharedUndoFactory !== null) // optional check (should always be true, if instance.state === 'next')
+        && (instance.state === 'next')
         && !instance.observed
       ) {
         console.log(instance.state);

@@ -1,7 +1,7 @@
 import {
   IPromiseCancelToken, TCancelStrategy,
-} from '../../notifications/observables/complete-state/promise-observable/promise-cancel-token/interfaces';
-import { PromiseCancelToken } from '../../notifications/observables/complete-state/promise-observable/promise-cancel-token/implementation';
+} from '../../notifications/observables/complete-state/promise/promise-cancel-token/interfaces';
+import { PromiseCancelToken } from '../../notifications/observables/complete-state/promise/promise-cancel-token/implementation';
 import {
   ICancellablePromise, ICancellablePromiseConstructor, TCancellablePromiseCreateCallback, TCancellablePromiseRaceFactory
 } from './interfaces';
@@ -11,7 +11,7 @@ import {
   TPromiseOrValue, TPromiseOrValueFactoryTupleToValueUnion, TPromiseOrValueTupleToValueTuple,
   TPromiseOrValueTupleToValueUnion
 } from '../interfaces';
-import { Finally, IsPromiseLike } from '../helpers';
+import { Finally, IsPromiseLikeBase } from '../helpers';
 import { Reason } from '../../misc/reason/implementation';
 
 
@@ -40,7 +40,6 @@ export function ConstructCancellablePromise<T>(
   privates.token = token;
   privates.strategy = strategy;
 
-
   if (typeof promiseOrCallback === 'function') {
     // ensures promiseOrCallback is called only if token is not cancelled
     privates.promise = privates.token.wrapFunction(() => {
@@ -48,7 +47,7 @@ export function ConstructCancellablePromise<T>(
         promiseOrCallback.call(instance, resolve, reject, privates.token);
       })
     }, privates.strategy)() as Promise<T>;
-  } else if (IsPromiseLike(promiseOrCallback)) {
+  } else if (IsPromiseLikeBase(promiseOrCallback)) {
     privates.promise = IsCancellablePromiseWithSameToken(promiseOrCallback, instance)
       ? promiseOrCallback
       : (privates.token.wrapPromise<T>(promiseOrCallback, privates.strategy) as Promise<T>);

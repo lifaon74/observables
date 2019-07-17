@@ -1,6 +1,6 @@
 import {
   IPromiseCancelToken, TCancelStrategy
-} from '../../notifications/observables/complete-state/promise-observable/promise-cancel-token/interfaces';
+} from '../../notifications/observables/complete-state/promise/promise-cancel-token/interfaces';
 import {
   TPromiseOrValue, TPromiseOrValueFactoryTupleToValueUnion, TPromiseOrValueTupleToValueTuple,
   TPromiseOrValueTupleToValueUnion

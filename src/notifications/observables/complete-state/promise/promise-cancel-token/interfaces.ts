@@ -7,7 +7,9 @@ export type TCancelStrategy =
   | 'never' // (default) never resolve the promise, it stays in a pending state forever
   ;
 
-export type TOnCancelled = ((this: IPromiseCancelToken) => TPromiseOrValue<void>) | undefined | null;
+export type TPromiseCancelTokenWarpPromiseCallback<T> = (this: IPromiseCancelToken, resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void, token: IPromiseCancelToken) => void;
+
+export type TOnCancelled = ((this: IPromiseCancelToken, reason: any) => TPromiseOrValue<void>) | undefined | null;
 
 export interface IPromiseCancelTokenConstructor {
   new(): IPromiseCancelToken;
@@ -88,7 +90,7 @@ export interface IPromiseCancelToken extends INotificationsObservable<IPromiseCa
    *
    */
   wrapPromise<T>(
-    promise: Promise<T>,
+    promiseOrCallback: Promise<T> | TPromiseCancelTokenWarpPromiseCallback<T>,
     strategy?: TCancelStrategy,
     onCancelled?: TOnCancelled,
   ): Promise<T | void>;

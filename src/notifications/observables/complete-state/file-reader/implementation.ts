@@ -5,22 +5,19 @@ import {
 } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../../../helpers';
-import { ICompleteStateObservableContext } from '../interfaces';
 import { CompleteStateObservable } from '../implementation';
 import { EventsObservable } from '../../events/events-observable/implementation';
 import { Progress } from '../../../../misc/progress/implementation';
 import { Notification } from '../../../core/notification/implementation';
 import { IProgress } from '../../../../misc/progress/interfaces';
-import { IObserver } from '../../../../core/observer/interfaces';
-import { IEventsObservable } from '../../events/events-observable/interfaces';
+import { IFromIterableObservable } from '../from/iterable/interfaces';
+import { BuildCompleteStateObservableHookBasedOnSharedFactoryFunction } from '../factory';
 
 export const FILE_READER_OBSERVABLE_PRIVATE = Symbol('file-reader-observable-private');
 
 export interface IFileReaderObservablePrivate<T extends TFileReaderReadType> {
-  context: ICompleteStateObservableContext<IFormatsToTypeMap[T], FileReaderObservableKeyValueMap<T>>,
   type: T;
   blob: Blob;
-  readerObservable: IEventsObservable<FileReaderEventMap, FileReader> | null;
 }
 
 export interface IFileReaderObservableInternal<T extends TFileReaderReadType> extends IFileReaderObservable<T> {
@@ -30,13 +27,11 @@ export interface IFileReaderObservableInternal<T extends TFileReaderReadType> ex
 
 export function ConstructFileReaderObservable<T extends TFileReaderReadType>(
   instance: IFileReaderObservable<T>,
-  context: ICompleteStateObservableContext<IFormatsToTypeMap[T], FileReaderObservableKeyValueMap<T>>,
   blob: Blob,
   options: IFileReaderObservableOptions<T> = {}
 ): void {
   ConstructClassWithPrivateMembers(instance, FILE_READER_OBSERVABLE_PRIVATE);
   const privates: IFileReaderObservablePrivate<T> = (instance as IFileReaderObservableInternal<T>)[FILE_READER_OBSERVABLE_PRIVATE];
-  privates.context = context;
 
   if (IsObject(options)) {
     if (options.type === void 0) {
@@ -52,8 +47,6 @@ export function ConstructFileReaderObservable<T extends TFileReaderReadType>(
     } else {
       throw new TypeError(`Expected Blob as blob`);
     }
-
-    privates.readerObservable = null;
   } else {
     throw new TypeError(`Expected object as FileReaderObservable.options`);
   }
@@ -64,27 +57,8 @@ export function IsFileReaderObservable(value: any): value is IFileReaderObservab
     && value.hasOwnProperty(FILE_READER_OBSERVABLE_PRIVATE as symbol);
 }
 
-
-/**
- * Properly clear resources when Observable is complete or it has no more Observers
- * @param instance
- */
-function FileReaderObservableClear<T extends TFileReaderReadType>(instance: IFileReaderObservable<T>): void {
-  const privates: IFileReaderObservablePrivate<T> = (instance as IFileReaderObservableInternal<T>)[FILE_READER_OBSERVABLE_PRIVATE];
-  if (privates.readerObservable !== null) {
-    if (privates.readerObservable.target.readyState === privates.readerObservable.target.LOADING) {
-      privates.readerObservable.target.abort();
-      privates.context.clearCache();
-    }
-    privates.readerObservable.clearObservers();
-    privates.readerObservable = null;
-  }
-}
-
-function FileReaderRead<T extends TFileReaderReadType>(
-  instance: IFileReaderObservable<T>,
-  emit: (value: TFileReaderObservableNotifications<T>) => void
-): () => void {
+function FileReaderReadHookBasedOnSharedFactoryFunction<T extends TFileReaderReadType>(emit: (value: TFileReaderObservableNotifications<T>) => void): () => void {
+  const instance: IFromIterableObservable<T> = this;
   const privates: IFileReaderObservablePrivate<T> = (instance as IFileReaderObservableInternal<T>)[FILE_READER_OBSERVABLE_PRIVATE];
 
   const reader: FileReader = new FileReader();
@@ -126,45 +100,6 @@ function FileReaderRead<T extends TFileReaderReadType>(
   };
 }
 
-export function FileReaderObservableOnObserved<T extends TFileReaderReadType>(instance: IFileReaderObservable<T>): void {
-  const privates: IFileReaderObservablePrivate<T> = (instance as IFileReaderObservableInternal<T>)[FILE_READER_OBSERVABLE_PRIVATE];
-
-  const reader: FileReader = new FileReader();
-  privates.readerObservable = new EventsObservable<FileReaderEventMap, FileReader>(reader)
-    .on('load', () => {
-      FileReaderObservableClear<T>(instance);
-      privates.context.next(reader.result as IFormatsToTypeMap[T]);
-      privates.context.complete();
-    })
-    .on('error', () => {
-      FileReaderObservableClear<T>(instance);
-      privates.context.error(reader.error);
-    })
-    .on('progress', (event: ProgressEvent) => {
-      privates.context.dispatch('progress', Progress.fromEvent(event));
-    })
-  ;
-
-  switch (privates.type) {
-    case 'dataURL':
-      reader.readAsDataURL(privates.blob);
-      break;
-    case 'text':
-      reader.readAsText(privates.blob);
-      break;
-    case 'arrayBuffer':
-      reader.readAsArrayBuffer(privates.blob);
-      break;
-    default:
-      throw new TypeError(`Expected 'dataURL', 'text', or 'arrayBuffer' as type`);
-  }
-}
-
-export function FileReaderObservableOnUnobserved<T extends TFileReaderReadType>(instance: IFileReaderObservable<T>,): void {
-  if (!instance.observed) {
-    FileReaderObservableClear<T>(instance);
-  }
-}
 
 export function FileReaderObservableType<T extends TFileReaderReadType>(instance: IFileReaderObservable<T>): T {
   return (instance as IFileReaderObservableInternal<T>)[FILE_READER_OBSERVABLE_PRIVATE].type;
@@ -179,20 +114,11 @@ export function FileReaderObservableBlob<T extends TFileReaderReadType>(instance
 export class FileReaderObservable<T extends TFileReaderReadType> extends CompleteStateObservable<IFormatsToTypeMap[T], FileReaderObservableKeyValueMap<T>> implements IFileReaderObservable<T> {
 
   constructor(blob: Blob, options?: IFileReaderObservableOptions<T>) {
-    let context: ICompleteStateObservableContext<IFormatsToTypeMap[T], FileReaderObservableKeyValueMap<T>>;
-    super((_context: ICompleteStateObservableContext<IFormatsToTypeMap[T], FileReaderObservableKeyValueMap<T>>) => {
-      context = _context;
-      return {
-        onObserved: () => {
-          FileReaderObservableOnObserved<T>(this);
-        },
-        onUnobserved: () => {
-          FileReaderObservableOnUnobserved<T>(this);
-        }
-      };
-    }, options);
-    // @ts-ignore
-    ConstructFileReaderObservable(this, context, blob, options);
+    super(
+      BuildCompleteStateObservableHookBasedOnSharedFactoryFunction<IFormatsToTypeMap[T], FileReaderObservableKeyValueMap<T>>(FileReaderReadHookBasedOnSharedFactoryFunction),
+      options
+    );
+    ConstructFileReaderObservable(this, blob, options);
   }
 
   get type(): T {

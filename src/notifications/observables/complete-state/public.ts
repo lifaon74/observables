@@ -3,6 +3,6 @@ export { CompleteStateObservable, IsCompleteStateObservable } from './implementa
 
 export * from './from/public';
 export * from './file-reader/public';
-export * from './promise-observable/public';
+export * from './promise/public';
 
 

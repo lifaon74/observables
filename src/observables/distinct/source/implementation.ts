@@ -1,7 +1,7 @@
 import { IObservableContext } from '../../../core/observable/interfaces';
 import { IAsyncSource, ISource } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
-import { IPromiseCancelToken } from '../../../notifications/observables/complete-state/promise-observable/promise-cancel-token/interfaces';
+import { IPromiseCancelToken } from '../../../notifications/observables/complete-state/promise/promise-cancel-token/interfaces';
 import {
   IValueObservableInternal, VALUE_OBSERVABLE_PRIVATE, ValueObservable
 } from '../value-observable/implementation';
