@@ -1,4 +1,4 @@
-import { IPromiseCancelToken } from '../notifications/observables/complete-state/promise/promise-cancel-token/interfaces';
+import { IPromiseCancelToken } from '../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
 
 
 export type TPromiseOrValue<T> = T | PromiseLike<T>;

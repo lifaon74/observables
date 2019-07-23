@@ -3,7 +3,7 @@ import { setImmediate, clearImmediate } from '../../classes/set-immediate';
 import { CancellablePromise } from './implementation';
 import {
   IPromiseCancelToken, TCancelStrategy
-} from '../../notifications/observables/complete-state/promise/promise-cancel-token/interfaces';
+} from '../../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
 import { TPromiseOrValue } from '../interfaces';
 import { Reason } from '../../misc/reason/implementation';
 

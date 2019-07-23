@@ -1135,6 +1135,141 @@ setTimeout(() => {
 
 **INFO:** For NodeJS's EventEmitter, the equivalent is NodeJSEventsObservable.
 
+---
+
+#### FiniteStateObservable
+```ts
+/**
+ * What to do when the FiniteStateObservable emits a value:
+ *  INFO: except for 'cache-all', the FiniteStateObservable doesn't care of notifications different than 'next', 'complete' or 'error'
+ */
+type TFiniteStateObservableMode =
+  'once' // (default) does not cache any values => after the final state ('complete' or 'error'), no observers will ever receive a value ('next')
+  | 'uniq' // does not cache any values => after the final state, throws an error if a new observer observes 'next', 'complete' or 'error'.
+  | 'cache' // caches own notifications ('next', 'complete' and 'error'). Every observer will receive the whole list of own emitted notifications
+  | 'cache-final-state' // caches 'complete' or 'error' notification. Every observer will receive this final state notification
+  | 'cache-all' // caches all notifications (including ones with a different name than 'next', 'complete' and 'error'). Every observer will receive the whole list of all emitted notifications
+  ;
+
+type TFiniteStateObservableFinalState =
+  | 'complete' // context.complete() called, cannot emit anymore data
+  | 'error' // context.error(err) called, cannot emit anymore data
+  ;
+
+type TFiniteStateObservableState =
+  'next' // may emit data though 'next'
+  | TFiniteStateObservableFinalState
+  ;
+
+
+interface IFiniteStateObservableOptions {
+  mode?: TFiniteStateObservableMode; // default: 'once'
+}
+
+type IFiniteStateObservableKeyValueMapGeneric<T> = {
+  'next': T; // incoming values
+  'complete': void; // when the Observable has no more data to emit
+  'error': any; // when the Observable errored
+  'reset': void; // when the Observable resets => this means than previously received notifications should be discarded
+};
+
+
+interface IFiniteStateObservableHook<T, TKVMap extends FiniteStateKeyValueMapConstraint<T, TKVMap>> extends TNotificationsObservableHook<TKVMap> {
+}
+
+
+type TFiniteStateObservableCreateCallback<T, TKVMap extends FiniteStateKeyValueMapConstraint<T, TKVMap>> = ((context: IFiniteStateObservableContext<T, TKVMap>) => (IFiniteStateObservableHook<T, TKVMap> | void));
+
+interface IFiniteStateObservableConstructor {
+  new<T, TKVMap extends FiniteStateKeyValueMapConstraint<T, TKVMap> = IFiniteStateObservableKeyValueMapGeneric<T>>(
+    create?: TFiniteStateObservableCreateCallback<T, TKVMap>,
+    options?: IFiniteStateObservableOptions,
+  ): IFiniteStateObservable<T, TKVMap>;
+}
+
+interface IFiniteStateObservable<T, TKVMap extends FiniteStateKeyValueMapConstraint<T, TKVMap> = IFiniteStateObservableKeyValueMapGeneric<T>> extends INotificationsObservable<TKVMap> {
+  readonly state: TFiniteStateObservableState;
+  readonly mode: TFiniteStateObservableMode;
+}
+```
+
+
+```ts
+interface IFiniteStateObservableContext<T, TKVMap extends FiniteStateKeyValueMapConstraint<T, TKVMap> = IFiniteStateObservableKeyValueMapGeneric<T>> extends INotificationsObservableContext<TKVMap> {
+  readonly observable: IFiniteStateObservable<T, TKVMap>;
+
+  next(value: T): void; // emits Notification('next', value)
+  complete(): void; // emits Notification('complete', void 0)
+  error(error?: any): void; // emits Notification('error', error)
+
+  /**
+   * clears the cache, resets the state to 'next' and emits a Notification('reset', void 0)
+   * Should be called only when this Observables is not observed
+   */
+  reset(): void;
+}
+```
+
+A FiniteStateObservable is simply an Observable with a final state (*complete* or *errored*), just like RXJS's Observables. It extends `NotificationsObservable` with at least the 4 following *'events'*:
+- *next: T*: the emitted values
+- *complete: void*: when the Observable has no more data to emit
+- *error: any*: when the Observable errored
+- *reset: void*:  when the Observable resets => this means than previously received notifications should be discarded. This is some edge case.
+
+###### Construct
+```ts
+new<T, TKVMap extends FiniteStateKeyValueMapConstraint<T, TKVMap> = IFiniteStateObservableKeyValueMapGeneric<T>>(
+  create?: TFiniteStateObservableCreateCallback<T, TKVMap>,
+  options?: IFiniteStateObservableOptions,
+): IFiniteStateObservable<T, TKVMap>;
+```
+The constructor is the same as the one for a NotificationsObservable, but `context` is slightly different:
+it implements some shortcuts to emits Notifications: `next`, `complete`, `error` and `reset`.
+
+When the FiniteStateObservable is into a final state (*error* or *complete*), you won't be allowed to emit `next`, `complete` or `error` Notifications, until you emit a `reset` Notification (but should be used carefully).
+
+You may provide a second argument: `options`
+
+Its `mode` defines some useful helper with the behaviour of the FiniteStateObservable:
+- once (default): does not cache any values => after the final state ('complete' or 'error'), no observers will ever receive a value ('next')
+- uniq: does not cache any values => after the final state, throws an error if a new observer observes 'next', 'complete' or 'error'.
+- cache: caches own notifications ('next', 'complete' and 'error'). Every observer will receive the whole list of own emitted notifications
+- cache-final-state: caches 'complete' or 'error' notification. Every observer will receive this final state notification
+- cache-all: caches all notifications (including ones with a different name than 'next', 'complete' and 'error'). Every observer will receive the whole list of all emitted notifications
+
+*Example:* Creates a new FiniteStateObservable from an Iterable
+```ts
+function fromIterable<T>(iterable: Iterable<T>): IFiniteStateObservable<T> {
+  return new FiniteStateObservable<T>((context) => {
+    return {
+      onObserved(): void {
+        if (context.observable.state === 'next') {
+          for (const value of iterable) {
+            context.next(value);
+          }
+          context.complete();
+        }
+      }
+    }
+  }, { mode: 'cache' })
+}
+
+fromIterable([0, 1, 2, 3])
+  .addListener('next', (value: number) => {
+    console.log('next', value);
+  })
+  .activate();
+```
+
+**INFO:** FromIterableObservable should be used instead.
+```ts
+new FromIterableObservable([0, 1, 2, 3], { mode: 'cache' })
+  .addListener('next', (value: number) => {
+    console.log('next', value);
+  })
+  .activate();
+```
+
 #### PromiseObservable
 
 ##### PromiseCancelToken
@@ -1144,6 +1279,8 @@ type TCancelStrategy =
   | 'reject' // reject the promise with the Token's reason
   | 'never' // (default) never resolve the promise, it stays in a pending state forever
   ;
+
+type TPromiseCancelTokenWrapPromiseCallback<T> = (this: IPromiseCancelToken, resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void, token: IPromiseCancelToken) => void;
 
 type TOnCancelled = ((this: IPromiseCancelToken) => TPromiseOrValue<void>) | undefined | null;
 
@@ -1179,7 +1316,7 @@ interface IPromiseCancelToken extends INotificationsObservable<IPromiseCancelTok
   
   // wraps a promise with a this Token
   wrapPromise<T>(
-    promise: Promise<T>,
+    promiseOrCallback: Promise<T> | TPromiseCancelTokenWrapPromiseCallback<T>,
     strategy?: TCancelStrategy,
     onCancelled?: TOnCancelled,
   ): Promise<T | void>;
@@ -1320,29 +1457,36 @@ function cancellablePromiseExample(): ICancellablePromise<void> {
 
 ##### PromiseObservable
 ```ts
-interface IPromiseNotificationKeyValueMap<TFulfilled, TErrored, TCancelled> {
-  complete: TFulfilled;
-  error: TErrored;
-  cancel: TCancelled;
+type TPromiseObservableMode = TFiniteStateObservableMode;
+
+interface IPromiseObservableKeyValueMap<T> extends IFiniteStateObservableKeyValueMapGeneric<T> {
+  cancel: any;
 }
+
+interface IPromiseObservableResetOptions {
+  immediate?: boolean; // default false => if true, calls the factory for each observer
+  // if one of the following is true, calls the factory when the observer is freshly observed,
+  // and resets the cache and the state of the PromiseObservable depending on the promise's state
+  complete?: boolean; // default false => if true, reset when the promise if fulfilled
+  error?: boolean; // default true => if true, reset when the promise if errored
+}
+
+interface IPromiseObservableOptions extends IFiniteStateObservableOptions {
+  mode?: TPromiseObservableMode;
+  reset?: IPromiseObservableResetOptions;
+}
+
+
+type TPromiseObservableFactory<T> = (this: IPromiseObservable<T>, token: IPromiseCancelToken) => TPromiseOrValue<T>;
+
 
 interface IPromiseObservableConstructor {
-  new<TFulfilled, TErrored, TCancelled>(promiseFactory: (token: IPromiseCancelToken) => Promise<TFulfilled>, options?: IPromiseObservableOptions): IPromiseObservable<TFulfilled, TErrored, TCancelled>;
+  new<T>(promiseFactory: TPromiseObservableFactory<T>, options?: IPromiseObservableOptions): IPromiseObservable<T>;
+
+  fromPromise<T>(promise: Promise<T>, token?: IPromiseCancelToken, options?: IPromiseObservableOptions): IPromiseObservable<T>;
 }
 
-interface IPromiseObservable<TFulfilled, TErrored, TCancelled> extends INotificationsObservable<TPromiseNotificationType, TFulfilled | TErrored | TCancelled> {
-  clearCachedPromise(): void;
-}
-
-interface IPromiseObservableClearOptions {
-  immediate?: boolean; // default false
-  complete?: boolean; // default false
-  error?: boolean; // default true
-  cancel?: boolean; // default true
-}
-
-interface IPromiseObservableOptions {
-  clear?: IPromiseObservableClearOptions;
+interface IPromiseObservable<T> extends IFiniteStateObservable<T, IPromiseObservableKeyValueMap<T>> {
 }
 
 ```
@@ -1366,8 +1510,8 @@ const newsRequest = http('https://domain/api/news')
   .pipeThrough(pipePromise<Response, INewsJSON>((response: Response) => response.json()));
   
 newsRequest
-  .on('complete', (response: INewsJSON) => {
-    console.log('complete', response);
+  .on('next', (response: INewsJSON) => {
+    console.log('next', response);
   })
   .on('error', (error: Error) => {
     console.error('error', error);
@@ -1381,15 +1525,14 @@ newsRequest
 
 When creating a new PromiseObservable you may specify some options:
 
-- **clear**: used to auto cache/uncache the `promiseFactory`'s promise.
-  - immediate: if set to true, when an Observer observes this Observable, the `promiseFactory` is called and not cached (so its called for each observers).
-    If false, the promise returned by the `promiseFactory` is cached.
-  - complete: if set to true, the promise is uncached when it fulfils.
-  - error: if set to true, the promise is uncached when it errors.
-  - cancel: if set to true, the promise is uncached when it cancels.
+- **reset**: used to reset the state of the PromiseObservable (may be useful to uncache values).
+  - immediate: if set to true, when an Observer observes this Observable, the `promiseFactory` is called for each observers => `options.mode` is ignored.
+    If false, the promise returned by the `promiseFactory` is called once as soon as the PromiseObservable is observed.
+  - complete: if set to true, the state and cache are reset when it fulfils.
+  - error: if set to true, the state and cache are reset when it errors.
 
-By default, the first observer will call `promiseFactory`, and the returned promise will be cached (so following observers won't generate more promises),
-except if the promise is rejected or cancelled (in this case, the cached promise is cleared, and the next observer will call again `promiseFactory`).
+By default: the first observer will call `promiseFactory` **once** (the returned promise may be cached with `options.mode = 'cache'` so following observers will receive the values).
+If the promise is rejected or cancelled, the state and cache are reset so the next observer will call again `promiseFactory`.
 
 You may manually clear the cached promise by calling `clearCachedPromise`.
 

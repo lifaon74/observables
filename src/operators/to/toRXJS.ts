@@ -4,10 +4,12 @@ import { Observer } from '../../core/observer/implementation';
 import { Observable as RXObservable, Subscriber as RXSubscriber } from 'rxjs';
 import { IObserver } from '../../core/observer/interfaces';
 import { TValueOrNotificationType } from './toPromise';
-import { TCompleteStateObservableLikeNotifications } from '../../notifications/observables/complete-state/interfaces';
+import {
+  TFiniteStateObservableFinalState, TFiniteStateObservableLikeNotifications
+} from '../../notifications/observables/finite-state/interfaces';
 
 
-export function toRXJS<T>(observable: IObservable<TCompleteStateObservableLikeNotifications<T>> | IObservable<T>): RXObservable<T> {
+export function toRXJS<T>(observable: IObservable<TFiniteStateObservableLikeNotifications<T, TFiniteStateObservableFinalState>> | IObservable<T>): RXObservable<T> {
   let subscriber: RXSubscriber<T>;
 
   const observer: IObserver<TValueOrNotificationType<T>> = new Observer<TValueOrNotificationType<T>>((value: TValueOrNotificationType<T>) => {

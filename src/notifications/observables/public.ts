@@ -1,2 +1,2 @@
 export * from './events/public';
-export * from './complete-state/public';
+export * from './finite-state/public';

@@ -12,16 +12,16 @@ import {
   IAsyncFunctionObservable, TAsyncFunctionObservableFactory, TAsyncFunctionObservableFactoryParameters
 } from '../observables/distinct/async-function-observable/interfaces';
 import { AsyncFunctionObservable } from '../observables/distinct/async-function-observable/implementation';
-import { IPromiseObservable, } from '../notifications/observables/complete-state/promise/promise-observable/interfaces';
+import { IPromiseObservable, } from '../notifications/observables/finite-state/promise/promise-observable/interfaces';
 import { toValueObservable } from './to/toValueObservable';
-import { IPromiseCancelToken } from '../notifications/observables/complete-state/promise/promise-cancel-token/interfaces';
+import { IPromiseCancelToken } from '../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
 import { TPipeBase, TPipeContextBase } from '../core/observable-observer/interfaces';
 import { IObserver } from '../core/observer/interfaces';
 import { Pipe } from '../core/observable-observer/implementation';
 import { IsObserver, Observer } from '../core/observer/public';
 import { assertFunctionObservableEmits, assertObservableEmits } from '../classes/asserts';
 import { IsObject } from '../helpers';
-import { LinkPromiseCancelTokenWithFetchArguments } from '../notifications/observables/complete-state/promise/promise-cancel-token/implementation';
+import { LinkPromiseCancelTokenWithFetchArguments } from '../notifications/observables/finite-state/promise/promise-cancel-token/implementation';
 
 export type TObservableOrValue<T> = IObservable<T> | T;
 export type TObservableOrValueToValueType<T extends TObservableOrValue<any>> = T extends IObservable<infer R> ? R : T;

@@ -3,7 +3,7 @@ import { Observable, ObservableClearObservers } from '../core/observable/impleme
 import { IObserver, Observer } from '../core/observer/public';
 import { IObservable } from '../core/observable/interfaces';
 import { NotificationsObservable } from '../notifications/core/notifications-observable/public';
-import { FromIterableObservable } from '../notifications/observables/complete-state/from/iterable/public';
+import { FromIterableObservable } from '../notifications/observables/finite-state/from/iterable/sync/public';
 
 /**
  * Test the performances of many observables emitting values from an iterable

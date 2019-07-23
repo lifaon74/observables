@@ -1,0 +1,442 @@
+import {
+  FinalStateConstraint, FiniteStateKeyValueMapConstraint, IFiniteStateObservable, IFiniteStateObservableContext,
+  TFiniteStateObservableCreateCallback
+} from './interfaces';
+import {
+  KeyValueMapToNotifications, KeyValueMapToNotificationsGeneric
+} from '../../core/notifications-observable/interfaces';
+import { IsObject } from '../../../helpers';
+import { KeyValueMapKeys, KeyValueMapValues } from '../../core/interfaces';
+import { Notification } from '../../core/notification/implementation';
+import { IPromiseCancelToken } from './promise/promise-cancel-token/interfaces';
+import { PromiseCancelReason, PromiseCancelToken } from './promise/promise-cancel-token/implementation';
+
+
+/*---------------------*/
+
+export type TGenerateFiniteStateObservableHookBasedOnSharedAsyncIterableFactoryFunction<TValue, TFinalState extends FinalStateConstraint<TFinalState>, TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>> =
+  (this: IFiniteStateObservable<TValue, TFinalState, TKVMap>, token: IPromiseCancelToken) => AsyncIterableIterator<KeyValueMapToNotifications<TKVMap>>;
+
+
+/**
+ * Generates an Hook for a FiniteStateObservable, based on an async iterable function:
+ *  - when the observer is observed, calls the factory.
+ *  - async iterate until
+ * INFO: factory is called only once
+ * @param factory
+ */
+export function GenerateFiniteStateObservableHookBasedOnAsyncIterableFactoryFunctionSharedPauseWorkflow<TValue, TFinalState extends FinalStateConstraint<TFinalState>, TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>>(
+  factory: TGenerateFiniteStateObservableHookBasedOnSharedAsyncIterableFactoryFunction<TValue, TFinalState, TKVMap>,
+): TFiniteStateObservableCreateCallback<TValue, TFinalState, TKVMap> {
+  return function (context: IFiniteStateObservableContext<TValue, TFinalState, TKVMap>) {
+    let token: IPromiseCancelToken | null = null;
+    let continuePromise: Promise<void>;
+    let resolve: (() => void) | null = null;
+
+    function pause() {
+      if (resolve === null) {
+        continuePromise = new Promise((_resolve: any) => {
+          resolve = _resolve;
+        });
+      }
+    }
+
+    function resume() {
+      if (resolve !== null) {
+        resolve();
+        resolve = null;
+      }
+    }
+
+    async function run(instance: IFiniteStateObservable<TValue, TFinalState, TKVMap>, token: IPromiseCancelToken) {
+      const iterator: AsyncIterableIterator<KeyValueMapToNotifications<TKVMap>> = factory.call(instance, token);
+      let result: IteratorResult<KeyValueMapToNotifications<TKVMap>>;
+      while (!(result = await iterator.next()).done) {
+        context.emit(result.value);
+        await continuePromise;
+      }
+    }
+
+    pause();
+
+    return {
+      onObserved(): void {
+        const instance: IFiniteStateObservable<TValue, TFinalState, TKVMap> = this;
+        if (
+
+          (instance.observers.length === 1) // optional check
+          && (token === null)
+          && (instance.state === 'next') // optional check
+        ) {
+          token = new PromiseCancelToken();
+          token.wrapPromise(run(instance, token))
+            .then(() => {
+              if (instance.state === 'next') {
+                context.complete();
+              }
+            }, (error: any) => {
+              context.error(error);
+            });
+        }
+
+        if (instance.observers.length > 0) { // optional check
+          resume();
+        }
+      },
+      onUnobserved(): void {
+        const instance: IFiniteStateObservable<TValue, TFinalState, TKVMap> = this;
+        if (
+          (!instance.observed)
+          && (instance.state === 'next')
+        ) {
+          pause();
+        }
+      },
+    };
+  };
+}
+
+export function GenerateFiniteStateObservableHookBasedOnSharedAsyncIterableFactoryFunction<TValue, TFinalState extends FinalStateConstraint<TFinalState>, TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>>(
+  factory: TGenerateFiniteStateObservableHookBasedOnSharedAsyncIterableFactoryFunction<TValue, TFinalState, TKVMap>,
+): TFiniteStateObservableCreateCallback<TValue, TFinalState, TKVMap> {
+  return function (context: IFiniteStateObservableContext<TValue, TFinalState, TKVMap>) {
+    let token: IPromiseCancelToken | null = null;
+
+    async function run(instance: IFiniteStateObservable<TValue, TFinalState, TKVMap>, token: IPromiseCancelToken) {
+      const iterator: AsyncIterableIterator<KeyValueMapToNotifications<TKVMap>> = factory.call(instance, token);
+      let result: IteratorResult<KeyValueMapToNotifications<TKVMap>>;
+      while (!(result = await iterator.next()).done) {
+        context.emit(result.value);
+      }
+    }
+
+    return {
+      onObserved(): void {
+        const instance: IFiniteStateObservable<TValue, TFinalState, TKVMap> = this;
+        if (
+          (instance.observers.length === 1)
+          && (token === null)
+          && (instance.state === 'next')
+        ) {
+          token = new PromiseCancelToken();
+          token.wrapPromise(run(instance, token))
+            .catch((error: any) => {
+              context.error(error);
+            });
+        }
+      },
+      onUnobserved(): void {
+        const instance: IFiniteStateObservable<TValue, TFinalState, TKVMap> = this;
+        if (
+          (!instance.observed)
+          && (token !== null)
+          && (instance.state === 'next')
+        ) {
+          context.clearCache();
+          token.cancel(new PromiseCancelReason(`No more observed`));
+          token = null;
+        }
+      },
+    };
+  };
+}
+
+
+/*----------------------------------------------------*/
+
+// export type TBuildFiniteStateObservableHookBasedOnFactoryFunctionCallbackClearObserversMode =
+//   'none' // do nothing
+//   | 'recall' // the factory function is re-called if the Observable is observed
+//   | 'unobserve' // (default) forces all observers to unobserve this observable
+//   ;
+//
+// export interface IBuildFiniteStateObservableHookBasedOnFactoryFunctionCallbackClearOptions {
+//   emitReset?: boolean; // default true => if a 'reset' notification should be emitted
+//   mode?: TBuildFiniteStateObservableHookBasedOnFactoryFunctionCallbackClearObserversMode; // default 'unobserve'
+// }
+//
+// export interface IBuildFiniteStateObservableHookBasedOnFactoryFunctionCallbackClearOptionsStrict extends IBuildFiniteStateObservableHookBasedOnFactoryFunctionCallbackClearOptions {
+//   emitReset: boolean;
+//   mode: TBuildFiniteStateObservableHookBasedOnFactoryFunctionCallbackClearObserversMode;
+// }
+
+
+/*----------------------------------------------------*/
+
+export type TFiniteStateObservableHookFactoryContextClearOptionsMode =
+  'none' // do nothing
+  | 'recall' // the factory function is re-called if the Observable is observed
+  | 'unobserve' // (default) forces all observers to unobserve this observable
+  ;
+
+export interface IFiniteStateObservableHookFactoryContextClearOptions {
+  mode?: TFiniteStateObservableHookFactoryContextClearOptionsMode; // default 'unobserve'
+}
+
+interface IFiniteStateObservableHookFactoryContextClearOptionsStrict extends IFiniteStateObservableHookFactoryContextClearOptions {
+  mode: TFiniteStateObservableHookFactoryContextClearOptionsMode;
+}
+
+export interface IFiniteStateObservableHookFactoryContext<TValue, TFinalState extends FinalStateConstraint<TFinalState>, TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>> {
+  emit(value: KeyValueMapToNotifications<TKVMap>): void;
+
+  dispatch<K extends KeyValueMapKeys<TKVMap>>(name: K, value: TKVMap[K]): void;
+
+  next(value: TValue): void;
+
+  complete(): void;
+
+  error(error?: any): void;
+
+  clear(options?: IFiniteStateObservableHookFactoryContextClearOptions): void;
+}
+
+export class FiniteStateObservableHookFactoryContext<TValue, TFinalState extends FinalStateConstraint<TFinalState>, TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>> implements IFiniteStateObservableHookFactoryContext<TValue, TFinalState, TKVMap> {
+
+  protected readonly _emit: (value: KeyValueMapToNotifications<TKVMap>) => void;
+  protected readonly _clear: (options: IFiniteStateObservableHookFactoryContextClearOptionsStrict) => void;
+  protected _cleared: boolean;
+  protected _stopped: boolean;
+
+  constructor(
+    emit: (value: KeyValueMapToNotifications<TKVMap>) => void,
+    clear: (options: IFiniteStateObservableHookFactoryContextClearOptionsStrict) => void
+  ) {
+    this._emit = emit;
+    this._clear = clear;
+    this._cleared = false;
+    this._stopped = false;
+  }
+
+  emit(value: KeyValueMapToNotifications<TKVMap>): void {
+    if (this._cleared) {
+      throw new Error(`Cannot emit after the context has been cleared`);
+    } else if (this._stopped) {
+      throw new Error(`Cannot emit after the context has been stopped`);
+    } else {
+      this._emit(value);
+    }
+  }
+
+  dispatch<K extends KeyValueMapKeys<TKVMap>>(name: K, value: TKVMap[K]): void {
+    this.emit(new Notification<K, TKVMap[K]>(name, value) as KeyValueMapToNotificationsGeneric<TKVMap> as KeyValueMapToNotifications<TKVMap>);
+  }
+
+  next(value: TValue): void {
+    this.dispatch('next' as KeyValueMapKeys<TKVMap>, value as KeyValueMapValues<TKVMap>);
+  }
+
+  complete(): void {
+    this.dispatch('complete' as KeyValueMapKeys<TKVMap>, void 0 as KeyValueMapValues<TKVMap>);
+  }
+
+  error(error?: any): void {
+    this.dispatch('error' as KeyValueMapKeys<TKVMap>, error as KeyValueMapValues<TKVMap>);
+  }
+
+  clear(options?: IFiniteStateObservableHookFactoryContextClearOptions): void {
+    if (!this._cleared) {
+      this._cleared = true;
+      this._stopped = true;
+      this._clear(NormalizeFiniteStateObservableHookFactoryContextClearOptions(options));
+    }
+  }
+}
+
+export function NormalizeFiniteStateObservableHookFactoryContextClearOptions(options: IFiniteStateObservableHookFactoryContextClearOptions = {}): IFiniteStateObservableHookFactoryContextClearOptionsStrict {
+  const _options: IFiniteStateObservableHookFactoryContextClearOptionsStrict = {} as any;
+
+  if (IsObject(options)) {
+    if (options.mode === void 0) {
+      _options.mode = 'unobserve';
+    } else if (['none', 'recall', 'unobserve'].includes(options.mode)) {
+      _options.mode = options.mode;
+    } else {
+      throw new TypeError(`Expected 'none', 'recall' or 'unobserve'] as options.mode`);
+    }
+  } else {
+    throw new TypeError(`Expected object or void as options`);
+  }
+
+  return _options;
+}
+
+
+/*----------------------------------------------------*/
+
+export interface IBuildFiniteStateObservableHookBasedOnFactoryFunctionCallbackReturn<TValue, TFinalState extends FinalStateConstraint<TFinalState>, TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>> {
+  main(this: IFiniteStateObservable<TValue, TFinalState, TKVMap>, context: IFiniteStateObservableHookFactoryContext<TValue, TFinalState, TKVMap>): void;
+
+  stop(this: IFiniteStateObservable<TValue, TFinalState, TKVMap>): void;
+}
+
+/**
+ * A TBuildFiniteStateObservableHookBasedOnFactoryFunctionCallback is a function taking one argument:
+ * - emit: a callback function to emit some notifications.
+ * And returning a 'clear' function called to interrupt the work / emit
+ * INFO: a factory MUST NOT emit any values before it has returned its clear function, nor after the final state.
+ */
+export type TBuildFiniteStateObservableHookBasedOnFactoryFunctionCallback<TValue, TFinalState extends FinalStateConstraint<TFinalState>, TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>> =
+  (this: IFiniteStateObservable<TValue, TFinalState, TKVMap>) => IBuildFiniteStateObservableHookBasedOnFactoryFunctionCallbackReturn<TValue, TFinalState, TKVMap>;
+
+
+function ThrowFactoryClearFunctionNull(): never {
+  throw new Error(`Cannot emit if the factory has not returned yet or if the 'clear' function has been called`);
+}
+
+
+/**
+ * Creates FiniteStateObservableHook based on a 'factory' function
+ * 'factory' is called once when the observable is observed and if the observable is in a 'next' state.
+ * when the observable is no more observed, calls the 'clear' function of the factory. If the observable is still in a 'next' state, clears the cached values.
+ * @param factory
+ */
+export function BuildFiniteStateObservableHookBasedOnSharedFactoryFunction<TValue, TFinalState extends FinalStateConstraint<TFinalState>, TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>>(
+  factory: TBuildFiniteStateObservableHookBasedOnFactoryFunctionCallback<TValue, TFinalState, TKVMap>,
+): TFiniteStateObservableCreateCallback<TValue, TFinalState, TKVMap> {
+  return function (context: IFiniteStateObservableContext<TValue, TFinalState, TKVMap>) {
+    let activeHook: IBuildFiniteStateObservableHookBasedOnFactoryFunctionCallbackReturn<TValue, TFinalState, TKVMap> | null = null;
+
+    const stopActiveHook = (instance: IFiniteStateObservable<TValue, TFinalState, TKVMap>) => {
+      if (activeHook !== null) {
+        // (activeHook as any)._stopped = true;
+        activeHook.stop.call(instance);
+        activeHook = null;
+      }
+    };
+
+    const callFactory = (instance: IFiniteStateObservable<TValue, TFinalState, TKVMap>) => {
+      const hook: IBuildFiniteStateObservableHookBasedOnFactoryFunctionCallbackReturn<TValue, TFinalState, TKVMap> = factory.call(instance);
+      const hookContext: IFiniteStateObservableHookFactoryContext<TValue, TFinalState, TKVMap> = new FiniteStateObservableHookFactoryContext<TValue, TFinalState, TKVMap>(
+        (value: KeyValueMapToNotifications<TKVMap>) => {
+          context.emit(value as KeyValueMapToNotifications<TKVMap>);
+        },
+        (options: IFiniteStateObservableHookFactoryContextClearOptionsStrict) => {
+          hookContext.stopActiveHook(instance);
+          switch (options.mode) {
+            case 'recall':
+              callFactoryIfObserved(instance);
+              break;
+            case 'unobserve':
+              instance.clearObservers();
+              break;
+          }
+        }
+      );
+      hook.main.call(instance, hookContext);
+      // activeHook = hook;
+    };
+
+    const callFactoryIfObserved = (instance: IFiniteStateObservable<TValue, TFinalState, TKVMap>) => {
+      if (
+        (instance.observers.length > 0)
+        && (activeHook === null)
+        && (instance.state === 'next')
+      ) {
+        callFactory(instance);
+      }
+    };
+
+    return {
+      onObserved(): void {
+        callFactoryIfObserved(this);
+      },
+      onUnobserved(): void {
+        const instance: IFiniteStateObservable<TValue, TFinalState, TKVMap> = this;
+        if (
+          (activeHook !== null)
+          && !instance.observed
+        ) {
+          if (instance.state === 'next') {
+            // clear the cache because the factory has been aborted, so the cache is inconsistent
+            context.clearCache();
+          }
+          clear(instance);
+        }
+      },
+    };
+  };
+}
+
+/**
+ * Creates FiniteStateObservableHook based on a 'factory' function
+ * 'factory' is called for each observer
+ * INFO: this mean that the 'mode' property of the FiniteStateObservable is ignored, and may be seen as a 'cache-all'
+ * @param factory
+ */
+// export function BuildFiniteStateObservableHookBasedOnPerObserverFactoryFunction<TValue, TFinalState, TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap> = IFiniteStateObservableKeyValueMapGeneric<T>>(
+//   factory: TBuildFiniteStateObservableHookBasedOnFactoryFunctionCallback<TValue, TFinalState, TKVMap>,
+// ): TFiniteStateObservableCreateCallback<TValue, TFinalState, TKVMap> {
+//   return function () {
+//     const observerClearFactory = new WeakMap<IObserver<KeyValueMapToNotifications<TKVMap>>, () => void>();
+//
+//     const clear = (instance: IFiniteStateObservable<TValue, TFinalState, TKVMap>, observer: IObserver<KeyValueMapToNotifications<TKVMap>>) => {
+//       if (observerClearFactory.has(observer)) { // optional check (should always be true)
+//         const undoFactory = observerClearFactory.get(observer) as (() => void);
+//         observerClearFactory.delete(observer); // remove before calling it, preventing to emit inside of undoFactory
+//         undoFactory.call(this);
+//       }
+//     };
+//
+//     return {
+//       onObserved(observer: IObserver<KeyValueMapToNotifications<TKVMap>>): void {
+//         const instance: IFiniteStateObservable<TValue, TFinalState, TKVMap> = this;
+//         let state: TFiniteStateObservableState = 'next';
+//
+//         const _emit = (notification: KeyValueMapToNotifications<TKVMap>) => {
+//           const isFiniteState: boolean = IsFiniteStateObservableFinalState(notification.name);
+//           if (
+//             (state === 'next')
+//             || (!isFiniteState && (notification.name !== 'next'))
+//           ) {
+//             if (observerClearFactory.has(observer)) {
+//               if (isFiniteState) {
+//                 state = notification.name as TFiniteStateObservableFinalState;
+//               } else if (notification.name === 'reset') {
+//                 state = 'next';
+//               }
+//               observer.emit(notification as KeyValueMapToNotifications<TKVMap>, instance);
+//             } else {
+//               ThrowFactoryClearFunctionNull();
+//             }
+//           } else {
+//             ThrowFiniteStateObservableCannotEmitAfterFiniteState(state, notification.name);
+//           }
+//         };
+//
+//         const _clear = (options?: IBuildFiniteStateObservableHookBasedOnFactoryFunctionCallbackClearOptions) => {
+//           cleared = true;
+//
+//           const _options = NormalizeBuildFiniteStateObservableHookBasedOnFactoryFunctionCallbackClearOptions(options);
+//
+//           if (_options.emitReset) {
+//             context.clearCache();
+//           }
+//
+//           clear(instance);
+//
+//           switch (_options.mode) {
+//             case 'recall':
+//               callIfObserved(instance);
+//               break;
+//             case 'unobserve':
+//               instance.clearObservers();
+//               break;
+//           }
+//         };
+//
+//         observerClearFactory.set(observer, factory.call(instance, _emit));
+//       },
+//       onUnobserved(observer: IObserver<KeyValueMapToNotifications<TKVMap>>): void {
+//         if (observerClearFactory.has(observer)) { // optional check (should always be true)
+//           const undoFactory = observerClearFactory.get(observer) as (() => void);
+//           observerClearFactory.delete(observer); // remove before calling it, preventing to emit inside of undoFactory
+//           undoFactory.call(this);
+//         }
+//       },
+//     };
+//   };
+// }
+
+
+
