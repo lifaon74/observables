@@ -378,7 +378,7 @@ function promiseObservableExample1(): void {
   function http(url: string) {
     return new PromiseObservable<Response>((token: PromiseCancelToken) => {
       return fetch(url, { signal: token.toAbortController().signal });
-    });
+    }, { mode: 'cache' });
   }
 
 

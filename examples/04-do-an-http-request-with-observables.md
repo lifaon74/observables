@@ -122,8 +122,8 @@ Sadly, by laziness or time constraint, developers tend to forgot the *cancel* pa
  * @param token - optional PromiseCancelToken, will be returned in the tuple
  */
 function createHttpRequest(url: string, token: IPromiseCancelToken = new PromiseCancelToken()): TCancellablePromiseTuple<string> {
-  return [
-    new Promise<string>((resolve, reject) => {
+  return {
+    promise: new Promise<string>((resolve, reject) => {
       const request = new XMLHttpRequest(); // create an XMLHttpRequest
       new EventsObservable<XMLHttpRequestEventMap>(request) // creates an EventsObservable for this request
         .on('load', () => { // when the request is finished, resolve the promise
@@ -144,16 +144,16 @@ function createHttpRequest(url: string, token: IPromiseCancelToken = new Promise
       request.send();
     }),
     token
-  ];
+  };
 }
 
 async function doRequest() {
-  let [promise, token] = createHttpRequest(`https://my-domain`);
+  let { promise, token } = createHttpRequest(`https://my-domain`);
   promise.catch(PromiseCancelReason.discard); // hide 'cancel' error
   
   token.cancel(); // abort the request
   
-  [promise, token] = createHttpRequest(`https://other-domain`);
+  { promise, token } = createHttpRequest(`https://other-domain`);
   await promise;
 }
 
@@ -169,41 +169,30 @@ We may consider that Promises have 3 final states: *completed*, *errored*, and *
 
 The PromiseObservable is constructed like this:
 ```ts
-new<TFulfilled, TErrored, TCancelled>(promiseFactory: (token: IPromiseCancelToken) => Promise<TFulfilled>, options?: IPromiseObservableOptions): IPromiseObservable<TFulfilled, TErrored, TCancelled>;
+new<T>(promiseFactory: (token: IPromiseCancelToken) => Promise<T>, options?: IPromiseObservableOptions): IPromiseObservable<T>;
 ```
 
-The `promiseFactory` is a function returning a Promise, called in certain circumstances (see bellow).
-The PromiseCancelToken provided by this function must be used to abort/cancel unnecessary work as seen previously (used in `then`for example).
+The `promiseFactory` is a function returning a Promise. It is called once if mode is different than `every`, else it is called for each Observers.
+The PromiseCancelToken provided in this function must be used to abort/cancel unnecessary work as seen previously (used in `then` for example).
 
 This token is cancelled by the PromiseObservable in certain circumstances: for example, if it has no more observers,
 or if the Observer which generated the promise stopped to observe.
 
-
-The second argument `options` is used to adjust the behaviour:
-- **clear**: used to auto cache/uncache the `promiseFactory`'s promise.
-  - immediate (default: false): if set to true, when an Observer observes this Observable, the `promiseFactory` is called and not cached (so its called for each observers).
-    If false, the promise returned by the `promiseFactory` is cached and reused.
-  - complete (default: false): if set to true, the promise is uncached when it fulfils.
-  - error (default: true): if set to true, the promise is uncached when it errors.
-  - cancel (default: true): if set to true, the promise is uncached when it cancels.
-
-
-By default, the first observer will call `promiseFactory`, and the returned promise will be cached (so following observers won't generate more promises),
-**except** if the promise is rejected or cancelled (in this case, the cached promise is cleared, and the next observer will call again `promiseFactory`).
-
 ---
 
-The PromiseObservable is a NotificationsObservable with the following KeyValueMap:
+The PromiseObservable is a FiniteSateObservable with the following KeyValueMap:
 
 ```ts
-interface IPromiseNotificationKeyValueMap<TFulfilled, TErrored, TCancelled> {
-  complete: TFulfilled;
-  error: TErrored;
-  cancel: TCancelled;
+interface IPromiseNotificationKeyValueMap<T> {
+  next: T;
+  complete: void;
+  error: any;
+  cancel: any;
 }
 ```
 
-When the Promise resolves, an uniq Notification is emitted according to the Promise's state.
+When the Promise fulfils, a `next` Notification followed by a `complete` Notification are emitted.
+If it rejects, a `error` Notification is send. Adn finally if it is cancelled, a `cancel` Notification is triggered.
 
 ---
 
@@ -213,12 +202,12 @@ Using PromiseObservable, we can now create a simple cancellable fetch function:
 function http(url: string) {
   return new PromiseObservable((token: PromiseCancelToken) => {
     return fetch(url, { signal: token.toAbortController().signal });
-  });
+  }, { mode: 'cache' });
 }
 
 const observable = http(url)
-  .on('complete', (response: Response) => {
-    console.log('complete', response);
+  .on('next', (response: Response) => {
+    console.log( response);
   }) // generates a new activated Observer, the promiseFactory is called and the request starts
   .on('error', (reason: any) => {
     console.error('error', reason);

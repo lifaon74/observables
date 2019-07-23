@@ -29,11 +29,11 @@ export type FinalStateConstraint<T> = IsSuperSet<T, TFiniteStateObservableFinalS
  *  INFO: except for 'cache-all', the FiniteStateObservable doesn't care of notifications different than 'next', 'complete' or 'error'
  */
 export type TFiniteStateObservableMode =
-  'once' // (default) does not cache any values => after the final state ('complete' or 'error'), no observers will ever receive a value ('next')
-  | 'uniq' // does not cache any values => after the final state, throws an error if a new observer observes 'next', 'complete' or 'error'.
-  | 'cache' // caches own notifications ('next', 'complete' and 'error'). Every observer will receive the whole list of own emitted notifications
-  | 'cache-final-state' // caches 'complete' or 'error' notification. Every observer will receive this final state notification
-  | 'cache-all' // caches all notifications (including ones with a different name than 'next', 'complete' and 'error'). Every observer will receive the whole list of all emitted notifications
+  'once' // (default) does not cache any values => after the final state (TFinalState), no observers will ever receive a value ('next')
+  | 'uniq' // does not cache any values => after the final state, throws an error if a new observer observes 'next' or TFinalState.
+  | 'cache' // caches own notifications ('next' and TFinalState). Every observer will receive the whole list of own emitted notifications
+  | 'cache-final-state' // caches TFinalState notification. Every observer will receive this final state notification
+  | 'cache-all' // caches all notifications (including ones with a different name than 'next', and TFinalState). Every observer will receive the whole list of all emitted notifications
   ;
 
 export type FiniteStateObservableModeConstraint<T> = IsSuperSet<T, TFiniteStateObservableMode> extends true
@@ -62,6 +62,7 @@ export type IFiniteStateObservableKeyValueMapGeneric<TValue, TFinalState extends
 } & {
   'next': TValue; // incoming values
   'complete': void; // when the Observable has no more data to emit
+  'error': any; // when the Observable errored
 };
 
 export type FiniteStateKeyValueMapConstraint<TValue, TFinalState extends FinalStateConstraint<TFinalState>, TKVMap extends object> = KeyValueMapConstraint<TKVMap, IFiniteStateObservableKeyValueMapGeneric<TValue, TFinalState>>;

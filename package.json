@@ -1,6 +1,6 @@
 {
   "name": "@lifaon/observables",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Better observables for everyone",
   "main": "bundle/public.umd.esnext.min.js",
   "module": "index.js",
