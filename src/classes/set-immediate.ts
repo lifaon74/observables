@@ -123,23 +123,30 @@ function GetRegisterImmediateImplementation(global: any): TRegisterImmediate {
 
 declare const __magic__: any;
 
-const globalThis: any = (function () {
-  Object.defineProperty(Object.prototype, '__magic__', {
-    get: function () {
-      return this;
-    },
-    configurable: true // This makes it possible to `delete` the getter later.
-  });
-  const globalThis = __magic__;
-  delete (Object.prototype as any)['__magic__'];
-  return globalThis;
-}());
+function init() {
+  const globalThis: any = (function () {
+    Object.defineProperty(Object.prototype, '__magic__', {
+      get: function () {
+        return this;
+      },
+      configurable: true // This makes it possible to `delete` the getter later.
+    });
+    const globalThis = __magic__;
+    delete (Object.prototype as any)['__magic__'];
+    return globalThis;
+  }());
 
-const registerImmediate: TRegisterImmediate = GetRegisterImmediateImplementation(globalThis);
+  registerImmediate = GetRegisterImmediateImplementation(globalThis);
+}
 
+// const registerImmediate: TRegisterImmediate = GetRegisterImmediateImplementation(globalThis);
+let registerImmediate: TRegisterImmediate;
 let nextHandle: number = 1;
 
 export function setImmediate(callback: (...args: any[]) => void, ...args: any[]): number {
+  if (registerImmediate === void 0) {
+    init();
+  }
   tasks.set(nextHandle, { callback: callback, args: args });
   registerImmediate(nextHandle);
   return nextHandle++;

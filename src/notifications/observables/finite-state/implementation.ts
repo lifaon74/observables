@@ -23,7 +23,7 @@ import {
 } from '../../core/notifications-observable/implementation';
 import { Notification } from '../../core/notification/implementation';
 import { KeyValueMapKeys, KeyValueMapValues } from '../../core/interfaces';
-import { IsObject } from '../../../helpers';
+import { EnumToString, IsObject } from '../../../helpers';
 import {
   Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
 } from '../../../classes/factory';
@@ -193,7 +193,7 @@ export function NormalizeFiniteStateObservableMode<TMode extends FiniteStateObse
   } else if (modes.has(mode)) {
     return mode;
   } else {
-    throw new TypeError(`Expected ${ Array.from(modes).join(', ') } or void as mode`);
+    throw new TypeError(`Expected void or ${ EnumToString(Array.from(modes)) } as mode`);
   }
 }
 
