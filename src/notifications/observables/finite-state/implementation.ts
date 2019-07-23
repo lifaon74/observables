@@ -4,16 +4,13 @@ import {
 } from '../../../core/observable/interfaces';
 import {
   INotificationsObservable, INotificationsObservableContext, INotificationsObservableTypedConstructor,
-  KeyValueMapToNotifications,
-  KeyValueMapToNotificationsGeneric
+  KeyValueMapToNotifications, KeyValueMapToNotificationsGeneric
 } from '../../core/notifications-observable/interfaces';
 import {
   FinalStateConstraint, FiniteStateKeyValueMapConstraint, FiniteStateObservableModeConstraint, IFiniteStateObservable,
-  IFiniteStateObservableConstructor,
-  IFiniteStateObservableContext,
-  IFiniteStateObservableContextConstructor, IFiniteStateObservableKeyValueMapGeneric, IFiniteStateObservableOptions,
-  IFiniteStateObservableSoftConstructor, TFiniteStateObservableConstructorArgs, TFiniteStateObservableFinalState,
-  TFiniteStateObservableGeneric,
+  IFiniteStateObservableConstructor, IFiniteStateObservableContext, IFiniteStateObservableContextConstructor,
+  IFiniteStateObservableKeyValueMapGeneric, IFiniteStateObservableOptions, IFiniteStateObservableSoftConstructor,
+  TFiniteStateObservableConstructorArgs, TFiniteStateObservableFinalState, TFiniteStateObservableGeneric,
   TFiniteStateObservableMode, TFiniteStateObservableState
 } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
@@ -114,8 +111,10 @@ export function GetFiniteStateObservableDefaultFinalStates(): Set<TFiniteStateOb
 }
 
 export function NormalizeFiniteStateObservableFinalStates<TFinalState extends FinalStateConstraint<TFinalState>>(finalStates?: Iterable<TFinalState>): Set<TFinalState> {
+  const defaultSet: Set<TFiniteStateObservableFinalState> = GetFiniteStateObservableDefaultFinalStates();
+
   if (finalStates === void 0) {
-    return GetFiniteStateObservableDefaultFinalStates() as Set<TFinalState>;
+    return defaultSet as Set<TFinalState>;
   } else if (Symbol.iterator in finalStates) {
     const _finalStates: Set<TFinalState> = new Set<TFinalState>(finalStates);
 
@@ -123,18 +122,27 @@ export function NormalizeFiniteStateObservableFinalStates<TFinalState extends Fi
       throw new TypeError(`finalStates must not contain 'next'`);
     }
 
-    if (!_finalStates.has('complete' as TFinalState)) {
-      throw new TypeError(`finalStates must contain 'complete'`);
+    {
+      const iterator: Iterator<TFiniteStateObservableFinalState> = defaultSet.values();
+      let result: IteratorResult<TFiniteStateObservableFinalState>;
+      while (!(result = iterator.next()).done) {
+        if (!_finalStates.has(result.value as TFinalState)) {
+          throw new TypeError(`finalStates must contain '${ result.value }'`);
+        }
+      }
     }
 
-    const iterator: Iterator<TFinalState> = _finalStates.values();
-    let i: number = 0;
-    let result: IteratorResult<TFinalState>;
-    while (!(result = iterator.next()).done) {
-      if (typeof result.value !== 'string') {
-        throw new TypeError(`Expected Iterable of string as finalStates, found '${ result.value }' at index ${ i }`);
+    {
+      const iterator: Iterator<TFinalState> = _finalStates.values();
+      let i: number = 0;
+      let result: IteratorResult<TFinalState>;
+      while (!(result = iterator.next()).done) {
+        if (typeof result.value !== 'string') {
+          throw new TypeError(`Expected Iterable of string as finalStates, found '${ result.value }' at index ${ i }`);
+        }
+        i++;
       }
-      i++;
+
     }
 
     return _finalStates;
@@ -159,13 +167,11 @@ export function NormalizeFiniteStateObservableModes<TMode extends FiniteStateObs
 
     {
       const iterator: Iterator<TFiniteStateObservableMode> = defaultSet.values();
-      let i: number = 0;
       let result: IteratorResult<TFiniteStateObservableMode>;
       while (!(result = iterator.next()).done) {
         if (!_modes.has(result.value as TMode)) {
           throw new TypeError(`modes must contain '${ result.value }'`);
         }
-        i++;
       }
     }
 
