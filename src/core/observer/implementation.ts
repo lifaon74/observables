@@ -27,14 +27,15 @@ export interface IObserverInternal<T> extends IObserver<T> {
 }
 
 
-export function ConstructObserver<T>(observer: IObserver<T>, onEmit: (value: T, observable?: IObservable<T>) => void): void {
-  ConstructClassWithPrivateMembers(observer, OBSERVER_PRIVATE);
-  (observer as IObserverInternal<T>)[OBSERVER_PRIVATE].activated = false;
-  (observer as IObserverInternal<T>)[OBSERVER_PRIVATE].observables = [];
-  // (observer as IObserverInternal<T>)[OBSERVER_PRIVATE].readOnlyObservables = new ReadonlyList<IObservable<T>>((observer as IObserverInternal<T>)[OBSERVER_PRIVATE].observables);
+export function ConstructObserver<T>(instance: IObserver<T>, onEmit: (value: T, observable?: IObservable<T>) => void): void {
+  ConstructClassWithPrivateMembers(instance, OBSERVER_PRIVATE);
+  const privates: IObserverPrivate<T> = (instance as IObserverInternal<T>)[OBSERVER_PRIVATE];
+  privates.activated = false;
+  privates.observables = [];
+  // privates.readOnlyObservables = new ReadonlyList<IObservable<T>>(privates.observables);
 
   if (typeof onEmit === 'function') {
-    (observer as IObserverInternal<T>)[OBSERVER_PRIVATE].onEmit = onEmit.bind(observer);
+    privates.onEmit = onEmit.bind(instance);
   } else {
     throw new TypeError(`Expected function as first argument of Observer.`);
   }
@@ -51,51 +52,68 @@ export function IsObserver(value: any): value is IObserver<any> {
 }
 
 /**
- * Activates an observer
- * @param observer
+ * Emits a value for an Observer
+ * @param instance
+ * @param value
+ * @param observable
  * @exposed
  */
-export function ObserverActivate<T>(observer: IObserver<T>): void {
-  if (!((observer as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].activated) {
-    ((observer as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].activated = true;
-    const observables: IObservable<T>[] = ((observer as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].observables;
+export function ObserverEmit<T>(instance: IObserver<T>, value: T, observable?: IObservable<T>): void {
+  const privates: IObserverPrivate<T> = (instance as IObserverInternal<T>)[OBSERVER_PRIVATE];
+  if (privates.activated) {
+    privates.onEmit(value, observable);
+  }
+}
+
+/**
+ * Activates an Observer
+ * @param instance
+ * @exposed
+ */
+export function ObserverActivate<T>(instance: IObserver<T>): void {
+  const privates: IObserverPrivate<T> = (instance as IObserverInternal<T>)[OBSERVER_PRIVATE];
+  if (!privates.activated) {
+    privates.activated = true;
+    const observables: IObservable<T>[] = privates.observables;
     for (let i = 0, l = observables.length; i < l; i++) {
-      LinkObservableAndObserver<T>(observables[i], observer);
+      LinkObservableAndObserver<T>(observables[i], instance);
     }
   }
 }
 
 /**
- * Deactivates an observer
- * @param observer
+ * Deactivates an Observer
+ * @param instance
  * @exposed
  */
-export function ObserverDeactivate<T>(observer: IObserver<T>): void {
-  if (((observer as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].activated) {
-    ((observer as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].activated = false;
-    const observables: IObservable<T>[] = ((observer as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].observables;
+export function ObserverDeactivate<T>(instance: IObserver<T>): void {
+  const privates: IObserverPrivate<T> = (instance as IObserverInternal<T>)[OBSERVER_PRIVATE];
+  if (privates.activated) {
+    privates.activated = false;
+    const observables: IObservable<T>[] = privates.observables;
     for (let i = 0, l = observables.length; i < l; i++) {
-      UnLinkObservableAndObserver<T>(observables[i], observer);
+      UnLinkObservableAndObserver<T>(observables[i], instance);
     }
   }
 }
 
 /**
  * Links an Observer with an Observable
- * @param observer
+ * @param instance
  * @param observables
  * @exposed
  */
-export function ObserverObserve<T>(observer: IObserver<T>, observables: IObservable<T>[]): void {
+export function ObserverObserve<T>(instance: IObserver<T>, observables: IObservable<T>[]): void {
+  const privates: IObserverPrivate<T> = (instance as IObserverInternal<T>)[OBSERVER_PRIVATE];
   for (let i = 0, l = observables.length; i < l; i++) {
     const observable: IObservable<T> = observables[i];
     if (IsObservable(observable)) {
-      if (((observer as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].observables.includes(observable)) {
+      if (privates.observables.includes(observable)) {
         throw new Error(`Already observing this Observable`);
       } else {
-        ((observer as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].observables.push(observable);
-        if (((observer as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].activated) {
-          LinkObservableAndObserver<T>(observables[i], observer);
+        privates.observables.push(observable);
+        if (privates.activated) {
+          LinkObservableAndObserver<T>(observables[i], instance);
         }
       }
     } else {
@@ -107,14 +125,14 @@ export function ObserverObserve<T>(observer: IObserver<T>, observables: IObserva
 
 /**
  * Unlinks an Observer with an Observable
- * @param observer
+ * @param instance
  * @param observables
  * @exposed
  */
-export function ObserverUnobserve<T>(observer: IObserver<T>, observables: IObservable<T>[]): void {
+export function ObserverUnobserve<T>(instance: IObserver<T>, observables: IObservable<T>[]): void {
   for (let i = 0, l = observables.length; i < l; i++) {
     if (IsObservable(observables[i])) {
-      ObserverUnobserveOne<T>(observer, observables[i]);
+      ObserverUnobserveOne<T>(instance, observables[i]);
     } else {
       throw new TypeError(`Expected Observable as argument #${ i + 1 } of Observer.unobserve.`);
     }
@@ -122,37 +140,48 @@ export function ObserverUnobserve<T>(observer: IObserver<T>, observables: IObser
 }
 
 /**
- * Unobserves on observable
- * @param observer
+ * Unobserves one observable
+ * @param instance
  * @param observable
  * @internal
  */
-export function ObserverUnobserveOne<T>(observer: IObserver<T>, observable: IObservable<T>): void {
-  const index: number = (observer as IObserverInternal<T>)[OBSERVER_PRIVATE].observables.indexOf(observable);
+export function ObserverUnobserveOne<T>(instance: IObserver<T>, observable: IObservable<T>): void {
+  const privates: IObserverPrivate<T> = (instance as IObserverInternal<T>)[OBSERVER_PRIVATE];
+  const index: number = privates.observables.indexOf(observable);
   if (index === -1) {
     throw new Error(`Not observing this Observable`);
   } else {
-    (observer as IObserverInternal<T>)[OBSERVER_PRIVATE].observables.splice(index, 1);
-    if ((observer as IObserverInternal<T>)[OBSERVER_PRIVATE].activated) {
-      UnLinkObservableAndObserver<T>(observable, observer);
+    privates.observables.splice(index, 1);
+    if (privates.activated) {
+      UnLinkObservableAndObserver<T>(observable, instance);
     }
   }
 }
 
 /**
  * Unlinks all Observables of on Observer
- * @param observer
+ * @param instance
  * @exposed
  */
-export function ObserverUnobserveAll<T, O extends IObserver<T>>(observer: O): O {
-  for (let i = 0, l = ((observer as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].observables.length; i < l; i++) {
-    if (((observer as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].activated) {
-      UnLinkObservableAndObserver<T>(((observer as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].observables[i], observer);
+export function ObserverUnobserveAll<T>(instance: IObserver<T>): void {
+  const privates: IObserverPrivate<T> = (instance as IObserverInternal<T>)[OBSERVER_PRIVATE];
+  for (let i = 0, l = privates.observables.length; i < l; i++) {
+    if (privates.activated) {
+      UnLinkObservableAndObserver<T>(privates.observables[i], instance);
     }
   }
-  ((observer as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].observables.length = 0;
-  return observer;
+  privates.observables.length = 0;
 }
+
+
+export function ObserverGetObservables<T>(instance: IObserver<T>): IReadonlyList<IObservable<T>> {
+  const privates: IObserverPrivate<T> = ((instance as IObserver<T>) as IObserverInternal<T>)[OBSERVER_PRIVATE];
+  if (privates.readOnlyObservables === void 0) {
+    privates.readOnlyObservables = new ReadonlyList<IObservable<T>>(privates.observables);
+  }
+  return privates.readOnlyObservables;
+}
+
 
 
 function PureObserverFactory<TBase extends Constructor>(superClass: TBase) {
@@ -170,10 +199,7 @@ function PureObserverFactory<TBase extends Constructor>(superClass: TBase) {
     }
 
     get observables(): IReadonlyList<IObservable<T>> {
-      if (((this as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].readOnlyObservables === void 0) {
-        ((this as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].readOnlyObservables = new ReadonlyList<IObservable<T>>(((this as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].observables);
-      }
-      return ((this as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].readOnlyObservables;
+      return ObserverGetObservables<T>(this);
     }
 
     get observing(): boolean {
@@ -181,9 +207,7 @@ function PureObserverFactory<TBase extends Constructor>(superClass: TBase) {
     }
 
     emit(value: T, observable?: IObservable<T>): void {
-      if (((this as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].activated) {
-        ((this as unknown) as IObserverInternal<T>)[OBSERVER_PRIVATE].onEmit(value, observable);
-      }
+      ObserverEmit<T>(this, value, observable);
     }
 
     activate(): this {
@@ -207,7 +231,8 @@ function PureObserverFactory<TBase extends Constructor>(superClass: TBase) {
     }
 
     disconnect(): this {
-      return ObserverUnobserveAll<T, this>(this);
+      ObserverUnobserveAll<T>(this);
+      return this;
     }
 
   };

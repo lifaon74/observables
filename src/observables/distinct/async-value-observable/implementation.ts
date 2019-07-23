@@ -12,7 +12,7 @@ import {
 import {
   Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
 } from '../../../classes/factory';
-import { IPromiseCancelToken } from '../../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import { IPromiseCancelToken } from '../../../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
 import { IValueObservable, IValueObservableConstructor, IValueObservableContext } from '../value-observable/interfaces';
 import {
   IsValueObservableConstructor, IValueObservableInternal, ValueObservableFactory,
@@ -20,7 +20,7 @@ import {
 import { InitObservableHook, IObservableHookPrivate } from '../../../core/observable/hook';
 import {
   PromiseCancelReason, PromiseCancelToken
-} from '../../../notifications/observables/promise-observable/promise-cancel-token/implementation';
+} from '../../../notifications/observables/finite-state/promise/promise-cancel-token/implementation';
 import { IsObject } from '../../../helpers';
 
 
@@ -43,15 +43,17 @@ export function ConstructAsyncValueObservable<T>(
   create?: (context: IAsyncValueObservableContext<T>) => (IObservableHook<T> | void)
 ): void {
   ConstructClassWithPrivateMembers(observable, ASYNC_VALUE_OBSERVABLE_PRIVATE);
+
+  (observable as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].context = context;
+  (observable as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].promise = null;
+  (observable as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].token = null;
+
   InitObservableHook(
     observable,
     (observable as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE],
     NewAsyncValueObservableContext,
     create,
   );
-  (observable as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].context = context;
-  (observable as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].promise = null;
-  (observable as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].token = null;
 }
 
 export function IsAsyncValueObservable(value: any): value is IAsyncValueObservable<any> {

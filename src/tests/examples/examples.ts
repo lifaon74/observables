@@ -4,15 +4,17 @@ import {
   NotificationsObservable, NotificationsObservableContext
 } from '../../notifications/core/notifications-observable/implementation';
 import { NotificationsObserver } from '../../notifications/core/notifications-observer/implementation';
-import { EventsObservable } from '../../notifications/observables/events-observable/implementation';
-import { FetchObservable } from '../../notifications/observables/fetch-observable/implementation';
-import { toCancellablePromiseTuple, toPromise } from '../../operators/to/toPromise';
+import { EventsObservable } from '../../notifications/observables/events/events-observable/implementation';
+import { FetchObservable } from '../../notifications/observables/finite-state/promise/fetch-observable/implementation';
+import {
+  finiteStateObservableToPromise, singleFiniteStateObservableToCancellablePromiseTuple,
+  singleFiniteStateObservableToPromise, genericObservableToCancellablePromiseTuple, genericObservableToPromise
+} from '../../operators/to/toPromise';
 import {
   PromiseCancelReason, PromiseCancelToken
-} from '../../notifications/observables/promise-observable/promise-cancel-token/implementation';
-import { TCancellablePromiseTuple } from '../../notifications/observables/promise-observable/interfaces';
+} from '../../notifications/observables/finite-state/promise/promise-cancel-token/implementation';
 import { Reason } from '../../misc/reason/implementation';
-import { PromiseObservable } from '../../notifications/observables/promise-observable/implementation';
+import { PromiseObservable } from '../../notifications/observables/finite-state/promise/promise-observable/implementation';
 import { IObserver } from '../../core/observer/interfaces';
 import { Pipe } from '../../core/observable-observer/implementation';
 import {
@@ -20,7 +22,6 @@ import {
 } from '../../notifications/core/notifications-observable/interfaces';
 import { IObservableObserver, IPipe, TPipeContextBase } from '../../core/observable-observer/interfaces';
 import { IObservable, IObservableContext } from '../../core/observable/interfaces';
-import { promisePipe } from '../../operators/pipes/promisePipe';
 import { TimerObservable } from '../../observables/timer-observable/implementation';
 import { Source } from '../../observables/distinct/source/implementation';
 import { ISource } from '../../observables/distinct/source/interfaces';
@@ -30,8 +31,17 @@ import { INotificationsObserver } from '../../notifications/core/notifications-o
 import { FunctionObservable } from '../../observables/distinct/function-observable/implementation';
 import { Expression } from '../../observables/distinct/expression/implementation';
 import { $equal, $expression, $string } from '../../operators/misc';
-import { IPromiseCancelToken } from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
-import { EventKeyValueMapConstraint } from '../../notifications/observables/events-observable/interfaces';
+import { IPromiseCancelToken } from '../../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
+import { EventKeyValueMapConstraint } from '../../notifications/observables/events/events-observable/interfaces';
+import { ICancellablePromiseTuple } from '../../promises/interfaces';
+import { SpreadCancellablePromiseTuple } from '../../promises/helpers';
+import { FiniteStateObservable } from '../../notifications/observables/finite-state/implementation';
+import {
+  IFiniteStateObservable, IFiniteStateObservableKeyValueMapGeneric, TFiniteStateObservableFinalState,
+  TFiniteStateObservableMode
+} from '../../notifications/observables/finite-state/interfaces';
+import { FromIterableObservable } from '../../notifications/observables/finite-state/from/iterable/sync/public';
+import { IFetchObservable } from '../../notifications/observables/finite-state/promise/fetch-observable/interfaces';
 
 
 /**
@@ -237,6 +247,46 @@ function eventsObservableExample2(): void {
   }, 5000);
 }
 
+
+function finiteStateObservableExample1(): void {
+  function fromIterable<T>(iterable: Iterable<T>): IFiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>> {
+    return new FiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>>((context) => {
+      return {
+        onObserved(): void {
+          if (context.observable.state === 'next') {
+            for (const value of iterable) {
+              context.next(value);
+            }
+            context.complete();
+          }
+        }
+      }
+    }, { mode: 'cache' })
+  }
+
+  fromIterable([0, 1, 2, 3])
+    .addListener('next', (value: number) => {
+      console.log('next', value);
+    })
+    .activate();
+}
+
+
+function FromIterableObservableExample1(): void {
+  const observable = new FromIterableObservable([0, 1, 2, 3], { mode: 'once' });
+  const observer = observable
+    .addListener('next', (value: number) => {
+      console.log('next', value);
+      observer.deactivate();
+
+      observable
+        .addListener('next', (value: number) => {
+          console.log('next-2', value);
+        }).activate();
+    });
+  observer.activate();
+}
+
 function promiseCancelTokenFetchExample1(): void {
   function loadNews(page: number, token: IPromiseCancelToken = new PromiseCancelToken()): Promise<void> {
     return token.wrapPromise(fetch(`https://my-domain/api/news?page${ page }`, { signal: token.toAbortController().signal }))
@@ -267,9 +317,9 @@ function promiseCancelTokenFetchExample1(): void {
  * @param url
  * @param token - optional PromiseCancelToken, will be returned in the tuple
  */
-function createHttpRequest(url: string, token: IPromiseCancelToken = new PromiseCancelToken()): TCancellablePromiseTuple<string> {
-  return [
-    new Promise<string>((resolve, reject) => {
+function createHttpRequest(url: string, token: IPromiseCancelToken = new PromiseCancelToken()): ICancellablePromiseTuple<string> {
+  return {
+    promise: new Promise<string>((resolve, reject) => {
       const request = new XMLHttpRequest(); // create an XMLHttpRequest
       new EventsObservable<XMLHttpRequestEventMap>(request) // creates an EventsObservable for this request
         .on('load', () => { // when the request is finished, resolve the promise
@@ -289,15 +339,15 @@ function createHttpRequest(url: string, token: IPromiseCancelToken = new Promise
       request.open('GET', url, true);
       request.send();
     }),
-    token
-  ];
+    token: token
+  };
 }
 
 /**
  * Demo how to use a PromiseCancelToken
  */
 function promiseCancelTokenExample1(): void {
-  const [promise, token] = createHttpRequest('https://server.test-cors.org/server?id=643798&enable=true&status=200&credentials=false&response_headers=Access-Control-Allow-Origin%3A%20*');
+  const { promise, token } = createHttpRequest('https://server.test-cors.org/server?id=643798&enable=true&status=200&credentials=false&response_headers=Access-Control-Allow-Origin%3A%20*');
   promise
     .then((content: string) => {
       if (!token.cancelled) {
@@ -326,9 +376,9 @@ function promiseCancelTokenExample1(): void {
 function promiseObservableExample1(): void {
   // creates an fetch observable from an url
   function http(url: string) {
-    return new PromiseObservable<Response, Error, any>((token: PromiseCancelToken) => {
+    return new PromiseObservable<Response>((token: PromiseCancelToken) => {
       return fetch(url, { signal: token.toAbortController().signal });
-    });
+    }, { mode: 'cache' });
   }
 
 
@@ -372,9 +422,10 @@ function promiseObservableExample1(): void {
 
   const url: string = 'https://server.test-cors.org/server?id=643798&enable=true&status=200&credentials=false&response_headers=Access-Control-Allow-Origin%3A%20*'; // valid cors url
 
+  console.log('do http');
   const observable = http(url)
-    .pipeThrough(promisePipe((response: Response) => response.json()))
-    .on('complete', (response: Response) => {
+    // .pipeThrough(promisePipe((response: Response) => response.json()))
+    .on('next', (response: Response) => {
       console.log('complete', response);
     })
     .on('error', (reason: any) => {
@@ -394,16 +445,24 @@ function promiseObservableExample1(): void {
  * Example how to observe a FetchObservable
  * @param observable
  */
-function observeFetchObservable(observable: FetchObservable): FetchObservable {
-  return observable.on('complete', (response: Response) => {
-    console.log(response);
-  })
+function observeFetchObservable(observable: IFetchObservable): IFetchObservable {
+  return observable
+    .on('next', (response: Response) => {
+      console.log(response);
+    })
     .on('error', (error: any) => {
       console.error('error', error);
     })
     .on('cancel', (reason: any) => {
       console.warn('cancelled', reason);
     });
+}
+
+function observeFetchObservable2(observable: IFetchObservable): IObserver<INotification<string, any>> {
+  return observable
+    .pipeTo((notification: INotification<string, any>) => {
+      console.log(notification.name, notification.value);
+    }).activate();
 }
 
 
@@ -423,6 +482,13 @@ function fetchObservableExample1(): void {
 
 }
 
+function fetchObservableExample2(): void {
+  const url: string = 'https://server.test-cors.org/server?id=643798&enable=true&status=200&credentials=false&response_headers=Access-Control-Allow-Origin%3A%20*'; // valid cors url
+
+  const observable = new FetchObservable(url, void 0, { mode: 'every' });
+  observeFetchObservable2(observable);
+  observeFetchObservable2(observable);
+}
 
 /**
  * Example how to cast an Observable to a Promise
@@ -449,19 +515,19 @@ async function observableToPromiseExample1(): Promise<void> {
   const url1: string = 'https://server.test-cors.org/server?id=643798&enable=true&status=200&credentials=false&response_headers=Access-Control-Allow-Origin%3A%20*'; // valid cors url
   const url2: string = 'https://invalid url'; // invalid  url
 
-  observePromise('fetch url 1', toPromise<Response>(new FetchObservable(url1))); // will complete
-  observePromise('fetch url 2', toPromise<Response>(new FetchObservable(url2))); // will error
+  observePromise('fetch url 1', singleFiniteStateObservableToPromise(new FetchObservable(url1)) as Promise<Response>); // will complete
+  observePromise('fetch url 2', singleFiniteStateObservableToPromise(new FetchObservable(url2)) as Promise<Response>); // will error
 
   const abortController: AbortController = new AbortController();
-  observePromise('fetch url with abort controller without token', toPromise<Response>(new FetchObservable(url1, { signal: abortController.signal }), 'reject')); // will cancel
+  observePromise('fetch url with abort controller without token', singleFiniteStateObservableToPromise(new FetchObservable(url1, { signal: abortController.signal }), 'reject') as Promise<Response>); // will cancel
   abortController.abort();
 
   // provides PromiseCancelToken too, to detect cancellation
-  observePromise('fetch url with abort controller with token', ...toCancellablePromiseTuple<Response>(new FetchObservable(url1, { signal: abortController.signal }), 'reject')); // will cancel
+  observePromise('fetch url with abort controller with token', ...SpreadCancellablePromiseTuple(singleFiniteStateObservableToCancellablePromiseTuple(new FetchObservable(url1, { signal: abortController.signal }), 'reject') as ICancellablePromiseTuple<Response>)); // will cancel
 }
 
 
-function observableObserverExampple1(): void {
+function observableObserverExample1(): void {
   function map<Tin, Tout>(transform: (value: Tin) => Tout): IObservableObserver<IObserver<Tin>, IObservable<Tout>> {
     let context: IObservableContext<Tout>;
     return {
@@ -640,7 +706,7 @@ function sensorExample1() {
             if (context.observable.observers.length === 1) {
               sensor.addEventListener('reading', valueListener);
               sensor.addEventListener('error', errorListener);
-              sensor.start();
+              sensor.main();
             }
           },
           onUnobserved() {
@@ -708,10 +774,14 @@ export async function testExamples() {
   // observeTimerObservable();
   // observeNotificationsObservable();
   // eventsObservableExample1();
+  // finiteStateObservableExample1();
+  // finiteStateObservableExample1();
+  // FromIterableObservableExample1();
   // promiseCancelTokenExample1();
   // promiseObservableExample1();
   // fetchObservableExample1();
-  // observableToPromiseExample1();
+  fetchObservableExample2();
+  // await observableToPromiseExample1();
 
   // pipeExample1();
   // pipeExample2();
@@ -720,7 +790,7 @@ export async function testExamples() {
   // functionObservableExample1();
   // expressionExample1();
 
-  sensorExample1();
+  // sensorExample1();
 }
 
 

@@ -14,10 +14,10 @@ import { IObserver } from '../../../core/observer/interfaces';
 import { Observer } from '../../../core/observer/public';
 import { IAsyncValueObservableContext } from '../async-value-observable/interfaces';
 import { AsyncValueObservable } from '../async-value-observable/implementation';
-import { IPromiseCancelToken } from '../../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import { IPromiseCancelToken } from '../../../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
 import {
   PromiseCancelReason, PromiseCancelToken
-} from '../../../notifications/observables/promise-observable/promise-cancel-token/implementation';
+} from '../../../notifications/observables/finite-state/promise/promise-cancel-token/implementation';
 import { FUNCTION_OBSERVABLE_PRIVATE, IFunctionObservableInternal } from '../function-observable/implementation';
 import { IsObject } from '../../../helpers';
 import { HasFactoryWaterMark } from '../../../classes/factory';

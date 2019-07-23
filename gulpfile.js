@@ -31,7 +31,8 @@ paths.ts = [
 
 paths.others = [
   $path.join(paths.source, '**'),
-  '!' + paths.ts[0]
+  '!' + paths.ts[0],
+  '!' + $path.join(paths.source, '**', '*.zip'),
 ];
 
 paths.package = [

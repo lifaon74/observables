@@ -23,10 +23,16 @@ export * from './notifications/core/notifications-observable/implementation';
 export * from './notifications/core/notifications-observer/implementation';
 export * from './notifications/core/preventable/implementation';
 
-export * from './notifications/observables/events-observable/implementation';
-export * from './notifications/observables/fetch-observable/implementation';
-export * from './notifications/observables/nodejs-events-observable/implementation';
-export * from './notifications/observables/promise-observable/implementation';
+export * from './notifications/observables/events/events-observable/implementation';
+export * from './notifications/observables/events/nodejs-events-observable/implementation';
+export * from './notifications/observables/finite-state/implementation';
+export * from './notifications/observables/finite-state/from/iterable/sync/implementation';
+export * from './notifications/observables/finite-state/from/iterable/async/implementation';
+export * from './notifications/observables/finite-state/from/rxjs/implementation';
+export * from './notifications/observables/finite-state/file-reader/implementation';
+export * from './notifications/observables/finite-state/promise/fetch-observable/implementation';
+export * from './notifications/observables/finite-state/promise/promise-observable/implementation';
+export * from './notifications/observables/finite-state/promise/promise-cancel-token/implementation';
 
 export * from './observables/distinct/async-function-observable/implementation';
 export * from './observables/distinct/async-value-observable/implementation';
@@ -36,8 +42,6 @@ export * from './observables/distinct/source/implementation';
 export * from './observables/distinct/value-observable/implementation';
 
 export * from './observables/dom-change/implementation';
-export * from './observables/from/iterable/implementation';
-export * from './observables/from/rxjs/implementation';
 
 export * from './observables/io/io-observable/implementation';
 export * from './observables/io/websocket-observable/implementation';

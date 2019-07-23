@@ -1,6 +1,6 @@
 {
   "name": "@lifaon/observables",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Better observables for everyone",
   "main": "bundle/public.umd.esnext.min.js",
   "module": "index.js",
@@ -8,12 +8,13 @@
   "scripts": {
     "start": "npm run clean && gulp watch",
     "clean": "rimraf ./dist",
-    "build.prod": "npm run clean && gulp build.prod && npm run minify.soft",
+    "build.prod": "npm run clean && gulp build.prod && npm run minify",
     "babelify": "babel ./dist/bundle/public.umd.esnext.js --out-file ./dist/bundle/public.umd.es5.js --presets=@babel/preset-env",
     "minify": "npm run minify.hard && npm run minify.soft",
-    "minify.hard": "npm run pre-minify && npm run min.esnext.hard && npm run min.core.hard",
+    "minify.hard": "npm run pre-minify && npm run min.esnext.hard && npm run min.core.hard && npm run post-minify",
     "minify.soft": "npm run min.esnext.soft && npm run min.core.soft",
     "pre-minify": "node scripts/pre-minify.js",
+    "post-minify": "node scripts/post-minify.js",
     "min.esnext.hard": "uglifyjs ./dist/bundle/public.umd.esnext.pre-min.js -o ./dist/bundle/public.umd.esnext.min.hard.js -c inline=false -m",
     "min.esnext.soft": "uglifyjs ./dist/bundle/public.umd.esnext.js -o ./dist/bundle/public.umd.esnext.min.js -c inline=false -m",
     "min.core.hard": "uglifyjs ./dist/bundle/public.core.umd.esnext.pre-min.js -o ./dist/bundle/public.core.umd.esnext.min.hard.js -c inline=false -m",
@@ -53,7 +54,7 @@
     "rimraf": "^2.6.3",
     "rollup-plugin-node-resolve": "^4.2.4",
     "rxjs": "^6.5.2",
-    "typescript": "^3.5.1",
+    "typescript": "^3.5.3",
     "typescript-tuple": "^2.2.1",
     "uglify-es": "^3.3.9",
     "vinyl-source-stream": "latest"

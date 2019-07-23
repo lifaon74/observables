@@ -2,8 +2,8 @@ import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWit
 import { IReadonlyList } from '../../../misc/readonly-list/interfaces';
 import { IWebSocketIO, IWebSocketIOKeyValueMap, IWebSocketIOOptions, TWebSocketData } from './interfaces';
 import { ReadonlyList } from '../../../misc/readonly-list/implementation';
-import { EventsObservable } from '../../../notifications/observables/events-observable/implementation';
-import { IEventsObservable } from '../../../notifications/observables/events-observable/interfaces';
+import { EventsObservable } from '../../../notifications/observables/events/events-observable/implementation';
+import { IEventsObservable } from '../../../notifications/observables/events/events-observable/interfaces';
 import {
   INotificationsObservableContext, KeyValueMapToNotifications, KeyValueMapToNotificationsObservers
 } from '../../../notifications/core/notifications-observable/interfaces';

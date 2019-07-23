@@ -12,9 +12,9 @@ export interface IPreventableInternal<N extends string> extends IPreventable<N> 
   [PREVENTABLE_PRIVATE]: IPreventablePrivate<N>;
 }
 
-export function ConstructPreventable<N extends string>(preventable: IPreventable<N>): void {
-  ConstructClassWithPrivateMembers(preventable, PREVENTABLE_PRIVATE);
-  (preventable as IPreventableInternal<N>)[PREVENTABLE_PRIVATE].prevented = new Set<N>();
+export function ConstructPreventable<N extends string>(instance: IPreventable<N>): void {
+  ConstructClassWithPrivateMembers(instance, PREVENTABLE_PRIVATE);
+  (instance as IPreventableInternal<N>)[PREVENTABLE_PRIVATE].prevented = new Set<N>();
 }
 
 export function IsPreventable(value: any): value is IPreventable<string> {

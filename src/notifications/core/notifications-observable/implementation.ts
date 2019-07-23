@@ -44,25 +44,28 @@ export type TKVNotificationsObserverInternal<TKVMap extends KeyValueMapGenericCo
 
 /**
  * Constructs a NotificationsObservable
- * @param observable
+ * @param instance
  * @param context
  * @param create
  */
 export function ConstructNotificationsObservable<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(
-  observable: INotificationsObservable<TKVMap>,
+  instance: INotificationsObservable<TKVMap>,
   context: IObservableContext<KeyValueMapToNotifications<TKVMap>>,
   create?: (context: INotificationsObservableContext<TKVMap>) => TNotificationsObservableHook<TKVMap> | void
 ): void {
-  ConstructClassWithPrivateMembers(observable, NOTIFICATIONS_OBSERVABLE_PRIVATE);
+  ConstructClassWithPrivateMembers(instance, NOTIFICATIONS_OBSERVABLE_PRIVATE);
+  const privates: INotificationsObservablePrivate<TKVMap> = (instance as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE];
+
+  privates.context = context;
+  privates.observersMap = new Map<KeyValueMapKeys<TKVMap>, KeyValueMapToNotificationsObservers<TKVMap>[]>();
+  privates.othersObservers = [];
+
   InitObservableHook(
-    observable,
-    (observable as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE],
+    instance,
+    privates,
     NewNotificationsObservableContext,
     create,
   );
-  (observable as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE].context = context;
-  (observable as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE].observersMap = new Map<KeyValueMapKeys<TKVMap>, KeyValueMapToNotificationsObservers<TKVMap>[]>();
-  (observable as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE].othersObservers = [];
 }
 
 export function IsNotificationsObservable(value: any): value is INotificationsObservable<KeyValueMapGeneric> {
@@ -81,11 +84,11 @@ export function IsNotificationsObservableConstructor(value: any, direct?: boolea
 /**
  * Called when an Observer observes a NotificationsObservable.
  * Registers the observer into 'observersMap' or 'othersObservers'
- * @param observable
+ * @param instance
  * @param observer
  */
-export function NotificationsObservableOnObserved<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(observable: INotificationsObservable<TKVMap>, observer: IObserver<KeyValueMapToNotifications<TKVMap>>): void {
-  const privates: INotificationsObservablePrivate<TKVMap> = (observable as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE];
+export function NotificationsObservableOnObserved<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(instance: INotificationsObservable<TKVMap>, observer: IObserver<KeyValueMapToNotifications<TKVMap>>): void {
+  const privates: INotificationsObservablePrivate<TKVMap> = (instance as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE];
 
   if (observer instanceof NotificationsObserver) {
     const name: KeyValueMapKeys<TKVMap> = ((observer as unknown) as TKVNotificationsObserverInternal<TKVMap>)[NOTIFICATIONS_OBSERVER_PRIVATE].name;
@@ -102,11 +105,11 @@ export function NotificationsObservableOnObserved<TKVMap extends KeyValueMapGene
 /**
  * Called when an Observer stops observing a NotificationsObservable.
  * Unregisters the observer into 'observersMap' or 'othersObservers'
- * @param observable
+ * @param instance
  * @param observer
  */
-export function NotificationsObservableOnUnobserved<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(observable: INotificationsObservable<TKVMap>, observer: IObserver<KeyValueMapToNotifications<TKVMap>>): void {
-  const privates: INotificationsObservablePrivate<TKVMap> = (observable as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE];
+export function NotificationsObservableOnUnobserved<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(instance: INotificationsObservable<TKVMap>, observer: IObserver<KeyValueMapToNotifications<TKVMap>>): void {
+  const privates: INotificationsObservablePrivate<TKVMap> = (instance as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE];
 
   if (observer instanceof NotificationsObserver) {
     const name: KeyValueMapKeys<TKVMap> = ((observer as unknown) as TKVNotificationsObserverInternal<TKVMap>)[NOTIFICATIONS_OBSERVER_PRIVATE].name;
@@ -126,27 +129,29 @@ export function NotificationsObservableOnUnobserved<TKVMap extends KeyValueMapGe
 
 
 /**
- * Removes the NotificationsObservers matching 'name' and 'callback' observing 'observable'
- * @param observable
+ * Removes the NotificationsObservers matching 'name' and 'callback' observing 'instance'
+ * @param instance
  * @param name
  * @param callback
  */
-export function NotificationsObservableRemoveListener<TKVMap extends KeyValueMapGenericConstraint<TKVMap>, K extends KeyValueMapKeys<TKVMap>>(observable: INotificationsObservable<TKVMap>, name: K, callback?: (value: TKVMap[K]) => void): void {
-  const observers: KeyValueMapToNotificationsObservers<TKVMap>[] = Array.from(NotificationsObservableMatches<TKVMap>(observable, name, callback)); // clone the list before removing
+export function NotificationsObservableRemoveListener<TKVMap extends KeyValueMapGenericConstraint<TKVMap>, K extends KeyValueMapKeys<TKVMap>>(instance: INotificationsObservable<TKVMap>, name: K, callback?: (value: TKVMap[K]) => void): void {
+  const observers: KeyValueMapToNotificationsObservers<TKVMap>[] = Array.from(NotificationsObservableMatches<TKVMap>(instance, name, callback)); // clone the list before removing
   for (let i = 0, l = observers.length; i < l; i++) {
-    ObserverUnobserveOne<KeyValueMapToNotifications<TKVMap>>((observers[i] as unknown) as any, observable);
+    ObserverUnobserveOne<KeyValueMapToNotifications<TKVMap>>((observers[i] as unknown) as any, instance);
   }
 }
 
 /**
  * Returns an Iterator over the list of NotificationsObservers matching 'name' and 'callback'
- * @param observable
+ * @param instance
  * @param name
  * @param callback
  */
-export function * NotificationsObservableMatches<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(observable: INotificationsObservable<TKVMap>, name: string, callback?: (value: any) => void): IterableIterator<KeyValueMapToNotificationsObservers<TKVMap>> {
-  if ((observable as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE].observersMap.has(name as KeyValueMapKeys<TKVMap>)) {
-    const observers: KeyValueMapToNotificationsObservers<TKVMap>[] = (observable as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE].observersMap.get(name as KeyValueMapKeys<TKVMap>) as KeyValueMapToNotificationsObservers<TKVMap>[];
+export function * NotificationsObservableMatches<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(instance: INotificationsObservable<TKVMap>, name: string, callback?: (value: any) => void): IterableIterator<KeyValueMapToNotificationsObservers<TKVMap>> {
+  const privates: INotificationsObservablePrivate<TKVMap> = (instance as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE];
+
+  if (privates.observersMap.has(name as KeyValueMapKeys<TKVMap>)) {
+    const observers: KeyValueMapToNotificationsObservers<TKVMap>[] = privates.observersMap.get(name as KeyValueMapKeys<TKVMap>) as KeyValueMapToNotificationsObservers<TKVMap>[];
     if (callback === void 0) {
       for (let i = 0, l = observers.length; i < l; i++) {
         yield observers[i];
@@ -163,14 +168,19 @@ export function * NotificationsObservableMatches<TKVMap extends KeyValueMapGener
 
 
 /**
- * Dispatches a Notification with 'name' and 'value' for all the observers observing this observable
- * @param observable
+ * Dispatches a Notification with 'name' and 'value' for all the observers observing this instance
+ * @param instance
  * @param name
  * @param value
  * @param notification
  */
-export function NotificationsObservableDispatch<TKVMap extends KeyValueMapGenericConstraint<TKVMap>, K extends KeyValueMapKeys<TKVMap>>(observable: INotificationsObservable<TKVMap>, name: K, value: TKVMap[K], notification?: INotification<K, TKVMap[K]>): void {
-  const privates: INotificationsObservablePrivate<TKVMap> = (observable as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE];
+export function NotificationsObservableDispatch<TKVMap extends KeyValueMapGenericConstraint<TKVMap>, K extends KeyValueMapKeys<TKVMap>>(
+  instance: INotificationsObservable<TKVMap>,
+  name: K,
+  value: TKVMap[K],
+  notification?: INotification<K, TKVMap[K]>
+): void {
+  const privates: INotificationsObservablePrivate<TKVMap> = (instance as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE];
 
   if (privates.observersMap.has(name as KeyValueMapKeys<TKVMap>)) {
     const observers: KeyValueMapToNotificationsObservers<TKVMap>[] = (privates.observersMap.get(name as KeyValueMapKeys<TKVMap>) as KeyValueMapToNotificationsObservers<TKVMap>[]).slice(0);
@@ -185,7 +195,7 @@ export function NotificationsObservableDispatch<TKVMap extends KeyValueMapGeneri
       notification = new Notification<K, TKVMap[K]>(name, value);
     }
     for (let i = 0; i < length; i++) {
-      ((privates.othersObservers[i] as unknown) as IObserverInternal<INotification<K, TKVMap[K]>>)[OBSERVER_PRIVATE].onEmit(notification, (observable as unknown) as IObservable<INotification<K, TKVMap[K]>>);
+      ((privates.othersObservers[i] as unknown) as IObserverInternal<INotification<K, TKVMap[K]>>)[OBSERVER_PRIVATE].onEmit(notification, (instance as unknown) as IObservable<INotification<K, TKVMap[K]>>);
     }
   }
 }
@@ -267,7 +277,6 @@ export function NotificationsObservableBaseFactory<TBase extends Constructor>(su
 
 NotificationsObservable = class NotificationsObservable extends NotificationsObservableBaseFactory<ObjectConstructor>(Object) {
   constructor(create?: (context: INotificationsObservableContext<KeyValueMapGeneric>) => (TNotificationsObservableHook<KeyValueMapGeneric> | void)) {
-    // constructor(create?: any) {
     super([create], []);
   }
 } as INotificationsObservableConstructor;
@@ -276,19 +285,28 @@ NotificationsObservable = class NotificationsObservable extends NotificationsObs
 /* ------------------------------------------- */
 
 
-export function NewNotificationsObservableContext<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(observable: INotificationsObservable<TKVMap>): INotificationsObservableContext<TKVMap> {
+export function NewNotificationsObservableContext<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(notificationsObservable: INotificationsObservable<TKVMap>): INotificationsObservableContext<TKVMap> {
   AllowObservableContextBaseConstruct(true);
-  const context: INotificationsObservableContext<TKVMap> = new ((NotificationsObservableContext as any) as INotificationsObservableContextConstructor)<TKVMap>(observable);
+  const context: INotificationsObservableContext<TKVMap> = new (NotificationsObservableContext as INotificationsObservableContextConstructor)<TKVMap>(notificationsObservable);
   AllowObservableContextBaseConstruct(false);
   return context;
 }
 
-export function NotificationsObservableContextEmit<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(context: INotificationsObservableContext<TKVMap>, notification: KeyValueMapToNotifications<TKVMap>): void {
-  NotificationsObservableDispatch<TKVMap, KeyValueMapKeys<TKVMap>>(((context as unknown) as IObservableContextBaseInternal<KeyValueMapToNotifications<TKVMap>>)[OBSERVABLE_CONTEXT_BASE_PRIVATE].observable as INotificationsObservable<TKVMap>, notification.name as KeyValueMapKeys<TKVMap>, notification.value as KeyValueMapValues<TKVMap>, notification);
+export function NotificationsObservableContextEmit<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(instance: INotificationsObservableContext<TKVMap>, notification: KeyValueMapToNotifications<TKVMap>): void {
+  NotificationsObservableDispatch<TKVMap, KeyValueMapKeys<TKVMap>>(
+    ((instance as unknown) as IObservableContextBaseInternal<KeyValueMapToNotifications<TKVMap>>)[OBSERVABLE_CONTEXT_BASE_PRIVATE].observable as INotificationsObservable<TKVMap>,
+    notification.name as KeyValueMapKeys<TKVMap>,
+    notification.value as KeyValueMapValues<TKVMap>,
+    notification
+  );
 }
 
-export function NotificationsObservableContextDispatch<TKVMap extends KeyValueMapGenericConstraint<TKVMap>, K extends KeyValueMapKeys<TKVMap>>(context: INotificationsObservableContext<TKVMap>, name: K, value: TKVMap[K]): void {
-  NotificationsObservableDispatch<TKVMap, K>(((context as unknown) as IObservableContextBaseInternal<KeyValueMapToNotifications<TKVMap>>)[OBSERVABLE_CONTEXT_BASE_PRIVATE].observable as INotificationsObservable<TKVMap>, name, value);
+export function NotificationsObservableContextDispatch<TKVMap extends KeyValueMapGenericConstraint<TKVMap>, K extends KeyValueMapKeys<TKVMap>>(
+  instance: INotificationsObservableContext<TKVMap>,
+  name: K,
+  value: TKVMap[K]
+): void {
+  NotificationsObservableDispatch<TKVMap, K>(((instance as unknown) as IObservableContextBaseInternal<KeyValueMapToNotifications<TKVMap>>)[OBSERVABLE_CONTEXT_BASE_PRIVATE].observable as INotificationsObservable<TKVMap>, name, value);
 }
 
 export class NotificationsObservableContext<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> extends ObservableContextBase<KeyValueMapToNotifications<TKVMap>> implements INotificationsObservableContext<TKVMap> {
@@ -297,7 +315,8 @@ export class NotificationsObservableContext<TKVMap extends KeyValueMapGenericCon
   }
 
   get observable(): INotificationsObservable<TKVMap> {
-    return ((this as unknown) as IObservableContextBaseInternal<KeyValueMapToNotifications<TKVMap>>)[OBSERVABLE_CONTEXT_BASE_PRIVATE].observable as INotificationsObservable<TKVMap>;
+    // return ((this as unknown) as IObservableContextBaseInternal<KeyValueMapToNotifications<TKVMap>>)[OBSERVABLE_CONTEXT_BASE_PRIVATE].observable as INotificationsObservable<TKVMap>;
+    return super.observable as INotificationsObservable<TKVMap>;
   }
 
   emit(value: KeyValueMapToNotifications<TKVMap>): void {

@@ -1,83 +1,189 @@
-import {
-  TCancellablePromiseTuple, TPromiseObservableNotification
-} from '../../notifications/observables/promise-observable/interfaces';
-import { Notification } from '../../notifications/core/notification/implementation';
+import { TPromiseObservableNotifications } from '../../notifications/observables/finite-state/promise/promise-observable/interfaces';
 import { IObservable } from '../../core/observable/interfaces';
-import {
-  ApplyCancelStrategy,
-  PromiseCancelToken
-} from '../../notifications/observables/promise-observable/promise-cancel-token/implementation';
+import { PromiseCancelToken } from '../../notifications/observables/finite-state/promise/promise-cancel-token/implementation';
 import {
   IPromiseCancelToken, TCancelStrategy
-} from '../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+} from '../../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
 import { Observer } from '../../core/observer/implementation';
-import { INotificationsObserver } from '../../notifications/core/notifications-observer/interfaces';
-import { TPromiseOrValue } from '../../promises/interfaces';
+import { ICancellablePromiseTuple, TPromiseOrValue } from '../../promises/interfaces';
+import {
+  FinalStateConstraint,
+  FiniteStateKeyValueMapConstraint, FiniteStateObservableModeConstraint, IFiniteStateObservable,
+  IFiniteStateObservableKeyValueMapGeneric, TFiniteStateObservableFinalState, TFiniteStateObservableGeneric,
+  TFiniteStateObservableMode
+} from '../../notifications/observables/finite-state/interfaces';
+import { KeyValueMapToNotifications } from '../../notifications/core/notifications-observable/interfaces';
+import { IObserver } from '../../core/observer/interfaces';
+import { IsFiniteStateObservable } from '../../notifications/observables/finite-state/implementation';
+import { IsObservable } from '../../core/observable/implementation';
 
-export type TBasePromiseObservableNotification<T> = TPromiseObservableNotification<T, any, any>;
+
+export type TBasePromiseObservableNotification<T> = TPromiseObservableNotifications<T>;
 export type TValueOrNotificationType<T> = T | TBasePromiseObservableNotification<T>;
 
 /**
  * Observes an Observable through a Promise.
- *  If the Observable sends a Notification, 'complete' or 'error' is expected as "name", and the promise is resolved of rejected.
- *  If the Observable sends a value, the promise is resolved with this value.
+ * The promise is resolved as soon as the observable emits a value.
  * @param observable
  * @param strategy
+ * @param token
  * @return a tuple: The Promise, and a PromiseCancelToken.
  */
-export function toCancellablePromiseTuple<T>(observable: IObservable<TBasePromiseObservableNotification<T>> | IObservable<T>, strategy?: TCancelStrategy): TCancellablePromiseTuple<T> {
-  const token: IPromiseCancelToken = new PromiseCancelToken();
-  return [
-    new Promise<T>((resolve: any, reject: any) => {
-      if (token.cancelled) {
-        resolve(ApplyCancelStrategy(token, strategy));
-      } else {
-        const _clear = () => {
-          observer.deactivate();
-          tokenObserver.deactivate();
-        };
+export function genericObservableToCancellablePromiseTuple<T>(
+  observable: IObservable<T>,
+  strategy?: TCancelStrategy,
+  token: IPromiseCancelToken = new PromiseCancelToken()
+): ICancellablePromiseTuple<T | void> {
+  return {
+    promise: token.wrapPromise<T>((resolve: (value?: TPromiseOrValue<T>) => void) => {
+      const _clear = () => {
+        observer.deactivate();
+        tokenObserver.deactivate();
+      };
 
-        const _resolve = (value: TPromiseOrValue<T | void>) => {
-          _clear();
-          resolve(value);
-        };
+      const tokenObserver = token.addListener('cancel', () => {
+        _clear();
+      });
 
-        const _reject = (error: any): void => {
-          _clear();
-          reject(error);
-        };
+      const observer: IObserver<T> = new Observer<T>((value: T) => {
+        _clear();
+        resolve(value);
+      }).observe(observable);
 
-        const observer = new Observer<TValueOrNotificationType<T>>((value: TValueOrNotificationType<T>) => {
-          if (value instanceof Notification) {
-            switch (value.name) {
-              case 'complete':
-                _resolve(value.value);
-                break;
-              case 'error':
-                _reject(value.value);
-                break;
-              case 'cancel':
-                token.cancel(value.value);
-                break;
-              default:
-                throw new Error(`Invalid Notification.name '${ value.name }'. Expected 'complete', 'error', or 'cancelled'`);
-            }
-          } else {
-            _resolve(value as T);
-          }
-        })
-          .observe(observable)
-          .activate();
-
-        const tokenObserver: INotificationsObserver<'cancel', void> = token.addListener('cancel', () => {
-          _resolve(ApplyCancelStrategy(token, strategy));
-        }).activate();
-      }
-    }),
-    token
-  ];
+      observer.activate();
+      tokenObserver.activate();
+    }, strategy),
+    token: token
+  };
 }
 
-export function toPromise<T>(observable: IObservable<TBasePromiseObservableNotification<T>> | IObservable<T>, strategy?: TCancelStrategy): Promise<T> {
-  return toCancellablePromiseTuple<T>(observable, strategy)[0];
+
+/**
+ * Observes an FiniteStateObservable through a Promise.
+ *  Accumulates values until 'complete' or 'next' is found
+ * @param observable
+ * @param strategy
+ * @param token
+ */
+export function finiteStateObservableToCancellablePromiseTuple<TValue, TFinalState extends FinalStateConstraint<TFinalState>, TMode extends FiniteStateObservableModeConstraint<TMode>, TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>>(
+  observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
+  strategy?: TCancelStrategy,
+  token: IPromiseCancelToken = new PromiseCancelToken()
+): ICancellablePromiseTuple<TValue[] | void> {
+  return {
+    promise: token.wrapPromise<TValue[]>((resolve: (value?: TPromiseOrValue<TValue[]>) => void, reject: (reason?: any) => void) => {
+      const values: TValue[] = [];
+
+      const _clear = () => {
+        observer.deactivate();
+        tokenObserver.deactivate();
+      };
+
+      const _resolve = () => {
+        _clear();
+        resolve(values);
+      };
+
+      const _reject = (error: any): void => {
+        _clear();
+        reject(error);
+      };
+
+      const tokenObserver = token.addListener('cancel', () => {
+        _clear();
+      });
+
+      const observer: IObserver<KeyValueMapToNotifications<TKVMap>> = new Observer<KeyValueMapToNotifications<TKVMap>>((notification: KeyValueMapToNotifications<TKVMap>) => {
+        switch (notification.name) {
+          case 'next':
+            values.push(notification.value);
+            break;
+          case 'complete':
+            _resolve();
+            break;
+          case 'error':
+            _reject(notification.value);
+            break;
+          case 'reset':
+            values.length = 0;
+            break;
+          case 'cancel':
+            token.cancel(notification.value);
+            break;
+        }
+      }).observe(observable);
+
+      observer.activate();
+      tokenObserver.activate();
+    }, strategy),
+    token: token
+  };
+}
+
+export function singleFiniteStateObservableToCancellablePromiseTuple<TValue, TFinalState extends FinalStateConstraint<TFinalState>, TMode extends FiniteStateObservableModeConstraint<TMode>, TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>>(
+  observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
+  strategy?: TCancelStrategy,
+  token?: IPromiseCancelToken
+): ICancellablePromiseTuple<TValue | void> {
+  const result: ICancellablePromiseTuple<TValue[] | void> = finiteStateObservableToCancellablePromiseTuple<TValue, TFinalState, TMode, TKVMap>(observable, strategy, token);
+  return {
+    promise: result.promise.then((result: TValue[] | void) => {
+      if (Array.isArray(result) && (result.length > 0)) {
+        return result[result.length - 1];
+      } else {
+        return void 0;
+      }
+    }),
+    token: result.token
+  };
+}
+
+
+export function toCancellablePromiseTuple<T>(
+  observable: IObservable<T> | TFiniteStateObservableGeneric<T>,
+  strategy?: TCancelStrategy,
+  token?: IPromiseCancelToken
+): ICancellablePromiseTuple<T | void> {
+  if (IsFiniteStateObservable(observable)) {
+    return singleFiniteStateObservableToCancellablePromiseTuple<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>>(observable, strategy, token);
+  } else if (IsObservable(observable)) {
+    return genericObservableToCancellablePromiseTuple<T>(observable as IObservable<T>, strategy, token);
+  } else {
+    throw new TypeError(`Expected Observable as observable`);
+  }
+}
+
+/*-------------------------*/
+
+export function genericObservableToPromise<T>(
+  observable: IObservable<T>,
+  strategy?: TCancelStrategy,
+  token?: IPromiseCancelToken
+): Promise<T | void> {
+  return genericObservableToCancellablePromiseTuple<T>(observable, strategy, token).promise;
+}
+
+
+export function finiteStateObservableToPromise<TValue, TFinalState extends FinalStateConstraint<TFinalState>, TMode extends FiniteStateObservableModeConstraint<TMode>, TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>>(
+  observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
+  strategy?: TCancelStrategy,
+  token?: IPromiseCancelToken
+): Promise<TValue[] | void> {
+  return finiteStateObservableToCancellablePromiseTuple<TValue, TFinalState, TMode, TKVMap>(observable, strategy, token).promise;
+}
+
+export function singleFiniteStateObservableToPromise<TValue, TFinalState extends FinalStateConstraint<TFinalState>, TMode extends FiniteStateObservableModeConstraint<TMode>, TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>>(
+  observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
+  strategy?: TCancelStrategy,
+  token?: IPromiseCancelToken
+): Promise<TValue | void> {
+  return singleFiniteStateObservableToCancellablePromiseTuple<TValue, TFinalState, TMode, TKVMap>(observable, strategy, token).promise;
+}
+
+export function toPromise<T>(
+  observable: IObservable<T> | TFiniteStateObservableGeneric<T>,
+  strategy?: TCancelStrategy,
+  token?: IPromiseCancelToken
+): Promise<T | void> {
+  return toCancellablePromiseTuple<T>(observable, strategy, token).promise;
 }

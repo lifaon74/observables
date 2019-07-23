@@ -1,3 +1,5 @@
+import { setImmediate } from './classes/set-immediate';
+
 export function noop() {
 }
 
@@ -38,4 +40,21 @@ export function IsArray(value: any): value is Iterable<any> {
 export function IsIterable(value: any): value is Iterable<any> {
   return IsObject(value)
     && (Symbol.iterator in value);
+}
+
+export function UntilDefined<T>(
+  callback: () => (T | undefined),
+  onDefined: (value: T) => void,
+  count: number = 1
+): void {
+  if (count >= 0) {
+    const value: T | undefined = callback();
+    if (value === void 0) {
+      setImmediate(() => {
+        UntilDefined<T>(callback, onDefined, count - 1);
+      });
+    } else {
+      onDefined(value);
+    }
+  }
 }

@@ -14,17 +14,26 @@ export interface ReasonInternal<T> extends IReason<T> {
   [REASON_PRIVATE]: IReasonPrivate<T>;
 }
 
+export function ConstructReason<T>(
+  instance: IReason<T>,
+  message: string,
+  code: T,
+): void {
+  ConstructClassWithPrivateMembers(instance, REASON_PRIVATE);
+  const privates: IReasonPrivate<T> = (instance as ReasonInternal<T>)[REASON_PRIVATE];
+  privates.message = message;
+  privates.code = code;
+}
+
 export function IsReason(value: any): value is IReason<any> {
   return IsObject(value)
-    && value.hasOwnProperty(REASON_PRIVATE);
+    && value.hasOwnProperty(REASON_PRIVATE as symbol);
 }
 
 export class Reason<T = void> implements IReason<T> {
 
   constructor(message: string, code: T) {
-    ConstructClassWithPrivateMembers(this, REASON_PRIVATE);
-    ((this as unknown) as ReasonInternal<T>)[REASON_PRIVATE].message = message;
-    ((this as unknown) as ReasonInternal<T>)[REASON_PRIVATE].code = code;
+    ConstructReason<T>(this, message, code);
   }
 
   get message(): string {

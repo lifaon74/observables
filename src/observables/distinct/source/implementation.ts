@@ -1,7 +1,7 @@
 import { IObservableContext } from '../../../core/observable/interfaces';
 import { IAsyncSource, ISource } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
-import { IPromiseCancelToken } from '../../../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import { IPromiseCancelToken } from '../../../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
 import {
   IValueObservableInternal, VALUE_OBSERVABLE_PRIVATE, ValueObservable
 } from '../value-observable/implementation';
@@ -31,7 +31,7 @@ export function ConstructSource<T>(source: ISource<T>, context: IObservableConte
 
 export function IsSource(value: any): value is ISource<any> {
   return IsObject(value)
-    && value.hasOwnProperty(SOURCE_PRIVATE);
+    && value.hasOwnProperty(SOURCE_PRIVATE as symbol);
 }
 
 export function SourceEmit<T>(source: ISource<T>, value: T): void {

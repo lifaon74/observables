@@ -1,6 +1,7 @@
 import { CancellablePromise } from '../promises/cancellable-promise/implementation';
-import { IPromiseCancelToken } from '../notifications/observables/promise-observable/promise-cancel-token/interfaces';
+import { IPromiseCancelToken } from '../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
 import { DeferredPromise } from '../promises/deferred-promise/implementation';
+import { $delay } from '../promises/cancellable-promise/helpers';
 
 export function testCancellablePromise() {
   const a = CancellablePromise.resolve(1)
@@ -32,6 +33,20 @@ export function testCancellablePromise() {
     })
     .then(() =>{
       console.log('never append');
+    });
+
+
+
+  CancellablePromise.raceCancellable(Array.from({ length: 4 }, (value: void, index: number) => {
+    return (token: IPromiseCancelToken) => {
+      return $delay(index * 1000, token)
+        .cancelled((token: IPromiseCancelToken) => {
+          console.log(`index: ${ index } cancelled: ${ token.reason.message }`);
+        });
+    };
+  }))
+    .then(() => {
+      console.log('done');
     });
 
   // console.log(a);

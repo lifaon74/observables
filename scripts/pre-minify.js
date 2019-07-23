@@ -27,7 +27,7 @@ function compressPrivates(content) {
 
     // console.log(generateName(1000));
     const map = new Map();
-    const reg = /((?:\[[\w]+\])|(?:[pP]rivates))\.([\w]+)/g;
+    const reg = /((?:\[[\w_PRIVATE]+\])|(?:[pP]rivates))\.([\w]+)/g;
     const _content = content.replace(reg, (match, key1, key2) => {
         // console.log(symbol);
 
@@ -80,6 +80,22 @@ function compressPrivates(content) {
     return _content;
 }
 
+async function compressErrors(content, output) {
+    const texts = [];
+    content = content.replace(/Error\(['`](.*?)['`]\)/g, (match, string) => {
+        texts.push(string);
+        return `Error('#${ texts.length }')`;
+    });
+    await $fs.writeFile(output, JSON.stringify(Object.fromEntries(texts.map((v, i) => [i, v])), null, '  '));
+    return content;
+}
+
+function compressSymbols(content) {
+    return content.replace(/Symbol\((.*?)\)/g, `Symbol()`);
+}
+
+
+
 function compressGlobals(content) {
     const constants = new Set([
         `TypeError`,
@@ -88,7 +104,7 @@ function compressGlobals(content) {
         `Array.isArray`,
         `Array.from`,
         `setTimeout`,
-        `Object.defineProperty`
+        `Object.defineProperty`,
     ]);
 
     const functions = new Set([
@@ -118,22 +134,27 @@ function compressGlobals(content) {
         content,
         `})());`,
     ].join('\n');
-
 }
 
 async function run(input, output) {
+    console.log('input', input);
     let content = (await $fs.readFile(input)).toString();
     // console.log(content);
 
-    content = compressPrivates(content);
+    // content = compressPrivates(content);
+    content = await compressErrors(content, output + '.errors.json');
+    content = compressSymbols(content);
     content = compressGlobals(content);
 
     await $fs.writeFile(output, content);
 }
 
+const root = $path.join(__dirname, '../');
+const bundlePath = $path.join(root, './dist/bundle');
+
 Promise.all([
-    run($path.join(__dirname, './dist/bundle/public.core.umd.esnext.js', './dist/bundle/public.core.umd.esnext.pre-min.js')),
-    run($path.join(__dirname, './dist/bundle/public.umd.esnext.js', './dist/bundle/public.umd.esnext.pre-min.js')),
+    run($path.join(bundlePath, './public.core.umd.esnext.js'), $path.join(bundlePath, './public.core.umd.esnext.pre-min.js')),
+    run($path.join(bundlePath, './public.umd.esnext.js'), $path.join(bundlePath, './public.umd.esnext.pre-min.js')),
 ]).then(() => {
     console.log('done');
 });

@@ -25,6 +25,9 @@ import { IObservableObserver } from '../../../core/observable-observer/interface
 type CastKeyValueMapToNotifications<TKVMap extends KeyValueMapGenericConstraint<TKVMap>, K extends KeyValueMapKeys<TKVMap>> = K extends any ? INotification<K, TKVMap[K]> : never;
 export type KeyValueMapToNotifications<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> = CastKeyValueMapToNotifications<TKVMap, KeyValueMapKeys<TKVMap>>;
 
+type CastKeyValueMapToNotificationsSoft<TKVMap extends object, K extends KeyValueMapKeys<TKVMap>> = K extends any ? INotification<K, TKVMap[K]> : never;
+export type KeyValueMapToNotificationsSoft<TKVMap extends object> = CastKeyValueMapToNotificationsSoft<TKVMap, KeyValueMapKeys<TKVMap>>;
+
 /**
  * Cast a KeyValueMap to a Notification where:
  * - 'name' is the union of the TKVMap's keys
@@ -80,11 +83,6 @@ export type TNotificationsObservableConstructorArgs<TKVMap extends KeyValueMapGe
   | [];
 
 
-export interface INotificationsObservableBasicKeyValueMap<TValue, TError = any> {
-  next: TValue;
-  complete: undefined;
-  error: TError;
-}
 
 /** INTERFACES **/
 

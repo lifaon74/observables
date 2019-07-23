@@ -24,9 +24,18 @@ export function ConstructReadonlyTuple<T extends any[]>(instance: IReadonlyTuple
 
 export function IsReadonlyTuple(value: any): value is IReadonlyTuple<any> {
   return IsObject(value)
-    && value.hasOwnProperty(READONLY_TUPLE_PRIVATE);
+    && value.hasOwnProperty(READONLY_TUPLE_PRIVATE as symbol);
 }
 
+
+export function ReadonlyTupleItem<T extends any[], K extends number>(instance: IReadonlyTuple<T>, index: K): T[K] {
+  const privates: IReadonlyTuplePrivate<T> = (instance as IReadonlyTupleInternal<T>)[READONLY_TUPLE_PRIVATE];
+  if ((0 <= index) && (index < privates.items.length)) {
+    return privates.items[index];
+  } else {
+    throw new RangeError(`Index out of range.`);
+  }
+}
 
 export class ReadonlyTuple<T extends any[]> implements IReadonlyTuple<T> {
 
@@ -39,11 +48,7 @@ export class ReadonlyTuple<T extends any[]> implements IReadonlyTuple<T> {
   }
 
   item<K extends number>(index: K): T[K] {
-    if ((0 <= index) && (index < ((this as unknown) as IReadonlyTupleInternal<T>)[READONLY_TUPLE_PRIVATE].items.length)) {
-      return ((this as unknown) as IReadonlyTupleInternal<T>)[READONLY_TUPLE_PRIVATE].items[index];
-    } else {
-      throw new RangeError(`Index out of range.`);
-    }
+    return ReadonlyTupleItem<T, K>(this, index);
   }
 
   [Symbol.iterator](): IterableIterator<TupleTypes<T>> {
