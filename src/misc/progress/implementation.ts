@@ -10,7 +10,7 @@ export interface IProgressPrivate {
   total: number;
 }
 
-export interface ProgressInternal extends IProgress {
+export interface IProgressInternal extends IProgress {
   [PROGRESS_PRIVATE]: IProgressPrivate;
 }
 
@@ -19,7 +19,7 @@ export function ConstructProgress(
   options: IProgressOptions = {}
 ): void {
   ConstructClassWithPrivateMembers(instance, PROGRESS_PRIVATE);
-  const privates: IProgressPrivate = (instance as ProgressInternal)[PROGRESS_PRIVATE];
+  const privates: IProgressPrivate = (instance as IProgressInternal)[PROGRESS_PRIVATE];
 
   if (IsObject(options)) {
     if (options.total === void 0) {
@@ -74,15 +74,15 @@ export class Progress implements IProgress {
   }
 
   get lengthComputable(): boolean {
-    return ((this as unknown) as ProgressInternal)[PROGRESS_PRIVATE].total !== Number.POSITIVE_INFINITY;
+    return ((this as unknown) as IProgressInternal)[PROGRESS_PRIVATE].total !== Number.POSITIVE_INFINITY;
   }
 
   get loaded(): number {
-    return ((this as unknown) as ProgressInternal)[PROGRESS_PRIVATE].loaded;
+    return ((this as unknown) as IProgressInternal)[PROGRESS_PRIVATE].loaded;
   }
 
   get total(): number {
-    return ((this as unknown) as ProgressInternal)[PROGRESS_PRIVATE].total;
+    return ((this as unknown) as IProgressInternal)[PROGRESS_PRIVATE].total;
   }
 
   toJSON(allowFloat: boolean = false): IProgressJSON {

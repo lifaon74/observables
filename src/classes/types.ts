@@ -19,6 +19,14 @@ export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 // removes from T (object) the properties K (tuple)
 export type ExcludeProperties<T, K extends (keyof T)[]> = Pick<T, Exclude<keyof T, TupleTypes<K>>>;
 
+
+export type RequireProperties<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
+export type PartialProperties<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+// export type RequireProperties<T, K extends keyof T> = T & {
+//   [P in K]-?: T[P];
+// };
+
+
 export type Clone<T> = {
   [K in keyof T]: T[K]
 };

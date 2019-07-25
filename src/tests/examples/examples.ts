@@ -42,6 +42,8 @@ import {
 } from '../../notifications/observables/finite-state/interfaces';
 import { FromIterableObservable } from '../../notifications/observables/finite-state/from/iterable/sync/public';
 import { IFetchObservable } from '../../notifications/observables/finite-state/promise/fetch-observable/interfaces';
+import { XHRObservable } from '../../notifications/observables/finite-state/promise/xhr-observable/implementation';
+import { XHRResponseToUint8Array } from '../../notifications/observables/finite-state/promise/xhr-observable/helpers';
 
 
 /**
@@ -490,6 +492,89 @@ function fetchObservableExample2(): void {
   observeFetchObservable2(observable);
 }
 
+async function xhrObservableExample1() {
+
+  function http(requestInfo: RequestInfo, requestInit?: RequestInit): Promise<void> {
+    return new Promise<void>((resolve: any, reject: any) => {
+      const observable = new XHRObservable(requestInfo, requestInit, { mode: 'once' });
+      observable
+        .pipeTo((notification: INotification<string, any>) => {
+          console.log(notification.name, notification.value);
+
+          if (notification.name === 'complete') {
+            resolve();
+          } else if (notification.name === 'error') {
+            reject(notification.value);
+          } else if (notification.name === 'next') {
+            (notification.value as Response)
+              .arrayBuffer()
+              .then((buffer) => {
+                console.log('done', buffer.byteLength);
+              })
+          }
+
+        }).activate();
+    });
+  }
+
+  function noCORS(url: string): string {
+    return `https://cors-anywhere.herokuapp.com/${ url }`;
+  }
+
+  const bytes: Uint8Array = new Uint8Array(Array.from({ length: 256 }, (v, i) => i));
+  // const bytes: Uint8Array = new TextEncoder().encode('😀 😁 😂');
+
+  // console.log(bytes);
+
+  // const blob = new Blob([bytes], { type: 'text/plain' });
+  const blob = new Blob([bytes], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  // const url = 'https://www.w3.org/TR/PNG/iso_8859-1.txt';
+  // const url = 'http://ipv4.download.thinkbroadband.com/10MB.zip';
+  // const url = 'https://speed.hetzner.de/100MB.bin';
+
+  function testXHR() {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    // xhr.overrideMimeType('text/plain; charset=x-user-defined');
+
+    xhr.responseType = 'text';
+
+    xhr.onload = function () {
+      if (xhr.readyState === xhr.DONE) {
+        if (xhr.status === 200) {
+          // const array = [];
+          // var binStr = xhr.responseText;
+          // for (var i = 0, len = binStr.length; i < len; ++i) {
+          //   var c = binStr.charCodeAt(i);
+          //   //String.fromCharCode(c & 0xff);
+          //   array.push(c & 0xff);  // byte at offset i
+          // }
+          // console.log(array);
+          // console.log(new TextEncoder().encode(xhr.responseText));
+          console.log(xhr.response);
+          // console.log(XHRResponseToUint8Array(xhr));
+          debugger;
+          console.log(xhr.responseText.length);
+        }
+      }
+    };
+
+    xhr.send(null);
+  }
+
+  function downloadBigFile() {
+    // return http(noCORS('http://ipv4.download.thinkbroadband.com/10MB.zip'));
+    // return http(noCORS('https://speed.hetzner.de/100MB.bin'));
+    return http(url);
+  }
+
+  await downloadBigFile();
+}
+
+
+
+
 /**
  * Example how to cast an Observable to a Promise
  */
@@ -780,7 +865,8 @@ export async function testExamples() {
   // promiseCancelTokenExample1();
   // promiseObservableExample1();
   // fetchObservableExample1();
-  fetchObservableExample2();
+  // fetchObservableExample2();
+  xhrObservableExample1();
   // await observableToPromiseExample1();
 
   // pipeExample1();

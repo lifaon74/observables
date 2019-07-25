@@ -104,9 +104,6 @@ export function finiteStateObservableToCancellablePromiseTuple<TValue, TFinalSta
           case 'error':
             _reject(notification.value);
             break;
-          case 'reset':
-            values.length = 0;
-            break;
           case 'cancel':
             token.cancel(notification.value);
             break;
