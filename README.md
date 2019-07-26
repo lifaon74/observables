@@ -324,6 +324,7 @@ interface SmartElectricOutlet {
       - [addListener](#addlistener)
       - [removeListener](#removelistener)
       - [on / off](#on--off)
+      - [hasListener](#haslistener)
       - [matches](#matches)
     + [NotificationsObserver](#notificationsobserver)
   * [EventsObservable](#eventsobservable)
@@ -338,6 +339,7 @@ interface SmartElectricOutlet {
       - [wrapPromise / wrapFunction / wrapFetchArguments](#wrappromise--wrapfunction--wrapfetcharguments)
     + [PromiseObservable](#promiseobservable-1)
     + [FetchObservable](#fetchobservable)
+
 
 
 

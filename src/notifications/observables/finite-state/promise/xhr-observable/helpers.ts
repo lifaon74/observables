@@ -443,6 +443,13 @@ export function CloneRequest(request: RequestInfo, init: PartialProperties<Reque
  * @param method
  * @param body
  * @param init
+ *
+ * @example:
+ *  CreateSimpleRequest('https://chart.googleapis.com/chart', 'GET', {
+      cht: 'qr',
+      chs: '256x256',
+      chl: data,
+    });
  */
 export function CreateSimpleRequest(url: string, method: string, body: any = null, init: RequestInit = {}): Request {
 

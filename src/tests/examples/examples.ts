@@ -43,7 +43,6 @@ import {
 import { FromIterableObservable } from '../../notifications/observables/finite-state/from/iterable/sync/public';
 import { IFetchObservable } from '../../notifications/observables/finite-state/promise/fetch-observable/interfaces';
 import { XHRObservable } from '../../notifications/observables/finite-state/promise/xhr-observable/implementation';
-import { XHRResponseToUint8Array } from '../../notifications/observables/finite-state/promise/xhr-observable/helpers';
 import { FromReadableStreamObservable } from '../../notifications/observables/finite-state/from/readable-stream/implementation';
 
 
@@ -493,6 +492,40 @@ function fetchObservableExample2(): void {
   observeFetchObservable2(observable);
 }
 
+function observeReadableStream(stream: ReadableStream<Uint8Array>) {
+  const chunks: Uint8Array[] = [];
+  new FromReadableStreamObservable<Uint8Array>(stream)
+    .on('next', (chunk: Uint8Array) => {
+      chunks.push(chunk);
+      // console.log('chunk', chunk);
+    })
+    .on('complete', () => {
+      const bytes = new Uint8Array(chunks.reduce((sum, chunk) => sum + chunk.length, 0));
+      chunks.reduce((index, chunk) => {
+        bytes.set(chunk, index);
+        return index + chunk.length;
+      }, 0);
+      console.log('complete', bytes);
+    });
+
+  // finiteStateObservableToPromise(new FromReadableStreamObservable<Uint8Array>(stream))
+  //   .then((chunks: Uint8Array[]) => {
+  //     const bytes = new Uint8Array(chunks.reduce((sum, chunk) => sum + chunk.length, 0));
+  //     chunks.reduce((index, chunk) => {
+  //       bytes.set(chunk, index);
+  //       return index + chunk.length;
+  //     }, 0);
+  //     console.log('complete', bytes);
+  //   });
+}
+
+function readableStreamExample1() {
+  fetch(URL.createObjectURL(new Blob([new Uint8Array(1e7)])))
+    .then((response: Response) => {
+      observeReadableStream(response.body as ReadableStream<Uint8Array>);
+    });
+}
+
 async function xhrObservableExample1() {
 
   function http(requestInfo: RequestInfo, requestInit?: RequestInit): Promise<void> {
@@ -507,23 +540,7 @@ async function xhrObservableExample1() {
           } else if (notification.name === 'error') {
             reject(notification.value);
           } else if (notification.name === 'next') {
-
-            const chunks: Uint8Array[] = [];
-            new FromReadableStreamObservable<Uint8Array>((notification.value as Response).body as ReadableStream<Uint8Array>)
-              .on('next', (chunk: Uint8Array) => {
-                chunks.push(chunk);
-                // console.log('chunk', chunk);
-              })
-              .on('complete', () => {
-                const bytes = new Uint8Array(chunks.reduce((sum, chunk) => sum + chunk.length, 0));
-                chunks.reduce((index, chunk) => {
-                  bytes.set(chunk, index);
-                  return index + chunk.length;
-                }, 0);
-
-                console.log('done', bytes);
-              });
-
+            observeReadableStream((notification.value as Response).body as ReadableStream<Uint8Array>);
             // (notification.value as Response)
             //   .arrayBuffer()
             //   .then((buffer) => {
@@ -553,47 +570,6 @@ async function xhrObservableExample1() {
 
   // const bytes: Uint8Array = new TextEncoder().encode('😀 😁 😂');
 
-
-  function testXHR() {
-
-    // console.log(bytes);
-
-    // const blob = new Blob([bytes], { type: 'text/plain' });
-
-    const url = 'https://www.w3.org/TR/PNG/iso_8859-1.txt';
-    // const url = 'http://ipv4.download.thinkbroadband.com/10MB.zip';
-    // const url = 'https://speed.hetzner.de/100MB.bin';
-
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-    // xhr.overrideMimeType('text/plain; charset=x-user-defined');
-
-    xhr.responseType = 'text';
-
-    xhr.onload = function () {
-      if (xhr.readyState === xhr.DONE) {
-        if (xhr.status === 200) {
-          // const array = [];
-          // var binStr = xhr.responseText;
-          // for (var i = 0, len = binStr.length; i < len; ++i) {
-          //   var c = binStr.charCodeAt(i);
-          //   //String.fromCharCode(c & 0xff);
-          //   array.push(c & 0xff);  // byte at offset i
-          // }
-          // console.log(array);
-          // console.log(new TextEncoder().encode(xhr.responseText));
-          console.log(xhr.response);
-          // console.log(XHRResponseToUint8Array(xhr));
-          debugger;
-          console.log(xhr.responseText.length);
-        }
-      }
-    };
-
-    xhr.send(null);
-  }
-
-
   function downloadBigFile() {
     const bytes = new Blob([dummyBytes(new Uint8Array(1e7))], { type: 'application/octet-stream' });
     return http(URL.createObjectURL(bytes));
@@ -610,7 +586,7 @@ async function xhrObservableExample1() {
   }
 
   await downloadBigFile();
-  // await uploadBigFile();
+  await uploadBigFile();
 }
 
 
@@ -907,7 +883,8 @@ export async function testExamples() {
   // promiseObservableExample1();
   // fetchObservableExample1();
   // fetchObservableExample2();
-  xhrObservableExample1();
+  readableStreamExample1();
+  // xhrObservableExample1();
   // await observableToPromiseExample1();
 
   // pipeExample1();
