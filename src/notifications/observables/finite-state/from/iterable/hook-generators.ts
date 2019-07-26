@@ -5,6 +5,7 @@ import {
 import {
   IFromIterableObservableKeyValueMap, TFromIterableObservableFinalState
 } from './sync/interfaces';
+import { IFromAsyncIterableObservableKeyValueMap, TFromAsyncIterableObservableFinalState } from './async/interfaces';
 
 /**
  * Generates an Hook for a FiniteStateObservable, based on an iterable:
@@ -88,10 +89,10 @@ export function GenerateFiniteStateObservableHookFromIterableWithPauseWorkflow<T
  */
 export function GenerateFiniteStateObservableHookFromAsyncIterableWithPauseWorkflow<TValue>(
   iterable: AsyncIterable<TValue>
-): TFiniteStateObservableCreateCallback<TValue, TFromIterableObservableFinalState, TFiniteStateObservableMode, IFromIterableObservableKeyValueMap<TValue>> {
-  type TFinalState = TFromIterableObservableFinalState;
+): TFiniteStateObservableCreateCallback<TValue, TFromAsyncIterableObservableFinalState, TFiniteStateObservableMode, IFromAsyncIterableObservableKeyValueMap<TValue>> {
+  type TFinalState = TFromAsyncIterableObservableFinalState;
   type TMode = TFiniteStateObservableMode;
-  type TKVMap = IFromIterableObservableKeyValueMap<TValue>;
+  type TKVMap = IFromAsyncIterableObservableKeyValueMap<TValue>;
   return function (context: IFiniteStateObservableContext<TValue, TFinalState, TMode, TKVMap>) {
     let iterator: AsyncIterator<TValue>;
     let state: 'paused' | 'iterating' | 'complete' = 'paused';

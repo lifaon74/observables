@@ -239,6 +239,9 @@ export function XHRResponseToReadableStream(
   responseType: XMLHttpRequestExtendedResponseType = xhr.responseType,
   token?: ICancelToken
 ): ReadableStream<Uint8Array> {
+
+  let clear: () => void;
+
   return new ReadableStream<Uint8Array>({
     start(controller) {
       if ((token === void 0) || (!token.cancelled)) {
@@ -247,7 +250,7 @@ export function XHRResponseToReadableStream(
         let tokenObserver: INotificationsObserver<'cancel', any>;
         let readIndex: number = 0;
 
-        const clear = () => {
+        clear = () => {
           xhr.removeEventListener('load', onLoad);
           xhr.removeEventListener('error', onError);
           xhr.removeEventListener('progress', onProgress);
@@ -301,7 +304,14 @@ export function XHRResponseToReadableStream(
             .activate();
         }
       }
-    }
+    },
+    cancel() {
+      if (clear !== void 0) {
+        clear();
+      }
+    },
+    // TODO: not implemented yet in some browsers
+    // type: 'bytes'
   });
 }
 

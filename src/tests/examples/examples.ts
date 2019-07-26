@@ -44,6 +44,7 @@ import { FromIterableObservable } from '../../notifications/observables/finite-s
 import { IFetchObservable } from '../../notifications/observables/finite-state/promise/fetch-observable/interfaces';
 import { XHRObservable } from '../../notifications/observables/finite-state/promise/xhr-observable/implementation';
 import { XHRResponseToUint8Array } from '../../notifications/observables/finite-state/promise/xhr-observable/helpers';
+import { FromReadableStreamObservable } from '../../notifications/observables/finite-state/from/readable-stream/implementation';
 
 
 /**
@@ -506,13 +507,30 @@ async function xhrObservableExample1() {
           } else if (notification.name === 'error') {
             reject(notification.value);
           } else if (notification.name === 'next') {
-            (notification.value as Response)
-              .arrayBuffer()
-              .then((buffer) => {
-                console.log('done', new Uint8Array(buffer));
-              }, (error: any) => {
-                console.warn(error);
+
+            const chunks: Uint8Array[] = [];
+            new FromReadableStreamObservable<Uint8Array>((notification.value as Response).body as ReadableStream<Uint8Array>)
+              .on('next', (chunk: Uint8Array) => {
+                chunks.push(chunk);
+                // console.log('chunk', chunk);
+              })
+              .on('complete', () => {
+                const bytes = new Uint8Array(chunks.reduce((sum, chunk) => sum + chunk.length, 0));
+                chunks.reduce((index, chunk) => {
+                  bytes.set(chunk, index);
+                  return index + chunk.length;
+                }, 0);
+
+                console.log('done', bytes);
               });
+
+            // (notification.value as Response)
+            //   .arrayBuffer()
+            //   .then((buffer) => {
+            //     console.log('done', new Uint8Array(buffer));
+            //   }, (error: any) => {
+            //     console.warn(error);
+            //   });
 
             // observer.deactivate();
           }
@@ -591,8 +609,8 @@ async function xhrObservableExample1() {
     });
   }
 
-  // await downloadBigFile();
-  await uploadBigFile();
+  await downloadBigFile();
+  // await uploadBigFile();
 }
 
 
