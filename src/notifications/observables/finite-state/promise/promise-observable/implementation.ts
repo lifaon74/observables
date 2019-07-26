@@ -1,4 +1,4 @@
-import { IPromiseCancelToken } from '../promise-cancel-token/interfaces';
+import { ICancelToken } from '../../../../../misc/cancel-token/interfaces';
 import {
   IPromiseObservable, IPromiseObservableKeyValueMap, IPromiseObservableOptions, TPromiseObservableFactory,
   TPromiseObservableFinalState, TPromiseObservableMode
@@ -51,8 +51,8 @@ export function NormalizePromiseObservableOptions(options: IPromiseObservableOpt
 }
 
 
-export function PromiseObservableFromPromise<T>(promise: Promise<T>, token?: IPromiseCancelToken, options?: IPromiseObservableOptions): IPromiseObservable<T> {
-  return new PromiseObservable<T>((_token: IPromiseCancelToken) => {
+export function PromiseObservableFromPromise<T>(promise: Promise<T>, token?: ICancelToken, options?: IPromiseObservableOptions): IPromiseObservable<T> {
+  return new PromiseObservable<T>((_token: ICancelToken) => {
     if (token !== void 0) {
       _token.linkWithToken(token);
     }
@@ -62,7 +62,7 @@ export function PromiseObservableFromPromise<T>(promise: Promise<T>, token?: IPr
 
 export class PromiseObservable<T> extends FiniteStateObservable<T, TPromiseObservableFinalState, TPromiseObservableMode, IPromiseObservableKeyValueMap<T>> implements IPromiseObservable<T> {
 
-  static fromPromise<T>(promise: Promise<T>, token?: IPromiseCancelToken, options?: IPromiseObservableOptions): IPromiseObservable<T> {
+  static fromPromise<T>(promise: Promise<T>, token?: ICancelToken, options?: IPromiseObservableOptions): IPromiseObservable<T> {
     return PromiseObservableFromPromise<T>(promise, token, options);
   }
 
@@ -80,8 +80,8 @@ export class PromiseObservable<T> extends FiniteStateObservable<T, TPromiseObser
 
 
 /*
-function doRequestWithTimeout(timeout: number = 60000, token?: PromiseCancelToken) {
-  const _token = new PromiseCancelToken();
+function doRequestWithTimeout(timeout: number = 60000, token?: CancelToken) {
+  const _token = new CancelToken();
 
   setTimeout(() => {
     _token.cancel(new Reason(`Timeout reached`, 'TIMEOUT'));

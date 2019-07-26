@@ -1,11 +1,11 @@
 import { CancellablePromise } from '../promises/cancellable-promise/implementation';
-import { IPromiseCancelToken } from '../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
+import { ICancelToken } from '../misc/cancel-token/interfaces';
 import { DeferredPromise } from '../promises/deferred-promise/implementation';
 import { $delay } from '../promises/cancellable-promise/helpers';
 
 export function testCancellablePromise() {
   const a = CancellablePromise.resolve(1)
-    .then((value: number, token: IPromiseCancelToken) => {
+    .then((value: number, token: ICancelToken) => {
       console.log('1', value);
       token.cancel('cancelled');
       return value * 2;
@@ -13,7 +13,7 @@ export function testCancellablePromise() {
     .then((value: number) => {
       console.log('never append', value);
     })
-    .cancelled((token: IPromiseCancelToken) => {
+    .cancelled((token: ICancelToken) => {
       console.log('cancelled', token.reason);
       return new Promise(() => {});
     })
@@ -27,7 +27,7 @@ export function testCancellablePromise() {
     });
 
   const b = CancellablePromise.all([Promise.resolve({ a: 1 }), { b: 1 }, 'a'])
-    .then((values: any[], token: IPromiseCancelToken) => {
+    .then((values: any[], token: ICancelToken) => {
       console.log('values', values);
       token.cancel('cancel b');
     })
@@ -38,9 +38,9 @@ export function testCancellablePromise() {
 
 
   CancellablePromise.raceCancellable(Array.from({ length: 4 }, (value: void, index: number) => {
-    return (token: IPromiseCancelToken) => {
+    return (token: ICancelToken) => {
       return $delay(index * 1000, token)
-        .cancelled((token: IPromiseCancelToken) => {
+        .cancelled((token: ICancelToken) => {
           console.log(`index: ${ index } cancelled: ${ token.reason.message }`);
         });
     };

@@ -324,13 +324,14 @@ interface SmartElectricOutlet {
       - [addListener](#addlistener)
       - [removeListener](#removelistener)
       - [on / off](#on--off)
+      - [hasListener](#haslistener)
       - [matches](#matches)
     + [NotificationsObserver](#notificationsobserver)
   * [EventsObservable](#eventsobservable)
   * [FiniteStateObservable](#finitestateobservable)
       - [Construct](#construct-4)
   * [PromiseObservable](#promiseobservable)
-    + [PromiseCancelToken](#promisecanceltoken)
+    + [CancelToken](#canceltoken)
       - [of (static)](#of-static)
       - [cancel](#cancel)
       - [linkWithToken](#linkwithtoken)
@@ -338,6 +339,7 @@ interface SmartElectricOutlet {
       - [wrapPromise / wrapFunction / wrapFetchArguments](#wrappromise--wrapfunction--wrapfetcharguments)
     + [PromiseObservable](#promiseobservable-1)
     + [FetchObservable](#fetchobservable)
+
 
 
 
@@ -942,6 +944,10 @@ It is widely used with events listener for example, and supports existing KeyVal
 ***NotificationsObservable***
 
 ```ts
+interface INotificationsObservableMatchOptions {
+  includeGlobalObservers?: boolean; // (default => false) if set to true, includes Observers which are not of type NotificationsObserver (assumes they receives all Notifications)
+}
+
 interface INotificationsObservableConstructor {
   new<TKVMap extends KeyValueMapGeneric>(create?: (context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)): INotificationsObservable<TKVMap>;
 }
@@ -959,8 +965,11 @@ interface INotificationsObservable<TKVMap extends KeyValueMapGeneric> extends IO
   // like "removeListener" but returns "this"
   off<K extends KeyValueMapKeys<TKVMap>>(name: K, callback?: (value: TKVMap[K]) => void): this;
 
-  // returns the list of observed NotificationsObserver matching "name" and "callback"
-  matches(name: string, callback?: (value: any) => void): IterableIterator<KeyValueMapToNotificationsObservers<TKVMap>>;
+  // returns true if this observable has an Observer matching "name" and "callback".
+  hasListener(name: string, callback?: (value: any) => void, options?: INotificationsObservableMatchOptions): boolean;
+  
+  // returns the list of Observer matching "name" and "callback"
+  matches(name: string, callback?: (value: any) => void, options?: INotificationsObservableMatchOptions): IterableIterator<IObserver<KeyValueMapToNotifications<TKVMap>>>;
 }
 ```
 
@@ -1044,12 +1053,23 @@ window.addEventListener(window, (event: MouseEvent) => {
 
 **INFO:** An EventsObservable is provided to simplify Events listening.
 
+###### hasListener
+```ts
+hasListener(name: string, callback?: (value: any) => void, options?: INotificationsObservableMatchOptions): boolean;
+```
+Returns true if this observable has an NotificationsObserver matching `name` and `callback`.
+If `callback` is omitted, returns all NotificationsObservers matching `name`.
+If `options.includeGlobalObservers` is true, and this Observable is observed by at least one Observer with a type different than NotificationsObserver, then returns true.
+
+**INFO:** `hasListener` is similar to `!observable.matches(name, callback, options).next().done`
+
 ###### matches
 ```ts
-matches(name: string, callback?: (value: any) => void): IterableIterator<KeyValueMapToNotificationsObservers<TKVMap>>;
+matches(name: string, callback?: (value: any) => void, options?: INotificationsObservableMatchOptions): IterableIterator<IObserver<KeyValueMapToNotifications<TKVMap>>>;
 ```
 Returns an iterator which iterates over the list of NotificationsObservers matching `name` and `callback`.
 If `callback` is omitted, returns all NotificationsObservers matching `name`.
+If `options.includeGlobalObservers` is true, includes the list of Observers with a type different than NotificationsObserver.
 
 
 ##### NotificationsObserver
@@ -1293,7 +1313,7 @@ new FromIterableObservable<number>([0, 1, 2, 3], { mode: 'cache' })
 
 #### PromiseObservable
 
-##### PromiseCancelToken
+##### CancelToken
 ```ts
 type TCancelStrategy =
   'resolve' // resolve the promise with void
@@ -1301,21 +1321,21 @@ type TCancelStrategy =
   | 'never' // (default) never resolve the promise, it stays in a pending state forever
   ;
 
-type TPromiseCancelTokenWrapPromiseCallback<T> = (this: IPromiseCancelToken, resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void, token: IPromiseCancelToken) => void;
+type TCancelTokenWrapPromiseCallback<T> = (this: ICancelToken, resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void, token: ICancelToken) => void;
 
-type TOnCancelled = ((this: IPromiseCancelToken, reason: any) => TPromiseOrValue<void>) | undefined | null;
+type TOnCancelled = ((this: ICancelToken, reason: any) => TPromiseOrValue<void>) | undefined | null;
 
-interface IPromiseCancelTokenConstructor {
-  new(): IPromiseCancelToken;
-  of(...tokens: IPromiseCancelToken[]): IPromiseCancelToken;
+interface ICancelTokenConstructor {
+  new(): ICancelToken;
+  of(...tokens: ICancelToken[]): ICancelToken;
 }
 
-interface IPromiseCancelTokenKeyValueMap {
+interface ICancelTokenKeyValueMap {
   cancel: any;
 }
 
 
-interface IPromiseCancelToken extends INotificationsObservable<IPromiseCancelTokenKeyValueMap> {
+interface ICancelToken extends INotificationsObservable<ICancelTokenKeyValueMap> {
   readonly cancelled: boolean;
   readonly reason: any;
 
@@ -1323,7 +1343,7 @@ interface IPromiseCancelToken extends INotificationsObservable<IPromiseCancelTok
   cancel(reason?: any): void;
 
   // links this Token with some others tokens
-  linkWithToken(...tokens: IPromiseCancelToken[]): () => void;
+  linkWithToken(...tokens: ICancelToken[]): () => void;
 
 
   // creates an AbortController linked with this Token
@@ -1338,7 +1358,7 @@ interface IPromiseCancelToken extends INotificationsObservable<IPromiseCancelTok
 
   // wraps a promise with a this Token
   wrapPromise<T>(
-    promiseOrCallback: Promise<T> | TPromiseCancelTokenWrapPromiseCallback<T>,
+    promiseOrCallback: Promise<T> | TCancelTokenWrapPromiseCallback<T>,
     strategy?: TCancelStrategy,
     onCancelled?: TOnCancelled,
   ): Promise<T | void>;
@@ -1356,12 +1376,12 @@ interface IPromiseCancelToken extends INotificationsObservable<IPromiseCancelTok
 }
 ```
 
-A PromiseCancelToken is a Token used to *"cancel"* a promise.
+A CancelToken is a Token used to *"cancel"* a something (generally a promise).
 It is extremely useful to avoid unnecessary work in a promise chain or to abort async operations.
 
-*Example:* Use PromiseCancelToken to know than a promise has been cancelled
+*Example:* Use CancelToken to know than a promise has been cancelled
 ```ts
-const token = new PromiseCancelToken();
+const token = new CancelToken();
 fetch('some-url')
   .then((response: Response) => {
     if (token.cancelled) { // if the token is cancelled, throw an error
@@ -1379,28 +1399,28 @@ token.cancel(new Error('Promise cancelled'));
 ```
 
 Promises don't have any 'cancelled' state or a way to dispatch/handle it natively.
-For this reason a PromiseCancelToken may be used and **MUST** be checked in every then/catch to avoid unnecessary work.
+For this reason a CancelToken may be used and **MUST** be checked in every then/catch to avoid unnecessary work.
 
 ###### of (static)
 ```ts
-of(...tokens: IPromiseCancelToken[]): IPromiseCancelToken;
+of(...tokens: ICancelToken[]): ICancelToken;
 ```
-Creates a new PromiseCancelToken from a list of PromiseCancelTokens:
+Creates a new CancelToken from a list of CancelTokens:
 if one of the provided `tokens` is cancelled, cancel this Token with the cancelled token's reason.
 
 ###### cancel
 ```ts
 cancel(reason?: any): void;
 ```
-Calls this function to notify a promise it has been cancelled:
+Calls this function to notify the observer that the token has been cancelled:
 - emits a *Notification<'cancel', any>*
 - enters in a *canceled* state
 
 ###### linkWithToken
 ```ts
-linkWithToken(...tokens: IPromiseCancelToken[]): () => void;
+linkWithToken(...tokens: ICancelToken[]): () => void;
 ```
-Links this PromiseCancelToken with a list of tokens. If one of the provided `tokens` is cancelled, cancel this Token with the cancelled token's reason.
+Links this CancelToken with a list of tokens. If one of the provided `tokens` is cancelled, cancel this Token with the cancelled token's reason.
 
 *INFO:* linkWith<name> methods return an undo function: calling this function will undo the link.
 
@@ -1411,12 +1431,12 @@ linkWithAbortController(controller: AbortController): () => void;
 linkWithAbortSignal(signal: AbortSignal): () => void;
 ```
 
-Links this PromiseCancelToken with an AbortController which may be used in `fetch` for example.
+Links this CancelToken with an AbortController which may be used in `fetch` for example.
 
 
-*Example:* Abort a fetch promise with a PromiseCancelToken
+*Example:* Abort a fetch promise with a CancelToken
 ```ts
-const token = new PromiseCancelToken();
+const token = new CancelToken();
 fetch('some-url', { signal: token.toAbortController().signal });
 
 token.cancel(new Error('Promise cancelled')); // aborts the fetch
@@ -1428,8 +1448,8 @@ Wraps a promise, function or fetch argument to properly handle the cancel state 
 
 *Example:*
 ```ts
-function promiseCancelTokenExample(): Promise<void> {
-  const token: IPromiseCancelToken = new PromiseCancelToken();
+function cancelTokenExample(): Promise<void> {
+  const token: ICancelToken = new CancelToken();
   // 1) wrapFetchArguments => ensures fetch will be aborted when token is cancelled
   // 2) wrapPromise => ensures fetch won't resolve if token is cancelled
   return token.wrapPromise(fetch(...token.wrapFetchArguments('http://domain.com/request1')))
@@ -1471,12 +1491,12 @@ interface IPromiseObservableOptions extends IFiniteStateObservableExposedOptions
 }
 
 
-type TPromiseObservableFactory<T> = (this: IPromiseObservable<T>, token: IPromiseCancelToken) => TPromiseOrValue<T>;
+type TPromiseObservableFactory<T> = (this: IPromiseObservable<T>, token: ICancelToken) => TPromiseOrValue<T>;
 
 
 interface IPromiseObservableConstructor {
   new<T>(promiseFactory: TPromiseObservableFactory<T>, options?: IPromiseObservableOptions): IPromiseObservable<T>;
-  fromPromise<T>(promise: Promise<T>, token?: IPromiseCancelToken, options?: IPromiseObservableOptions): IPromiseObservable<T>;
+  fromPromise<T>(promise: Promise<T>, token?: ICancelToken, options?: IPromiseObservableOptions): IPromiseObservable<T>;
 }
 
 
@@ -1486,7 +1506,7 @@ interface IPromiseObservable<T> extends IFiniteStateObservable<T, TPromiseObserv
 
 A PromiseObservable *"converts"* a Promise to an Observable.
 `promiseFactory` is a callback used to generate a Promise when an Observer observes this PromiseObservable.
-A PromiseCancelToken is provided and is used to notify the promise that it has been cancelled.
+A CancelToken is provided and is used to notify the promise that it has been cancelled.
 This token may be cancelled by the Observable if it has no more observers,
 or if the Observer which generated the promise stopped to observe it for example.
 
@@ -1494,7 +1514,7 @@ or if the Observer which generated the promise stopped to observe it for example
 *Example:* Use Observable to call an API
 ```ts
 function http(url) {
-  return new PromiseObservable<Response>((token: PromiseCancelToken) => {
+  return new PromiseObservable<Response>((token: CancelToken) => {
     return fetch(url, { signal: token.toAbortController().signal });
   });
 }

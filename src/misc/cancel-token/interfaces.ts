@@ -1,5 +1,5 @@
-import { INotificationsObservable } from '../../../../core/notifications-observable/interfaces';
-import { TPromiseOrValue, TPromiseType } from '../../../../../promises/interfaces';
+import { INotificationsObservable } from '../../notifications/core/notifications-observable/interfaces';
+import { TPromiseOrValue, TPromiseType } from '../../promises/interfaces';
 
 export type TCancelStrategy =
   'resolve' // resolve the promise with void
@@ -7,22 +7,22 @@ export type TCancelStrategy =
   | 'never' // (default) never resolve the promise, it stays in a pending state forever
   ;
 
-export type TPromiseCancelTokenWrapPromiseCallback<T> = (this: IPromiseCancelToken, resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void, token: IPromiseCancelToken) => void;
+export type TCancelTokenWrapPromiseCallback<T> = (this: ICancelToken, resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void, token: ICancelToken) => void;
 
-export type TOnCancelled = ((this: IPromiseCancelToken, reason: any) => TPromiseOrValue<void>) | undefined | null;
+export type TOnCancelled = ((this: ICancelToken, reason: any) => TPromiseOrValue<void>) | undefined | null;
 
-export interface IPromiseCancelTokenConstructor {
-  new(): IPromiseCancelToken;
+export interface ICancelTokenConstructor {
+  new(): ICancelToken;
 
   /**
-   * Builds a new PromiseCancelToken from a list of PromiseCancelTokens:
+   * Builds a new CancelToken from a list of CancelTokens:
    *  - if one of the provided 'tokens' is cancelled, cancel this Token with the cancelled token's reason
    * Equivalent of the 'linkWithTokens' method
    */
-  of(...tokens: IPromiseCancelToken[]): IPromiseCancelToken;
+  of(...tokens: ICancelToken[]): ICancelToken;
 }
 
-export interface IPromiseCancelTokenKeyValueMap {
+export interface ICancelTokenKeyValueMap {
   cancel: any;
 }
 
@@ -30,7 +30,7 @@ export interface IPromiseCancelTokenKeyValueMap {
  * Represents a Token able to cancel a Promise.
  *  This Token is a NotificationsObservable which may send a 'cancel' Notification
  */
-export interface IPromiseCancelToken extends INotificationsObservable<IPromiseCancelTokenKeyValueMap> {
+export interface ICancelToken extends INotificationsObservable<ICancelTokenKeyValueMap> {
   readonly cancelled: boolean;
   readonly reason: any;
 
@@ -45,14 +45,14 @@ export interface IPromiseCancelToken extends INotificationsObservable<IPromiseCa
    * Links this Token with some others tokens
    *  If one of the provided 'tokens' is cancelled, cancel this Token with the cancelled token's reason
    * @Example:
-   *  function run(token: PromiseCancelToken) {
-   *    const _token = new PromiseCancelToken();
+   *  function run(token: CancelToken) {
+   *    const _token = new CancelToken();
    *    _token.linkWithToken(token);
    *    document.querySelector(`.close-button`).addEventListener('click', () => _token.cancel(new Reason('clicked on close')));
    *    return _token.wrapPromise(fetch(..._token.wrapFetchArguments('http://domain.com/request1')));
    *  }
    */
-  linkWithToken(...tokens: IPromiseCancelToken[]): () => void;
+  linkWithToken(...tokens: ICancelToken[]): () => void;
 
 
   // creates an AbortController linked with this Token
@@ -90,7 +90,7 @@ export interface IPromiseCancelToken extends INotificationsObservable<IPromiseCa
    *
    */
   wrapPromise<T>(
-    promiseOrCallback: Promise<T> | TPromiseCancelTokenWrapPromiseCallback<T>,
+    promiseOrCallback: Promise<T> | TCancelTokenWrapPromiseCallback<T>,
     strategy?: TCancelStrategy,
     onCancelled?: TOnCancelled,
   ): Promise<T | void>;
@@ -148,8 +148,8 @@ export interface IPromiseCancelToken extends INotificationsObservable<IPromiseCa
 /*
 // Full example:
 
-export function promiseCancelTokenExample(): Promise<void> {
-  const token: IPromiseCancelToken = new PromiseCancelToken();
+export function cancelTokenExample(): Promise<void> {
+  const token: ICancelToken = new CancelToken();
   // 1) wrapFetchArguments => ensures fetch will be aborted when token is cancelled
   // 2) wrapPromise => ensures fetch won't resolve if token is cancelled
   return token.wrapPromise(fetch(...token.wrapFetchArguments('http://domain.com/request1')))

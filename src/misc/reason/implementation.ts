@@ -10,7 +10,7 @@ export interface IReasonPrivate<T> {
   code: T;
 }
 
-export interface ReasonInternal<T> extends IReason<T> {
+export interface IReasonInternal<T> extends IReason<T> {
   [REASON_PRIVATE]: IReasonPrivate<T>;
 }
 
@@ -20,7 +20,7 @@ export function ConstructReason<T>(
   code: T,
 ): void {
   ConstructClassWithPrivateMembers(instance, REASON_PRIVATE);
-  const privates: IReasonPrivate<T> = (instance as ReasonInternal<T>)[REASON_PRIVATE];
+  const privates: IReasonPrivate<T> = (instance as IReasonInternal<T>)[REASON_PRIVATE];
   privates.message = message;
   privates.code = code;
 }
@@ -37,11 +37,11 @@ export class Reason<T = void> implements IReason<T> {
   }
 
   get message(): string {
-    return ((this as unknown) as ReasonInternal<T>)[REASON_PRIVATE].message;
+    return ((this as unknown) as IReasonInternal<T>)[REASON_PRIVATE].message;
   }
 
   get code(): T {
-    return ((this as unknown) as ReasonInternal<T>)[REASON_PRIVATE].code;
+    return ((this as unknown) as IReasonInternal<T>)[REASON_PRIVATE].code;
   }
 
   toJSON(): Pick<IReason<T>, 'message' | 'code'> {

@@ -2,8 +2,8 @@ import {
   IFiniteStateObservable, IFiniteStateObservableContext, IFiniteStateObservableKeyValueMapGeneric,
   TFiniteStateObservableCreateCallback, TFiniteStateObservableMode, TFiniteStateObservableState
 } from '../../interfaces';
-import { IPromiseCancelToken } from '../promise-cancel-token/interfaces';
-import { PromiseCancelReason, PromiseCancelToken } from '../promise-cancel-token/implementation';
+import { ICancelToken } from '../../../../../misc/cancel-token/interfaces';
+import { CancelReason, CancelToken } from '../../../../../misc/cancel-token/implementation';
 import { Notification } from '../../../../core/notification/implementation';
 import { IPromiseObservableKeyValueMap, TPromiseObservableFactory, TPromiseObservableFinalState } from './interfaces';
 import { IObserver } from '../../../../../core/observer/interfaces';
@@ -30,11 +30,11 @@ export function GenerateFiniteStateObservableHookFromPromise<TValue>(
   type TMode = TFiniteStateObservableMode;
   type TKVMap = IFiniteStateObservableKeyValueMapGeneric<TValue, TFinalState>;
   return function (context: IFiniteStateObservableContext<TValue, TFinalState, TMode, TKVMap>) {
-    let token: IPromiseCancelToken | null = null;
+    let token: ICancelToken | null = null;
 
     function clear() {
       if (token !== null) {
-        token.cancel(new PromiseCancelReason(`Observer stopped observing this promise`));
+        token.cancel(new CancelReason(`Observer stopped observing this promise`));
         token = null;
       }
     }
@@ -47,7 +47,7 @@ export function GenerateFiniteStateObservableHookFromPromise<TValue>(
           && (instance.observers.length === 1) // optional check
           && (instance.state === 'next') // optional check
         ) {
-          token = new PromiseCancelToken();
+          token = new CancelToken();
 
           const _promiseFactory = token.wrapFunction(promiseFactory, 'never', (reason: any) => {
             if (
@@ -112,12 +112,12 @@ export function GenerateFiniteStateObservableHookFromPromiseForEachObservers<TVa
         const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this;
 
         let state: TFiniteStateObservableState<TPromiseObservableFinalState> = 'next';
-        const token: IPromiseCancelToken = new PromiseCancelToken();
+        const token: ICancelToken = new CancelToken();
 
         function clear() {
           if (clearFunctions.has(observer)) {
             clearFunctions.delete(observer);
-            token.cancel(new PromiseCancelReason(`Observer stopped observing this promise`));
+            token.cancel(new CancelReason(`Observer stopped observing this promise`));
           }
         }
 

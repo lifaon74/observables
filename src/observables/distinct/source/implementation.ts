@@ -1,7 +1,7 @@
 import { IObservableContext } from '../../../core/observable/interfaces';
 import { IAsyncSource, ISource } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
-import { IPromiseCancelToken } from '../../../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
+import { ICancelToken } from '../../../misc/cancel-token/interfaces';
 import {
   IValueObservableInternal, VALUE_OBSERVABLE_PRIVATE, ValueObservable
 } from '../value-observable/implementation';
@@ -83,7 +83,7 @@ export function ConstructAsyncSource<T>(source: IAsyncSource<T>, context: IAsync
 }
 
 
-export function AsyncSourceEmit<T, S extends IAsyncSource<T>>(source: S, promise: Promise<T>, token?: IPromiseCancelToken): Promise<S> {
+export function AsyncSourceEmit<T, S extends IAsyncSource<T>>(source: S, promise: Promise<T>, token?: ICancelToken): Promise<S> {
   return ((source as unknown) as IAsyncSourceInternal<T>)[ASYNC_SOURCE_PRIVATE].context.emit(promise, token)
     .then(() => source);
 }
@@ -103,11 +103,11 @@ export class AsyncSource<T> extends AsyncValueObservable<T> implements IAsyncSou
     return ((this as unknown) as IAsyncSourceInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].promise;
   }
 
-  get token(): IPromiseCancelToken | null {
+  get token(): ICancelToken | null {
     return ((this as unknown) as IAsyncSourceInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].token;
   }
 
-  emit(promise: Promise<T>, token?: IPromiseCancelToken): Promise<this> {
+  emit(promise: Promise<T>, token?: ICancelToken): Promise<this> {
     return AsyncSourceEmit<T, this>(this, promise, token);
   }
 }

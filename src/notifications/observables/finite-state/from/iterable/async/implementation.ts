@@ -37,11 +37,11 @@ export function IsFromAsyncIterableObservable(value: any): value is IFromAsyncIt
     && value.hasOwnProperty(FROM_ASYNC_ITERABLE_OBSERVABLE_PRIVATE as symbol);
 }
 
-const IS_FROM_ITERABLE_OBSERVABLE_CONSTRUCTOR = Symbol('is-from-iterable-observable-constructor');
+const IS_FROM_ASYNC_ITERABLE_OBSERVABLE_CONSTRUCTOR = Symbol('is-from-async-iterable-observable-constructor');
 
 export function IsFromAsyncIterableObservableConstructor(value: any): boolean {
   return (typeof value === 'function')
-    && HasFactoryWaterMark(value, IS_FROM_ITERABLE_OBSERVABLE_CONSTRUCTOR);
+    && HasFactoryWaterMark(value, IS_FROM_ASYNC_ITERABLE_OBSERVABLE_CONSTRUCTOR);
 }
 
 export function PureFromAsyncIterableObservableFactory<TBase extends Constructor<IFiniteStateObservable<any, TFromAsyncIterableObservableFinalState, TFromAsyncIterableObservableMode, IFromAsyncIterableObservableKeyValueMap<any>>>>(superClass: TBase) {
@@ -69,7 +69,7 @@ export function FromAsyncIterableObservableFactory<TBase extends Constructor<IFi
   return MakeFactory<IFromAsyncIterableObservableConstructor, [], TBase>(PureFromAsyncIterableObservableFactory, [], superClass, {
     name: 'FromAsyncIterableObservable',
     instanceOf: FromAsyncIterableObservable,
-    waterMarks: [IS_FROM_ITERABLE_OBSERVABLE_CONSTRUCTOR],
+    waterMarks: [IS_FROM_ASYNC_ITERABLE_OBSERVABLE_CONSTRUCTOR],
   });
 }
 
@@ -81,7 +81,7 @@ export function FromAsyncIterableObservableBaseFactory<TBase extends Constructor
     ], TBase>(PureFromAsyncIterableObservableFactory, [FiniteStateObservableFactory, NotificationsObservableFactory, ObservableFactory], superClass, {
     name: 'FromAsyncIterableObservable',
     instanceOf: FromAsyncIterableObservable,
-    waterMarks: [IS_FROM_ITERABLE_OBSERVABLE_CONSTRUCTOR],
+    waterMarks: [IS_FROM_ASYNC_ITERABLE_OBSERVABLE_CONSTRUCTOR],
   });
 }
 

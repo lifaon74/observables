@@ -1,11 +1,11 @@
-import { IPromiseCancelToken } from '../../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
+import { ICancelToken } from '../../misc/cancel-token/interfaces';
 import { IPipe } from '../../core/observable-observer/interfaces';
 import { IObserver } from '../../core/observer/interfaces';
 import {
   IPromiseObservable, TPromiseObservableNotifications
 } from '../../notifications/observables/finite-state/promise/promise-observable/interfaces';
 import { Pipe } from '../../core/observable-observer/implementation';
-import { PromiseCancelToken } from '../../notifications/observables/finite-state/promise/promise-cancel-token/implementation';
+import { CancelToken } from '../../misc/cancel-token/implementation';
 import { Observer } from '../../core/observer/implementation';
 import { PromiseObservable } from '../../notifications/observables/finite-state/promise/promise-observable/implementation';
 import { INotification } from '../../notifications/core/notification/interfaces';
@@ -19,8 +19,8 @@ import { TPromiseOrValue } from '../../promises/interfaces';
  */
 
 export function promisePipe<T, TResult1 = T, TResult2 = never>(
-  onFulfilled: (value: T, token: IPromiseCancelToken) => TPromiseOrValue<TResult1> = (value: T) => (value as unknown as TResult1),
-  onRejected: (reason: any, token: IPromiseCancelToken) => TPromiseOrValue<TResult2> = (error: any) => Promise.reject(error),
+  onFulfilled: (value: T, token: ICancelToken) => TPromiseOrValue<TResult1> = (value: T) => (value as unknown as TResult1),
+  onRejected: (reason: any, token: ICancelToken) => TPromiseOrValue<TResult2> = (error: any) => Promise.reject(error),
 ): IPipe<
   IObserver<TPromiseObservableNotifications<T>>,
   IPromiseObservable<TResult1 | TResult2>
@@ -39,7 +39,7 @@ export function promisePipe<T, TResult1 = T, TResult2 = never>(
 
     let resolve: (value: TPromiseOrValue<TResult1 | TResult2>) => void;
     let reject: (reason: any) => void;
-    let token: PromiseCancelToken;
+    let token: CancelToken;
     let value: T;
 
     return {
@@ -69,7 +69,7 @@ export function promisePipe<T, TResult1 = T, TResult2 = never>(
           }
         }
       }),
-      observable: new PromiseObservable<TResult1 | TResult2>((_token: IPromiseCancelToken) => {
+      observable: new PromiseObservable<TResult1 | TResult2>((_token: ICancelToken) => {
         token = _token;
         return new Promise<TResult1 | TResult2>((_resolve, _reject) => {
           resolve = _resolve;

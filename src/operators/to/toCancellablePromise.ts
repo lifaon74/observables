@@ -5,8 +5,8 @@ import { CancellablePromise } from '../../promises/cancellable-promise/implement
 import { ICancellablePromiseTuple } from '../../promises/interfaces';
 import { TFiniteStateObservableGeneric } from '../../notifications/observables/finite-state/interfaces';
 import {
-  IPromiseCancelToken
-} from '../../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
+  ICancelToken
+} from '../../misc/cancel-token/interfaces';
 
 
 /**
@@ -19,7 +19,7 @@ import {
  */
 export function toCancellablePromise<T>(
   observable: IObservable<T> | TFiniteStateObservableGeneric<T>,
-  _token?: IPromiseCancelToken
+  _token?: ICancelToken
 ): ICancellablePromise<T> {
   const { promise, token } = toCancellablePromiseTuple<T>(observable, 'never', _token) as ICancellablePromiseTuple<T | void>;
   return new CancellablePromise<T>(promise as Promise<T>, token);

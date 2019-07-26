@@ -1,5 +1,5 @@
 import { IObservable, IObservableConstructor } from '../../../core/observable/interfaces';
-import { IPromiseCancelToken } from '../../../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
+import { ICancelToken } from '../../../misc/cancel-token/interfaces';
 import { IValueObservable } from '../value-observable/interfaces';
 
 
@@ -37,12 +37,12 @@ export interface IAsyncSourceConstructor extends IObservableConstructor {
 }
 
 /**
- * An AsyncSource is similar to a Source, but takes a Promise instead of a value (and an optional PromiseCancelToken),
+ * An AsyncSource is similar to a Source, but takes a Promise instead of a value (and an optional CancelToken),
  * then waits until the promise is resolved (fulfilled or rejected), and emits the values with the same behaviour than a Source.
  */
 export interface IAsyncSource<T> extends IObservable<T> {
   readonly promise: Promise<T> | null;
-  readonly token: IPromiseCancelToken | null;
+  readonly token: ICancelToken | null;
 
-  emit(promise: Promise<T>, token?: IPromiseCancelToken): Promise<this>;
+  emit(promise: Promise<T>, token?: ICancelToken): Promise<this>;
 }

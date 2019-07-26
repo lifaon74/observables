@@ -14,6 +14,15 @@ export function EnumToString<T>(values: T[]): string {
   return string;
 }
 
+export function StringMaxLength(input: string, maxLength: number): string {
+  if (maxLength < 3) {
+    throw new RangeError(`Expected maxLength greater or equal to 3`);
+  }
+  return (input.length > maxLength)
+    ? (input.substring(0, maxLength - 3) + '...')
+    : input;
+}
+
 export function MathClosestTo(targetValue: number, ...values: number[]): number {
   let closest: number = values[0];
   let closestDistance: number = Math.abs(values[0] - targetValue);
@@ -41,6 +50,52 @@ export function IsIterable(value: any): value is Iterable<any> {
   return IsObject(value)
     && (Symbol.iterator in value);
 }
+
+export function IsNullOrUndefined(value: any): boolean {
+  return (value === null) || (value === void 0);
+}
+
+
+
+export function ToIterable<T>(value: any): Iterable<T> {
+  // return Array.from(value);
+  if (IsNullOrUndefined(value)) {
+    throw new TypeError(`Cannot cast value to an Iterable`);
+  } else if (Symbol.iterator in value) {
+    return value;
+  } else if (typeof value === 'object') {
+    if (typeof value.next === 'function') {
+      return function * () {
+        const iterator: Iterator<T> = value;
+        let result: IteratorResult<T>;
+        while (!(result = iterator.next()).done) {
+          yield result.value;
+        }
+      }();
+    } else {
+      return Object.entries(value) as unknown as Iterable<T>;
+    }
+  } else {
+    throw new TypeError(`Cannot cast value to an Iterable`);
+  }
+}
+
+export function ToIterator<T>(value: any): Iterator<T> {
+  if (IsNullOrUndefined(value)) {
+    throw new TypeError(`Cannot cast value to an iterable`);
+  } else if (Symbol.iterator in value) {
+    return value[Symbol.iterator]();
+  } else if (typeof value === 'object') {
+    if (typeof value.next === 'function') {
+      return value;
+    } else {
+      return Object.entries(value)[Symbol.iterator]() as unknown as Iterator<T>;
+    }
+  } else {
+    throw new TypeError(`Cannot cast value to an Iterator`);
+  }
+}
+
 
 export function UntilDefined<T>(
   callback: () => (T | undefined),

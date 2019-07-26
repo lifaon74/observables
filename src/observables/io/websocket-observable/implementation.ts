@@ -306,8 +306,8 @@ export class WebSocketIO extends InputOutput<IWebSocketIOKeyValueMap, IObservabl
   }
 
   // @type-fix
-  matches(name: string, callback?: (value: any) => void): IterableIterator<KeyValueMapToNotificationsObservers<IWebSocketIOKeyValueMap>> {
-    return super.matches(name, callback) as IterableIterator<KeyValueMapToNotificationsObservers<IWebSocketIOKeyValueMap>>;
-  }
+  // matches(name: string, callback?: (value: any) => void): IterableIterator<KeyValueMapToNotificationsObservers<IWebSocketIOKeyValueMap>> {
+  //   return super.matches(name, callback) as IterableIterator<KeyValueMapToNotificationsObservers<IWebSocketIOKeyValueMap>>;
+  // }
 }
 
