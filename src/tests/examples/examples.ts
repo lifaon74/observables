@@ -11,8 +11,8 @@ import {
   singleFiniteStateObservableToPromise, genericObservableToCancellablePromiseTuple, genericObservableToPromise
 } from '../../operators/to/toPromise';
 import {
-  PromiseCancelReason, PromiseCancelToken
-} from '../../notifications/observables/finite-state/promise/promise-cancel-token/implementation';
+  CancelReason, CancelToken
+} from '../../misc/cancel-token/implementation';
 import { Reason } from '../../misc/reason/implementation';
 import { PromiseObservable } from '../../notifications/observables/finite-state/promise/promise-observable/implementation';
 import { IObserver } from '../../core/observer/interfaces';
@@ -31,7 +31,7 @@ import { INotificationsObserver } from '../../notifications/core/notifications-o
 import { FunctionObservable } from '../../observables/distinct/function-observable/implementation';
 import { Expression } from '../../observables/distinct/expression/implementation';
 import { $equal, $expression, $string } from '../../operators/misc';
-import { IPromiseCancelToken } from '../../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
+import { ICancelToken } from '../../misc/cancel-token/interfaces';
 import { EventKeyValueMapConstraint } from '../../notifications/observables/events/events-observable/interfaces';
 import { ICancellablePromiseTuple } from '../../promises/interfaces';
 import { SpreadCancellablePromiseTuple } from '../../promises/helpers';
@@ -289,8 +289,8 @@ function FromIterableObservableExample1(): void {
   observer.activate();
 }
 
-function promiseCancelTokenFetchExample1(): void {
-  function loadNews(page: number, token: IPromiseCancelToken = new PromiseCancelToken()): Promise<void> {
+function cancelTokenFetchExample1(): void {
+  function loadNews(page: number, token: ICancelToken = new CancelToken()): Promise<void> {
     return token.wrapPromise(fetch(`https://my-domain/api/news?page${ page }`, { signal: token.toAbortController().signal }))
       .then(token.wrapFunction((response: Response) => {
         return response.json();
@@ -301,25 +301,25 @@ function promiseCancelTokenFetchExample1(): void {
   }
 
   let page: number = 0;
-  let token: IPromiseCancelToken;
+  let token: ICancelToken;
   (document.querySelector('button') as HTMLElement)
     .addEventListener(`click`, () => {
       if (token !== void 0) {
-        token.cancel(new PromiseCancelReason('Manual cancel'));
+        token.cancel(new CancelReason('Manual cancel'));
       }
-      token = new PromiseCancelToken();
+      token = new CancelToken();
       page++;
       loadNews(page, token)
-        .catch(PromiseCancelReason.discard);
+        .catch(CancelReason.discard);
     });
 }
 
 /**
- * Creates a simple GET http request which loads an url and returns result as [Promise<string>, PromiseCancelToken]
+ * Creates a simple GET http request which loads an url and returns result as [Promise<string>, CancelToken]
  * @param url
- * @param token - optional PromiseCancelToken, will be returned in the tuple
+ * @param token - optional CancelToken, will be returned in the tuple
  */
-function createHttpRequest(url: string, token: IPromiseCancelToken = new PromiseCancelToken()): ICancellablePromiseTuple<string> {
+function createHttpRequest(url: string, token: ICancelToken = new CancelToken()): ICancellablePromiseTuple<string> {
   return {
     promise: new Promise<string>((resolve, reject) => {
       const request = new XMLHttpRequest(); // create an XMLHttpRequest
@@ -331,7 +331,7 @@ function createHttpRequest(url: string, token: IPromiseCancelToken = new Promise
           reject(new Error(`Failed to fetch data: ${ request.statusText }`));
         })
         .on('abort', () => {
-          reject(token.reason || new PromiseCancelReason());
+          reject(token.reason || new CancelReason());
         });
 
       token.addListener('cancel', () => { // if the token is cancelled, abort the request
@@ -346,9 +346,9 @@ function createHttpRequest(url: string, token: IPromiseCancelToken = new Promise
 }
 
 /**
- * Demo how to use a PromiseCancelToken
+ * Demo how to use a CancelToken
  */
-function promiseCancelTokenExample1(): void {
+function cancelTokenExample1(): void {
   const { promise, token } = createHttpRequest('https://server.test-cors.org/server?id=643798&enable=true&status=200&credentials=false&response_headers=Access-Control-Allow-Origin%3A%20*');
   promise
     .then((content: string) => {
@@ -378,7 +378,7 @@ function promiseCancelTokenExample1(): void {
 function promiseObservableExample1(): void {
   // creates an fetch observable from an url
   function http(url: string) {
-    return new PromiseObservable<Response>((token: PromiseCancelToken) => {
+    return new PromiseObservable<Response>((token: CancelToken) => {
       return fetch(url, { signal: token.toAbortController().signal });
     }, { mode: 'cache' });
   }
@@ -389,7 +389,7 @@ function promiseObservableExample1(): void {
       super(() => {
         let resolve: any;
         let reject: any;
-        let token: PromiseCancelToken;
+        let token: CancelToken;
 
         return {
           observer: new Observer<INotification<TPromiseNotificationType, Response>>((notification: INotification<TPromiseNotificationType, Response>) => {
@@ -408,7 +408,7 @@ function promiseObservableExample1(): void {
               }
             }
           }),
-          observable: new PromiseObservable((_token: IPromiseCancelToken) => {
+          observable: new PromiseObservable((_token: ICancelToken) => {
             console.log('call promise');
             token = _token;
             return new Promise<T>((_resolve, _reject) => {
@@ -497,7 +497,7 @@ async function xhrObservableExample1() {
   function http(requestInfo: RequestInfo, requestInit?: RequestInit): Promise<void> {
     return new Promise<void>((resolve: any, reject: any) => {
       const observable = new XHRObservable(requestInfo, requestInit, { mode: 'once' });
-      observable
+      const observer = observable
         .pipeTo((notification: INotification<string, any>) => {
           console.log(notification.name, notification.value);
 
@@ -509,8 +509,12 @@ async function xhrObservableExample1() {
             (notification.value as Response)
               .arrayBuffer()
               .then((buffer) => {
-                console.log('done', buffer.byteLength);
-              })
+                console.log('done', new Uint8Array(buffer));
+              }, (error: any) => {
+                console.warn(error);
+              });
+
+            // observer.deactivate();
           }
 
         }).activate();
@@ -521,19 +525,27 @@ async function xhrObservableExample1() {
     return `https://cors-anywhere.herokuapp.com/${ url }`;
   }
 
-  const bytes: Uint8Array = new Uint8Array(Array.from({ length: 256 }, (v, i) => i));
+  function dummyBytes(bytes: Uint8Array): Uint8Array {
+    for (let i = 0; i < bytes.length; i++) {
+      bytes[i] = i;
+    }
+    return bytes;
+  }
+
+
   // const bytes: Uint8Array = new TextEncoder().encode('😀 😁 😂');
 
-  // console.log(bytes);
-
-  // const blob = new Blob([bytes], { type: 'text/plain' });
-  const blob = new Blob([bytes], { type: 'application/octet-stream' });
-  const url = URL.createObjectURL(blob);
-  // const url = 'https://www.w3.org/TR/PNG/iso_8859-1.txt';
-  // const url = 'http://ipv4.download.thinkbroadband.com/10MB.zip';
-  // const url = 'https://speed.hetzner.de/100MB.bin';
 
   function testXHR() {
+
+    // console.log(bytes);
+
+    // const blob = new Blob([bytes], { type: 'text/plain' });
+
+    const url = 'https://www.w3.org/TR/PNG/iso_8859-1.txt';
+    // const url = 'http://ipv4.download.thinkbroadband.com/10MB.zip';
+    // const url = 'https://speed.hetzner.de/100MB.bin';
+
     const xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     // xhr.overrideMimeType('text/plain; charset=x-user-defined');
@@ -563,13 +575,24 @@ async function xhrObservableExample1() {
     xhr.send(null);
   }
 
+
   function downloadBigFile() {
-    // return http(noCORS('http://ipv4.download.thinkbroadband.com/10MB.zip'));
-    // return http(noCORS('https://speed.hetzner.de/100MB.bin'));
-    return http(url);
+    const bytes = new Blob([dummyBytes(new Uint8Array(1e7))], { type: 'application/octet-stream' });
+    return http(URL.createObjectURL(bytes));
   }
 
-  await downloadBigFile();
+  function uploadBigFile() {
+    const bytes = new Blob([dummyBytes(new Uint8Array(1e7))], { type: 'application/octet-stream' });
+    const formData = new FormData();
+    formData.set('file', bytes, 'my-file.bin');
+    return http('https://jsonplaceholder.typicode.com/posts', {
+      method: 'POST',
+      body: formData
+    });
+  }
+
+  // await downloadBigFile();
+  await uploadBigFile();
 }
 
 
@@ -580,7 +603,7 @@ async function xhrObservableExample1() {
  */
 async function observableToPromiseExample1(): Promise<void> {
 
-  function observePromise(name: string, promise: Promise<Response>, token?: PromiseCancelToken): Promise<void> {
+  function observePromise(name: string, promise: Promise<Response>, token?: CancelToken): Promise<void> {
     return promise
       .then((response: Response) => {
         if (token && token.cancelled) {
@@ -607,7 +630,7 @@ async function observableToPromiseExample1(): Promise<void> {
   observePromise('fetch url with abort controller without token', singleFiniteStateObservableToPromise(new FetchObservable(url1, { signal: abortController.signal }), 'reject') as Promise<Response>); // will cancel
   abortController.abort();
 
-  // provides PromiseCancelToken too, to detect cancellation
+  // provides CancelToken too, to detect cancellation
   observePromise('fetch url with abort controller with token', ...SpreadCancellablePromiseTuple(singleFiniteStateObservableToCancellablePromiseTuple(new FetchObservable(url1, { signal: abortController.signal }), 'reject') as ICancellablePromiseTuple<Response>)); // will cancel
 }
 
@@ -862,7 +885,7 @@ export async function testExamples() {
   // finiteStateObservableExample1();
   // finiteStateObservableExample1();
   // FromIterableObservableExample1();
-  // promiseCancelTokenExample1();
+  // cancelTokenExample1();
   // promiseObservableExample1();
   // fetchObservableExample1();
   // fetchObservableExample2();

@@ -1,7 +1,7 @@
 import { IReadonlyTuple, TupleTypes } from '../../../misc/readonly-list/interfaces';
 import { IAsyncValueObservable } from '../async-value-observable/interfaces';
 import { ObservableCastTupleArray } from '../function-observable/interfaces';
-import { IPromiseCancelToken } from '../../../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
+import { ICancelToken } from '../../../misc/cancel-token/interfaces';
 
 
 export interface IAsyncFunctionObservableConstructor {
@@ -22,9 +22,9 @@ export interface IAsyncFunctionObservable<T extends TAsyncFunctionObservableFact
   run(callback: (this: this) => void): Promise<this>;
 }
 
-export type TAsyncFunctionObservableFactory = (token: IPromiseCancelToken, ...args: any[]) => Promise<any>;
+export type TAsyncFunctionObservableFactory = (token: ICancelToken, ...args: any[]) => Promise<any>;
 
-export type TAsyncFunctionObservableFactoryParameters<T extends TAsyncFunctionObservableFactory> = T extends (token: IPromiseCancelToken, ...args: infer P) => any ? P : never;
+export type TAsyncFunctionObservableFactoryParameters<T extends TAsyncFunctionObservableFactory> = T extends (token: ICancelToken, ...args: infer P) => any ? P : never;
 export type TAsyncFunctionObservableFactoryReturnType<T extends TAsyncFunctionObservableFactory> = ReturnType<T>;
 
 export type TAsyncFunctionObservableParameters<T extends TAsyncFunctionObservableFactory> = ObservableCastTupleArray<TAsyncFunctionObservableFactoryParameters<T>>;

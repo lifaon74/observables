@@ -1,7 +1,8 @@
 import { Notification } from '../notification/implementation';
 import {
   INotificationsObservable, INotificationsObservableConstructor, INotificationsObservableContext,
-  INotificationsObservableContextConstructor, KeyValueMapToNotifications, KeyValueMapToNotificationsObservers,
+  INotificationsObservableContextConstructor, INotificationsObservableMatchOptions, KeyValueMapToNotifications,
+  KeyValueMapToNotificationsObservers,
   TNotificationsObservableConstructorArgs, TNotificationsObservableHook,
 } from './interfaces';
 import {
@@ -13,7 +14,7 @@ import { IObservable, IObservableConstructor, IObservableContext } from '../../.
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { INotificationsObserver } from '../notifications-observer/interfaces';
 import {
-  INotificationsObserverInternal, NOTIFICATIONS_OBSERVER_PRIVATE, NotificationsObserver
+  NotificationsObserver
 } from '../notifications-observer/implementation';
 import { IObserverInternal, OBSERVER_PRIVATE, ObserverUnobserveOne } from '../../../core/observer/implementation';
 import { INotification } from '../notification/interfaces';
@@ -39,7 +40,7 @@ export interface INotificationsObservableInternal<TKVMap extends KeyValueMapGene
   [NOTIFICATIONS_OBSERVABLE_PRIVATE]: INotificationsObservablePrivate<TKVMap>;
 }
 
-export type TKVNotificationsObserverInternal<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> = INotificationsObserverInternal<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>;
+// export type TKVNotificationsObserverInternal<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> = INotificationsObserverInternal<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>;
 
 
 /**
@@ -91,7 +92,7 @@ export function NotificationsObservableOnObserved<TKVMap extends KeyValueMapGene
   const privates: INotificationsObservablePrivate<TKVMap> = (instance as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE];
 
   if (observer instanceof NotificationsObserver) {
-    const name: KeyValueMapKeys<TKVMap> = ((observer as unknown) as TKVNotificationsObserverInternal<TKVMap>)[NOTIFICATIONS_OBSERVER_PRIVATE].name;
+    const name: KeyValueMapKeys<TKVMap> = observer.name;
     if (!privates.observersMap.has(name)) {
       privates.observersMap.set(name, []);
     }
@@ -112,7 +113,7 @@ export function NotificationsObservableOnUnobserved<TKVMap extends KeyValueMapGe
   const privates: INotificationsObservablePrivate<TKVMap> = (instance as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE];
 
   if (observer instanceof NotificationsObserver) {
-    const name: KeyValueMapKeys<TKVMap> = ((observer as unknown) as TKVNotificationsObserverInternal<TKVMap>)[NOTIFICATIONS_OBSERVER_PRIVATE].name;
+    const name: KeyValueMapKeys<TKVMap> = observer.name;
     const observers: KeyValueMapToNotificationsObservers<TKVMap>[] = privates.observersMap.get(name) as KeyValueMapToNotificationsObservers<TKVMap>[];
     observers.splice(observers.indexOf((observer as unknown) as KeyValueMapToNotificationsObservers<TKVMap>), 1);
     if (observers.length === 0) {
@@ -135,9 +136,56 @@ export function NotificationsObservableOnUnobserved<TKVMap extends KeyValueMapGe
  * @param callback
  */
 export function NotificationsObservableRemoveListener<TKVMap extends KeyValueMapGenericConstraint<TKVMap>, K extends KeyValueMapKeys<TKVMap>>(instance: INotificationsObservable<TKVMap>, name: K, callback?: (value: TKVMap[K]) => void): void {
-  const observers: KeyValueMapToNotificationsObservers<TKVMap>[] = Array.from(NotificationsObservableMatches<TKVMap>(instance, name, callback)); // clone the list before removing
+  const observers: IObserver<KeyValueMapToNotifications<TKVMap>>[] = Array.from(NotificationsObservableMatches<TKVMap>(instance, name, callback)); // clone the list before removing
   for (let i = 0, l = observers.length; i < l; i++) {
     ObserverUnobserveOne<KeyValueMapToNotifications<TKVMap>>((observers[i] as unknown) as any, instance);
+  }
+}
+
+
+export type INotificationsObservableMatchOptionStrict = Required<INotificationsObservableMatchOptions>;
+
+export function NormalizeNotificationsObservableMatchOptions(options: INotificationsObservableMatchOptions = {}): INotificationsObservableMatchOptionStrict {
+  if (IsObject(options)) {
+    const _options: INotificationsObservableMatchOptionStrict = {} as INotificationsObservableMatchOptionStrict;
+
+    _options.includeGlobalObservers = Boolean(options.includeGlobalObservers);
+
+    return  _options;
+  } else {
+    throw new TypeError(`Expected object or void as options`);
+  }
+
+}
+
+export function NotificationsObservableHasListener<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(
+  instance: INotificationsObservable<TKVMap>,
+  name: string,
+  callback?: (value: any) => void,
+  options?: INotificationsObservableMatchOptions,
+): boolean {
+  const _options: INotificationsObservableMatchOptionStrict = NormalizeNotificationsObservableMatchOptions(options);
+  const privates: INotificationsObservablePrivate<TKVMap> = (instance as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE];
+
+  if (
+    _options.includeGlobalObservers
+    && (privates.othersObservers.length > 0)
+  ) {
+    return true;
+  } else if (privates.observersMap.has(name as KeyValueMapKeys<TKVMap>)) {
+    const observers: KeyValueMapToNotificationsObservers<TKVMap>[] = privates.observersMap.get(name as KeyValueMapKeys<TKVMap>) as KeyValueMapToNotificationsObservers<TKVMap>[];
+    if (callback === void 0) {
+      return observers.length > 0;
+    } else {
+      for (let i = 0, l = observers.length; i < l; i++) {
+        if (observers[i].callback === callback) {
+          return true;
+        }
+      }
+      return false;
+    }
+  } else {
+    return false;
   }
 }
 
@@ -146,23 +194,32 @@ export function NotificationsObservableRemoveListener<TKVMap extends KeyValueMap
  * @param instance
  * @param name
  * @param callback
+ * @param options
  */
-export function * NotificationsObservableMatches<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(instance: INotificationsObservable<TKVMap>, name: string, callback?: (value: any) => void): IterableIterator<KeyValueMapToNotificationsObservers<TKVMap>> {
+export function * NotificationsObservableMatches<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(
+  instance: INotificationsObservable<TKVMap>,
+  name: string,
+  callback?: (value: any) => void,
+  options?: INotificationsObservableMatchOptions,
+): IterableIterator<IObserver<KeyValueMapToNotifications<TKVMap>>> {
+  const _options: INotificationsObservableMatchOptionStrict = NormalizeNotificationsObservableMatchOptions(options);
   const privates: INotificationsObservablePrivate<TKVMap> = (instance as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE];
 
   if (privates.observersMap.has(name as KeyValueMapKeys<TKVMap>)) {
     const observers: KeyValueMapToNotificationsObservers<TKVMap>[] = privates.observersMap.get(name as KeyValueMapKeys<TKVMap>) as KeyValueMapToNotificationsObservers<TKVMap>[];
     if (callback === void 0) {
-      for (let i = 0, l = observers.length; i < l; i++) {
-        yield observers[i];
-      }
+      yield * observers as unknown as IObserver<KeyValueMapToNotifications<TKVMap>>[];
     } else {
       for (let i = 0, l = observers.length; i < l; i++) {
-        if (((observers[i] as unknown) as TKVNotificationsObserverInternal<TKVMap>)[NOTIFICATIONS_OBSERVER_PRIVATE].callback === callback) {
-          yield observers[i];
+        if (observers[i].callback === callback) {
+          yield observers[i] as unknown as IObserver<KeyValueMapToNotifications<TKVMap>>;
         }
       }
     }
+  }
+
+  if (_options.includeGlobalObservers) {
+    yield * privates.othersObservers;
   }
 }
 
@@ -185,7 +242,7 @@ export function NotificationsObservableDispatch<TKVMap extends KeyValueMapGeneri
   if (privates.observersMap.has(name as KeyValueMapKeys<TKVMap>)) {
     const observers: KeyValueMapToNotificationsObservers<TKVMap>[] = (privates.observersMap.get(name as KeyValueMapKeys<TKVMap>) as KeyValueMapToNotificationsObservers<TKVMap>[]).slice(0);
     for (let i = 0, l = observers.length; i < l; i++) {
-      ((observers[i] as unknown) as TKVNotificationsObserverInternal<TKVMap>)[NOTIFICATIONS_OBSERVER_PRIVATE].callback(value);
+      observers[i].callback(value);
     }
   }
 
@@ -251,8 +308,20 @@ function PureNotificationsObservableFactory<TBase extends Constructor<IObservabl
       return this;
     }
 
-    matches(name: string, callback?: (value: any) => void): IterableIterator<KeyValueMapToNotificationsObservers<TKVMap>> {
-      return NotificationsObservableMatches<TKVMap>(this, name, callback);
+    hasListener(
+      name: string,
+      callback?: (value: any) => void,
+      options?: INotificationsObservableMatchOptions
+    ): boolean {
+      return NotificationsObservableHasListener<TKVMap>(this, name, callback, options);
+    }
+
+    matches(
+      name: string,
+      callback?: (value: any) => void,
+      options?: INotificationsObservableMatchOptions
+    ): IterableIterator<IObserver<KeyValueMapToNotifications<TKVMap>>> {
+      return NotificationsObservableMatches<TKVMap>(this, name, callback, options);
     }
   };
 }

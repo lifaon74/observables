@@ -1,4 +1,4 @@
-import { IPromiseCancelToken } from '../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
+import { ICancelToken } from '../misc/cancel-token/interfaces';
 
 
 export type TPromiseOrValue<T> = T | PromiseLike<T>;
@@ -35,8 +35,8 @@ export type TPromiseCreateCallback<T> = (resolve: (value?: TPromiseOrValue<T>) =
 export type TPromiseConstructorLike<P extends PromiseLike<any> = PromiseLike<any>> = new(executor: TPromiseCreateCallback<TPromiseType<P>>) => P;
 
 
-// export type TCancellablePromiseTuple<T> = [Promise<T>, IPromiseCancelToken];
+// export type TCancellablePromiseTuple<T> = [Promise<T>, ICancelToken];
 export type ICancellablePromiseTuple<T> = {
   promise: Promise<T>,
-  token: IPromiseCancelToken,
+  token: ICancelToken,
 };

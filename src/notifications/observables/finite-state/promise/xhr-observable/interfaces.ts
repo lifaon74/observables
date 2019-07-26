@@ -14,7 +14,7 @@ export type TXHRObservableFinalState = TFiniteStateObservableFinalState | 'cance
 export type TXHRObservableMode = TFiniteStateObservableMode | 'every';
 
 export interface IXHRObservableKeyValueMap extends IFiniteStateObservableKeyValueMapGeneric<Response, TXHRObservableFinalState> {
-  'progress': IProgress;
+  'download-progress': IProgress;
   'cancel': any;
   'upload-complete': void;
   'upload-progress': IProgress;

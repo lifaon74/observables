@@ -77,11 +77,15 @@ export type TNotificationsObservablePipeThroughResult<TInputObservableObserver e
 
 export type TNotificationsObservableHook<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> = IObservableHook<KeyValueMapToNotifications<TKVMap>>;
 
-
 export type TNotificationsObservableConstructorArgs<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> =
   [(context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)]
   | [];
 
+
+
+export interface INotificationsObservableMatchOptions {
+  includeGlobalObservers?: boolean; // (default => false) if set to true, includes Observers which are not of type NotificationsObserver (assumes they receives all Notifications)
+}
 
 
 /** INTERFACES **/
@@ -124,8 +128,27 @@ export interface INotificationsObservable<TKVMap extends KeyValueMapGenericConst
   // like "removeListener" but returns "this"
   off<K extends KeyValueMapKeys<TKVMap>>(name: K, callback?: (value: TKVMap[K]) => void): this;
 
-  // returns the list of observed NotificationsObserver matching "name" and "callback"
-  matches(name: string, callback?: (value: any) => void): IterableIterator<KeyValueMapToNotificationsObservers<TKVMap>>;
+
+  /**
+   * Returns true if this observable has an Observer matching "name" and "callback".
+   *  If 'callback' is not defined, searches only for 'name'
+   *  If options.includeGlobalObservers is true, and this Observable is observed by at least one Observer with a type different than NotificationsObserver, then returns true.
+   * @param name
+   * @param callback
+   * @param options
+   */
+  hasListener(name: string, callback?: (value: any) => void, options?: INotificationsObservableMatchOptions): boolean;
+
+  /**
+   * Returns the list of Observer matching "name" and "callback"
+   *  If 'callback' is not defined, searches only for 'name'
+   *  If options.includeGlobalObservers is true, includes the list of Observers with a type different than NotificationsObserver.
+   * @param name
+   * @param callback
+   * @param options
+   */
+  matches(name: string, callback?: (value: any) => void, options?: INotificationsObservableMatchOptions): IterableIterator<IObserver<KeyValueMapToNotifications<TKVMap>>>;
+  // matches(name: string, callback?: (value: any) => void): IterableIterator<KeyValueMapToNotificationsObservers<TKVMap>>;
 }
 
 export interface IBaseNotificationsObservable<TName extends string, TValue> extends INotificationsObservable<KVRecord<TName, TValue>> {

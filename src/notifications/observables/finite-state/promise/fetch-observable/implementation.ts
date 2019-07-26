@@ -1,7 +1,7 @@
 import { IFetchObservable, IFetchObservableOptions, TFetchObservableCastKeyValueMap } from './interfaces';
 import { IPromiseObservableInternal, PromiseObservable } from '../promise-observable/implementation';
 import { ConstructClassWithPrivateMembers } from '../../../../../misc/helpers/ClassWithPrivateMembers';
-import { IPromiseCancelToken } from '../promise-cancel-token/interfaces';
+import { ICancelToken } from '../../../../../misc/cancel-token/interfaces';
 import { INotificationsObservable } from '../../../../core/notifications-observable/interfaces';
 import { promisePipe } from '../../../../../operators/pipes/promisePipe';
 import { IsObject } from '../../../../../helpers';
@@ -58,7 +58,7 @@ export function IsFetchObservable(value: any): value is IFetchObservable {
     && (FETCH_OBSERVABLE_PRIVATE in value);
 }
 
-export function FetchObservablePromiseFactory(instance: IFetchObservable, token: IPromiseCancelToken): Promise<Response> {
+export function FetchObservablePromiseFactory(instance: IFetchObservable, token: ICancelToken): Promise<Response> {
   const privates: IFetchObservablePrivate = (instance as IFetchObservableInternal)[FETCH_OBSERVABLE_PRIVATE];
   return fetch(...token.wrapFetchArguments(
     privates.requestInfo,
@@ -80,7 +80,7 @@ export function FetchObservablePromiseTo<T>(instance: IFetchObservable, callback
 export class FetchObservable extends PromiseObservable<Response> implements IFetchObservable {
 
   constructor(requestInfo: RequestInfo, requestInit?: RequestInit, options?: IFetchObservableOptions) {
-    super((token: IPromiseCancelToken): Promise<Response> => {
+    super((token: ICancelToken): Promise<Response> => {
       return FetchObservablePromiseFactory(this, token);
     }, options);
     ConstructFetchObservable(this, requestInfo, requestInit, options);

@@ -1,17 +1,24 @@
-import { IPromiseCancelToken } from '../promise-cancel-token/interfaces';
+import { ICancelToken } from '../../../../../misc/cancel-token/interfaces';
 import { ICancellablePromise } from '../../../../../promises/cancellable-promise/interfaces';
 import { CancellablePromise } from '../../../../../promises/cancellable-promise/implementation';
-import { ToIterable } from '../../../../../helpers';
+import { StringMaxLength, ToIterable } from '../../../../../helpers';
 import { PartialProperties } from '../../../../../classes/types';
 import { Program } from '../../../../../tests/test-program';
 import { INotificationsObserver } from '../../../../core/notifications-observer/interfaces';
-import { PromiseCancelToken } from '../promise-cancel-token/implementation';
+import { CancelReason, CancelToken } from '../../../../../misc/cancel-token/implementation';
 
 export type XMLHttpRequestExtendedResponseType = XMLHttpRequestResponseType | 'binary-string';
 
 
-export function CreateXHRError(xhr: XMLHttpRequest): Error {
-  return new Error(`Failed to fetch ${ xhr.responseURL }^^: ${ xhr.status } - ${ xhr.statusText }`);
+export function CreateFetchError(url: string): Error {
+  return new Error(`Failed to fetch '${ StringMaxLength(url, 100) }'`);
+}
+
+export function CreateNetworkError(): Error {
+  return new Error(`Network error`);
+}
+export function CreateFetchCancelReason(url: string): CancelReason {
+  return new CancelReason(`Fetching '${ StringMaxLength(url, 100) }' has been aborted`);
 }
 
 /**
@@ -96,7 +103,11 @@ export function InitXHRFromRequest(request: Request, xhr: XMLHttpRequest, respon
  * @param xhr
  * @param responseType
  */
-export function DoXHRFromRequestUsingReadableStream(request: Request, xhr: XMLHttpRequest = new XMLHttpRequest(), responseType: XMLHttpRequestExtendedResponseType): XMLHttpRequest {
+export function DoXHRFromRequestUsingReadableStream(
+  request: Request,
+  xhr: XMLHttpRequest = new XMLHttpRequest(),
+  responseType: XMLHttpRequestExtendedResponseType
+): XMLHttpRequest {
   InitXHRFromRequest(request, xhr, responseType);
   xhr.send(request.body);
   return xhr;
@@ -109,7 +120,18 @@ export function DoXHRFromRequestUsingReadableStream(request: Request, xhr: XMLHt
  * @param responseType
  * @param token
  */
-export function DoXHRFromRequest(request: Request, xhr: XMLHttpRequest = new XMLHttpRequest(), responseType: XMLHttpRequestExtendedResponseType, token?: IPromiseCancelToken): ICancellablePromise<XMLHttpRequest> {
+export function DoXHRFromRequest(
+  request: Request,
+  xhr: XMLHttpRequest = new XMLHttpRequest(),
+  responseType: XMLHttpRequestExtendedResponseType,
+  token?: ICancelToken
+): ICancellablePromise<XMLHttpRequest> {
+  // return CancellablePromise.of<ArrayBuffer>(request.arrayBuffer(), token)
+  //   .then((buffer: ArrayBuffer) => {
+  //     InitXHRFromRequest(request, xhr, responseType);
+  //     xhr.send(buffer);
+  //     return xhr;
+  //   });
   return CancellablePromise.of<Blob>(request.blob(), token)
     .then((blob: Blob) => {
       InitXHRFromRequest(request, xhr, responseType);
@@ -215,20 +237,23 @@ export function XHRResponseToBlob(xhr: XMLHttpRequest, responseType: XMLHttpRequ
 export function XHRResponseToReadableStream(
   xhr: XMLHttpRequest,
   responseType: XMLHttpRequestExtendedResponseType = xhr.responseType,
-  token: IPromiseCancelToken = new PromiseCancelToken()
+  token?: ICancelToken
 ): ReadableStream<Uint8Array> {
   return new ReadableStream<Uint8Array>({
     start(controller) {
-      if (!token.cancelled) {
+      if ((token === void 0) || (!token.cancelled)) {
         const isStreamableResponseType: boolean = (responseType === 'binary-string');
 
+        let tokenObserver: INotificationsObserver<'cancel', any>;
         let readIndex: number = 0;
 
         const clear = () => {
           xhr.removeEventListener('load', onLoad);
           xhr.removeEventListener('error', onError);
           xhr.removeEventListener('progress', onProgress);
-          tokenObserver.deactivate();
+          if (tokenObserver !== void 0) {
+            tokenObserver.deactivate();
+          }
         };
 
         const onProgress = () => {
@@ -252,12 +277,14 @@ export function XHRResponseToReadableStream(
 
         const onError = () => {
           clear();
-          controller.error(CreateXHRError(xhr));
-          controller.close();
+          controller.error(CreateNetworkError());
         };
 
         const onCancelled = () => {
-          clear();
+          if (token !== void 0) { // optional check
+            clear();
+            controller.error(token.reason);
+          }
         };
 
         xhr.addEventListener('load', onLoad);
@@ -268,9 +295,11 @@ export function XHRResponseToReadableStream(
         }
 
 
-        const tokenObserver: INotificationsObserver<'cancel', any> = token
-          .addListener('cancel', onCancelled)
-          .activate();
+        if (token !== void 0) {
+          tokenObserver = token
+            .addListener('cancel', onCancelled)
+            .activate();
+        }
       }
     }
   });

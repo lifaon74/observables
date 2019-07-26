@@ -12,15 +12,15 @@ import {
 import {
   Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
 } from '../../../classes/factory';
-import { IPromiseCancelToken } from '../../../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
+import { ICancelToken } from '../../../misc/cancel-token/interfaces';
 import { IValueObservable, IValueObservableConstructor, IValueObservableContext } from '../value-observable/interfaces';
 import {
   IsValueObservableConstructor, IValueObservableInternal, ValueObservableFactory,
 } from '../value-observable/implementation';
 import { InitObservableHook, IObservableHookPrivate } from '../../../core/observable/hook';
 import {
-  PromiseCancelReason, PromiseCancelToken
-} from '../../../notifications/observables/finite-state/promise/promise-cancel-token/implementation';
+  CancelReason, CancelToken
+} from '../../../misc/cancel-token/implementation';
 import { IsObject } from '../../../helpers';
 
 
@@ -29,7 +29,7 @@ export const ASYNC_VALUE_OBSERVABLE_PRIVATE = Symbol('async-value-observable-pri
 export interface IAsyncValueObservablePrivate<T> extends IObservableHookPrivate<T> {
   context: IValueObservableContext<T>;
   promise: Promise<T> | null;
-  token: IPromiseCancelToken | null;
+  token: ICancelToken | null;
 }
 
 export interface IAsyncValueObservableInternal<T> extends IAsyncValueObservable<T>, IValueObservableInternal<T> {
@@ -79,11 +79,11 @@ export function AsyncValueObservableOnUnobserved<T>(observable: IAsyncValueObser
 /**
  * TODO maybe emits should be chained (awaiting for previous emit) instead of cancelled
  */
-export function AsyncValueObservableEmit<T>(observable: IAsyncValueObservable<T>, promise: Promise<T>, token: IPromiseCancelToken = new PromiseCancelToken()): Promise<void> {
+export function AsyncValueObservableEmit<T>(observable: IAsyncValueObservable<T>, promise: Promise<T>, token: ICancelToken = new CancelToken()): Promise<void> {
   const privates: IAsyncValueObservablePrivate<T> = ((observable as unknown) as IAsyncValueObservableInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE];
 
   if (privates.token !== null) {
-    privates.token.cancel(new PromiseCancelReason('Emit before last one finished'));
+    privates.token.cancel(new CancelReason('Emit before last one finished'));
   }
   privates.token = token;
   privates.promise = promise;
@@ -158,7 +158,7 @@ export function NewAsyncValueObservableContext<T>(observable: IAsyncValueObserva
   return context;
 }
 
-export function AsyncValueObservableContextEmit<T>(context: IAsyncValueObservableContext<T>, promise: Promise<T>, token?: IPromiseCancelToken): Promise<void> {
+export function AsyncValueObservableContextEmit<T>(context: IAsyncValueObservableContext<T>, promise: Promise<T>, token?: ICancelToken): Promise<void> {
   return AsyncValueObservableEmit<T>(context.observable, promise, token);
 }
 
@@ -172,7 +172,7 @@ export class AsyncValueObservableContext<T> extends ObservableContextBase<T> imp
     return ((this as unknown) as IObservableContextBaseInternal<T>)[OBSERVABLE_CONTEXT_BASE_PRIVATE].observable as IAsyncValueObservable<T>;
   }
 
-  emit(promise: Promise<T>, token?: IPromiseCancelToken): Promise<void> {
+  emit(promise: Promise<T>, token?: ICancelToken): Promise<void> {
     return AsyncValueObservableContextEmit<T>(this, promise, token);
   }
 

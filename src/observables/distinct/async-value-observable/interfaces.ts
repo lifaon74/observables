@@ -1,5 +1,5 @@
 import { IObservable, IObservableHook } from '../../../core/observable/interfaces';
-import { IPromiseCancelToken } from '../../../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
+import { ICancelToken } from '../../../misc/cancel-token/interfaces';
 import { IValueObservable } from '../value-observable/interfaces';
 
 
@@ -29,6 +29,6 @@ export interface IAsyncValueObservableContextConstructor {
 export interface IAsyncValueObservableContext<T> {
   readonly observable: IAsyncValueObservable<T>;
 
-  emit(promise: Promise<T>, token?: IPromiseCancelToken): Promise<void>;
+  emit(promise: Promise<T>, token?: ICancelToken): Promise<void>;
 }
 

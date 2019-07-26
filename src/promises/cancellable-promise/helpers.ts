@@ -2,8 +2,8 @@ import { ICancellablePromise } from './interfaces';
 import { setImmediate, clearImmediate } from '../../classes/set-immediate';
 import { CancellablePromise } from './implementation';
 import {
-  IPromiseCancelToken, TCancelStrategy
-} from '../../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
+  ICancelToken, TCancelStrategy
+} from '../../misc/cancel-token/interfaces';
 import { TPromiseOrValue } from '../interfaces';
 import { Reason } from '../../misc/reason/implementation';
 
@@ -13,20 +13,20 @@ import { Reason } from '../../misc/reason/implementation';
  * @param token
  * @param strategy
  */
-export function $delay(timeout: number, token?: IPromiseCancelToken, strategy?: TCancelStrategy): ICancellablePromise<void> {
-  return new CancellablePromise<void>((resolve: (value?: TPromiseOrValue<void>) => void, reject: (reason?: any) => void, token: IPromiseCancelToken) => {
-    const promiseCancelTokenObserver = token.addListener('cancel', () => {
+export function $delay(timeout: number, token?: ICancelToken, strategy?: TCancelStrategy): ICancellablePromise<void> {
+  return new CancellablePromise<void>((resolve: (value?: TPromiseOrValue<void>) => void, reject: (reason?: any) => void, token: ICancelToken) => {
+    const cancelTokenObserver = token.addListener('cancel', () => {
       clearTimeout(timer);
-      promiseCancelTokenObserver.deactivate();
+      cancelTokenObserver.deactivate();
       reject(token.reason);
     });
 
     const timer = setTimeout(() => {
-      promiseCancelTokenObserver.deactivate();
+      cancelTokenObserver.deactivate();
       resolve();
     }, timeout);
 
-    promiseCancelTokenObserver.activate();
+    cancelTokenObserver.activate();
   }, token, strategy);
 }
 
@@ -35,20 +35,20 @@ export function $delay(timeout: number, token?: IPromiseCancelToken, strategy?: 
  * @param token
  * @param strategy
  */
-export function $yield(token?: IPromiseCancelToken, strategy?: TCancelStrategy): ICancellablePromise<void> {
-  return new CancellablePromise<void>((resolve: (value?: TPromiseOrValue<void>) => void, reject: (reason?: any) => void, token: IPromiseCancelToken) => {
-    const promiseCancelTokenObserver = token.addListener('cancel', () => {
+export function $yield(token?: ICancelToken, strategy?: TCancelStrategy): ICancellablePromise<void> {
+  return new CancellablePromise<void>((resolve: (value?: TPromiseOrValue<void>) => void, reject: (reason?: any) => void, token: ICancelToken) => {
+    const cancelTokenObserver = token.addListener('cancel', () => {
       clearImmediate(timer);
-      promiseCancelTokenObserver.deactivate();
+      cancelTokenObserver.deactivate();
       reject(token.reason);
     });
 
     const timer = setImmediate(() => {
-      promiseCancelTokenObserver.deactivate();
+      cancelTokenObserver.deactivate();
       resolve();
     });
 
-    promiseCancelTokenObserver.activate();
+    cancelTokenObserver.activate();
   }, token, strategy);
 }
 

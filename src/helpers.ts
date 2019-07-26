@@ -14,6 +14,15 @@ export function EnumToString<T>(values: T[]): string {
   return string;
 }
 
+export function StringMaxLength(input: string, maxLength: number): string {
+  if (maxLength < 3) {
+    throw new RangeError(`Expected maxLength greater or equal to 3`);
+  }
+  return (input.length > maxLength)
+    ? (input.substring(0, maxLength - 3) + '...')
+    : input;
+}
+
 export function MathClosestTo(targetValue: number, ...values: number[]): number {
   let closest: number = values[0];
   let closestDistance: number = Math.abs(values[0] - targetValue);

@@ -1,6 +1,6 @@
 # How to create an Observable which does http request (for REST API for example) ?
 
-### Understanding the PromiseCancelToken
+### Understanding the CancelToken
 
 One recurrent issue with the promise is the **cancellation**: when initialized, a promise and all its *then/catch* will be called
 even if at some point we don't require anymore the final result.
@@ -32,12 +32,12 @@ This has some problems if the user clicks many times on the button:
   3) (at time 300ms) second request finishes and is rendered into the DOM (page 1)
   4) (at time 1000ms) first request finishes and is rendered into the DOM (page 0) => UNWANTED BEHAVIOUR !
 
-PromiseCancelToken helps to solve this problem: it's simply an object with a possible *cancelled* state, and a `cancel` function.
+CancelToken helps to solve this problem: it's simply an object with a possible *cancelled* state, and a `cancel` function.
 
 It may be used like this:
 
 ```ts
-function loadNews(page: number, token: IPromiseCancelToken = new PromiseCancelToken()): Promise<void> {
+function loadNews(page: number, token: ICancelToken = new CancelToken()): Promise<void> {
   return fetch(`https://my-domain/api/news?page=${page}`, { signal: token.toAbortController().signal })
     .then((response: Response) => {
       if (token.cancelled) {
@@ -56,13 +56,13 @@ function loadNews(page: number, token: IPromiseCancelToken = new PromiseCancelTo
 }
 
 let page: number = 0;
-let token: IPromiseCancelToken;
+let token: ICancelToken;
 document.querySelector('button')
   .addEventListener(`click`, () => {
     if (token !== void 0) {
       token.cancel(new PromiseCancelReason('Manual cancel'));
     }
-    token = new PromiseCancelToken();
+    token = new CancelToken();
     page++;
     loadNews(page, token)
       .catch(PromiseCancelReason.discard);
@@ -71,7 +71,7 @@ document.querySelector('button')
 
 Or even better, using the *wrap* methods:
 ```ts
-function loadNews(page: number, token: IPromiseCancelToken = new PromiseCancelToken()): Promise<void> {
+function loadNews(page: number, token: ICancelToken = new CancelToken()): Promise<void> {
   return token.wrapPromise(fetch(`https://my-domain/api/news?page=${page}`, { signal: token.toAbortController().signal }))
     .then(token.wrapFunction((response: Response) => {
       return response.json();
@@ -84,7 +84,7 @@ function loadNews(page: number, token: IPromiseCancelToken = new PromiseCancelTo
 
 Or if you prefer to use the provided CancellablePromise:
 ```ts
-function loadNews(page: number, token: IPromiseCancelToken = new PromiseCancelToken()): Promise<void> {
+function loadNews(page: number, token: ICancelToken = new CancelToken()): Promise<void> {
   return new CancellablePromise(fetch(`https://my-domain/api/news?page=${page}`, { signal: token.toAbortController().signal }), token)
     .then((response: Response) => {
       return response.json();
@@ -96,7 +96,7 @@ function loadNews(page: number, token: IPromiseCancelToken = new PromiseCancelTo
 }
 ```
 
-**The PromiseCancelToken is useful to avoid unnecessary work into the promise chain, and should be used in most of your workflow.**
+**The CancelToken is useful to avoid unnecessary work into the promise chain, and should be used in most of your workflow.**
 
 *Another example - assuming a payment mobile app:*
 
@@ -111,17 +111,17 @@ function loadNews(page: number, token: IPromiseCancelToken = new PromiseCancelTo
     4) the server detects that the session is no more valid for the first request, and returns a 401 error.
 
 This king of pattern occurs extremely frequently: a call to the server after a click on a button, followed by a success/error popup.
-Sadly, by laziness or time constraint, developers tend to forgot the *cancel* part (and the error part too ;) ), where PromiseCancelToken simplifies the work.
+Sadly, by laziness or time constraint, developers tend to forgot the *cancel* part (and the error part too ;) ), where CancelToken simplifies the work.
 
 ### Simple cancellable http request example
 
 ```ts
 /**
- * Creates a simple GET http request which loads an url and returns result as [Promise<string>, PromiseCancelToken]
+ * Creates a simple GET http request which loads an url and returns result as [Promise<string>, CancelToken]
  * @param url
- * @param token - optional PromiseCancelToken, will be returned in the tuple
+ * @param token - optional CancelToken, will be returned in the tuple
  */
-function createHttpRequest(url: string, token: IPromiseCancelToken = new PromiseCancelToken()): TCancellablePromiseTuple<string> {
+function createHttpRequest(url: string, token: ICancelToken = new CancelToken()): TCancellablePromiseTuple<string> {
   return {
     promise: new Promise<string>((resolve, reject) => {
       const request = new XMLHttpRequest(); // create an XMLHttpRequest
@@ -163,17 +163,17 @@ doRequest();
 
 ### Understanding the PromiseObservable
 
-Unlike Promises, Observables are cancellable due to their onObserve/onUnobserve mechanism (a core functionality), that's why we introduced the PromiseCancelToken.
+Unlike Promises, Observables are cancellable due to their onObserve/onUnobserve mechanism (a core functionality), that's why we introduced the CancelToken.
 
 We may consider that Promises have 3 final states: *completed*, *errored*, and *canceled*.
 
 The PromiseObservable is constructed like this:
 ```ts
-new<T>(promiseFactory: (token: IPromiseCancelToken) => Promise<T>, options?: IPromiseObservableOptions): IPromiseObservable<T>;
+new<T>(promiseFactory: (token: ICancelToken) => Promise<T>, options?: IPromiseObservableOptions): IPromiseObservable<T>;
 ```
 
 The `promiseFactory` is a function returning a Promise. It is called once if mode is different than `every`, else it is called for each Observers.
-The PromiseCancelToken provided in this function must be used to abort/cancel unnecessary work as seen previously (used in `then` for example).
+The CancelToken provided in this function must be used to abort/cancel unnecessary work as seen previously (used in `then` for example).
 
 This token is cancelled by the PromiseObservable in certain circumstances: for example, if it has no more observers,
 or if the Observer which generated the promise stopped to observe.
@@ -200,7 +200,7 @@ Using PromiseObservable, we can now create a simple cancellable fetch function:
 
 ```ts
 function http(url: string) {
-  return new PromiseObservable((token: PromiseCancelToken) => {
+  return new PromiseObservable((token: CancelToken) => {
     return fetch(url, { signal: token.toAbortController().signal });
   }, { mode: 'cache' });
 }

@@ -1,6 +1,6 @@
 import { IsObject } from '../helpers';
 import { ICancellablePromiseTuple, TPromiseCreateCallback, TPromiseOrValue } from './interfaces';
-import { IPromiseCancelToken } from '../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
+import { ICancelToken } from '../misc/cancel-token/interfaces';
 
 
 export function IsPromiseLike(value: any): value is Promise<any> {
@@ -82,6 +82,6 @@ export function AllSettled<T>(promises: Iterable<Promise<T>>): Promise<AllSettle
   );
 }
 
-export function SpreadCancellablePromiseTuple<T>({ promise, token }: ICancellablePromiseTuple<T>): [Promise<T>, IPromiseCancelToken] {
+export function SpreadCancellablePromiseTuple<T>({ promise, token }: ICancellablePromiseTuple<T>): [Promise<T>, ICancelToken] {
   return [promise, token ];
 }

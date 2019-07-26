@@ -14,10 +14,10 @@ import { IObserver } from '../../../core/observer/interfaces';
 import { Observer } from '../../../core/observer/public';
 import { IAsyncValueObservableContext } from '../async-value-observable/interfaces';
 import { AsyncValueObservable } from '../async-value-observable/implementation';
-import { IPromiseCancelToken } from '../../../notifications/observables/finite-state/promise/promise-cancel-token/interfaces';
+import { ICancelToken } from '../../../misc/cancel-token/interfaces';
 import {
-  PromiseCancelReason, PromiseCancelToken
-} from '../../../notifications/observables/finite-state/promise/promise-cancel-token/implementation';
+  CancelReason, CancelToken
+} from '../../../misc/cancel-token/implementation';
 import { FUNCTION_OBSERVABLE_PRIVATE, IFunctionObservableInternal } from '../function-observable/implementation';
 import { IsObject } from '../../../helpers';
 import { HasFactoryWaterMark } from '../../../classes/factory';
@@ -62,7 +62,7 @@ export function ConstructAsyncFunctionObservable<T extends TAsyncFunctionObserva
     AsyncFunctionObservableSetObservableValue<T>(observable, argObservable, value);
     if (privates.argumentsObserverPauseCount === -1) {
       AsyncFunctionObservableCallFactory<T>(observable)
-        .catch(PromiseCancelReason.discard);
+        .catch(CancelReason.discard);
     }
   }).observe(...Array.from(new Set(privates.args))); // ensure we observe it only once
 
@@ -104,7 +104,7 @@ export function AsyncFunctionObservableSetObservableValue<T extends TAsyncFuncti
 
 
 export function AsyncFunctionObservableCallFactory<T extends TAsyncFunctionObservableFactory>(observable: IAsyncFunctionObservable<T>): Promise<void> {
-  const token: IPromiseCancelToken = new PromiseCancelToken();
+  const token: ICancelToken = new CancelToken();
   const promise: TAsyncFunctionObservableFactoryReturnType<T> = (observable as IAsyncFunctionObservableInternal<T>)[ASYNC_FUNCTION_OBSERVABLE_PRIVATE].factory.apply(
     null,
     [token].concat((observable as IAsyncFunctionObservableInternal<T>)[ASYNC_FUNCTION_OBSERVABLE_PRIVATE].values)

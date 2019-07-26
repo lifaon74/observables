@@ -292,7 +292,7 @@ export function FiniteStateObservableClearCache<
   TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>
 >(instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>): void {
   const privates: IFiniteStateObservablePrivate<TValue, TFinalState, TMode, TKVMap> = (instance as IFiniteStateObservableInternal<TValue, TFinalState, TMode, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE];
-  if (privates.state === 'next') {
+  if (privates.state !== 'next') {
     throw new Error(`Clearing FiniteStateObservable's cache may only be performed when its state is 'next'`);
   } else if (instance.observed)  {
     throw new Error(`Clearing FiniteStateObservable's cache may only be performed when it is not observed`);
