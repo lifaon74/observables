@@ -14,7 +14,10 @@ import { ConstructClassWithPrivateMembers } from '../../../../../misc/helpers/Cl
 import { IsObject } from '../../../../../helpers';
 import { NotificationsObservableFactory } from '../../../../core/notifications-observable/implementation';
 import { INotificationsObservableTypedConstructor } from '../../../../core/notifications-observable/interfaces';
-import { GenerateFiniteStateObservableHookFromReadableStreamWithPauseWorkflow } from './hook-generators';
+import {
+  GenerateFiniteStateObservableHookFromReadableStreamReaderWithPauseWorkflow,
+  GenerateFiniteStateObservableHookFromReadableStreamWithPauseWorkflow
+} from './hook-generators';
 
 
 export const FROM_READABLE_STREAM_OBSERVABLE_PRIVATE = Symbol('from-readable-stream-observable-private');
@@ -53,9 +56,9 @@ export function PureFromReadableStreamObservableFactory<TBase extends Constructo
 
   return class FromReadableStreamObservable extends superClass implements IFromReadableStreamObservable<T> {
     constructor(...args: any[]) {
-      const [iterable, options]: TFromReadableStreamObservableConstructorArgs<T> = args[0];
+      const [reader, options]: TFromReadableStreamObservableConstructorArgs<T> = args[0];
       super(...setSuperArgs(args.slice(1), [
-        GenerateFiniteStateObservableHookFromReadableStreamWithPauseWorkflow<T>(iterable),
+        GenerateFiniteStateObservableHookFromReadableStreamReaderWithPauseWorkflow<T>(reader),
         options
       ]));
       ConstructFromReadableStreamObservable<T>(this);
@@ -86,7 +89,7 @@ export function FromReadableStreamObservableBaseFactory<TBase extends Constructo
 }
 
 FromReadableStreamObservable = class FromReadableStreamObservable extends FromReadableStreamObservableBaseFactory<ObjectConstructor>(Object) {
-  constructor(iterable: ReadableStream<any>, options?: IFromReadableStreamObservableOptions) {
-    super([iterable, options], [], [], []);
+  constructor(reader: ReadableStreamReader<any>, options?: IFromReadableStreamObservableOptions) {
+    super([reader, options], [], [], []);
   }
 } as IFromReadableStreamObservableConstructor;

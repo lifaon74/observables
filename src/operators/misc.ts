@@ -213,6 +213,25 @@ function divide(value1: number, value2: number): number {
 }
 
 
+export function $min(...values: TObservableOrValue<number>[]): IFunctionObservable<typeof min> {
+  return new FunctionObservable(min, $observables(...values));
+}
+
+function min(...values: number[]): number {
+  return Math.min(...values);
+}
+
+
+export function $max(...values: TObservableOrValue<number>[]): IFunctionObservable<typeof max> {
+  return new FunctionObservable(max, $observables(...values));
+}
+
+function max(...values: number[]): number {
+  return Math.max(...values);
+}
+
+
+
 /**** LOGIC ****/
 
 export function $and(...values: TObservableOrValue<boolean>[]): IFunctionObservable<typeof and> {

@@ -136,7 +136,7 @@ export function GenerateFiniteStateObservableHookFromAsyncIterableWithPauseWorkf
         }
 
         if (instance.observers.length > 0) { // optional check
-          resume();
+          resume(); // cannot fail
         }
       },
       onUnobserved(): void {

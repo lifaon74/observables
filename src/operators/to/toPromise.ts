@@ -137,7 +137,7 @@ export function singleFiniteStateObservableToCancellablePromiseTuple<TValue, TFi
 
 
 export function toCancellablePromiseTuple<T>(
-  observable: IObservable<T> | TFiniteStateObservableGeneric<T>,
+  observable: TFiniteStateObservableGeneric<T> | IObservable<T>,
   strategy?: TCancelStrategy,
   token?: ICancelToken
 ): ICancellablePromiseTuple<T | void> {
@@ -178,7 +178,7 @@ export function singleFiniteStateObservableToPromise<TValue, TFinalState extends
 }
 
 export function toPromise<T>(
-  observable: IObservable<T> | TFiniteStateObservableGeneric<T>,
+  observable: TFiniteStateObservableGeneric<T> | IObservable<T>,
   strategy?: TCancelStrategy,
   token?: ICancelToken
 ): Promise<T | void> {

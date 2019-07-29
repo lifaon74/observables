@@ -44,6 +44,7 @@ import { FromIterableObservable } from '../../notifications/observables/finite-s
 import { IFetchObservable } from '../../notifications/observables/finite-state/promise/fetch-observable/interfaces';
 import { XHRObservable } from '../../notifications/observables/finite-state/promise/xhr-observable/implementation';
 import { FromReadableStreamObservable } from '../../notifications/observables/finite-state/from/readable-stream/implementation';
+import { FromAsyncIterableObservable } from '../../notifications/observables/finite-state/from/iterable/async/implementation';
 
 
 /**
@@ -263,7 +264,7 @@ function finiteStateObservableExample1(): void {
           }
         }
       }
-    }, { mode: 'cache' })
+    }, { mode: 'cache' });
   }
 
   fromIterable([0, 1, 2, 3])
@@ -274,7 +275,61 @@ function finiteStateObservableExample1(): void {
 }
 
 
-function FromIterableObservableExample1(): void {
+async function finiteStateObservableExample2() {
+  function fromReadableStream<T>(reader: ReadableStreamReader<T>): IFiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>> {
+    return new FiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>>((context) => {
+      async function readAll() {
+        let result: ReadableStreamReadResult<T>;
+        while (!(result = await reader.read()).done) {
+          context.next(result.value);
+        }
+        context.complete();
+      }
+
+      return {
+        onObserved(): void {
+          if (
+            (context.observable.state === 'next')
+            && (context.observable.observers.length === 1)
+          ) {
+            readAll();
+          }
+        }
+      }
+    }, { mode: 'cache' });
+  }
+
+  function fromReadableStreamUsingFromAsyncIterableObservable<T>(reader: ReadableStreamReader<T>): IFiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>> {
+    return new FromAsyncIterableObservable((async function * () {
+      let result: ReadableStreamReadResult<T>;
+      while (!(result = await reader.read()).done) {
+        yield result.value;
+      }
+    })(), { mode: 'cache' });
+  }
+
+
+  const response: Response = await fetch(URL.createObjectURL(new Blob([new Uint8Array(1e6)])));
+
+  fromReadableStream((response.body as ReadableStream<Uint8Array>).getReader())
+    .on('next', (chunk: Uint8Array) => {
+      console.log('chunk', chunk);
+    })
+    .on('complete', () => {
+      console.log('complete');
+    });
+
+  // new FromReadableStreamObservable((response.body as ReadableStream<Uint8Array>).getReader())
+  //   .on('next', (chunk: Uint8Array) => {
+  //     console.log('chunk', chunk);
+  //   })
+  //   .on('complete', () => {
+  //     console.log('complete');
+  //   });
+}
+
+
+function fromIterableObservableExample1(): void {
   const observable = new FromIterableObservable([0, 1, 2, 3], { mode: 'once' });
   const observer = observable
     .addListener('next', (value: number) => {
@@ -494,7 +549,7 @@ function fetchObservableExample2(): void {
 
 function observeReadableStream(stream: ReadableStream<Uint8Array>) {
   const chunks: Uint8Array[] = [];
-  new FromReadableStreamObservable<Uint8Array>(stream)
+  new FromReadableStreamObservable<Uint8Array>(stream.getReader())
     .on('next', (chunk: Uint8Array) => {
       chunks.push(chunk);
       // console.log('chunk', chunk);
@@ -871,19 +926,21 @@ function sensorExample1() {
 }
 
 
+
+
 export async function testExamples() {
   // timerObservableExample1();
   // observeTimerObservable();
   // observeNotificationsObservable();
   // eventsObservableExample1();
   // finiteStateObservableExample1();
-  // finiteStateObservableExample1();
-  // FromIterableObservableExample1();
+  finiteStateObservableExample2();
+  // fromIterableObservableExample1();
   // cancelTokenExample1();
   // promiseObservableExample1();
   // fetchObservableExample1();
   // fetchObservableExample2();
-  readableStreamExample1();
+  // readableStreamExample1();
   // xhrObservableExample1();
   // await observableToPromiseExample1();
 

@@ -10,7 +10,7 @@ import { WebSocketIO } from '../observables/io/websocket-observable/implementati
 import { UnionToIntersection } from '../classes/types';
 import { reducePipe } from '../operators/pipes/reducePipe';
 import { flattenPipe } from '../operators/pipes/flattenPipe';
-import { assert, assertFails, assertObservableEmits, notificationsEquals } from '../classes/asserts';
+import { assert, assertFails, assertObservableEmits, eq, notificationsEquals } from '../classes/asserts';
 // import { FromIterableObservable } from '../observables/from/iterable/implementation';
 import { noop } from '../helpers';
 import { Observer } from '../core/observer/public';
@@ -25,10 +25,10 @@ import { Progress } from '../misc/progress/implementation';
 import { FromIterableObservable } from '../notifications/observables/finite-state/from/iterable/sync/public';
 import { FromRXJSObservable } from '../notifications/observables/finite-state/from/rxjs/public';
 import { aggregateNotificationsPipe } from '../operators/pipes/aggregateNotificationsPipe';
-// import { toAsyncIterable } from '../operators/to/async-iterator/toAsyncIterable';
-import { clearImmediate, setImmediate } from '../classes/set-immediate';;
+import { finiteStateObservableToPromise, toPromise } from '../operators/to/toPromise';
 import { testExamples } from './examples/examples';
-import { testPromises } from './test-promises';
+// import { toAsyncIterable } from '../operators/to/async-iterator/toAsyncIterable';
+
 
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve: any, reject: any) => {
@@ -393,19 +393,41 @@ async function testFromRXJSObservable() {
 
 }
 
-async function testToRXJSObservable() {
-  toRXJS<number>(new FromIterableObservable([0, 1, 2, 3, 4]))
-    .subscribe({
-      next: (value: number) => {
-        console.log('next', value);
-      },
-      complete: () => {
-        console.log('complete');
-      },
-      error: (error: any) => {
-        console.log('error', error);
-      }
-    });
+async function testToRXJS() {
+  const rxObservable = toRXJS<number>(new FromIterableObservable([0, 1, 2, 3]));
+
+  const notifications = [
+    new Notification('next', 0),
+    new Notification('next', 1),
+    new Notification('next', 2),
+    new Notification('next', 3),
+    new Notification('complete', void 0),
+  ];
+
+
+  const values = new FromRXJSObservable<number>(rxObservable, { mode: 'uniq' });
+
+  await assertObservableEmits(
+    values,
+    notifications
+  );
+
+  // rxObservable.subscribe({
+  //   next: (value: number) => {
+  //     console.log('next', value);
+  //   },
+  //   complete: () => {
+  //     console.log('complete');
+  //   },
+  //   error: (error: any) => {
+  //     console.log('error', error);
+  //   }
+  // });
+}
+
+async function testToPromise() {
+  await assert(() => toPromise(new FromIterableObservable<number>([0, 1, 2, 3])).then(_ => (_ === 3)));
+  await assert(() => finiteStateObservableToPromise(new FromIterableObservable<number>([0, 1, 2, 3])).then(values => eq(values, [0, 1, 2, 3])));
 }
 
 async function testToAsyncIterable() {
@@ -539,6 +561,7 @@ export async function testFileReaderObservable() {
 export async function test() {
   console.log('1');
   await testExamples();
+  // testMicroObservables();
 
   // testReadOnlyList();
   // testSource();
@@ -550,7 +573,8 @@ export async function test() {
   // await testFlattenPipe();
 
   // await testFromRXJSObservable();
-  // await testToRXJSObservable(); // TODO
+  // await testToRXJS();
+  // await testToPromise();
 
   // await testToAsyncIterable();
 
@@ -569,6 +593,8 @@ export async function test() {
   // testPromises();
   // testClasses();
   // testProgram();
+
+  console.log('tests done');
 }
 
 
