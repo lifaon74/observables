@@ -307,13 +307,9 @@ export function $fetch<T>(requestInfo: TObservableOrValue<RequestInfo>, requestI
 }
 
 export function _fetch<T>(token: ICancelToken, requestInfo: RequestInfo, requestInit?: RequestInit): Promise<T> {
-  return fetch(requestInfo, LinkCancelTokenWithFetchArguments(token, requestInfo, requestInit))
+  return token.wrapPromise(fetch(...token.wrapFetchArguments(requestInfo, requestInit)))
     .then<T>((response: Response) => {
-      if (token.cancelled) {
-        throw token.reason;
-      } else {
-        return response.json();
-      }
+      return response.json();
     });
 }
 
