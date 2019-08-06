@@ -1178,6 +1178,7 @@ Because FiniteStateObservable is pretty complex, I wont give more details here b
 <details>
 <summary>show</summary>
 <p>
+
 ```ts
 type TCancelStrategy =
   'resolve' // resolve the promise with void
@@ -1340,6 +1341,7 @@ function cancellablePromiseExample(): ICancellablePromise<void> {
     });
 }
 ```
+
 </p>
 </details>
 

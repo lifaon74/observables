@@ -204,7 +204,7 @@ function fromReadableStreamUsingFromAsyncIterableObservable<T>(reader: ReadableS
 }
 ```
 
-**WARN:**: For better performances you should use `FromReadableStreamObservable` instead:
+**WARN:** For better performances you should use `FromReadableStreamObservable` instead:
 ```ts
 new FromReadableStreamObservable((response.body as ReadableStream<Uint8Array>).getReader())
   .on('next', (chunk: Uint8Array) => {
