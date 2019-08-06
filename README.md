@@ -286,11 +286,11 @@ button.addEventListener('click', () => {
 In the context of IoT and sensors, Observables may be extremely useful:
 ```ts
 interface SmartElectricOutlet {
-  state: Observerable<'on' | 'off'>;
-  current: Observerable<number>;
-  voltage: Observerable<number>;  
-  watts: Observerable<number>;  
-  wattHours: Observerable<number>;
+  state: Observable<'on' | 'off'>;
+  current: Observable<number>;
+  voltage: Observable<number>;  
+  watts: Observable<number>;  
+  wattHours: Observable<number>;
 }
 ```
 
