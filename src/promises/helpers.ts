@@ -83,5 +83,5 @@ export function AllSettled<T>(promises: Iterable<Promise<T>>): Promise<AllSettle
 }
 
 export function SpreadCancellablePromiseTuple<T>({ promise, token }: ICancellablePromiseTuple<T>): [Promise<T>, ICancelToken] {
-  return [promise, token ];
+  return [promise, token];
 }

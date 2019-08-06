@@ -3,7 +3,7 @@ import { ICancelToken } from '../misc/cancel-token/interfaces';
 
 export type TPromiseOrValue<T> = T | PromiseLike<T>;
 export type TPromiseOrValueFactory<T> = (...args: any[]) => TPromiseOrValue<T>;
-
+export type TPromiseFactory<T> = (...args: any[]) => Promise<T>;
 
 export type TPromiseType<P> = P extends PromiseLike<infer T>
   ? T extends PromiseLike<any>

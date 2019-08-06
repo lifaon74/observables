@@ -51,11 +51,19 @@ export function IsIterable(value: any): value is Iterable<any> {
     && (Symbol.iterator in value);
 }
 
-export function IsNullOrUndefined(value: any): boolean {
+export function IsIterator(value: any): value is Iterable<any> {
+  return IsObject(value)
+    && (typeof (value as any).next === 'function');
+}
+
+export function IsNullOrUndefined(value: any): value is (null | undefined) {
   return (value === null) || (value === void 0);
 }
 
-
+export type TCastableToIterableStrict<T> = Iterable<T> | Iterator<T>;
+export type TCastableToIterable<T> = TCastableToIterableStrict<T> | object;
+export type TCastableToIteratorStrict<T> = Iterable<T> | Iterator<T>;
+export type TCastableToIterator<T> = TCastableToIteratorStrict<T> | object;
 
 export function ToIterable<T>(value: any): Iterable<T> {
   // return Array.from(value);
