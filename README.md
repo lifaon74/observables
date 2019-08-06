@@ -1156,7 +1156,7 @@ setTimeout(() => {
 }, 5000);
 ```
 
-**INFO:** For NodeJS's EventEmitter, the equivalent is NodeJSEventsObservable.
+**INFO:** For NodeJS's EventEmitter, the equivalent is `NodeJSEventsObservable`.
 
 ---
 
@@ -1241,7 +1241,7 @@ interface ICancelToken extends INotificationsObservable<ICancelTokenKeyValueMap>
 }
 ```
 
-A CancelToken is a Token used to *"cancel"* a something (generally a promise).
+A CancelToken is a Token used to *"cancel"* something (generally an async task like a promise).
 It is extremely useful to avoid unnecessary work in a promise chain or to abort async operations.
 
 *Example:* Use CancelToken to know than a promise has been cancelled
@@ -1287,7 +1287,7 @@ linkWithToken(...tokens: ICancelToken[]): () => void;
 ```
 Links this CancelToken with a list of tokens. If one of the provided `tokens` is cancelled, cancel this Token with the cancelled token's reason.
 
-*INFO:* linkWith<name> methods return an undo function: calling this function will undo the link.
+**INFO:** linkWith[name] methods return an undo function: calling this function will undo the link.
 
 ###### toAbortController / linkWithAbortController / linkWithAbortSignal
 ```ts
@@ -1401,7 +1401,7 @@ newsRequest
   });
   
 ```
-**INFO:** An FetchObservable is provided to simplify fetch requests.
+**INFO:** A `FetchObservable` is provided to simplify fetch requests.
 
 By default, the first observer will call `promiseFactory` **once** (the returned promise may be cached with `options.mode = 'cache'` so following observers will receive the values),
 even if the promise is cancelled or rejected.
