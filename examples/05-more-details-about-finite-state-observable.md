@@ -146,7 +146,7 @@ fromIterable([0, 1, 2, 3])
   .activate();
 ```
 
-**WARN:** This example is not optimized at all, do not use directly, instead `FromIterableObservable` should be used.
+**WARN:** This example is not optimized at all, do not use directly, instead use `FromIterableObservable`.
 ```ts
 new FromIterableObservable<number>([0, 1, 2, 3], { mode: 'cache' })
   .addListener('next', (value: number) => {
@@ -192,7 +192,7 @@ fromReadableStream((response.body as ReadableStream<Uint8Array>).getReader())
 
 ```
 
-You may use `FromAsyncIterableObservable` too for a better implementation:
+Same but shorter and simpler implementation using `FromAsyncIterableObservable`:
 ```ts
 function fromReadableStreamUsingFromAsyncIterableObservable<T>(reader: ReadableStreamReader<T>): IFiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>> {
   return new FromAsyncIterableObservable((async function * () {
@@ -204,7 +204,7 @@ function fromReadableStreamUsingFromAsyncIterableObservable<T>(reader: ReadableS
 }
 ```
 
-Finally, for better performances you should use `FromReadableStreamObservable`:
+**WARN:**: For better performances you should use `FromReadableStreamObservable` instead:
 ```ts
 new FromReadableStreamObservable((response.body as ReadableStream<Uint8Array>).getReader())
   .on('next', (chunk: Uint8Array) => {
