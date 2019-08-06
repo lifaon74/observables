@@ -1,4 +1,4 @@
-import { ICancellablePromise } from './interfaces';
+import { ICancellablePromise, TCancellablePromiseCreateCallback } from './interfaces';
 import { setImmediate, clearImmediate } from '../../classes/set-immediate';
 import { CancellablePromise } from './implementation';
 import {
@@ -6,6 +6,7 @@ import {
 } from '../../misc/cancel-token/interfaces';
 import { TPromiseOrValue } from '../interfaces';
 import { Reason } from '../../misc/reason/implementation';
+import { CancelToken } from '../../misc/cancel-token/implementation';
 
 /**
  * Returns a CancellablePromise resolved after 'timeout' milliseconds
@@ -52,17 +53,26 @@ export function $yield(token?: ICancelToken, strategy?: TCancelStrategy): ICance
   }, token, strategy);
 }
 
-
 /**
- * Cancels a CancellablePromise after 'timeout' milliseconds
- * @param promise
+ * Cancels a Promise after 'timeout' milliseconds
+ * @param promiseOrCallback
  * @param timeout
+ * @param token - should be omitted if promise is a CancellablePromise
+ * @param strategy - should be omitted if promise is a CancellablePromise
  */
-export function $timeout<T>(promise: ICancellablePromise<T>, timeout: number): ICancellablePromise<T> {
-  $delay(timeout, promise.token)
+export function $timeout<T>(promiseOrCallback: Promise<T> | TCancellablePromiseCreateCallback<T>, timeout: number, token?: ICancelToken, strategy?: TCancelStrategy): ICancellablePromise<T> {
+  const promise: ICancellablePromise<T> = CancellablePromise.of<T>(promiseOrCallback, token, strategy);
+
+  const delayToken: ICancelToken = new CancelToken();
+  delayToken.linkWithToken(promise.token);
+
+  $delay(timeout, delayToken)
     .then(() => {
       promise.token.cancel(new Reason<string>(`Timeout reached`, 'TIMEOUT'));
     });
-  return promise;
-}
 
+  return promise
+    .finally(() => {
+      delayToken.cancel();
+    });
+}

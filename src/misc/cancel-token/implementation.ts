@@ -383,12 +383,12 @@ export function CancelTokenLinkWithTokens(
   instance: ICancelToken,
   tokens: ICancelToken[],
 ): () => void {
-  const index: number = tokens.findIndex(_ => _.cancelled);
+  const index: number = tokens.findIndex(token => token.cancelled);
 
   if (index === -1) {
     const clear = () => {
       tokenObserver.deactivate();
-      tokensObserver.forEach(_ => _.deactivate());
+      tokensObserver.forEach(tokenObserver => tokenObserver.deactivate());
     };
 
     const cancel = (reason: any) => {
@@ -397,9 +397,9 @@ export function CancelTokenLinkWithTokens(
     };
 
     const tokenObserver = instance.addListener('cancel', clear);
-    const tokensObserver = tokens.map(_ => _.addListener('cancel', cancel));
+    const tokensObserver = tokens.map(tokenObserver => tokenObserver.addListener('cancel', cancel));
     tokenObserver.activate();
-    tokensObserver.forEach(_ => _.activate());
+    tokensObserver.forEach(tokenObserver => tokenObserver.activate());
     return clear;
   } else {
     instance.cancel(tokens[index].reason);

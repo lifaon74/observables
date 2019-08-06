@@ -265,7 +265,7 @@ export function CancellablePromiseOf<T>(
 ): ICancellablePromise<T> {
   return (
     IsCancellablePromise(promiseOrCallback)
-    && (promiseOrCallback.token === token)
+    && ((token === void 0) || (promiseOrCallback.token === token))
   )
     ? promiseOrCallback
     : new constructor(promiseOrCallback, token, strategy);
