@@ -1,7 +1,7 @@
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { Constructor, HasFactoryWaterMark, MakeFactory } from '../factory';
 import {
-  IActivable, IActivableConstructor, IActivableHook, TActivableConstructorArgs, TActivableState
+  IActivable, IActivableConstructor, IActivableHook, TActivableConstructorArgs, TActivableSateListener
 } from './interfaces';
 import { IsObject } from '../../helpers';
 
@@ -9,9 +9,9 @@ import { IsObject } from '../../helpers';
 export const ACTIVABLE_PRIVATE = Symbol('activable-private');
 
 export interface IActivablePrivate {
-  state: TActivableState;
-  activatePromise: Promise<void>;
-  deactivatePromise: Promise<void>;
+  activated: boolean;
+  promise: Promise<void>;
+  listeners: Map<TActivableSateListener, () => void>;
 
   activate(): Promise<void>;
 
@@ -22,32 +22,32 @@ export interface IActivableInternal extends IActivable {
   [ACTIVABLE_PRIVATE]: IActivablePrivate;
 }
 
-export function ConstructActivable(activable: IActivable, hook: IActivableHook): void {
-  ConstructClassWithPrivateMembers(activable, ACTIVABLE_PRIVATE);
-  const privates: IActivablePrivate = (activable as IActivableInternal)[ACTIVABLE_PRIVATE];
+export function ConstructActivable(instance: IActivable, hook: IActivableHook): void {
+  ConstructClassWithPrivateMembers(instance, ACTIVABLE_PRIVATE);
+  const privates: IActivablePrivate = (instance as IActivableInternal)[ACTIVABLE_PRIVATE];
 
-  privates.state = 'deactivated';
-  privates.activatePromise = Promise.resolve();
-  privates.deactivatePromise = Promise.resolve();
+  privates.activated = false;
+  privates.promise = Promise.resolve();
+  privates.listeners = new Map<TActivableSateListener, () => void>();
 
-  const activate = hook.activate.bind(activable);
+  const activate = hook.activate;
   privates.activate = () => {
-    return new Promise((resolve: any) => {
-      resolve(activate());
+    return new Promise<void>((resolve: any) => {
+      resolve(activate.call(instance));
     });
   };
 
-  const deactivate = hook.deactivate.bind(activable);
+  const deactivate = hook.deactivate;
   privates.deactivate = () => {
-    return new Promise((resolve: any) => {
-      resolve(deactivate());
+    return new Promise<void>((resolve: any) => {
+      resolve(deactivate.call(instance));
     });
   };
 }
 
 export function IsActivable(value: any): value is IActivable {
   return IsObject(value)
-    && value.hasOwnProperty(ACTIVABLE_PRIVATE);
+    && value.hasOwnProperty(ACTIVABLE_PRIVATE as symbol);
 }
 
 const IS_ACTIVABLE_CONSTRUCTOR = Symbol('is-activable-constructor');
@@ -58,50 +58,74 @@ export function IsActivableConstructor(value: any, direct?: boolean): boolean {
 }
 
 
-export function ActivableActivate(activable: IActivable): Promise<void> {
-  const privates: IActivablePrivate = (activable as IActivableInternal)[ACTIVABLE_PRIVATE];
-  if ((privates.state === 'deactivated') || (privates.state === 'deactivating')) {
-    ActivableSetState(activable, 'activating');
-    return privates.deactivatePromise.then(() => {
-      // assert state is deactivated
-      return privates.activatePromise = privates.activate()
-        .then(() => {
-          ActivableSetState(activable, 'activated');
-        }, (error: any) => {
-          return privates.deactivate()
-            .then(() => Promise.reject(error));
-        });
-    });
+export function ActivableActivate(instance: IActivable): Promise<void> {
+  const privates: IActivablePrivate = (instance as IActivableInternal)[ACTIVABLE_PRIVATE];
+  if (!privates.activated) {
+    privates.promise = privates.promise
+      .catch(() => {}) // discard previous errors
+      .then(() => {
+        return privates.activate()
+          .then(() => {
+            ActivableSetState(instance, true);
+          }, (error: any) => {
+            return privates.deactivate()
+              .then(() => Promise.reject(error));
+          });
+      });
+  }
+  return privates.promise;
+}
+
+export function ActivableDeactivate(instance: IActivable): Promise<void> {
+  const privates: IActivablePrivate = (instance as IActivableInternal)[ACTIVABLE_PRIVATE];
+  if (privates.activated) {
+    privates.promise = privates.promise
+      .catch(() => {}) // discard previous errors
+      .then(() => {
+        return privates.deactivate()
+          .then(() => {
+            ActivableSetState(instance, false);
+          }, (error: any) => {
+            console.error('deactivate should never fail !');
+            ActivableSetState(instance, false);
+            return Promise.reject(error);
+          });
+      });
+  }
+  return privates.promise;
+}
+
+function ActivableSetState(instance: IActivable, activated: boolean): void {
+  const privates: IActivablePrivate = (instance as IActivableInternal)[ACTIVABLE_PRIVATE];
+  if (activated !== privates.activated) { // should be an optional check => must always be true
+    privates.activated = activated;
+    const iterator: Iterator<TActivableSateListener> = privates.listeners.keys();
+    let result: IteratorResult<TActivableSateListener>;
+    while (!(result = iterator.next()).done) {
+      result.value.call(instance, activated);
+    }
   } else {
-    return privates.activatePromise;
+    console.warn(`invalid ActivableSetState`);
   }
 }
 
-export function ActivableDeactivate(activable: IActivable): Promise<void> {
-  const privates: IActivablePrivate = (activable as IActivableInternal)[ACTIVABLE_PRIVATE];
-  if ((privates.state === 'activated') || (privates.state === 'activating')) {
-    ActivableSetState(activable, 'deactivating');
-    return privates.activatePromise.then(() => {
-      // assert state is activated
-      return privates.deactivatePromise = privates.deactivate()
-        .then(() => {
-          ActivableSetState(activable, 'deactivated');
-        }, (error: any) => {
-          console.error('_deactivate should never fail !');
-          ActivableSetState(activable, 'deactivated');
-          return Promise.reject(error);
-        });
-    });
+export function ActivableAddStateListener(instance: IActivable, listener: TActivableSateListener): () => void {
+  const privates: IActivablePrivate = (instance as IActivableInternal)[ACTIVABLE_PRIVATE];
+  if (privates.listeners.has(listener)) {
+    return privates.listeners.get(listener) as () => void;
   } else {
-    return privates.deactivatePromise;
+    let cleared: boolean = false;
+    const clear = () => {
+      if (!cleared) {
+        cleared = true;
+        privates.listeners.delete(listener);
+      }
+    };
+    privates.listeners.set(listener, clear);
+    return clear;
   }
 }
 
-export function ActivableSetState(activable: IActivable, state: TActivableState): void {
-  if (state !== (activable as IActivableInternal)[ACTIVABLE_PRIVATE].state) {
-    (activable as IActivableInternal)[ACTIVABLE_PRIVATE].state = state;
-  }
-}
 
 function PureActivableFactory<TBase extends Constructor>(superClass: TBase) {
   return class Activable extends superClass implements IActivable {
@@ -112,12 +136,8 @@ function PureActivableFactory<TBase extends Constructor>(superClass: TBase) {
       ConstructActivable(this, hook);
     }
 
-    get state(): TActivableState {
-      return ((this as unknown) as IActivableInternal)[ACTIVABLE_PRIVATE].state;
-    }
-
     get activated(): boolean {
-      return ((this as unknown) as IActivableInternal)[ACTIVABLE_PRIVATE].state === 'activated';
+      return ((this as unknown) as IActivableInternal)[ACTIVABLE_PRIVATE].activated;
     }
 
     activate(): Promise<void> {
@@ -128,6 +148,9 @@ function PureActivableFactory<TBase extends Constructor>(superClass: TBase) {
       return ActivableDeactivate(this);
     }
 
+    addStateListener(listener: TActivableSateListener): () => void {
+      return ActivableAddStateListener(this, listener);
+    }
   };
 }
 
