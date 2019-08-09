@@ -3,9 +3,8 @@ import { ICancellablePromise } from '../../../../../promises/cancellable-promise
 import { CancellablePromise } from '../../../../../promises/cancellable-promise/implementation';
 import { StringMaxLength, ToIterable } from '../../../../../helpers';
 import { PartialProperties } from '../../../../../classes/types';
-import { Program } from '../../../../../tests/test-program';
 import { INotificationsObserver } from '../../../../core/notifications-observer/interfaces';
-import { CancelReason, CancelToken } from '../../../../../misc/cancel-token/implementation';
+import { CancelReason } from '../../../../../misc/cancel-token/implementation';
 
 export type XMLHttpRequestExtendedResponseType = XMLHttpRequestResponseType | 'binary-string';
 
@@ -168,11 +167,11 @@ export function BinaryStringToUint8Array(input: string): Uint8Array {
   return array;
 }
 
-const BinaryStringToUint8ArrayAsyncProgram = new Program(BinaryStringToUint8Array);
-
-export function BinaryStringToUint8ArrayAsync(input: string): Promise<Uint8Array> {
-  return BinaryStringToUint8ArrayAsyncProgram.run([input]);
-}
+// const BinaryStringToUint8ArrayAsyncProgram = new Program(BinaryStringToUint8Array);
+//
+// export function BinaryStringToUint8ArrayAsync(input: string): Promise<Uint8Array> {
+//   return BinaryStringToUint8ArrayAsyncProgram.run([input]);
+// }
 
 
 

@@ -60,10 +60,16 @@ export function IsNullOrUndefined(value: any): value is (null | undefined) {
   return (value === null) || (value === void 0);
 }
 
+export function IsMap(value: any): value is Map<any, any> {
+  return (value instanceof Map);
+}
+
 export type TCastableToIterableStrict<T> = Iterable<T> | Iterator<T>;
 export type TCastableToIterable<T> = TCastableToIterableStrict<T> | object;
 export type TCastableToIteratorStrict<T> = Iterable<T> | Iterator<T>;
 export type TCastableToIterator<T> = TCastableToIteratorStrict<T> | object;
+export type TCastableToMapStrict<K, V> =  Map<K, V> | Iterable<[K, V]> | Iterator<[K, V]>;
+export type TCastableToMap<K, V> = TCastableToMapStrict<K, V> | object;
 
 export function ToIterable<T>(value: any): Iterable<T> {
   // return Array.from(value);
@@ -103,6 +109,32 @@ export function ToIterator<T>(value: any): Iterator<T> {
     throw new TypeError(`Cannot cast value to an Iterator`);
   }
 }
+
+
+export function ToMap<K, V>(value: any): Map<K, V> {
+  if (IsNullOrUndefined(value)) {
+    throw new TypeError(`Cannot cast value to a Map`);
+  } else if (value instanceof Map) {
+    return value;
+  } else if (Symbol.iterator in value) {
+    return new Map<K, V>(Array.from(value as Iterable<[K, V]>));
+  } else if (typeof value === 'object') {
+    if (typeof (value as any).next === 'function') {
+      const map = new Map<K, V>();
+      const iterator: Iterator<[K, V]> = value as Iterator<[K, V]>;
+      let result: IteratorResult<[K, V]>;
+      while (!(result = iterator.next()).done) {
+        map.set(result.value[0], result.value[1]);
+      }
+      return map;
+    } else {
+      return new Map<K, V>(Object.entries(value) as unknown as [K, V][]);
+    }
+  } else {
+    throw new TypeError(`Cannot cast value to a Map`);
+  }
+}
+
 
 
 export function UntilDefined<T>(
