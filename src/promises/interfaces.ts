@@ -1,5 +1,12 @@
 import { ICancelToken } from '../misc/cancel-token/interfaces';
 
+export type TPromiseStatus =
+  'fulfilled' // promise is fulfilled
+  | 'rejected' // promise is rejected
+  | 'pending' // promise is neither resolved nor resolving
+  | 'resolving';
+
+
 
 export type TPromiseOrValue<T> = T | PromiseLike<T>;
 export type TPromiseOrValueFactory<T> = (...args: any[]) => TPromiseOrValue<T>;

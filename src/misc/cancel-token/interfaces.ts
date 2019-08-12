@@ -1,15 +1,36 @@
 import { INotificationsObservable } from '../../notifications/core/notifications-observable/interfaces';
 import { TPromiseOrValue, TPromiseType } from '../../promises/interfaces';
 
+
+/** TYPES **/
+
 export type TCancelStrategy =
   'resolve' // resolve the promise with void
   | 'reject' // reject the promise with the Token's reason
   | 'never' // (default) never resolve the promise, it stays in a pending state forever
   ;
 
+export type TCancelStrategyReturn<TStrategy extends TCancelStrategy> =
+  TStrategy extends 'resolve'
+    ? void
+    : TStrategy extends 'reject'
+    ? never
+    : never;
+export type TCancelStrategyReturnedPromise<T, TStrategy extends TCancelStrategy, TCancelled> = Promise<T | TCancelStrategyReturn<TStrategy> | TCancelled>;
+
+
 export type TCancelTokenWrapPromiseCallback<T> = (this: ICancelToken, resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void, token: ICancelToken) => void;
 
-export type TOnCancelled = ((this: ICancelToken, reason: any) => TPromiseOrValue<void>) | undefined | null;
+export type TCatchCancelled<T, TStrategy extends TCancelStrategy> = (this: ICancelToken, reason: any, rethrowCancelled: () => Promise<TCancelStrategyReturn<TStrategy>>) => (TPromiseOrValue<T> | Promise<TCancelStrategyReturn<TStrategy>>);
+
+
+export interface ICancelTokenWrapPromiseOptions<TStrategy extends TCancelStrategy, TCancelled> {
+  strategy?: TStrategy;
+  onCancelled?: TCatchCancelled<TCancelled, TStrategy>;
+}
+
+
+/** INTERFACES **/
 
 export interface ICancelTokenConstructor {
   new(): ICancelToken;
@@ -89,11 +110,10 @@ export interface ICancelToken extends INotificationsObservable<ICancelTokenKeyVa
    *  token.cancel();
    *
    */
-  wrapPromise<T>(
+  wrapPromise<T, TStrategy extends TCancelStrategy, TCancelled>(
     promiseOrCallback: Promise<T> | TCancelTokenWrapPromiseCallback<T>,
-    strategy?: TCancelStrategy,
-    onCancelled?: TOnCancelled,
-  ): Promise<T | void>;
+    options?: ICancelTokenWrapPromiseOptions<TStrategy, TCancelled>,
+  ): TCancelStrategyReturnedPromise<T, TStrategy, TCancelled>;
 
   /**
    * Wraps a function with this Token:
@@ -125,11 +145,10 @@ export interface ICancelToken extends INotificationsObservable<ICancelTokenKeyVa
    *      console.log('never called');
    *    });
    */
-  wrapFunction<CB extends (...args: any[]) => any>(
+  wrapFunction<CB extends (...args: any[]) => any, TStrategy extends TCancelStrategy, TCancelled>(
     callback: CB,
-    strategy?: TCancelStrategy,
-    onCancelled?: TOnCancelled,
-  ): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>> | void>;
+    options?: ICancelTokenWrapPromiseOptions<TStrategy, TCancelled>,
+  ): (...args: Parameters<CB>) => TCancelStrategyReturnedPromise<TPromiseType<ReturnType<CB>>, TStrategy, TCancelled>;
 
   /**
    * Wraps the fetch arguments with this Token:

@@ -2,7 +2,7 @@ import {
   IFiniteStateObservable, IFiniteStateObservableContext, IFiniteStateObservableKeyValueMapGeneric,
   TFiniteStateObservableCreateCallback, TFiniteStateObservableMode, TFiniteStateObservableState
 } from '../../interfaces';
-import { ICancelToken } from '../../../../../misc/cancel-token/interfaces';
+import { ICancelToken, TCancelStrategyReturn } from '../../../../../misc/cancel-token/interfaces';
 import { CancelReason, CancelToken } from '../../../../../misc/cancel-token/implementation';
 import { Notification } from '../../../../core/notification/implementation';
 import { IPromiseObservableKeyValueMap, TPromiseObservableFactory, TPromiseObservableFinalState } from './interfaces';
@@ -49,13 +49,17 @@ export function GenerateFiniteStateObservableHookFromPromise<TValue>(
         ) {
           token = new CancelToken();
 
-          const _promiseFactory = token.wrapFunction(promiseFactory, 'never', (reason: any) => {
-            if (
-              (instance.observed)
-              && (instance.state === 'next')
-            ) {
-              context.emit(new Notification<'cancel', TValue>('cancel', reason));
-              clear();
+          const _promiseFactory = token.wrapFunction(promiseFactory, {
+            strategy: 'never',
+            onCancelled: (reason: any, rethrowCancelled: () => Promise<TCancelStrategyReturn<'never'>>) => {
+              if (
+                (instance.observed)
+                && (instance.state === 'next')
+              ) {
+                context.emit(new Notification<'cancel', TValue>('cancel', reason));
+                clear();
+              }
+              return rethrowCancelled();
             }
           });
 
@@ -121,10 +125,14 @@ export function GenerateFiniteStateObservableHookFromPromiseForEachObservers<TVa
           }
         }
 
-        const _promiseFactory = token.wrapFunction(promiseFactory, 'never', (reason: any) => {
-          if (state === 'next') {
-            observer.emit(new Notification<'cancel', TValue>('cancel', reason));
-            clear();
+        const _promiseFactory = token.wrapFunction(promiseFactory, {
+          strategy: 'never',
+          onCancelled: (reason: any, rethrowCancelled: () => Promise<TCancelStrategyReturn<'never'>>) => {
+            if (state === 'next') {
+              observer.emit(new Notification<'cancel', TValue>('cancel', reason));
+              clear();
+            }
+            return rethrowCancelled();
           }
         });
 

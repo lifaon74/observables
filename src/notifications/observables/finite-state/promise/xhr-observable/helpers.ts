@@ -124,14 +124,14 @@ export function DoXHRFromRequest(
   xhr: XMLHttpRequest = new XMLHttpRequest(),
   responseType: XMLHttpRequestExtendedResponseType,
   token?: ICancelToken
-): ICancellablePromise<XMLHttpRequest> {
+): ICancellablePromise<XMLHttpRequest, 'never'> {
   // return CancellablePromise.of<ArrayBuffer>(request.arrayBuffer(), token)
   //   .then((buffer: ArrayBuffer) => {
   //     InitXHRFromRequest(request, xhr, responseType);
   //     xhr.send(buffer);
   //     return xhr;
   //   });
-  return CancellablePromise.of<Blob>(request.blob(), token)
+  return CancellablePromise.of<Blob, 'never'>(request.blob(), token)
     .then((blob: Blob) => {
       InitXHRFromRequest(request, xhr, responseType);
       xhr.send(blob);

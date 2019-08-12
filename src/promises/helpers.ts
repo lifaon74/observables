@@ -46,11 +46,11 @@ export function Finally<T>(onFinally?: (() => void) | undefined | null): [
   return (typeof onFinally === 'function')
     ? [
       (value: T) => {
-        return new Promise<void>(resolve => resolve(onFinally()))
+        return PromiseTry<void>(onFinally)
           .then<T, never>(() => value);
       },
       (reason: any) => {
-        return new Promise<void>(resolve => resolve(onFinally()))
+        return PromiseTry<void>(onFinally)
           .then<never, never>(() => {
             throw reason;
           });

@@ -6,7 +6,8 @@ import { INotificationsObserver } from '../../notifications/core/notifications-o
 import { ConstructClassWithPrivateMembers } from '../helpers/ClassWithPrivateMembers';
 import {
   ICancelToken, ICancelTokenConstructor, ICancelTokenKeyValueMap,
-  TCancelTokenWrapPromiseCallback, TCancelStrategy, TOnCancelled
+  TCancelTokenWrapPromiseCallback, TCancelStrategy, TCatchCancelled, TCancelStrategyReturnedPromise,
+  TCancelStrategyReturn, ICancelTokenWrapPromiseOptions
 } from './interfaces';
 import { NotificationsObserver } from '../../notifications/core/notifications-observer/implementation';
 import { Reason } from '../reason/implementation';
@@ -14,6 +15,8 @@ import { IsObject, noop } from '../../helpers';
 import { TPromiseOrValue, TPromiseType } from '../../promises/interfaces';
 import { Finally, IsPromiseLikeBase, PromiseTry } from '../../promises/helpers';
 import { INotificationsObservableContext } from '../../notifications/core/notifications-observable/interfaces';
+
+
 
 
 export const CANCEL_TOKEN_PRIVATE = Symbol('cancel-token-private');
@@ -117,6 +120,34 @@ export function LinkCancelTokenWithFetchArgumentsSpread(instance: ICancelToken, 
 /**
  * IMPLEMENTATION
  */
+
+export interface ICancelTokenWrapPromiseOptionsStrict<TStrategy extends TCancelStrategy, TCancelled> extends ICancelTokenWrapPromiseOptions<TStrategy, TCancelled> {
+  strategy: TStrategy;
+}
+
+
+export function CancelTokenNormalizeWrapPromiseOptions<TStrategy extends TCancelStrategy, TCancelled>(options?: ICancelTokenWrapPromiseOptions<TStrategy, TCancelled>): ICancelTokenWrapPromiseOptionsStrict<TStrategy, TCancelled> {
+  const _options: ICancelTokenWrapPromiseOptionsStrict<TStrategy, TCancelled> = {} as ICancelTokenWrapPromiseOptionsStrict<TStrategy, TCancelled>;
+  if (options === void 0) {
+    options = {};
+  } else if (!IsObject(options)) {
+    throw new TypeError(`Expected object or void as options`);
+  }
+
+  if (options.strategy === void 0) {
+    _options.strategy = 'never' as TStrategy;
+  } else if (['resolve', 'reject', 'never'].includes(options.strategy)) {
+    _options.strategy = options.strategy;
+  } else {
+    throw new TypeError(`Expected 'resolve', 'reject', 'never' or void as options.strategy`);
+  }
+
+  if ((options.onCancelled !== void 0) && (typeof options.onCancelled !== 'function')) {
+    throw new TypeError(`Expected function or void as options.onCancelled`);
+  }
+
+  return _options;
+}
 
 /**
  * Links a CancelToken with an AbortController.
@@ -247,12 +278,13 @@ export function CancelTokenLinkWithAbortSignal(instance: ICancelToken, signal: A
  * @param instance
  * @param strategy
  */
-export function ApplyCancelStrategy(instance: ICancelToken, strategy: TCancelStrategy = 'never'): Promise<void> {
+export function ApplyCancelStrategy<TStrategy extends TCancelStrategy>(instance: ICancelToken, strategy?: TStrategy): Promise<TCancelStrategyReturn<TStrategy>> {
   switch (strategy) {
+    case void 0:
     case 'never':
       return new Promise<never>(noop);
     case 'resolve':
-      return Promise.resolve();
+      return Promise.resolve() as Promise<TCancelStrategyReturn<TStrategy>>;
     case 'reject':
       return Promise.reject(instance.reason);
     default:
@@ -261,21 +293,19 @@ export function ApplyCancelStrategy(instance: ICancelToken, strategy: TCancelStr
 }
 
 /**
- * If present, apply the onCancelled function and when resolved, the cancel strategy
+ * Calls the onCancelled function.
+ * When resolved, applies the cancel strategy
  * @param instance
- * @param strategy
- * @param onCancelled
+ * @param options
  */
-export function ApplyOnCancelCallback(
+export function ApplyOnCancelCallback<TStrategy extends TCancelStrategy, TCancelled>(
   instance: ICancelToken,
-  strategy?: TCancelStrategy,
-  onCancelled?: TOnCancelled,
-): Promise<void> {
-  const promise: Promise<void> = (typeof onCancelled === 'function')
-    ? PromiseTry<void>(() => onCancelled.call(instance, instance.reason))
-    : Promise.resolve();
-
-  return promise.then(() => ApplyCancelStrategy(instance, strategy));
+  options: ICancelTokenWrapPromiseOptionsStrict<TStrategy, TCancelled>,
+): Promise<TCancelStrategyReturn<TStrategy> | TCancelled> {
+  const rethrowCancelled = () => ApplyCancelStrategy<TStrategy>(instance, options.strategy);
+  return (typeof options.onCancelled === 'function')
+    ? PromiseTry<TCancelled>(() => (options.onCancelled as Function).call(instance, instance.reason, rethrowCancelled))
+    : rethrowCancelled();
 }
 
 /**
@@ -316,65 +346,56 @@ export function RaceCancelled<T>(
  *  else pass though promise
  * @param instance
  * @param promise
- * @param strategy
- * @param onCancelled
+ * @param options
  */
-export function CancelTokenWrapPromise<T>(
+export function CancelTokenWrapPromise<T, TStrategy extends TCancelStrategy, TCancelled>(
   instance: ICancelToken,
   promise: Promise<T>,
-  strategy?: TCancelStrategy,
-  onCancelled?: TOnCancelled,
-): Promise<T | void> {
+  options: ICancelTokenWrapPromiseOptionsStrict<TStrategy, TCancelled>,
+): TCancelStrategyReturnedPromise<T, TStrategy, TCancelled> {
   return RaceCancelled<T>(instance, promise)
-    .then<T | void, never | void>((value: T) => {
+    .then<T | TCancelStrategyReturn<TStrategy> | TCancelled, never | TCancelStrategyReturn<TStrategy> | TCancelled>((value: T) => {
       return instance.cancelled
-        ? ApplyOnCancelCallback(instance, strategy, onCancelled)
+        ? ApplyOnCancelCallback<TStrategy, TCancelled>(instance, options)
         : value;
     }, (error: any) => {
       if (instance.cancelled) {
-        return ApplyOnCancelCallback(instance, strategy, onCancelled);
+        return ApplyOnCancelCallback<TStrategy, TCancelled>(instance, options);
       } else {
         throw error;
       }
     });
-    // .then(...Finally<T>(() => {
-    //   return instance.cancelled
-    //     ? ApplyOnCancelCallback(instance, strategy, onCancelled)
-    //     : Promise.resolve();
-    // }));
 }
 
-export function CancelTokenWrapPromiseOrCreate<T>(
+export function CancelTokenWrapPromiseOrCreate<T, TStrategy extends TCancelStrategy, TCancelled>(
   instance: ICancelToken,
   promiseOrCallback: Promise<T> | TCancelTokenWrapPromiseCallback<T>,
-  strategy?: TCancelStrategy,
-  onCancelled?: TOnCancelled,
-): Promise<T | void> {
+  options: ICancelTokenWrapPromiseOptionsStrict<TStrategy, TCancelled>,
+): TCancelStrategyReturnedPromise<T, TStrategy, TCancelled> {
   if (typeof promiseOrCallback === 'function') {
     // ensures promiseOrCallback is called only if token is not cancelled
-    return CancelTokenWrapFunction(instance, () => {
+    return CancelTokenWrapFunction<() => Promise<T>, TStrategy, TCancelled>(instance, () => {
       return new Promise<T>((resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void) => {
         promiseOrCallback.call(instance, resolve, reject, instance);
       })
-    }, strategy, onCancelled)();
+    }, options)();
   } else if (IsPromiseLikeBase(promiseOrCallback)) {
-    return CancelTokenWrapPromise<T>(instance, promiseOrCallback, strategy, onCancelled);
+    return CancelTokenWrapPromise<T, TStrategy, TCancelled>(instance, promiseOrCallback, options);
   } else {
     throw new TypeError(`Expected Promise or function as token.wrapPromise's first argument.`);
   }
 }
 
-export function CancelTokenWrapFunction<CB extends (...args: any[]) => any>(
+export function CancelTokenWrapFunction<CB extends (...args: any[]) => any, TStrategy extends TCancelStrategy, TCancelled>(
   instance: ICancelToken,
   callback: CB,
-  strategy?: TCancelStrategy,
-  onCancelled?: TOnCancelled,
-): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>> | void> {
+  options: ICancelTokenWrapPromiseOptionsStrict<TStrategy, TCancelled>,
+): (...args: Parameters<CB>) => TCancelStrategyReturnedPromise<TPromiseType<ReturnType<CB>>, TStrategy, TCancelled> {
   type T = TPromiseType<ReturnType<CB>>;
-  return function (...args: Parameters<CB>): Promise<T | void> {
+  return function (...args: Parameters<CB>): TCancelStrategyReturnedPromise<T, TStrategy, TCancelled> {
     return instance.cancelled
-      ? ApplyOnCancelCallback(instance, strategy, onCancelled)
-      : CancelTokenWrapPromise<T>(instance, PromiseTry<T>(() => callback.apply(this, args)), strategy, onCancelled);
+      ? ApplyOnCancelCallback<TStrategy, TCancelled>(instance, options)
+      : CancelTokenWrapPromise<T, TStrategy, TCancelled>(instance, PromiseTry<T>(() => callback.apply(this, args)), options);
   };
 }
 
@@ -463,20 +484,18 @@ export class CancelToken extends NotificationsObservable<ICancelTokenKeyValueMap
     return CancelTokenLinkWithAbortSignal(this, signal);
   }
 
-  wrapPromise<T>(
+  wrapPromise<T, TStrategy extends TCancelStrategy, TCancelled>(
     promiseOrCallback: Promise<T> | TCancelTokenWrapPromiseCallback<T>,
-    strategy?: TCancelStrategy,
-    onCancelled?: TOnCancelled,
-  ): Promise<T | void> {
-    return CancelTokenWrapPromiseOrCreate<T>(this, promiseOrCallback, strategy, onCancelled);
+    options?: ICancelTokenWrapPromiseOptions<TStrategy, TCancelled>,
+  ): TCancelStrategyReturnedPromise<T, TStrategy, TCancelled> {
+    return CancelTokenWrapPromiseOrCreate<T, TStrategy, TCancelled>(this, promiseOrCallback, CancelTokenNormalizeWrapPromiseOptions(options));
   }
 
-  wrapFunction<CB extends (...args: any[]) => any>(
+  wrapFunction<CB extends (...args: any[]) => any, TStrategy extends TCancelStrategy, TCancelled>(
     callback: CB,
-    strategy?: TCancelStrategy,
-    onCancelled?: TOnCancelled,
-  ): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>> | void> {
-    return CancelTokenWrapFunction<CB>(this, callback, strategy, onCancelled);
+    options?: ICancelTokenWrapPromiseOptions<TStrategy, TCancelled>,
+  ): (...args: Parameters<CB>) => TCancelStrategyReturnedPromise<TPromiseType<ReturnType<CB>>, TStrategy, TCancelled> {
+    return CancelTokenWrapFunction<CB, TStrategy, TCancelled>(this, callback, CancelTokenNormalizeWrapPromiseOptions(options));
   }
 
   wrapFetchArguments(requestInfo: RequestInfo, requestInit?: RequestInit): [RequestInfo, RequestInit | undefined] {
