@@ -1,5 +1,5 @@
 import { INotificationsObservable } from '../../notifications/core/notifications-observable/interfaces';
-import { TPromiseOrValue, TPromiseType } from '../../promises/interfaces';
+import { TPromise, TPromiseOrValue, TPromiseType } from '../../promises/interfaces';
 
 
 /** TYPES **/
@@ -16,17 +16,18 @@ export type TCancelStrategyReturn<TStrategy extends TCancelStrategy> =
     : TStrategy extends 'reject'
     ? never
     : never;
-export type TCancelStrategyReturnedPromise<T, TStrategy extends TCancelStrategy, TCancelled> = Promise<T | TCancelStrategyReturn<TStrategy> | TCancelled>;
+export type TCancelStrategyReturnedPromise<T, TStrategy extends TCancelStrategy, TCancelled> = TPromise<T | TCancelStrategyReturn<TStrategy> | TCancelled>;
 
 
 export type TCancelTokenWrapPromiseCallback<T> = (this: ICancelToken, resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void, token: ICancelToken) => void;
 
-export type TCatchCancelled<T, TStrategy extends TCancelStrategy> = (this: ICancelToken, reason: any, rethrowCancelled: () => Promise<TCancelStrategyReturn<TStrategy>>) => (TPromiseOrValue<T> | Promise<TCancelStrategyReturn<TStrategy>>);
+export type TCatchCancelled<T, TStrategy extends TCancelStrategy> = (this: ICancelToken, reason: any, newToken: ICancelToken) => TPromiseOrValue<T | TCancelStrategyReturn<TStrategy>>;
 
 
 export interface ICancelTokenWrapPromiseOptions<TStrategy extends TCancelStrategy, TCancelled> {
   strategy?: TStrategy;
   onCancelled?: TCatchCancelled<TCancelled, TStrategy>;
+  onCancelledToken?: ICancelToken;
 }
 
 

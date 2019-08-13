@@ -27,6 +27,7 @@ import { FromRXJSObservable } from '../notifications/observables/finite-state/fr
 import { aggregateNotificationsPipe } from '../operators/pipes/aggregateNotificationsPipe';
 import { finiteStateObservableToPromise, toPromise } from '../operators/to/toPromise';
 import { testExamples } from './examples/examples';
+import { testPromises } from './test-promises';
 // import { toAsyncIterable } from '../operators/to/async-iterator/toAsyncIterable';
 
 
@@ -560,7 +561,7 @@ export async function testFileReaderObservable() {
 
 export async function test() {
   console.log('1');
-  await testExamples();
+  // await testExamples();
   // testMicroObservables();
 
   // testReadOnlyList();
@@ -590,7 +591,7 @@ export async function test() {
   // testInstanceof();
   // testPerformances();
   // testSignalingServer();
-  // testPromises();
+  testPromises();
   // testClasses();
   // testProgram();
 

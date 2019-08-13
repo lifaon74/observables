@@ -3,6 +3,17 @@ import { TPromiseOrValue, TPromiseOrValueFactory } from '../interfaces';
 import { PromiseTry } from '../helpers';
 import { CancelToken } from '../../misc/cancel-token/implementation';
 
+/**
+ * INFO:
+ *  - IterableIterator<Promise<T>> !== AsyncIterator<T>
+ *    -> AsyncIterator<T> waits for the previous next to complete before resolving the current next
+ *    -> IterableIterator<Promise<T>> immediately returns a Promise
+ */
+
+/**
+ * Converts a list of promise factories to an iterator of promises
+ * @param iterator
+ */
 export function * PromiseFactoriesIteratorToPromiseIterable<T>(iterator: Iterator<TPromiseOrValueFactory<T>>): IterableIterator<Promise<T>> {
   let result: IteratorResult<TPromiseOrValueFactory<T>>;
   while (!(result = iterator.next()).done) {
@@ -10,8 +21,15 @@ export function * PromiseFactoriesIteratorToPromiseIterable<T>(iterator: Iterato
   }
 }
 
+/**
+ * Runs in parallel up to 'concurrent' promises
+ * @param iterator
+ * @param concurrent
+ * @param token
+ */
 export function RunConcurrentPromises<T>(iterator: Iterator<TPromiseOrValue<T>>, concurrent: number = 1, token: ICancelToken = new CancelToken()): Promise<void> {
-  const next = token.wrapFunction((): TPromiseOrValue<void> => {
+  // ensures job is cancelled if one of the promise rejects or if the token is cancelled manually
+  const next = token.wrapFunction<() => TPromiseOrValue<void>, 'never', never>((): TPromiseOrValue<void> => {
     const result: IteratorResult<TPromiseOrValue<T>> = iterator.next();
     if (!result.done) {
       return Promise.resolve(result.value).then(next);

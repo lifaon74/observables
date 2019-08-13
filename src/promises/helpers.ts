@@ -1,9 +1,12 @@
-import { IsObject } from '../helpers';
-import { ICancellablePromiseTuple, TPromiseCreateCallback, TPromiseOrValue } from './interfaces';
-import { ICancelToken } from '../misc/cancel-token/interfaces';
+import { IsObject, noop } from '../helpers';
+import {
+  AllSettledResult, ICancellablePromiseTuple, PromiseFulfilledObject, PromiseRejectedObject, TPromise,
+  TPromiseCreateCallback, TPromiseOrValue
+} from './interfaces';
+import { ICancelToken, TCancelStrategyReturn } from '../misc/cancel-token/interfaces';
 
 
-export function IsPromiseLike(value: any): value is Promise<any> {
+export function IsPromiseLike(value: any): value is TPromise<any> {
   return IsPromiseLikeBase(value)
     && (typeof (value as any).catch === 'function')
     && (typeof (value as any).finally === 'function')
@@ -15,6 +18,9 @@ export function IsPromiseLikeBase(value: any): value is PromiseLike<any> {
     && (typeof (value as any).then === 'function')
   ;
 }
+
+export const NEVER_PROMISE = new Promise<never>(noop);
+export const VOID_PROMISE = Promise.resolve();
 
 
 export function PromiseCreateCallbackNoop(): TPromiseCreateCallback<never> {
@@ -29,15 +35,17 @@ export function PromiseCreateCallbackReject(reason: any): TPromiseCreateCallback
   return (resolve: (value?: never) => void, reject: (reason?: any) => void) => reject(reason);
 }
 
-export function PromiseTry<T>(callback: () => TPromiseOrValue<T>): Promise<T> {
+
+export function PromiseTry<T>(callback: () => TPromiseOrValue<T>): TPromise<T> {
   return new Promise<T>(resolve => resolve(callback()));
 }
 
-export function EnsuresPromise<T>(promise: PromiseLike<T>): Promise<T> {
+export function EnsuresPromise<T>(promise: PromiseLike<T>): TPromise<T> {
   return (promise instanceof Promise)
     ? promise
     : Promise.resolve(promise);
 }
+
 
 export function Finally<T>(onFinally?: (() => void) | undefined | null): [
   ((value: T) => TPromiseOrValue<T>) | undefined | null,
@@ -47,41 +55,29 @@ export function Finally<T>(onFinally?: (() => void) | undefined | null): [
     ? [
       (value: T) => {
         return PromiseTry<void>(onFinally)
-          .then<T, never>(() => value);
+          .then((): T => value);
       },
       (reason: any) => {
         return PromiseTry<void>(onFinally)
-          .then<never, never>(() => {
+          .then((): never => {
             throw reason;
           });
       }
     ] : [void 0, void 0];
 }
 
-export interface AllSettledFulfilled<T> {
-  status: 'fulfilled';
-  value: T;
-}
-
-export interface AllSettledRejected {
-  status: 'rejected';
-  reason: any;
-}
-
-export type AllSettledResult<T> = AllSettledFulfilled<T> | AllSettledRejected;
-
-export function AllSettled<T>(promises: Iterable<Promise<T>>): Promise<AllSettledResult<T>[]> {
+export function AllSettled<T>(promises: Iterable<TPromise<T>>): TPromise<AllSettledResult<T>[]> {
   return Promise.all<AllSettledResult<T>>(
-    Array.from<Promise<T>, Promise<AllSettledResult<T>>>(promises, (promise: Promise<T>) => {
+    Array.from<TPromise<T>, TPromise<AllSettledResult<T>>>(promises, (promise: TPromise<T>) => {
       return promise
-        .then<AllSettledFulfilled<T>, AllSettledRejected>(
-          (value: T) => ( { status: 'fulfilled', value: value } ),
-          (reason: any) => ( { status: 'rejected', reason: reason } ),
+        .then(
+          (value: T): PromiseFulfilledObject<T> => ( { status: 'fulfilled', value: value } ),
+          (reason: any): PromiseRejectedObject => ( { status: 'rejected', reason: reason } ),
         );
     })
   );
 }
 
-export function SpreadCancellablePromiseTuple<T>({ promise, token }: ICancellablePromiseTuple<T>): [Promise<T>, ICancelToken] {
+export function SpreadCancellablePromiseTuple<T>({ promise, token }: ICancellablePromiseTuple<T>): [TPromise<T>, ICancelToken] {
   return [promise, token];
 }

@@ -10,12 +10,11 @@ import { CancelToken } from '../../misc/cancel-token/implementation';
 
 /**
  * Returns a CancellablePromise resolved after 'timeout' milliseconds
- * @param timeout
- * @param token
- * @param strategy
  */
-export function $delay(timeout: number, token?: ICancelToken, strategy?: TCancelStrategy): ICancellablePromise<void> {
-  return new CancellablePromise<void>((resolve: (value?: TPromiseOrValue<void>) => void, reject: (reason?: any) => void, token: ICancelToken) => {
+export function $delay(timeout: number, token?: ICancelToken): ICancellablePromise<void, 'never'>;
+export function $delay<TStrategy extends TCancelStrategy>(timeout: number, token: ICancelToken, strategy: TStrategy): ICancellablePromise<void, TStrategy>;
+export function $delay<TStrategy extends TCancelStrategy>(timeout: number, token?: ICancelToken, strategy?: TStrategy): ICancellablePromise<void, TStrategy> {
+  return new CancellablePromise<void, TStrategy>((resolve: (value?: TPromiseOrValue<void>) => void, reject: (reason?: any) => void, token: ICancelToken) => {
     const cancelTokenObserver = token.addListener('cancel', () => {
       clearTimeout(timer);
       cancelTokenObserver.deactivate();
@@ -33,11 +32,11 @@ export function $delay(timeout: number, token?: ICancelToken, strategy?: TCancel
 
 /**
  * Returns a CancellablePromise resolved immediately after the environment has completed other operations such as events or display updates.
- * @param token
- * @param strategy
  */
-export function $yield(token?: ICancelToken, strategy?: TCancelStrategy): ICancellablePromise<void> {
-  return new CancellablePromise<void>((resolve: (value?: TPromiseOrValue<void>) => void, reject: (reason?: any) => void, token: ICancelToken) => {
+export function $yield(token?: ICancelToken): ICancellablePromise<void, 'never'>;
+export function $yield<TStrategy extends TCancelStrategy>(token: ICancelToken, strategy: TStrategy): ICancellablePromise<void, TStrategy>;
+export function $yield<TStrategy extends TCancelStrategy>(token?: ICancelToken, strategy?: TStrategy): ICancellablePromise<void, TStrategy> {
+  return new CancellablePromise<void, TStrategy>((resolve: (value?: TPromiseOrValue<void>) => void, reject: (reason?: any) => void, token: ICancelToken) => {
     const cancelTokenObserver = token.addListener('cancel', () => {
       clearImmediate(timer);
       cancelTokenObserver.deactivate();
@@ -55,13 +54,12 @@ export function $yield(token?: ICancelToken, strategy?: TCancelStrategy): ICance
 
 /**
  * Cancels a Promise after 'timeout' milliseconds
- * @param promiseOrCallback
- * @param timeout
- * @param token - should be omitted if promise is a CancellablePromise
- * @param strategy - should be omitted if promise is a CancellablePromise
+ *  -> 'token' and 'strategy' should be omitted if 'promiseOrCallback' is a CancellablePromise
  */
-export function $timeout<T>(promiseOrCallback: Promise<T> | TCancellablePromiseCreateCallback<T>, timeout: number, token?: ICancelToken, strategy?: TCancelStrategy): ICancellablePromise<T> {
-  const promise: ICancellablePromise<T> = CancellablePromise.of<T>(promiseOrCallback, token, strategy);
+export function $timeout<T>(promiseOrCallback: Promise<T> | TCancellablePromiseCreateCallback<T, 'never'>, timeout: number, token?: ICancelToken): ICancellablePromise<T, 'never'>;
+export function $timeout<T, TStrategy extends TCancelStrategy>(promiseOrCallback: Promise<T> | TCancellablePromiseCreateCallback<T, TStrategy>, timeout: number, token: ICancelToken, strategy: TStrategy): ICancellablePromise<T, TStrategy>;
+export function $timeout<T, TStrategy extends TCancelStrategy>(promiseOrCallback: Promise<T> | TCancellablePromiseCreateCallback<T, TStrategy>, timeout: number, token?: ICancelToken, strategy?: TStrategy): ICancellablePromise<T, TStrategy> {
+  const promise: ICancellablePromise<T, TStrategy> = CancellablePromise.of<T, TStrategy>(promiseOrCallback, token, strategy);
 
   const delayToken: ICancelToken = new CancelToken();
   delayToken.linkWithToken(promise.token);

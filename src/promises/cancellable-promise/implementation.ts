@@ -1,16 +1,17 @@
 import { ICancelToken, TCancelStrategy, TCancelStrategyReturn, } from '../../misc/cancel-token/interfaces';
 import { CancelToken, IsCancelToken } from '../../misc/cancel-token/implementation';
 import {
-  ICancellablePromise, ICancellablePromiseConstructor, TCancellablePromiseCreateCallback, TCancellablePromiseEndStatus,
-  TCancellablePromiseFactory,
-  TCancellablePromiseOnCancelled, TCancellablePromiseOnFinally, TCancellablePromiseOnFulfilled,
-  TCancellablePromiseOnRejected
+  ICancellablePromise, ICancellablePromiseConstructor, PromiseCancelledObject, TCancellablePromiseCancelledReturn,
+  TCancellablePromiseCatchReturn, TCancellablePromiseCreateCallback, TCancellablePromiseFactory,
+  TCancellablePromiseOnCancelledArgument, TCancellablePromiseOnFinallyArgument, TCancellablePromiseOnFulfilled,
+  TCancellablePromiseOnFulfilledArgument, TCancellablePromiseOnRejected, TCancellablePromiseOnRejectedArgument,
+  TCancellablePromiseThenReturn
 } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject, TCastableToIteratorStrict, ToIterator } from '../../helpers';
 import {
-  TPromiseOrValue, TPromiseOrValueFactoryTupleToValueUnion, TPromiseOrValueTupleToValueTuple,
-  TPromiseOrValueTupleToValueUnion
+  PromiseFulfilledObject, PromiseRejectedObject, TPromise, TPromiseOrValue, TPromiseOrValueFactoryTupleToValueUnion,
+  TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion
 } from '../interfaces';
 import { Finally, IsPromiseLikeBase, PromiseTry } from '../helpers';
 import { Reason } from '../../misc/reason/implementation';
@@ -20,7 +21,7 @@ import { RunConcurrentPromises } from '../concurent-promises/helpers';
 export const CANCELLABLE_PROMISE_PRIVATE = Symbol('cancellable-promise-private');
 
 export interface ICancellablePromisePrivate<T, TStrategy extends TCancelStrategy> {
-  promise: Promise<T>;
+  promise: TPromise<T | TCancelStrategyReturn<TStrategy>>;
   token: ICancelToken;
   strategy: TStrategy;
   isCancellablePromiseWithSameToken: boolean;
@@ -34,7 +35,7 @@ export interface ICancellablePromiseInternal<T, TStrategy extends TCancelStrateg
 let CHECK_CANCELLABLE_PROMISE_CONSTRUCT: boolean = true;
 
 export function NewCancellablePromise<T, TStrategy extends TCancelStrategy>(
-  promise: Promise<T>,
+  promise: TPromise<T>,
   token?: ICancelToken,
   strategy?: TStrategy,
   constructor: ICancellablePromiseConstructor = CancellablePromise
@@ -45,19 +46,19 @@ export function NewCancellablePromise<T, TStrategy extends TCancelStrategy>(
   return instance;
 }
 
-export function NewCancellablePromiseFromInstance<T, TStrategy extends TCancelStrategy, TPromise>(
+export function NewCancellablePromiseFromInstance<T, TStrategy extends TCancelStrategy, TPromiseValue>(
   instance: ICancellablePromise<T, TStrategy>,
-  promise: Promise<TPromise>,
+  promise: TPromise<TPromiseValue>,
   token: ICancelToken = instance.token,
   strategy: TStrategy = (instance as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE].strategy,
-): ICancellablePromise<TPromise, TStrategy> {
-  return NewCancellablePromise<TPromise, TStrategy>(promise, token, strategy, instance.constructor as ICancellablePromiseConstructor);
+): ICancellablePromise<TPromiseValue, TStrategy> {
+  return NewCancellablePromise<TPromiseValue, TStrategy>(promise, token, strategy, instance.constructor as ICancellablePromiseConstructor);
 }
 
 
 export function ConstructCancellablePromise<T, TStrategy extends TCancelStrategy>(
   instance: ICancellablePromise<T, TStrategy>,
-  promiseOrCallback: Promise<T> | TCancellablePromiseCreateCallback<T, TStrategy>,
+  promiseOrCallback: TPromise<T> | TCancellablePromiseCreateCallback<T, TStrategy>,
   token?: ICancelToken,
   strategy?: TStrategy
 ): void {
@@ -84,24 +85,24 @@ export function ConstructCancellablePromise<T, TStrategy extends TCancelStrategy
     if (typeof promiseOrCallback === 'function') {
       privates.isCancellablePromiseWithSameToken = false;
       // ensures promiseOrCallback is called only if token is not cancelled
-      privates.promise = privates.token.wrapFunction(() => {
+      privates.promise = privates.token.wrapFunction<() => TPromise<T>, TStrategy, never>(() => {
         return new Promise<T>((resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void) => {
           promiseOrCallback.call(instance, resolve, reject, privates.token);
         });
-      }, privates)() as Promise<T>;
+      }, privates)();
     } else if (IsPromiseLikeBase(promiseOrCallback)) {
-      privates.isCancellablePromiseWithSameToken = IsCancellablePromiseWithSameToken(promiseOrCallback, instance);
+      privates.isCancellablePromiseWithSameToken = IsCancellablePromiseWithSameToken<T, TStrategy>(promiseOrCallback, instance);
       privates.promise = privates.isCancellablePromiseWithSameToken
         ? promiseOrCallback
-        : (privates.token.wrapPromise<T, TStrategy, never>(promiseOrCallback, privates) as Promise<T>);
+        : privates.token.wrapPromise<T, TStrategy, never>(promiseOrCallback, privates);
     } else {
       throw new TypeError(`Expected Promise or function as CancellablePromise first argument.`);
     }
   } else {
     privates.token = token as ICancelToken;
     privates.strategy = strategy as TStrategy;
-    privates.isCancellablePromiseWithSameToken = IsCancellablePromiseWithSameToken(promiseOrCallback, instance);
-    privates.promise = promiseOrCallback as Promise<T>;
+    privates.isCancellablePromiseWithSameToken = IsCancellablePromiseWithSameToken<T, TStrategy>(promiseOrCallback, instance);
+    privates.promise = promiseOrCallback as Promise<T | TCancelStrategyReturn<TStrategy>>;
   }
 }
 
@@ -116,198 +117,161 @@ export function IsCancellablePromiseWithSameToken<T, TStrategy extends TCancelSt
     && (value.token === instance.token);
 }
 
+/*----------*/
 
-export function CancellablePromiseFulfillInternal<T, TStrategy extends TCancelStrategy, TRejected>(
+export function CancellablePromiseInternalThen<T, TStrategy extends TCancelStrategy, TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, TStrategy, any>, TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>, TCancelled extends TCancellablePromiseOnCancelledArgument<T, TStrategy, any>>(
   instance: ICancellablePromise<T, TStrategy>,
-  onFulfilled: TCancellablePromiseOnFulfilled<T, TStrategy, TRejected> | undefined | null,
-): (value: T) => Promise<TRejected> {
+  onFulfilled: TFulfilled,
+  onRejected: TRejected,
+  onCancelled: TCancelled,
+): TCancellablePromiseThenReturn<T, TStrategy, TFulfilled, TRejected, TCancelled> {
   const privates: ICancellablePromisePrivate<T, TStrategy> = (instance as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE];
-  return privates.token.wrapFunction((value: T) => {
-    if (typeof onFulfilled === 'function') {
-      return onFulfilled.call(instance, value, privates.token);
-    } else {
-      return value;
-    }
-  }, privates);
-}
 
-export function CancellablePromiseCatchInternal<T, TStrategy extends TCancelStrategy, TRejected>(
-  instance: ICancellablePromise<T, TStrategy>,
-  onRejected: TCancellablePromiseOnRejected<T, TStrategy, TRejected> | undefined | null,
-): (reason: any) => Promise<TRejected | never> {
-  const privates: ICancellablePromisePrivate<T, TStrategy> = (instance as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE];
-  return privates.token.wrapFunction((reason: any) => {
-    if (typeof onRejected === 'function') {
-      return onRejected.call(instance, reason, privates.token);
-    } else {
-      throw reason;
-    }
-  }, privates);
-}
+  type TPromiseValue = T | never | TFulfilled | TRejected | TCancelled | TCancelStrategyReturn<TStrategy>;
 
+  let newToken: ICancelToken;
+  let promise: TPromise<TPromiseValue>;
 
-// export function CancellablePromiseFinallyInternal<T, TStrategy extends TCancelStrategy>(
-//   instance: ICancellablePromise<T, TStrategy>,
-//   onFinally: TCancellablePromiseOnFinally<T, TStrategy> | undefined | null,
-//   status: TCancellablePromiseEndStatus,
-// ): () => Promise<void> {
-//   const privates: ICancellablePromisePrivate<T, TStrategy> = (instance as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE];
-//   return privates.token.wrapFunction(() => {
-//     if (typeof onFinally === 'function') {
-//       return onFinally.call(instance, status, privates.token);
-//     }
-//   }, privates);
-// }
-
-export function CancellablePromiseCancelledInternal<T, TStrategy extends TCancelStrategy, TCancelled>(
-  instance: ICancellablePromise<T, TStrategy>,
-  onCancelled?: TCancellablePromiseOnCancelled<T, TStrategy, TCancelled> | undefined | null
-): Promise<T | TCancelled | TCancelStrategyReturn<TStrategy>> {
-  const privates: ICancellablePromisePrivate<T, TStrategy> = (instance as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE];
-  return privates.token.wrapPromise<T, TStrategy, never>( // not great because privates.promise is already wrapped
-    privates.promise,
-    {
-      strategy: privates.strategy,
-      onCancelled: (reason: any, rethrowCancelled: () => Promise<TCancelStrategyReturn<TStrategy>>) => {
-        if (typeof onCancelled === 'function') {
-          return onCancelled.call(instance, reason, privates.token, rethrowCancelled);
-        } else {
-          return rethrowCancelled();
-        }
+  if (typeof onCancelled === 'function') {
+    newToken = new CancelToken();
+    promise = privates.token.wrapPromise<T, TStrategy, TCancelled>(
+      privates.promise,
+      {
+        strategy: privates.strategy,
+        onCancelled: (reason: any, newToken: ICancelToken) => {
+          return onCancelled.call(instance, reason, newToken, privates.token);
+        },
+        onCancelledToken: newToken
       }
-    }
-  );
-}
-
-
-export function CancellablePromiseThen<T, TStrategy extends TCancelStrategy, TFulfilled, TRejected, TCancelled>(
-  instance: ICancellablePromise<T, TStrategy>,
-  onFulfilled?: TCancellablePromiseOnFulfilled<T, TStrategy, TFulfilled> | undefined | null,
-  onRejected?: TCancellablePromiseOnRejected<T, TStrategy, TRejected> | undefined | null,
-  onCancelled?: TCancellablePromiseOnCancelled<T, TStrategy, TCancelled> | undefined | null,
-): ICancellablePromise<TFulfilled | TRejected | TCancelled, TStrategy> {
-  return NewCancellablePromiseFromInstance<T, TStrategy, TFulfilled | TRejected | TCancelled>(
-    instance,
-    (
-      (typeof onCancelled === 'function')
-        ? CancellablePromiseCancelledInternal<T, TStrategy, TCancelled>(instance, onCancelled)
-        : (instance as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE].promise
-    ).then(
-      CancellablePromiseFulfillInternal<T, TStrategy, TFulfilled>(instance, onFulfilled),
-      CancellablePromiseCatchInternal<T, TStrategy, TRejected>(instance, onRejected)
-    ),
-  );
-}
-
-export function CancellablePromiseCatch<T, TStrategy extends TCancelStrategy, TRejected>(
-  instance: ICancellablePromise<T, TStrategy>,
-  onRejected?: TCancellablePromiseOnRejected<T, TStrategy, TRejected> | undefined | null
-): ICancellablePromise<T | TRejected, TStrategy> {
-  return NewCancellablePromiseFromInstance<T, TStrategy, T | TRejected>(
-    instance,
-    (instance as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE].promise
-      .then<T, TRejected>(
-        void 0,
-        CancellablePromiseCatchInternal<T, TStrategy, TRejected>(instance, onRejected)
-      )
-  );
-}
-
-
-export function CancellablePromiseFinally<T, TStrategy extends TCancelStrategy>(
-  instance: ICancellablePromise<T, TStrategy>,
-  onFinally?: TCancellablePromiseOnFinally<T, TStrategy> | undefined | null,
-  includeCancelled?: boolean
-): ICancellablePromise<T, TStrategy> {
-  const privates: ICancellablePromisePrivate<T, TStrategy> = (instance as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE];
-  let promise: Promise<T | TCancelStrategyReturn<TStrategy>>;
-
-  if (typeof onFinally === 'function') {
-    promise = includeCancelled
-      ? CancellablePromiseCancelledInternal<T, TStrategy, TCancelStrategyReturn<TStrategy>>(instance, (reason: any, rethrowCancelled: () => Promise<TCancelStrategyReturn<TStrategy>>) => {
-        return PromiseTry<void>(() => {
-          return onFinally.call(instance, 'cancelled', privates.token);
-        })
-          .then<TCancelStrategyReturn<TStrategy>, never>(() => rethrowCancelled());
-      })
-      : privates.promise;
-
-    promise = promise.then<T | TCancelStrategyReturn<TStrategy>, never | TCancelStrategyReturn<TStrategy>>(
-      privates.token.wrapFunction<(value: T) => Promise<T>, TStrategy, never>((value: T) => {
-        return PromiseTry<void>(() => {
-          return onFinally.call(instance, 'fulfilled', privates.token);
-        })
-          .then<T, never>(() => value);
-      }),
-      privates.token.wrapFunction<(reason: any) => Promise<never>, TStrategy, never>((reason: any) => {
-        return PromiseTry<void>(() => {
-          return onFinally.call(instance, 'rejected', privates.token);
-        })
-          .then<never, never>(() => {
-            throw reason;
-          });
-      })
     );
   } else {
+    newToken = privates.token;
     promise = privates.promise;
   }
 
-  return NewCancellablePromiseFromInstance<T, TStrategy, T>(instance, promise as Promise<T>);
+  const onFulfilledDefined: boolean = (typeof onFulfilled === 'function');
+  const onRejectedDefined: boolean = (typeof onRejected === 'function');
+
+  if (onFulfilledDefined || onRejectedDefined) {
+    promise = promise.then(
+      onFulfilledDefined
+        ? privates.token.wrapFunction<(value: T) => TPromiseOrValue<TFulfilled>, TStrategy, never>((value: T): TPromiseOrValue<TFulfilled> => {
+          return (onFulfilled as TCancellablePromiseOnFulfilled<T, TStrategy, TFulfilled>).call(instance, value, privates.token);
+        }, privates)
+        : void 0,
+      onRejectedDefined
+        ? privates.token.wrapFunction<(value: T) => TPromiseOrValue<TRejected>, TStrategy, never>((reason: any) => {
+          return (onRejected as TCancellablePromiseOnRejected<T, TStrategy, TRejected>).call(instance, reason, privates.token);
+        }, privates)
+        : void 0
+    );
+  }
+
+  return NewCancellablePromiseFromInstance<T, TStrategy, TPromiseValue>(instance, promise, newToken) as TCancellablePromiseThenReturn<T, TStrategy, TFulfilled, TRejected, TCancelled>;
 }
 
-export function CancellablePromiseCancelled<T, TStrategy extends TCancelStrategy, TCancelled>(
+export function CancellablePromiseOptimizedThen<T, TStrategy extends TCancelStrategy, TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, TStrategy, any>, TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>, TCancelled extends TCancellablePromiseOnCancelledArgument<T, TStrategy, any>>(
   instance: ICancellablePromise<T, TStrategy>,
-  onCancelled: TCancellablePromiseOnCancelled<T, TStrategy, TCancelled> | undefined | null
-): ICancellablePromise<T | TCancelled, TStrategy> {
-  return NewCancellablePromiseFromInstance<T, TStrategy, T | TCancelled>(
-    instance,
-    CancellablePromiseCancelledInternal<T, TStrategy, TCancelled>(instance, onCancelled) as Promise<T>,
-  );
-}
-
-export function CancellablePromiseFastThen<T, TStrategy extends TCancelStrategy, TFulfilled, TRejected, TCancelled>(
-  instance: ICancellablePromise<T, TStrategy>,
-  onFulfilled?: TCancellablePromiseOnFulfilled<T, TStrategy, TFulfilled> | undefined | null,
-  onRejected?: TCancellablePromiseOnRejected<T, TStrategy, TRejected> | undefined | null,
-  onCancelled?: TCancellablePromiseOnCancelled<T, TStrategy, TCancelled> | undefined | null,
-): ICancellablePromise<TFulfilled | TRejected | TCancelled, TStrategy> {
+  onFulfilled: TFulfilled,
+  onRejected: TRejected,
+  onCancelled: TCancelled,
+): TCancellablePromiseThenReturn<T, TStrategy, TFulfilled, TRejected, TCancelled> {
   const privates: ICancellablePromisePrivate<T, TStrategy> = (instance as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE];
   return privates.isCancellablePromiseWithSameToken
     ? (privates.promise as ICancellablePromise<T, TStrategy>).then<TFulfilled, TRejected, TCancelled>(onFulfilled, onRejected, onCancelled)
-    : CancellablePromiseThen<T, TStrategy, TFulfilled, TRejected, TCancelled>(instance, onFulfilled, onRejected, onCancelled);
+    : CancellablePromiseInternalThen<T, TStrategy, TFulfilled, TRejected, TCancelled>(instance, onFulfilled, onRejected, onCancelled);
 }
 
-export function CancellablePromiseFastCatch<T, TStrategy extends TCancelStrategy, TRejected>(
+
+export function CancellablePromiseInternalFinally<T, TStrategy extends TCancelStrategy>(
   instance: ICancellablePromise<T, TStrategy>,
-  onRejected?: TCancellablePromiseOnRejected<T, TStrategy, TRejected> | undefined | null
-): ICancellablePromise<T | TRejected, TStrategy> {
-  const privates: ICancellablePromisePrivate<T, TStrategy> = (instance as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE];
-  return privates.isCancellablePromiseWithSameToken
-    ? (privates.promise as ICancellablePromise<T, TStrategy>).catch<TRejected>(onRejected)
-    : CancellablePromiseCatch<T, TStrategy, TRejected>(instance, onRejected);
+  onFinally: TCancellablePromiseOnFinallyArgument<T, TStrategy>,
+  includeCancelled: boolean = false
+): ICancellablePromise<T, TStrategy> {
+  if (typeof onFinally === 'function') {
+    const privates: ICancellablePromisePrivate<T, TStrategy> = (instance as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE];
+    return CancellablePromiseThen<T, TStrategy, (value: T) => TPromise<T>, (reason: any) => TPromise<never>, ((reason: any, newToken: ICancelToken) => TPromise<never>) | undefined>(
+      instance,
+      (value: T) => {
+        return PromiseTry<void>((): TPromise<void> => {
+          return onFinally.call(instance, {
+            status: 'fulfilled',
+            value: value
+          } as PromiseFulfilledObject<T>, privates.token);
+        }).then(() => value);
+      }, (reason: any): TPromise<never> => {
+        return PromiseTry<void>(() => {
+          return onFinally.call(instance, {
+            status: 'rejected',
+            reason: reason
+          } as PromiseRejectedObject, privates.token);
+        }).then(() => {
+          throw reason;
+        });
+      }, includeCancelled
+        ? (reason: any, newToken: ICancelToken): TPromise<never> => {
+          return PromiseTry<void>(() => {
+            return onFinally.call(instance, {
+              status: 'cancelled',
+              reason: reason
+            } as PromiseCancelledObject, privates.token);
+          }).then(() => {
+            newToken.cancel(reason);
+          });
+        }
+        : void 0
+    ) as ICancellablePromise<T, TStrategy>;
+  } else {
+    return CancellablePromiseThen<T, TStrategy, undefined, undefined, undefined>(instance, void 0, void 0, void 0) as ICancellablePromise<T, TStrategy>;
+  }
 }
 
-export function CancellablePromiseFastFinally<T, TStrategy extends TCancelStrategy>(
+export function CancellablePromiseOptimizedFinally<T, TStrategy extends TCancelStrategy>(
   instance: ICancellablePromise<T, TStrategy>,
-  onFinally?: TCancellablePromiseOnFinally<T, TStrategy> | undefined | null,
+  onFinally: TCancellablePromiseOnFinallyArgument<T, TStrategy>,
   includeCancelled?: boolean
 ): ICancellablePromise<T, TStrategy> {
   const privates: ICancellablePromisePrivate<T, TStrategy> = (instance as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE];
   return privates.isCancellablePromiseWithSameToken
     ? (privates.promise as ICancellablePromise<T, TStrategy>).finally(onFinally, includeCancelled)
-    : CancellablePromiseFinally<T, TStrategy>(instance, onFinally, includeCancelled);
+    : CancellablePromiseInternalFinally<T, TStrategy>(instance, onFinally, includeCancelled);
 }
 
-export function CancellablePromiseFastCancelled<T, TStrategy extends TCancelStrategy, TCancelled>(
+/*----------*/
+
+
+export function CancellablePromiseThen<T, TStrategy extends TCancelStrategy, TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, TStrategy, any>, TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>, TCancelled extends TCancellablePromiseOnCancelledArgument<T, TStrategy, any>>(
   instance: ICancellablePromise<T, TStrategy>,
-  onCancelled: TCancellablePromiseOnCancelled<T, TStrategy, TCancelled> | undefined | null
-): ICancellablePromise<T | TCancelled, TStrategy> {
-  const privates: ICancellablePromisePrivate<T, TStrategy> = (instance as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE];
-  return privates.isCancellablePromiseWithSameToken
-    ? (privates.promise as ICancellablePromise<T, TStrategy>).cancelled(onCancelled)
-    : CancellablePromiseCancelled<T, TStrategy, TCancelled>(instance, onCancelled);
+  onFulfilled?: TFulfilled,
+  onRejected?: TRejected,
+  onCancelled?: TCancelled,
+): TCancellablePromiseThenReturn<T, TStrategy, TFulfilled, TRejected, TCancelled> {
+  return CancellablePromiseOptimizedThen<T, TStrategy, TFulfilled, TRejected, TCancelled>(instance, onFulfilled as TFulfilled, onRejected as TRejected, onCancelled as TCancelled);
 }
 
+export function CancellablePromiseCatch<T, TStrategy extends TCancelStrategy, TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>>(
+  instance: ICancellablePromise<T, TStrategy>,
+  onRejected?: TRejected,
+): TCancellablePromiseCatchReturn<T, TStrategy, TRejected> {
+  return CancellablePromiseThen<T, TStrategy, undefined, TRejected, undefined>(instance, void 0, onRejected as TRejected, void 0) as TCancellablePromiseCatchReturn<T, TStrategy, TRejected>;
+}
+
+export function CancellablePromiseCancelled<T, TStrategy extends TCancelStrategy, TCancelled extends TCancellablePromiseOnCancelledArgument<T, TStrategy, any>>(
+  instance: ICancellablePromise<T, TStrategy>,
+  onCancelled?: TCancelled
+): TCancellablePromiseCancelledReturn<T, TStrategy, TCancelled> {
+  return CancellablePromiseThen<T, TStrategy, undefined, undefined, TCancelled>(instance, void 0, void 0, onCancelled as TCancelled) as TCancellablePromiseCancelledReturn<T, TStrategy, TCancelled>;
+}
+
+export function CancellablePromiseFinally<T, TStrategy extends TCancelStrategy>(
+  instance: ICancellablePromise<T, TStrategy>,
+  onFinally?: TCancellablePromiseOnFinallyArgument<T, TStrategy>,
+  includeCancelled?: boolean
+): ICancellablePromise<T, TStrategy> {
+  return CancellablePromiseOptimizedFinally<T, TStrategy>(instance, onFinally, includeCancelled);
+}
+
+/*------------------------------------------------*/
 
 export function CancellablePromiseOf<T, TStrategy extends TCancelStrategy>(
   constructor: ICancellablePromiseConstructor,
@@ -377,7 +341,41 @@ export function CancellablePromiseAllCallback<TTuple extends TPromiseOrValue<any
 }
 
 
+
+let globalConcurrentPromises: ICancellablePromise<void, TCancelStrategy>;
+
+function CancellablePromiseConcurrentGlobalRun(
+  run: () => ICancellablePromise<void, TCancelStrategy>,
+  global: boolean = false,
+): ICancellablePromise<void, TCancelStrategy> {
+  if (global) {
+    if ((globalConcurrentPromises === void 0) || globalConcurrentPromises.token.cancelled) {
+      globalConcurrentPromises = run();
+    } else {
+      globalConcurrentPromises = globalConcurrentPromises
+        .then(run, run, run);
+    }
+    return globalConcurrentPromises;
+  } else {
+    return run();
+  }
+}
+
 export function CancellablePromiseConcurrent<T, TStrategy extends TCancelStrategy>(
+  constructor: ICancellablePromiseConstructor,
+  iterator: TCastableToIteratorStrict<TPromiseOrValue<T>>,
+  concurrent?: number,
+  global?: boolean,
+  token?: ICancelToken,
+  strategy?: TStrategy
+): ICancellablePromise<void, TStrategy> {
+  return CancellablePromiseConcurrentGlobalRun(
+    () => CancellablePromiseConcurrentNonGlobal<T, TStrategy>(constructor, iterator, concurrent, token, strategy),
+    global
+  ) as ICancellablePromise<void, TStrategy>;
+}
+
+export function CancellablePromiseConcurrentNonGlobal<T, TStrategy extends TCancelStrategy>(
   constructor: ICancellablePromiseConstructor,
   iterator: TCastableToIteratorStrict<TPromiseOrValue<T>>,
   concurrent?: number,
@@ -389,14 +387,13 @@ export function CancellablePromiseConcurrent<T, TStrategy extends TCancelStrateg
   }, token, strategy);
 }
 
+
 export function * CancellablePromiseFactoriesIteratorToPromiseIterable<T, TStrategy extends TCancelStrategy>(iterator: Iterator<TCancellablePromiseFactory<T>>, token: ICancelToken): IterableIterator<Promise<T>> {
   let result: IteratorResult<TCancellablePromiseFactory<T>>;
   while (!(result = iterator.next()).done) {
     yield PromiseTry<T>(() => result.value.call(null, token));
   }
 }
-
-let globalConcurrentPromises: ICancellablePromise<void, TCancelStrategy>;
 
 export function CancellablePromiseConcurrentFactories<T, TStrategy extends TCancelStrategy>(
   constructor: ICancellablePromiseConstructor,
@@ -406,18 +403,10 @@ export function CancellablePromiseConcurrentFactories<T, TStrategy extends TCanc
   token?: ICancelToken,
   strategy?: TStrategy
 ): ICancellablePromise<void, TStrategy> {
-  const run = () => CancellablePromiseConcurrentFactoriesNonGlobal<T, TStrategy>(constructor, iterator, concurrent, token, strategy);
-  if (global) {
-    if ((globalConcurrentPromises === void 0) || globalConcurrentPromises.token.cancelled) {
-      globalConcurrentPromises = run();
-    } else {
-      globalConcurrentPromises = globalConcurrentPromises
-        .then(run, run, run);
-    }
-    return globalConcurrentPromises as ICancellablePromise<void, TStrategy>;
-  } else {
-    return run();
-  }
+  return CancellablePromiseConcurrentGlobalRun(
+    () => CancellablePromiseConcurrentFactoriesNonGlobal<T, TStrategy>(constructor, iterator, concurrent, token, strategy),
+    global
+  ) as ICancellablePromise<void, TStrategy>;
 }
 
 export function CancellablePromiseConcurrentFactoriesNonGlobal<T, TStrategy extends TCancelStrategy>(
@@ -451,12 +440,17 @@ export function CancellablePromiseFetch<TStrategy extends TCancelStrategy>(
 
 export class CancellablePromise<T, TStrategy extends TCancelStrategy> implements ICancellablePromise<T, TStrategy> {
 
+  static resolve(): ICancellablePromise<void, 'never'>;
   static resolve<TStrategy extends TCancelStrategy>(): ICancellablePromise<void, TStrategy>;
-  static resolve<T, TStrategy extends TCancelStrategy>(value: TPromiseOrValue<T>, token?: ICancelToken, strategy?: TStrategy): ICancellablePromise<T, TStrategy>;
-  static resolve<T, TStrategy extends TCancelStrategy>(value?: TPromiseOrValue<T>, token?: ICancelToken, strategy?: TStrategy): ICancellablePromise<T | void, TStrategy> {
-    return new CancellablePromise<T | void, TStrategy>(Promise.resolve<T | void>(value), token, strategy);
+  static resolve<T>(value: TPromiseOrValue<T>, token?: ICancelToken): ICancellablePromise<T, 'never'>;
+  static resolve<T, TStrategy extends TCancelStrategy>(value: TPromiseOrValue<T>, token: ICancelToken | undefined, strategy: TStrategy): ICancellablePromise<T, TStrategy>;
+  static resolve<T, TStrategy extends TCancelStrategy>(value?: TPromiseOrValue<T>, token?: ICancelToken, strategy?: TStrategy): ICancellablePromise<T, TStrategy> {
+    return new CancellablePromise<T, TStrategy>(Promise.resolve<T>(value as T), token, strategy);
   }
 
+  static reject(): ICancellablePromise<never, 'never'>;
+  static reject(reason: any, token?: ICancelToken): ICancellablePromise<never, 'never'>;
+  static reject<TStrategy extends TCancelStrategy>(reason: any, token: ICancelToken | undefined, strategy: TStrategy): ICancellablePromise<never, TStrategy>;
   static reject<T, TStrategy extends TCancelStrategy>(reason?: any, token?: ICancelToken, strategy?: TStrategy): ICancellablePromise<T, TStrategy> {
     return new CancellablePromise<T, TStrategy>(Promise.reject<T>(reason), token, strategy);
   }
@@ -514,10 +508,11 @@ export class CancellablePromise<T, TStrategy extends TCancelStrategy> implements
   static concurrent<T, TStrategy extends TCancelStrategy>(
     iterator: TCastableToIteratorStrict<TPromiseOrValue<T>>,
     concurrent?: number,
+    global?: boolean,
     token?: ICancelToken,
     strategy?: TStrategy
   ): ICancellablePromise<void, TStrategy> {
-    return CancellablePromiseConcurrent<T, TStrategy>(this, iterator, concurrent, token, strategy);
+    return CancellablePromiseConcurrent<T, TStrategy>(this, iterator, concurrent, global, token, strategy);
   }
 
   static concurrentFactories<T, TStrategy extends TCancelStrategy>(
@@ -551,7 +546,7 @@ export class CancellablePromise<T, TStrategy extends TCancelStrategy> implements
     ConstructCancellablePromise<T, TStrategy>(this, promiseOrCallback, token, strategy);
   }
 
-  get promise(): Promise<T> {
+  get promise(): Promise<T | TCancelStrategyReturn<TStrategy>> {
     return ((this as unknown) as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE].promise;
   }
 
@@ -564,26 +559,41 @@ export class CancellablePromise<T, TStrategy extends TCancelStrategy> implements
   }
 
 
-  then<TFulfilled = T, TRejected = never, TCancelled = never>(
-    onFulfilled?: TCancellablePromiseOnFulfilled<T, TStrategy, TFulfilled> | undefined | null,
-    onRejected?: TCancellablePromiseOnRejected<T, TStrategy, TRejected> | undefined | null,
-    onCancelled?: TCancellablePromiseOnCancelled<T, TStrategy, TCancelled> | undefined | null,
-  ): ICancellablePromise<TFulfilled | TRejected | TCancelled, TStrategy> {
-    return CancellablePromiseFastThen<T, TStrategy, TFulfilled, TRejected, TCancelled>(this, onFulfilled, onRejected, onCancelled);
+  then(): TCancellablePromiseThenReturn<T, TStrategy, undefined, undefined, undefined>;
+  then<TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, TStrategy, any>>(
+    onFulfilled: TFulfilled,
+  ): TCancellablePromiseThenReturn<T, TStrategy, TFulfilled, undefined, undefined>;
+  then<TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, TStrategy, any>, TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>>(
+    onFulfilled: TFulfilled,
+    onRejected: TRejected,
+  ): TCancellablePromiseThenReturn<T, TStrategy, TFulfilled, TRejected, undefined>;
+  then<TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, TStrategy, any>, TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>, TCancelled extends TCancellablePromiseOnCancelledArgument<T, TStrategy, any>>(
+    onFulfilled: TFulfilled,
+    onRejected: TRejected,
+    onCancelled: TCancelled,
+  ): TCancellablePromiseThenReturn<T, TStrategy, TFulfilled, TRejected, TCancelled>;
+  then<TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, TStrategy, any>, TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>, TCancelled extends TCancellablePromiseOnCancelledArgument<T, TStrategy, any>>(
+    onFulfilled?: TFulfilled,
+    onRejected?: TRejected,
+    onCancelled?: TCancelled,
+  ): TCancellablePromiseThenReturn<T, TStrategy, TFulfilled, TRejected, TCancelled> {
+    return CancellablePromiseThen<T, TStrategy, TFulfilled, TRejected, TCancelled>(this, onFulfilled, onRejected, onCancelled);
   }
 
-  catch<TRejected = never>(
-    onRejected?: TCancellablePromiseOnRejected<T, TStrategy, TRejected> | undefined | null
-  ): ICancellablePromise<T | TRejected, TStrategy> {
-    return CancellablePromiseFastCatch<T, TStrategy, TRejected>(this, onRejected);
+  catch(): TCancellablePromiseCatchReturn<T, TStrategy, undefined>;
+  catch<TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>>(onRejected: TRejected): TCancellablePromiseCatchReturn<T, TStrategy, TRejected>;
+  catch<TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>>(onRejected?: TRejected): TCancellablePromiseCatchReturn<T, TStrategy, TRejected> {
+    return CancellablePromiseCatch<T, TStrategy, TRejected>(this, onRejected);
   }
 
-  cancelled<TCancelled>(onCancelled: TCancellablePromiseOnCancelled<T, TStrategy, TCancelled> | undefined | null): ICancellablePromise<T | TCancelled, TStrategy> {
-    return CancellablePromiseFastCancelled<T, TStrategy, TCancelled>(this, onCancelled);
+  cancelled(): TCancellablePromiseCancelledReturn<T, TStrategy, undefined>;
+  cancelled<TCancelled extends TCancellablePromiseOnCancelledArgument<T, TStrategy, any>>(onCancelled: TCancelled): TCancellablePromiseCancelledReturn<T, TStrategy, TCancelled>;
+  cancelled<TCancelled extends TCancellablePromiseOnCancelledArgument<T, TStrategy, any>>(onCancelled?: TCancelled): TCancellablePromiseCancelledReturn<T, TStrategy, TCancelled> {
+    return CancellablePromiseCancelled<T, TStrategy, TCancelled>(this, onCancelled);
   }
 
-  finally(onFinally?: TCancellablePromiseOnFinally<T, TStrategy> | undefined | null, includeCancelled?: boolean): ICancellablePromise<T, TStrategy> {
-    return CancellablePromiseFastFinally<T, TStrategy>(this, onFinally, includeCancelled);
+  finally(onFinally?: TCancellablePromiseOnFinallyArgument<T, TStrategy>, includeCancelled?: boolean): ICancellablePromise<T, TStrategy> {
+    return CancellablePromiseFinally<T, TStrategy>(this, onFinally, includeCancelled);
   }
 
 

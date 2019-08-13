@@ -308,7 +308,7 @@ export function $fetch<T>(requestInfo: TObservableOrValue<RequestInfo>, requestI
 
 export function _fetch<T>(token: ICancelToken, requestInfo: RequestInfo, requestInit?: RequestInit): Promise<T> {
   return token.wrapPromise(fetch(...token.wrapFetchArguments(requestInfo, requestInit)))
-    .then<T>((response: Response) => {
+    .then((response: Response): Promise<T> => {
       return response.json();
     });
 }

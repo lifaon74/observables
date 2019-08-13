@@ -2,12 +2,13 @@ import {
   IFiniteStateObservable, IFiniteStateObservableContext, IFiniteStateObservableKeyValueMapGeneric,
   TFiniteStateObservableCreateCallback, TFiniteStateObservableMode, TFiniteStateObservableState
 } from '../../interfaces';
-import { ICancelToken, TCancelStrategyReturn } from '../../../../../misc/cancel-token/interfaces';
+import { ICancelToken } from '../../../../../misc/cancel-token/interfaces';
 import { CancelReason, CancelToken } from '../../../../../misc/cancel-token/implementation';
 import { Notification } from '../../../../core/notification/implementation';
 import { IPromiseObservableKeyValueMap, TPromiseObservableFactory, TPromiseObservableFinalState } from './interfaces';
 import { IObserver } from '../../../../../core/observer/interfaces';
 import { KeyValueMapToNotifications } from '../../../../core/notifications-observable/interfaces';
+import { INotificationsObserver } from '../../../../core/notifications-observer/interfaces';
 
 
 /**
@@ -31,10 +32,14 @@ export function GenerateFiniteStateObservableHookFromPromise<TValue>(
   type TKVMap = IFiniteStateObservableKeyValueMapGeneric<TValue, TFinalState>;
   return function (context: IFiniteStateObservableContext<TValue, TFinalState, TMode, TKVMap>) {
     let token: ICancelToken | null = null;
+    let tokenCancelObserver: INotificationsObserver<'cancel', any>;
 
     function clear() {
       if (token !== null) {
-        token.cancel(new CancelReason(`Observer stopped observing this promise`));
+        tokenCancelObserver.deactivate();
+        if (!token.cancelled) {
+          token.cancel(new CancelReason(`Observer stopped observing this promise`));
+        }
         token = null;
       }
     }
@@ -49,21 +54,12 @@ export function GenerateFiniteStateObservableHookFromPromise<TValue>(
         ) {
           token = new CancelToken();
 
-          const _promiseFactory = token.wrapFunction(promiseFactory, {
-            strategy: 'never',
-            onCancelled: (reason: any, rethrowCancelled: () => Promise<TCancelStrategyReturn<'never'>>) => {
-              if (
-                (instance.observed)
-                && (instance.state === 'next')
-              ) {
-                context.emit(new Notification<'cancel', TValue>('cancel', reason));
-                clear();
-              }
-              return rethrowCancelled();
-            }
-          });
+          tokenCancelObserver = token.addListener('cancel', (reason: any) => {
+            context.emit(new Notification<'cancel', any>('cancel', reason));
+            clear();
+          }).activate();
 
-          (_promiseFactory.call(instance, token) as Promise<TValue | void>)
+          (token.wrapFunction(promiseFactory).call(instance, token) as Promise<TValue | void>)
             .then((value: TValue) => {
                 if ((token !== null) && !token.cancelled) {
                   context.next(value);
@@ -121,22 +117,19 @@ export function GenerateFiniteStateObservableHookFromPromiseForEachObservers<TVa
         function clear() {
           if (clearFunctions.has(observer)) {
             clearFunctions.delete(observer);
-            token.cancel(new CancelReason(`Observer stopped observing this promise`));
+            tokenCancelObserver.deactivate();
+            if (!token.cancelled) {
+              token.cancel(new CancelReason(`Observer stopped observing this promise`));
+            }
           }
         }
 
-        const _promiseFactory = token.wrapFunction(promiseFactory, {
-          strategy: 'never',
-          onCancelled: (reason: any, rethrowCancelled: () => Promise<TCancelStrategyReturn<'never'>>) => {
-            if (state === 'next') {
-              observer.emit(new Notification<'cancel', TValue>('cancel', reason));
-              clear();
-            }
-            return rethrowCancelled();
-          }
-        });
+        const tokenCancelObserver = token.addListener('cancel', (reason: any) => {
+          observer.emit(new Notification<'cancel', any>('cancel', reason));
+          clear();
+        }).activate();
 
-        (_promiseFactory.call(instance, token) as Promise<TValue | void>)
+        (token.wrapFunction(promiseFactory).call(instance, token) as Promise<TValue | void>)
           .then((value: TValue) => {
               if (!token.cancelled) {
                 observer.emit(new Notification<'next', TValue>('next', value));
