@@ -10,6 +10,10 @@ import { TCastableToIteratorStrict } from '../../helpers';
 
 export type TCancellablePromiseFactory<T> = (token: ICancelToken) => TPromiseOrValue<T>;
 
+export type TCancellablePromiseTryCallback<T, TStrategy extends TCancelStrategy> = (this: ICancellablePromise<T, TStrategy>, token: ICancelToken) => TPromiseOrValue<T>;
+export type TCancellablePromiseRaceCallback<TTuple extends TPromiseOrValue<any>[], TStrategy extends TCancelStrategy> = (this: ICancellablePromise<TPromiseOrValueTupleToValueUnion<TTuple>, TStrategy>, token: ICancelToken) => TTuple;
+export type TCancellablePromiseAllCallback<TTuple extends TPromiseOrValue<any>[], TStrategy extends TCancelStrategy> = (this: ICancellablePromise<TPromiseOrValueTupleToValueTuple<TTuple>, TStrategy>, token: ICancelToken) => TTuple;
+
 export type TCancellablePromiseCreateCallback<T, TStrategy extends TCancelStrategy> = (this: ICancellablePromise<T, TStrategy>, resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void, token: ICancelToken) => void;
 
 export type TCancellablePromiseOnFulfilled<T, TStrategy extends TCancelStrategy, TFulfilled> = (this: ICancellablePromise<T, TStrategy>, value: T, token: ICancelToken) => TPromiseOrValue<TFulfilled>;
@@ -96,11 +100,7 @@ export interface ICancellablePromiseConstructor {
    * @param token
    * @param strategy
    */
-  try<T, TStrategy extends TCancelStrategy>(
-    callback: (this: ICancellablePromise<T, TStrategy>, token: ICancelToken) => TPromiseOrValue<T>,
-    token?: ICancelToken,
-    strategy?: TStrategy
-  ): ICancellablePromise<T, TStrategy>;
+  try<T, TStrategy extends TCancelStrategy>(callback: TCancellablePromiseTryCallback<T, TStrategy>, token?: ICancelToken, strategy?: TStrategy): ICancellablePromise<T, TStrategy>;
 
   // Equivalent of Promise.race
   race<TTuple extends TPromiseOrValue<any>[], TStrategy extends TCancelStrategy>(
@@ -250,7 +250,7 @@ export interface ICancellablePromiseConstructor {
  *  - 'then', 'catch', and 'finally' won't be called and 'promise' will never resolve (depends on strategy)
  *  - 'cancelled' is called whatever its place in the promise chain (won't wait on provided promise to resolve)
  */
-export interface ICancellablePromise<T, TStrategy extends TCancelStrategy> extends TPromise<T> {
+export interface ICancellablePromise<T, TStrategy extends TCancelStrategy = 'never'> extends TPromise<T> {
   readonly promise: Promise<T | TCancelStrategyReturn<TStrategy>>; // a promised wrapped by the CancellablePromise's token. May never resolve if token is cancelled (depends on strategy).
   readonly token: ICancelToken; // the CancelToken associated with this CancellablePromise
 

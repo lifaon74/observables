@@ -9,6 +9,7 @@ import { IPromiseObservableKeyValueMap, TPromiseObservableFactory, TPromiseObser
 import { IObserver } from '../../../../../core/observer/interfaces';
 import { KeyValueMapToNotifications } from '../../../../core/notifications-observable/interfaces';
 import { INotificationsObserver } from '../../../../core/notifications-observer/interfaces';
+import { FiniteStateObservableHookDefaultOnUnobserved } from '../../helpers';
 
 
 /**
@@ -80,14 +81,7 @@ export function GenerateFiniteStateObservableHookFromPromise<TValue>(
         }
       },
       onUnobserved(): void {
-        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this;
-        if (
-          (!instance.observed)
-          && (instance.state === 'next')
-        ) {
-          clear();
-          context.clearCache();
-        }
+        FiniteStateObservableHookDefaultOnUnobserved<TValue, TFinalState, TMode, TKVMap>(this, context, clear);
       },
     };
   };

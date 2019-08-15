@@ -131,7 +131,7 @@ export function DoXHRFromRequest(
   //     xhr.send(buffer);
   //     return xhr;
   //   });
-  return CancellablePromise.of<Blob, 'never'>(request.blob(), token)
+  return CancellablePromise.of<Blob>(request.blob(), token)
     .then((blob: Blob) => {
       InitXHRFromRequest(request, xhr, responseType);
       xhr.send(blob);
