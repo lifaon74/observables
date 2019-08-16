@@ -16,14 +16,14 @@ export type TPromiseRejectedArgument<TOut> = ((reason: any) => TPromiseOrValue<T
 
 export type TPromiseThenReturnedValue<T, TFulfilled extends TPromiseFulfilledArgument<T, any>, TRejected extends TPromiseRejectedArgument<any>> =
   TPromiseFulfilledReturnedValue<T, TFulfilled>
-  | TPromiseRejectedReturnedValue<TRejected>;
+  | TPromiseRejectedReturnedValue<T, TRejected>;
 
 export type TPromiseFulfilledReturnedValue<T, TFulfilled extends TPromiseFulfilledArgument<T, any>> =
   TFulfilled extends (value: T) => TPromiseOrValue<infer TFulfilledValue>
     ? TFulfilledValue
     : T;
 
-export type TPromiseRejectedReturnedValue<TRejected extends TPromiseRejectedArgument<any>> =
+export type TPromiseRejectedReturnedValue<T, TRejected extends TPromiseRejectedArgument<any>> =
   TRejected extends (reason: any) => TPromiseOrValue<infer TRejectedValue>
     ? TRejectedValue
     : never;
@@ -32,8 +32,8 @@ export type TPromiseRejectedReturnedValue<TRejected extends TPromiseRejectedArgu
 export type TPromiseThenReturn<T, TFulfilled extends TPromiseFulfilledArgument<T, any>, TRejected extends TPromiseRejectedArgument<any>> =
   TPromise<TPromiseThenReturnedValue<T, TFulfilled, TRejected>>;
 
-export type TPromiseCatchReturn<TRejected extends TPromiseRejectedArgument<any>> =
-  TPromise<TPromiseRejectedReturnedValue<TRejected>>;
+export type TPromiseCatchReturn<T, TRejected extends TPromiseRejectedArgument<any>> =
+  TPromiseThenReturn<T, undefined, TRejected>;
 
 
 export interface TPromiseLike<T> extends PromiseLike<T> {
@@ -99,9 +99,9 @@ export interface TPromise<T> extends Promise<T> {
   //   onRejected?: TRejected,
   // ): TPromiseThenReturn<T, TFulfilled, TRejected>;
 
-  catch(): TPromiseCatchReturn<undefined>;
+  catch(): TPromiseCatchReturn<T, undefined>;
 
-  catch<TRejected extends TPromiseRejectedArgument<any>>(onRejected: TRejected): TPromiseCatchReturn<TRejected>;
+  catch<TRejected extends TPromiseRejectedArgument<any>>(onRejected: TRejected): TPromiseCatchReturn<T, TRejected>;
 
   // catch<TRejected extends TRejectedArgument<any>>(onRejected?: TRejected): TPromiseCatchReturn<TRejected>;
 
@@ -115,12 +115,13 @@ export interface TPromise<T> extends Promise<T> {
 // const a: TPromise<boolean> = null as any;
 // const b = a.then(() => 1); // TPromise<number>
 // const b = a.then(() => 1); // TPromise<number>
-// const c = a.then((3 as unknown as T1)); // TPromise<number | boolean>
-// const b = a.then(void 0); // TPromise<number | boolean>
+// const c = a.then((3 as unknown as T1)); // TPromise<boolean | number>
+// const b = a.then(void 0); // TPromise<boolean>
+// const b = a.then(void 0, () => 'a'); // TPromise<boolean | string>
 // const b = a.then(() => 'a', () => 1); // TPromise<string | number>
 // const b = c.then((v: boolean) => null);  // TPromise<null>
-// const b = a.catch(); // TPromise<never>
-// const b = a.catch((v: boolean) => null); // TPromise<null>
+// const b = a.catch(); // TPromise<boolean | never>
+// const b = a.catch((v: boolean) => null); // TPromise<boolean | null>
 
 /**
  * Better definition of a PromiseConstructor

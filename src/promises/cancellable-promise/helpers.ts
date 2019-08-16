@@ -59,7 +59,7 @@ export function $yield<TStrategy extends TCancelStrategy>(token?: ICancelToken, 
 export function $timeout<T>(promiseOrCallback: Promise<T> | TCancellablePromiseCreateCallback<T, 'never'>, timeout: number, token?: ICancelToken): ICancellablePromise<T, 'never'>;
 export function $timeout<T, TStrategy extends TCancelStrategy>(promiseOrCallback: Promise<T> | TCancellablePromiseCreateCallback<T, TStrategy>, timeout: number, token: ICancelToken, strategy: TStrategy): ICancellablePromise<T, TStrategy>;
 export function $timeout<T, TStrategy extends TCancelStrategy>(promiseOrCallback: Promise<T> | TCancellablePromiseCreateCallback<T, TStrategy>, timeout: number, token?: ICancelToken, strategy?: TStrategy): ICancellablePromise<T, TStrategy> {
-  const promise: ICancellablePromise<T, TStrategy> = CancellablePromise.of<T, TStrategy>(promiseOrCallback, token, strategy);
+  const promise: ICancellablePromise<T, TStrategy> = CancellablePromise.of<T, TStrategy>(promiseOrCallback, token, strategy as TStrategy);
 
   const delayToken: ICancelToken = new CancelToken();
   delayToken.linkWithToken(promise.token);

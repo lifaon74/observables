@@ -71,10 +71,12 @@ export type TCancellablePromiseThenReturn<T, TStrategy extends TCancelStrategy, 
   ICancellablePromise<TCancellablePromiseThenReturnedValue<T, TStrategy, TFulfilled, TRejected, TCancelled>| TCancelStrategyReturn<TStrategy>, TStrategy>;
 
 export type TCancellablePromiseCatchReturn<T, TStrategy extends TCancelStrategy, TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>> =
-  ICancellablePromise<TCancellablePromiseRejectedReturnedValue<T, TStrategy, TRejected> | TCancelStrategyReturn<TStrategy>, TStrategy>;
+  TCancellablePromiseThenReturn<T, TStrategy, undefined, TRejected, undefined>;
+  // ICancellablePromise<TCancellablePromiseRejectedReturnedValue<T, TStrategy, TRejected> | TCancelStrategyReturn<TStrategy>, TStrategy>;
 
 export type TCancellablePromiseCancelledReturn<T, TStrategy extends TCancelStrategy, TCancelled extends TCancellablePromiseOnCancelledArgument<T, TStrategy, any>> =
-  ICancellablePromise<TCancellablePromiseCancelledReturnedValue<T, TStrategy, TCancelled> | TCancelStrategyReturn<TStrategy>, TStrategy>;
+  TCancellablePromiseThenReturn<T, TStrategy, undefined, undefined, TCancelled>;
+  // ICancellablePromise<TCancellablePromiseCancelledReturnedValue<T, TStrategy, TCancelled> | TCancelStrategyReturn<TStrategy>, TStrategy>;
 
 
 

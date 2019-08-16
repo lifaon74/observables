@@ -400,27 +400,31 @@ export function CancelTokenLinkWithTokens(
   instance: ICancelToken,
   tokens: ICancelToken[],
 ): () => void {
-  const index: number = tokens.findIndex(token => token.cancelled);
+  if (tokens.length > 0) {
+    const index: number = tokens.findIndex(token => token.cancelled);
 
-  if (index === -1) {
-    const clear = () => {
-      tokenObserver.deactivate();
-      tokensObserver.forEach(tokenObserver => tokenObserver.deactivate());
-    };
+    if (index === -1) {
+      const clear = () => {
+        tokenObserver.deactivate();
+        tokensObserver.forEach(tokenObserver => tokenObserver.deactivate());
+      };
 
-    const cancel = (reason: any) => {
-      clear();
-      instance.cancel(reason);
-    };
+      const cancel = (reason: any) => {
+        clear();
+        instance.cancel(reason);
+      };
 
-    const tokenObserver = instance.addListener('cancel', clear);
-    const tokensObserver = tokens.map(tokenObserver => tokenObserver.addListener('cancel', cancel));
-    tokenObserver.activate();
-    tokensObserver.forEach(tokenObserver => tokenObserver.activate());
-    return clear;
+      const tokenObserver = instance.addListener('cancel', clear);
+      const tokensObserver = tokens.map(tokenObserver => tokenObserver.addListener('cancel', cancel));
+      tokenObserver.activate();
+      tokensObserver.forEach(tokenObserver => tokenObserver.activate());
+      return clear;
+    } else {
+      instance.cancel(tokens[index].reason);
+      return noop;
+    }
   } else {
-    instance.cancel(tokens[index].reason);
-    return noop;
+    throw new Error(`Expected at least one token`);
   }
 }
 

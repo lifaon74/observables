@@ -451,7 +451,7 @@ export class CancellablePromise<T, TStrategy extends TCancelStrategy = 'never'> 
   static resolve<T, TStrategy extends TCancelStrategy>(
     value: TPromiseOrValue<T>,
     token: ICancelToken | undefined,
-    strategy: TStrategy | undefined
+    strategy: TStrategy
   ): ICancellablePromise<T, TStrategy>;
   static resolve<T, TStrategy extends TCancelStrategy>(
     value?: TPromiseOrValue<T>,
@@ -469,7 +469,7 @@ export class CancellablePromise<T, TStrategy extends TCancelStrategy = 'never'> 
   static reject<TStrategy extends TCancelStrategy>(
     reason: any,
     token: ICancelToken | undefined,
-    strategy: TStrategy | undefined
+    strategy: TStrategy
   ): ICancellablePromise<never, TStrategy>;
   static reject<T, TStrategy extends TCancelStrategy>(
     reason?: any,
@@ -487,7 +487,7 @@ export class CancellablePromise<T, TStrategy extends TCancelStrategy = 'never'> 
   static try<T, TStrategy extends TCancelStrategy>(
     callback: TCancellablePromiseTryCallback<T, TStrategy>,
     token: ICancelToken | undefined,
-    strategy: TStrategy | undefined
+    strategy: TStrategy
   ): ICancellablePromise<T, TStrategy>;
   static try<T, TStrategy extends TCancelStrategy>(
     callback: TCancellablePromiseTryCallback<T, TStrategy>,
@@ -505,7 +505,7 @@ export class CancellablePromise<T, TStrategy extends TCancelStrategy = 'never'> 
   static race<TTuple extends TPromiseOrValue<any>[], TStrategy extends TCancelStrategy>(
     values: TTuple,
     token: ICancelToken | undefined,
-    strategy: TStrategy | undefined
+    strategy: TStrategy
   ): ICancellablePromise<TPromiseOrValueTupleToValueUnion<TTuple>, TStrategy>;
   static race<TTuple extends TPromiseOrValue<any>[], TStrategy extends TCancelStrategy>(
     values: TTuple,
@@ -523,7 +523,7 @@ export class CancellablePromise<T, TStrategy extends TCancelStrategy = 'never'> 
   static raceCallback<TTuple extends TPromiseOrValue<any>[], TStrategy extends TCancelStrategy>(
     callback: TCancellablePromiseRaceCallback<TTuple, TStrategy>,
     token: ICancelToken | undefined,
-    strategy: TStrategy | undefined
+    strategy: TStrategy
   ): ICancellablePromise<TPromiseOrValueTupleToValueUnion<TTuple>, TStrategy>
   static raceCallback<TTuple extends TPromiseOrValue<any>[], TStrategy extends TCancelStrategy>(
     callback: TCancellablePromiseRaceCallback<TTuple, TStrategy>,
@@ -540,7 +540,7 @@ export class CancellablePromise<T, TStrategy extends TCancelStrategy = 'never'> 
   static raceCancellable<TTuple extends TCancellablePromiseFactory<any>[], TStrategy extends TCancelStrategy>(
     factories: TTuple,
     token: ICancelToken | undefined,
-    strategy: TStrategy | undefined
+    strategy: TStrategy
   ): ICancellablePromise<TPromiseOrValueFactoryTupleToValueUnion<TTuple>, TStrategy>;
   static raceCancellable<TTuple extends TCancellablePromiseFactory<any>[], TStrategy extends TCancelStrategy>(
     factories: TTuple,
@@ -558,7 +558,7 @@ export class CancellablePromise<T, TStrategy extends TCancelStrategy = 'never'> 
   static all<TTuple extends TPromiseOrValue<any>[], TStrategy extends TCancelStrategy>(
     values: TTuple,
     token: ICancelToken | undefined,
-    strategy: TStrategy | undefined
+    strategy: TStrategy
   ): ICancellablePromise<TPromiseOrValueTupleToValueTuple<TTuple>, TStrategy>;
   static all<TTuple extends TPromiseOrValue<any>[], TStrategy extends TCancelStrategy>(
     values: TTuple,
@@ -575,7 +575,7 @@ export class CancellablePromise<T, TStrategy extends TCancelStrategy = 'never'> 
   static allCallback<TTuple extends TPromiseOrValue<any>[], TStrategy extends TCancelStrategy>(
     callback: TCancellablePromiseAllCallback<TTuple, TStrategy>,
     token: ICancelToken | undefined,
-    strategy: TStrategy | undefined
+    strategy: TStrategy
   ): ICancellablePromise<TPromiseOrValueTupleToValueTuple<TTuple>, TStrategy>;
   static allCallback<TTuple extends TPromiseOrValue<any>[], TStrategy extends TCancelStrategy>(
     callback: TCancellablePromiseAllCallback<TTuple, TStrategy>,
@@ -596,7 +596,7 @@ export class CancellablePromise<T, TStrategy extends TCancelStrategy = 'never'> 
     concurrent: number | undefined,
     global: boolean | undefined,
     token: ICancelToken | undefined,
-    strategy: TStrategy | undefined
+    strategy: TStrategy
   ): ICancellablePromise<void, TStrategy>;
   static concurrent<T, TStrategy extends TCancelStrategy>(
     iterator: TCastableToIteratorStrict<TPromiseOrValue<T>>,
@@ -619,7 +619,7 @@ export class CancellablePromise<T, TStrategy extends TCancelStrategy = 'never'> 
     concurrent: number | undefined,
     global: boolean | undefined,
     token: ICancelToken | undefined,
-    strategy: TStrategy | undefined
+    strategy: TStrategy
   ): ICancellablePromise<void, TStrategy>;
   static concurrentFactories<T, TStrategy extends TCancelStrategy>(
     iterator: TCastableToIteratorStrict<TCancellablePromiseFactory<T>>,
@@ -640,7 +640,7 @@ export class CancellablePromise<T, TStrategy extends TCancelStrategy = 'never'> 
     requestInfo: RequestInfo,
     requestInit: RequestInit | undefined,
     token: ICancelToken | undefined,
-    strategy: TStrategy | undefined
+    strategy: TStrategy
   ): ICancellablePromise<Response, TStrategy>;
   static fetch<TStrategy extends TCancelStrategy>(
     requestInfo: RequestInfo,
@@ -659,7 +659,7 @@ export class CancellablePromise<T, TStrategy extends TCancelStrategy = 'never'> 
   static of<T, TStrategy extends TCancelStrategy>(
     promiseOrCallback: Promise<T> | TCancellablePromiseCreateCallback<T, TStrategy>,
     token: ICancelToken | undefined,
-    strategy: TStrategy | undefined
+    strategy: TStrategy
   ): ICancellablePromise<T, TStrategy>;
   static of<T, TStrategy extends TCancelStrategy>(
     promiseOrCallback: Promise<T> | TCancellablePromiseCreateCallback<T, TStrategy>,
