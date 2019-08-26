@@ -5,7 +5,7 @@ import { CancellablePromise } from '../../promises/cancellable-promise/implement
 import { ICancellablePromiseTuple } from '../../promises/interfaces';
 import { TFiniteStateObservableGeneric } from '../../notifications/observables/finite-state/interfaces';
 import {
-  ICancelToken
+  ICancelToken, TCancelStrategy
 } from '../../misc/cancel-token/interfaces';
 
 
@@ -15,14 +15,16 @@ import {
  *  If the Observable sends a value, the promise is resolved with this value.
  * @param observable
  * @param _token
+ * @param strategy
  * @return a CancellablePromise
  */
-export function toCancellablePromise<T>(
+export function toCancellablePromise<T, TStrategy extends TCancelStrategy>(
   observable: IObservable<T> | TFiniteStateObservableGeneric<T>,
-  _token?: ICancelToken
-): ICancellablePromise<T> {
-  const { promise, token } = toCancellablePromiseTuple<T>(observable, 'never', _token) as ICancellablePromiseTuple<T | void>;
-  return new CancellablePromise<T>(promise as Promise<T>, token);
+  _token?: ICancelToken,
+  strategy?: TStrategy,
+): ICancellablePromise<T, TStrategy> {
+  const { promise, token } = toCancellablePromiseTuple<T, TStrategy>(observable, strategy, _token) as ICancellablePromiseTuple<T | void>;
+  return new CancellablePromise<T, TStrategy>(promise as Promise<T>, token, strategy);
 
 }
 

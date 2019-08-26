@@ -11,6 +11,7 @@ import { Notification } from '../../../core/notification/implementation';
 import { IProgress } from '../../../../misc/progress/interfaces';
 import { Progress } from '../../../../misc/progress/implementation';
 import { IEventsObservable } from '../../events/events-observable/interfaces';
+import { FiniteStateObservableHookDefaultOnUnobserved } from '../helpers';
 
 /**
 /**
@@ -91,14 +92,7 @@ export function GenerateFiniteStateObservableHookFromFileReader<T extends TFileR
         }
       },
       onUnobserved(): void {
-        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this;
-        if (
-          (!instance.observed)
-          && (instance.state === 'next')
-        ) {
-          clear();
-          context.clearCache();
-        }
+        FiniteStateObservableHookDefaultOnUnobserved<TValue, TFinalState, TMode, TKVMap>(this, context, clear);
       },
     };
   };

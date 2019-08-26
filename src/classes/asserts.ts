@@ -27,7 +27,7 @@ export function assert(cb: () => boolean | Promise<boolean>, message: string = c
   return new Promise<boolean>(resolve => resolve(cb()))
     .then((result: boolean) => {
       if (!result) {
-        new Error(`Assert failed: ${ message }`);
+        throw new Error(`Assert failed: ${ message }`);
       }
     });
 }

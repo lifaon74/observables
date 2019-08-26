@@ -4,13 +4,11 @@ export interface IReadonlyTupleConstructor {
   new<T extends any[]>(tuple: T): IReadonlyTuple<T>;
 }
 
-export interface IReadonlyTuple<T extends any[]> {
+export interface IReadonlyTuple<T extends any[]> extends Iterable<TupleTypes<T>> {
   readonly length: number;
 
   // returns value at 'index', or throws if out of range
   item<K extends number>(index: K): T[K];
-
-  [Symbol.iterator](): Iterator<TupleTypes<T>>;
 
   toString(): string;
 

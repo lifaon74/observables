@@ -1,13 +1,11 @@
-import { TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion } from '../interfaces';
+import {
+  TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion, TPromiseStatus
+} from '../interfaces';
 import { IsSubSet } from '../../classes/types';
 
 /** TYPES **/
 
-export type TPromiseStatus =
-  'fulfilled' // promise is fulfilled
-  | 'rejected' // promise is rejected
-  | 'pending' // promise is neither resolved nor resolving
-  | 'resolving'; // promise is resolving => its final state is not known yet, but the promise's resolve/reject functions can't be called anymore
+// promise is resolving => its final state is not known yet, but the promise's resolve/reject functions can't be called anymore
 
 export type TDeferredPromiseRaceReturn<TTuple extends TPromiseOrValue<any>[], TReference, TReturn> =
   true extends {

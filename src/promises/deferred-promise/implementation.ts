@@ -1,9 +1,10 @@
 import {
-  IDeferredPromise, IDeferredPromiseCodes, TDeferredPromiseAllReturn, TDeferredPromiseRaceReturn, TPromiseStatus
-} from './interfaces';
+  IDeferredPromise, IDeferredPromiseCodes, TDeferredPromiseAllReturn, TDeferredPromiseRaceReturn} from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject, noop } from '../../helpers';
-import { TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion } from '../interfaces';
+import {
+  TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion, TPromiseStatus
+} from '../interfaces';
 
 
 export const DEFERRED_PROMISE_PRIVATE = Symbol('deferred-promise-private');

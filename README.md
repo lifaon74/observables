@@ -286,11 +286,11 @@ button.addEventListener('click', () => {
 In the context of IoT and sensors, Observables may be extremely useful:
 ```ts
 interface SmartElectricOutlet {
-  state: Observerable<'on' | 'off'>;
-  current: Observerable<number>;
-  voltage: Observerable<number>;  
-  watts: Observerable<number>;  
-  wattHours: Observerable<number>;
+  state: Observable<'on' | 'off'>;
+  current: Observable<number>;
+  voltage: Observable<number>;  
+  watts: Observable<number>;  
+  wattHours: Observable<number>;
 }
 ```
 
@@ -329,7 +329,6 @@ interface SmartElectricOutlet {
     + [NotificationsObserver](#notificationsobserver)
   * [EventsObservable](#eventsobservable)
   * [FiniteStateObservable](#finitestateobservable)
-      - [Construct](#construct-4)
   * [PromiseObservable](#promiseobservable)
     + [CancelToken](#canceltoken)
       - [of (static)](#of-static)
@@ -1157,163 +1156,29 @@ setTimeout(() => {
 }, 5000);
 ```
 
-**INFO:** For NodeJS's EventEmitter, the equivalent is NodeJSEventsObservable.
+**INFO:** For NodeJS's EventEmitter, the equivalent is `NodeJSEventsObservable`.
 
 ---
 
 #### FiniteStateObservable
 
-**WARN:** FiniteStateObservable is pretty complex. You may ignore it and go directly to the next Observables which implements FiniteStateObservable in a simpler manner.
-
-```ts
-type TFiniteStateObservableFinalState = 'complete' | 'error';
-
-type FinalStateConstraint<T> = IsSuperSet<T, TFiniteStateObservableFinalState> extends true
-  ? ['next'] extends [T]
-    ? 'superset must not contain next'
-    : string
-  : 'not a superset of TFiniteStateObservableFinalState';
-
-type TFiniteStateObservableMode =
-  'once' // (default) does not cache any values => after the final state (TFinalState), no observers will ever receive a value ('next')
-  | 'uniq' // does not cache any values => after the final state, throws an error if a new observer observes 'next' or TFinalState.
-  | 'cache' // caches own notifications ('next' and TFinalState). Every observer will receive the whole list of own emitted notifications
-  | 'cache-final-state' // caches TFinalState notification. Every observer will receive this final state notification
-  | 'cache-all' // caches all notifications (including ones with a different name than 'next', and TFinalState). Every observer will receive the whole list of all emitted notifications
-  ;
-
-type FiniteStateObservableModeConstraint<T> = IsSuperSet<T, TFiniteStateObservableMode> extends true
-  ? string
-  : 'not a superset of TFiniteStateObservableMode';
-
-
-type TFiniteStateObservableState<TFinalState extends FinalStateConstraint<TFinalState>> =
-  'next' // may emit data though 'next'
-  | TFinalState
-  ;
-
-interface IFiniteStateObservableOptions<TFinalState extends FinalStateConstraint<TFinalState>, TMode extends FiniteStateObservableModeConstraint<TMode>> {
-  finalStates?: Iterable<TFinalState>;
-  modes?: Iterable<TMode>;
-  mode?: TMode; // default: 'once'
-}
-
-type IFiniteStateObservableKeyValueMapGeneric<TValue, TFinalState extends FinalStateConstraint<TFinalState>> = {
-  [K in TFinalState]: any;
-} & {
-  'next': TValue; // incoming values
-  'complete': void; // when the Observable has no more data to emit
-  'error': any; // when the Observable errored
-};
-
-type FiniteStateKeyValueMapConstraint<TValue, TFinalState extends FinalStateConstraint<TFinalState>, TKVMap extends object> = KeyValueMapConstraint<TKVMap, IFiniteStateObservableKeyValueMapGeneric<TValue, TFinalState>>;
-
-interface IFiniteStateObservableHook<TValue, TFinalState extends FinalStateConstraint<TFinalState>, TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>> extends TNotificationsObservableHook<TKVMap> {
-}
-
-type TFiniteStateObservableCreateCallback<TValue, TFinalState extends FinalStateConstraint<TFinalState>, TMode extends FiniteStateObservableModeConstraint<TMode>, TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>> =
-  ((context: IFiniteStateObservableContext<TValue, TFinalState, TMode, TKVMap>) => (IFiniteStateObservableHook<TValue, TFinalState, TKVMap> | void));
-
-
-interface IFiniteStateObservableConstructor {
-  new<TValue, TFinalState extends FinalStateConstraint<TFinalState>, TMode extends FiniteStateObservableModeConstraint<TMode>, TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>>(
-    create?: TFiniteStateObservableCreateCallback<TValue, TFinalState, TMode, TKVMap>,
-    options?: IFiniteStateObservableOptions<TFinalState, TMode>,
-  ): IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>;
-}
-
-interface IFiniteStateObservable<TValue, TFinalState extends FinalStateConstraint<TFinalState>, TMode extends FiniteStateObservableModeConstraint<TMode>, TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>> extends INotificationsObservable<TKVMap> {
-  readonly state: TFiniteStateObservableState<TFinalState>;
-  readonly mode: TMode;
-}
-```
-
-
-```ts
-interface IFiniteStateObservableContext<TValue, TFinalState extends FinalStateConstraint<TFinalState>, TMode extends FiniteStateObservableModeConstraint<TMode>, TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>> extends INotificationsObservableContext<TKVMap> {
-  readonly observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>;
-
-  next(value: TValue): void; // emits Notification('next', value)
-  complete(): void; // emits Notification('complete', void)
-  error(error?: any): void; // emits Notification('error', void)
-
-  clearCache(): void;
-}
-```
-
-A FiniteStateObservable is simply an Observable with a final state (at lest *complete* or *error*), just like the RXJS's Observables. 
-**It is an helper to build Observables having a final state, but shouldn't be used directly.**
+A FiniteStateObservable is simply an Observable with a final state (at least *complete* or *error*), just like the RXJS's Observables.
 
 It extends `NotificationsObservable` with the minimum following 3 *'events'*:
 - `next: TValue`: the emitted values
 - `complete: void`: when the Observable has no more data to emit
 - `error: any`: when the Observable errored
 
-It works with *Generic* types:
-- `TValue` represents the type of the value emitted though `next`
-- `TFinalState` represents the list (as union of strings) of the final states of the FiniteStateObservable. At least it must contain `TFiniteStateObservableFinalState` (`complete` and `error`).
-- `TMode` represents the mode (as union of strings) supported by the FiniteStateObservable. At least it must contain `TFiniteStateObservableMode`.
-- `TKVMap` represents the KeyValueMap used by NotificationsObservable, meaning than more events than just `next`, `complete` and `error` may be emitted.
-
-
-###### Construct
-```ts
-new<TValue, TFinalState extends FinalStateConstraint<TFinalState>, TMode extends FiniteStateObservableModeConstraint<TMode>, TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>>(
-  create?: TFiniteStateObservableCreateCallback<TValue, TFinalState, TMode, TKVMap>,
-  options?: IFiniteStateObservableOptions<TFinalState, TMode>,
-): IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>;
-```
-
-The constructor is the same as the one for a NotificationsObservable, but `context` is slightly different:
-it implements some shortcuts to emits Notifications: `next`, `complete` and `error`.
-
-When the FiniteStateObservable is into a final state (`TFinalState`, ex: *error* or *complete*), you won't be allowed to emit `next` or `TFinalState` Notifications.
-
-You may provide a second argument: `options`
-
-Its `mode` defines some useful behaviours:
-- `once` (default): does not cache any values => after the final state (`TFinalState`), no observers will ever receive a value (`next`)
-- `uniq`: does not cache any values => after the final state, throws an error if a new observer observes `next` or `TFinalState`.
-- `cache`: caches own notifications (`next` and `TFinalState`). Every observer will receive the whole list of own emitted notifications
-- `cache-final-state`: caches `TFinalState` notification. Every observer will receive this final state notification
-- `cache-all`: caches all notifications (including ones with a different name than `next` and `TFinalState`). Every observer will receive the whole list of all emitted notifications
-
-*Example:* Creates a new FiniteStateObservable from an Iterable
-```ts
-function fromIterable<T>(iterable: Iterable<T>): IFiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>> {
-  return new FiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>>((context) => {
-    return {
-      onObserved(): void {
-        if (context.observable.state === 'next') {
-          for (const value of iterable) {
-            context.next(value);
-          }
-          context.complete();
-        }
-      }
-    }
-  }, { mode: 'cache' })
-}
-
-fromIterable([0, 1, 2, 3])
-  .addListener('next', (value: number) => {
-    console.log('next', value);
-  })
-  .activate();
-```
-
-**INFO:** FromIterableObservable should be used instead.
-```ts
-new FromIterableObservable<number>([0, 1, 2, 3], { mode: 'cache' })
-  .addListener('next', (value: number) => {
-    console.log('next', value);
-  })
-  .activate();
-```
+Because FiniteStateObservable is pretty complex, I wont give more details here but if interested [you can read the documentation](./examples/05-more-details-about-finite-state-observable.md).
 
 #### PromiseObservable
 
 ##### CancelToken
+
+<details>
+<summary>show</summary>
+<p>
+
 ```ts
 type TCancelStrategy =
   'resolve' // resolve the promise with void
@@ -1376,7 +1241,7 @@ interface ICancelToken extends INotificationsObservable<ICancelTokenKeyValueMap>
 }
 ```
 
-A CancelToken is a Token used to *"cancel"* a something (generally a promise).
+A CancelToken is a Token used to *"cancel"* something (generally an async task like a promise).
 It is extremely useful to avoid unnecessary work in a promise chain or to abort async operations.
 
 *Example:* Use CancelToken to know than a promise has been cancelled
@@ -1422,7 +1287,7 @@ linkWithToken(...tokens: ICancelToken[]): () => void;
 ```
 Links this CancelToken with a list of tokens. If one of the provided `tokens` is cancelled, cancel this Token with the cancelled token's reason.
 
-*INFO:* linkWith<name> methods return an undo function: calling this function will undo the link.
+**INFO:** linkWith[name] methods return an undo function: calling this function will undo the link.
 
 ###### toAbortController / linkWithAbortController / linkWithAbortSignal
 ```ts
@@ -1477,6 +1342,8 @@ function cancellablePromiseExample(): ICancellablePromise<void> {
 }
 ```
 
+</p>
+</details>
 
 ##### PromiseObservable
 ```ts
@@ -1534,7 +1401,7 @@ newsRequest
   });
   
 ```
-**INFO:** An FetchObservable is provided to simplify fetch requests.
+**INFO:** A `FetchObservable` is provided to simplify fetch requests.
 
 By default, the first observer will call `promiseFactory` **once** (the returned promise may be cached with `options.mode = 'cache'` so following observers will receive the values),
 even if the promise is cancelled or rejected.

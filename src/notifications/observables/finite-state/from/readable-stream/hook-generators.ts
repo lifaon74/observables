@@ -1,29 +1,25 @@
 import {
-  IFiniteStateObservable, IFiniteStateObservableContext, TFiniteStateObservableCreateCallback,
+  TFiniteStateObservableCreateCallback,
   TFiniteStateObservableMode
 } from '../../interfaces';
 
 import { IFromReadableStreamObservableKeyValueMap, TFromReadableStreamObservableFinalState } from './interfaces';
 import { GenerateFiniteStateObservableHookFromAsyncIterableWithPauseWorkflow } from '../iterable/hook-generators';
 
+
 /**
- * Generates an Hook for a FiniteStateObservable, based on an async iterable:
- *  - when the Observable is freshly observed, creates an iterator from the iterable
- *  - iterates over the elements (emits 'next'). While iterating, if the observable is no more observed pause the iteration
+ * Generates an Hook for a FiniteStateObservable, based on a ReadableStream:
+ *  - when the Observable is freshly observed, starts reading the stream
+ *  - when the ReadableStream emits a value, transfers it to the FiniteStateObservable using 'next'
+ *  - while reading, if the observable is no more observed pause the reading
  *  - when all elements are read, emits a 'complete'
+ *  - if the stream errors, emits an 'error'
  * @param stream
  */
 export function GenerateFiniteStateObservableHookFromReadableStreamWithPauseWorkflow<TValue>(
   stream: ReadableStream<TValue>
 ): TFiniteStateObservableCreateCallback<TValue, TFromReadableStreamObservableFinalState, TFiniteStateObservableMode, IFromReadableStreamObservableKeyValueMap<TValue>> {
-  return GenerateFiniteStateObservableHookFromAsyncIterableWithPauseWorkflow<TValue>((async function * () {
-    const reader: ReadableStreamDefaultReader<TValue> = stream.getReader();
-    let result: ReadableStreamReadResult<TValue>;
-    while (!(result = await reader.read()).done) {
-      yield result.value;
-    }
-  })());
-
+  return GenerateFiniteStateObservableHookFromReadableStreamReaderWithPauseWorkflow<TValue>(stream.getReader());
   // type TFinalState = TFromReadableStreamObservableFinalState;
   // type TMode = TFiniteStateObservableMode;
   // type TKVMap = IFromReadableStreamObservableKeyValueMap<TValue>;
@@ -86,3 +82,14 @@ export function GenerateFiniteStateObservableHookFromReadableStreamWithPauseWork
   // };
 }
 
+
+export function GenerateFiniteStateObservableHookFromReadableStreamReaderWithPauseWorkflow<TValue>(
+  reader: ReadableStreamReader<TValue>
+): TFiniteStateObservableCreateCallback<TValue, TFromReadableStreamObservableFinalState, TFiniteStateObservableMode, IFromReadableStreamObservableKeyValueMap<TValue>> {
+  return GenerateFiniteStateObservableHookFromAsyncIterableWithPauseWorkflow<TValue>((async function * () {
+    let result: ReadableStreamReadResult<TValue>;
+    while (!(result = await reader.read()).done) {
+      yield result.value;
+    }
+  })());
+}

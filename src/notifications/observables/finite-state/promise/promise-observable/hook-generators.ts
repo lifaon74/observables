@@ -8,6 +8,8 @@ import { Notification } from '../../../../core/notification/implementation';
 import { IPromiseObservableKeyValueMap, TPromiseObservableFactory, TPromiseObservableFinalState } from './interfaces';
 import { IObserver } from '../../../../../core/observer/interfaces';
 import { KeyValueMapToNotifications } from '../../../../core/notifications-observable/interfaces';
+import { INotificationsObserver } from '../../../../core/notifications-observer/interfaces';
+import { FiniteStateObservableHookDefaultOnUnobserved } from '../../helpers';
 
 
 /**
@@ -31,10 +33,14 @@ export function GenerateFiniteStateObservableHookFromPromise<TValue>(
   type TKVMap = IFiniteStateObservableKeyValueMapGeneric<TValue, TFinalState>;
   return function (context: IFiniteStateObservableContext<TValue, TFinalState, TMode, TKVMap>) {
     let token: ICancelToken | null = null;
+    let tokenCancelObserver: INotificationsObserver<'cancel', any>;
 
     function clear() {
       if (token !== null) {
-        token.cancel(new CancelReason(`Observer stopped observing this promise`));
+        tokenCancelObserver.deactivate();
+        if (!token.cancelled) {
+          token.cancel(new CancelReason(`Observer stopped observing this promise`));
+        }
         token = null;
       }
     }
@@ -49,17 +55,12 @@ export function GenerateFiniteStateObservableHookFromPromise<TValue>(
         ) {
           token = new CancelToken();
 
-          const _promiseFactory = token.wrapFunction(promiseFactory, 'never', (reason: any) => {
-            if (
-              (instance.observed)
-              && (instance.state === 'next')
-            ) {
-              context.emit(new Notification<'cancel', TValue>('cancel', reason));
-              clear();
-            }
-          });
+          tokenCancelObserver = token.addListener('cancel', (reason: any) => {
+            context.emit(new Notification<'cancel', any>('cancel', reason));
+            clear();
+          }).activate();
 
-          (_promiseFactory.call(instance, token) as Promise<TValue | void>)
+          (token.wrapFunction(promiseFactory).call(instance, token) as Promise<TValue | void>)
             .then((value: TValue) => {
                 if ((token !== null) && !token.cancelled) {
                   context.next(value);
@@ -80,14 +81,7 @@ export function GenerateFiniteStateObservableHookFromPromise<TValue>(
         }
       },
       onUnobserved(): void {
-        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this;
-        if (
-          (!instance.observed)
-          && (instance.state === 'next')
-        ) {
-          clear();
-          context.clearCache();
-        }
+        FiniteStateObservableHookDefaultOnUnobserved<TValue, TFinalState, TMode, TKVMap>(this, context, clear);
       },
     };
   };
@@ -117,18 +111,19 @@ export function GenerateFiniteStateObservableHookFromPromiseForEachObservers<TVa
         function clear() {
           if (clearFunctions.has(observer)) {
             clearFunctions.delete(observer);
-            token.cancel(new CancelReason(`Observer stopped observing this promise`));
+            tokenCancelObserver.deactivate();
+            if (!token.cancelled) {
+              token.cancel(new CancelReason(`Observer stopped observing this promise`));
+            }
           }
         }
 
-        const _promiseFactory = token.wrapFunction(promiseFactory, 'never', (reason: any) => {
-          if (state === 'next') {
-            observer.emit(new Notification<'cancel', TValue>('cancel', reason));
-            clear();
-          }
-        });
+        const tokenCancelObserver = token.addListener('cancel', (reason: any) => {
+          observer.emit(new Notification<'cancel', any>('cancel', reason));
+          clear();
+        }).activate();
 
-        (_promiseFactory.call(instance, token) as Promise<TValue | void>)
+        (token.wrapFunction(promiseFactory).call(instance, token) as Promise<TValue | void>)
           .then((value: TValue) => {
               if (!token.cancelled) {
                 observer.emit(new Notification<'next', TValue>('next', value));

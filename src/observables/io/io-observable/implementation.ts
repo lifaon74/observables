@@ -14,12 +14,12 @@ import { IObservablePrivate, OBSERVABLE_PRIVATE, ObservableFactory } from '../..
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import {
   ACTIVABLE_PRIVATE, ActivableFactory, IActivablePrivate, IsActivableConstructor
-} from '../../../classes/activable/implementation';
+} from '../../../misc/activable/implementation';
 import { IsObject } from '../../../helpers';
 import {
   IsNotificationsObservableConstructor, NotificationsObservableFactory
 } from '../../../notifications/core/notifications-observable/implementation';
-import { IActivableConstructor } from '../../../classes/activable/interfaces';
+import { IActivableConstructor } from '../../../misc/activable/interfaces';
 
 
 export const INPUT_OUTPUT_PRIVATE = Symbol('input-output-private');

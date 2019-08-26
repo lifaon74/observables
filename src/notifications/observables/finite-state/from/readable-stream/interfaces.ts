@@ -15,13 +15,13 @@ export type TFromReadableStreamObservableNotifications<T> = KeyValueMapToNotific
 export interface IFromReadableStreamObservableOptions extends IFiniteStateObservableExposedOptions<TFromReadableStreamObservableMode> {
 }
 
-export type TFromReadableStreamObservableConstructorArgs<T> = [ReadableStream<T>, IFromReadableStreamObservableOptions?];
+export type TFromReadableStreamObservableConstructorArgs<T> = [ReadableStreamReader<T>, IFromReadableStreamObservableOptions?];
 
 
 /** INTERFACES **/
 
 export interface IFromReadableStreamObservableConstructor {
-  new<T>(iterable: ReadableStream<T>, options?: IFromReadableStreamObservableOptions): IFromReadableStreamObservable<T>;
+  new<T>(reader: ReadableStreamReader<T>, options?: IFromReadableStreamObservableOptions): IFromReadableStreamObservable<T>;
 }
 
 export interface IFromReadableStreamObservable<T> extends IFiniteStateObservable<T, TFromReadableStreamObservableFinalState, TFromReadableStreamObservableMode, IFromReadableStreamObservableKeyValueMap<T>> {

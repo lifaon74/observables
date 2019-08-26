@@ -80,27 +80,28 @@ function copyPackageFiles() {
 function bundle(buildOptions) {
   const base = $path.join(paths.destination);
   const inputName = $path.join(paths.destination, buildOptions.rollup.main);
-  const outputName = `${$path.basename(buildOptions.rollup.main, $path.extname(buildOptions.rollup.main))}.${buildOptions.rollup.outputPostFix || 'bundled'}.js`;
+  const outputName = `${ $path.basename(buildOptions.rollup.main, $path.extname(buildOptions.rollup.main)) }.${ buildOptions.rollup.outputPostFix || 'bundled' }.js`;
 
   return function _bundle() {
     return gulp.src([
       // $path.join(base, '**', '*.' + fileExt),
       inputName
     ], { base: base })
-      // .pipe(gulpPlugins.betterRollup({
-      //   input: inputName,
-      //   allowRealFiles: true,
-      //   output: {
-      //     format: buildOptions.rollup.format || 'es',
-      //     name: buildOptions.rollup.name,
-      //     file: outputName
-      //   },
-      //   plugins: [
-      //     $resolve({
-      //       mainFields: ['jsnext:main', 'browser', 'module', 'main'],
-      //     })
-      //   ]
-      // }))
+        .pipe(gulpPlugins.sourcemaps.init())
+        // .pipe(gulpPlugins.betterRollup({
+        //   input: inputName,
+        //   allowRealFiles: true,
+        //   output: {
+        //     format: buildOptions.rollup.format || 'es',
+        //     name: buildOptions.rollup.name,
+        //     file: outputName
+        //   },
+        //   plugins: [
+        //     $resolve({
+        //       mainFields: ['jsnext:main', 'browser', 'module', 'main'],
+        //     })
+        //   ]
+        // }))
         .pipe(gulpPlugins.betterRollup({
           input: inputName,
           // allowRealFiles: true,
@@ -114,8 +115,9 @@ function bundle(buildOptions) {
           name: buildOptions.rollup.name,
           file: outputName
         }))
-      .pipe(gulpPlugins.rename(outputName))
-      .pipe(gulp.dest($path.join(paths.destination, 'bundle')));
+        .pipe(gulpPlugins.rename(outputName))
+        .pipe(gulpPlugins.sourcemaps.write())
+        .pipe(gulp.dest($path.join(paths.destination, 'bundle')));
   };
 }
 

@@ -14,6 +14,7 @@ import {
   CreateFetchError, DoXHRFromRequest
 } from './helpers';
 import { ICancelToken } from '../../../../../misc/cancel-token/interfaces';
+import { FiniteStateObservableHookDefaultOnUnobserved } from '../../helpers';
 
 
 export interface IGenerateFiniteStateObservableHookFromXHROptions {
@@ -136,14 +137,7 @@ export function GenerateFiniteStateObservableHookFromXHR(
         }
       },
       onUnobserved(): void {
-        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this;
-        if (
-          (!instance.observed)
-          && (instance.state === 'next')
-        ) {
-          clear();
-          context.clearCache();
-        }
+        FiniteStateObservableHookDefaultOnUnobserved<TValue, TFinalState, TMode, TKVMap>(this, context, clear);
       },
     };
   };
