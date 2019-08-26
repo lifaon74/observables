@@ -3,7 +3,7 @@ import {
   INotificationsObservable, INotificationsObservableContext, KeyValueMapToNotifications,
   TNotificationsObservableConstructorArgs, TNotificationsObservableHook
 } from '../../../notifications/core/notifications-observable/interfaces';
-import { IActivable, IActivableHook, TActivableConstructorArgs } from '../../../classes/activable/interfaces';
+import { IActivable, IActivableHook, TActivableConstructorArgs } from '../../../misc/activable/interfaces';
 import { IObservable, TObservableConstructorArgs } from '../../../core/observable/interfaces';
 import { KeyValueMapConstraint } from '../../../notifications/core/interfaces';
 

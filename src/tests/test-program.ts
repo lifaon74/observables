@@ -165,7 +165,7 @@ export class Program<CB extends WorkerCallback> {
                 const type: any = (error.type in globalThis) ? (globalThis as any)[error.type] : Error;
                 const reconstructedError: any = new type(error.message || '');
                 if (error.name && (error.name !== reconstructedError.name)) {
-                  reconstructedError.name = error.name
+                  reconstructedError.name = error.name;
                 }
                 reconstructedError.stack = error.stack || `${ error.name }: ${ error.message }\n\tempty stack`;
                 error = reconstructedError;

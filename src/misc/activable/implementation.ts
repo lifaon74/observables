@@ -1,5 +1,5 @@
-import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
-import { Constructor, HasFactoryWaterMark, MakeFactory } from '../factory';
+import { ConstructClassWithPrivateMembers } from '../helpers/ClassWithPrivateMembers';
+import { Constructor, HasFactoryWaterMark, MakeFactory } from '../../classes/factory';
 import {
   IActivable, IActivableConstructor, IActivableHook, TActivableConstructorArgs, TActivableSateListener
 } from './interfaces';

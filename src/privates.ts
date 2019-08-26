@@ -1,6 +1,5 @@
 export * from './public';
 
-export * from './classes/activable/implementation';
 export * from './classes/cyclic/CyclicIndex';
 export * from './classes/cyclic/CyclicTypedVectorArray';
 export * from './classes/asserts';

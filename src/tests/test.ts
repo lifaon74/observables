@@ -28,6 +28,7 @@ import { aggregateNotificationsPipe } from '../operators/pipes/aggregateNotifica
 import { finiteStateObservableToPromise, toPromise } from '../operators/to/toPromise';
 import { testExamples } from './examples/examples';
 import { testPromises } from './test-promises';
+import { testTask } from './test-task';
 // import { toAsyncIterable } from '../operators/to/async-iterator/toAsyncIterable';
 
 
@@ -591,9 +592,10 @@ export async function test() {
   // testInstanceof();
   // testPerformances();
   // testSignalingServer();
-  testPromises();
+  // testPromises();
   // testClasses();
   // testProgram();
+  await testTask();
 
   console.log('tests done');
 }
