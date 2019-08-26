@@ -1,14 +1,14 @@
 import {
   ITask, ITaskContext, ITaskContextConstructor, ITaskKeyValueMap, TTaskCreateCallback, TTaskState
 } from './interfaces';
-import { INotificationsObservableContext } from '../core/notifications-observable/interfaces';
+import { INotificationsObservableContext } from '../../core/notifications-observable/interfaces';
 import {
   INotificationsObservableInternal, NotificationsObservable
-} from '../core/notifications-observable/implementation';
-import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
-import { IsObject } from '../../helpers';
-import { IProgress, IProgressOptions } from '../../misc/progress/interfaces';
-import { IsProgress, Progress } from '../../misc/progress/implementation';
+} from '../../core/notifications-observable/implementation';
+import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
+import { IsObject } from '../../../helpers';
+import { IProgress, IProgressOptions } from '../../../misc/progress/interfaces';
+import { IsProgress, Progress } from '../../../misc/progress/implementation';
 
 
 

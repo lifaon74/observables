@@ -1,6 +1,6 @@
 /** TYPES **/
-import { IProgress, IProgressOptions } from '../../misc/progress/interfaces';
-import { INotificationsObservable } from '../core/notifications-observable/interfaces';
+import { IProgress, IProgressOptions } from '../../../misc/progress/interfaces';
+import { INotificationsObservable } from '../../core/notifications-observable/interfaces';
 
 
 export type TTaskState = 'await' | 'run' | 'pause' | 'cancel' | 'complete' | 'error';

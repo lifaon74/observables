@@ -1,13 +1,11 @@
-import { Task } from '../notifications/task/implementation';
-import { ITask, ITaskContext } from '../notifications/task/interfaces';
+import { Task } from '../notifications/observables/task/implementation';
+import { ITask, ITaskContext } from '../notifications/observables/task/interfaces';
 import { ICancelToken } from '../misc/cancel-token/interfaces';
 import { CancelToken } from '../misc/cancel-token/implementation';
 import {
   FromReadableStreamObservable, IFromReadableStreamObservable
 } from '../notifications/observables/finite-state/from/readable-stream/public';
 import { IProgress } from '../misc/progress/interfaces';
-import { periodTime } from '../classes/pure-pipes';
-import { finiteStateObservableToPromise, toPromise } from '../operators/to/toPromise';
 
 export async function testTask() {
 
