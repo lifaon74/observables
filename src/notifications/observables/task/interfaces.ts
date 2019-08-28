@@ -1,9 +1,18 @@
 /** TYPES **/
 import { IProgress, IProgressOptions } from '../../../misc/progress/interfaces';
 import { INotificationsObservable } from '../../core/notifications-observable/interfaces';
+import { TaskContextCompleteUntilRun, TaskContextErrorUntilRun, TaskContextNextUntilRun } from './implementation';
+import { TCancelStrategy } from '../../../misc/cancel-token/interfaces';
 
 
-export type TTaskState = 'await' | 'run' | 'pause' | 'cancel' | 'complete' | 'error';
+export type TTaskState =
+  'await' // task is awaiting for a 'start'
+  | 'run' // task is currently running
+  | 'pause' // task execution is paused
+  | 'cancel' // task is cancelled
+  | 'complete' // task finished with success
+  | 'error' // task errored
+;
 
 export interface ITaskKeyValueMap<TValue> {
   'start': void;
@@ -25,19 +34,28 @@ export interface ITaskConstructor {
   new<TValue>(create: TTaskCreateCallback<TValue>): ITask<TValue>;
 }
 
+/**
+ * A Task is an async process which potentially takes some time and may be fragmented.
+ * For example, the following algorithm is a Task:
+ *  1) fetch data
+ *  2) decode data
+ *  3) compute something from these data
+ * A file copy, is a task too, etc...
+ */
 export interface ITask<TValue> extends INotificationsObservable<ITaskKeyValueMap<TValue>> {
   readonly state: TTaskState;
   readonly result: TValue | any | undefined;
+  readonly done: boolean;
 
-  start(): void;
+  start(): this;
 
-  pause(): void;
+  pause(): this;
 
-  resume(): void;
+  resume(): this;
 
-  cancel(reason?: any): void;
+  cancel(reason?: any): this;
 
-  toPromise(): Promise<TValue>;
+  toPromise(strategy?: TCancelStrategy): Promise<TValue>;
 }
 
 /* CONTEXT */
@@ -55,6 +73,19 @@ export interface ITaskContext<TValue> {
   error(error?: any): void; // emits Notification('error', void)
 
   progress(loaded: number, total?: number): void;
-
   progress(progress?: IProgress | IProgressOptions): void; // emits Notification('progress', progress)
+
+  /**
+   * Calls 'callback' when the task is running
+   */
+  untilRun(callback: (this: ITaskContext<TValue>) => void): void;
+
+  nextUntilRun(value: TValue): void;
+
+  completeUntilRun(): void;
+
+  errorUntilRun(error?: any): void;
+
+  progressUntilRun(loaded: number, total?: number): void;
+  progressUntilRun(progress?: IProgress | IProgressOptions): void;
 }

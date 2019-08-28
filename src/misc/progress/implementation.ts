@@ -1,4 +1,4 @@
-import { IProgress, IProgressJSON, IProgressOptions } from './interfaces';
+import { IProgress, IProgressConstructor, IProgressJSON, IProgressOptions } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../helpers';
 
@@ -16,36 +16,44 @@ export interface IProgressInternal extends IProgress {
 
 export function ConstructProgress(
   instance: IProgress,
-  options: IProgressOptions = {}
+  options?: IProgressOptions | number,
+  total?: number
 ): void {
   ConstructClassWithPrivateMembers(instance, PROGRESS_PRIVATE);
   const privates: IProgressPrivate = (instance as IProgressInternal)[PROGRESS_PRIVATE];
 
-  if (IsObject(options)) {
-    if (options.total === void 0) {
-      privates.total = Number.POSITIVE_INFINITY;
-    } else {
-      const total: number = Number(options.total);
-      if (Number.isNaN(total) || (total < 0)) {
-        throw new TypeError(`Expected positive number as Progress.options.total`);
-      } else {
-        privates.total = total;
-      }
-    }
-
-    if (options.loaded === void 0) {
-      privates.loaded = 0;
-    } else {
-      const loaded: number = Number(options.loaded);
-      if (Number.isNaN(loaded) || (loaded < 0) || (loaded > privates.total)) {
-        throw new TypeError(`Expected number in the range [0, ${ privates.total } (total)] as Progress.options.loaded`);
-      } else {
-        privates.loaded = loaded;
-      }
-    }
-
+  let _options: IProgressOptions;
+  if ((options === void 0) || (typeof options === 'number')) {
+    _options = {
+      loaded: options,
+      total: total,
+    };
+  } else if (IsObject(options) && (total === void 0)) {
+    _options = options;
   } else {
-    throw new TypeError(`Expected object as Progress.options`);
+    throw new TypeError(`Expected Progress(object?) or Progress(number?, number?)`);
+  }
+
+  if (_options.total === void 0) {
+    privates.total = Number.POSITIVE_INFINITY;
+  } else {
+    const total: number = Number(_options.total);
+    if (Number.isNaN(total) || (total < 0)) {
+      throw new TypeError(`Expected positive number as Progress.options.total`);
+    } else {
+      privates.total = total;
+    }
+  }
+
+  if (_options.loaded === void 0) {
+    privates.loaded = 0;
+  } else {
+    const loaded: number = Number(_options.loaded);
+    if (Number.isNaN(loaded) || (loaded < 0) || (loaded > privates.total)) {
+      throw new TypeError(`Expected number in the range [0, ${ privates.total } (total)] as Progress.options.loaded`);
+    } else {
+      privates.loaded = loaded;
+    }
   }
 
 }
@@ -55,6 +63,38 @@ export function IsProgress(value: any): value is IProgress {
     && value.hasOwnProperty(PROGRESS_PRIVATE as symbol);
 }
 
+/** METHODS **/
+
+export function ProgressToJSON(instance: IProgress, allowFloat: boolean = false): IProgressJSON {
+  return {
+    lengthComputable: instance.lengthComputable,
+    loaded: instance.loaded,
+    total: (allowFloat || instance.lengthComputable) ? instance.total : 0,
+  };
+}
+
+export function ProgressToString(instance: IProgress): string {
+  return instance.lengthComputable
+    ? `${ instance.loaded.toString(10) } / ${ instance.total.toString(10) } (${ Math.floor((instance.loaded / instance.total) * 100).toString(10) }%)`
+    : instance.loaded.toString(10);
+}
+
+/** STATIC **/
+
+export function ProgressFromJSONStatic(constructor: IProgressConstructor, json: IProgressJSON): IProgress {
+  const total: number = json.lengthComputable
+    ? Math.max(0, json.total)
+    : Number.POSITIVE_INFINITY;
+
+  return new constructor({
+    total: total,
+    loaded: Math.max(0, Math.min(total, json.loaded)),
+  });
+}
+
+
+/** CLASS **/
+
 export class Progress implements IProgress {
 
   static fromEvent(event: ProgressEvent): IProgress {
@@ -62,15 +102,13 @@ export class Progress implements IProgress {
   }
 
   static fromJSON(json: IProgressJSON): IProgress {
-    const total: number = json.lengthComputable ? Math.max(0, json.total) : Number.POSITIVE_INFINITY;
-    return new Progress({
-      total: total,
-      loaded: Math.max(0, Math.min(total, json.loaded)),
-    });
+    return ProgressFromJSONStatic(this, json);
   }
 
-  constructor(options?: IProgressOptions) {
-    ConstructProgress(this, options);
+  constructor(loaded?: number, total?: number);
+  constructor(options?: IProgressOptions);
+  constructor(options?: IProgressOptions | number, total?: number) {
+    ConstructProgress(this, options, total);
   }
 
   get lengthComputable(): boolean {
@@ -85,11 +123,11 @@ export class Progress implements IProgress {
     return ((this as unknown) as IProgressInternal)[PROGRESS_PRIVATE].total;
   }
 
-  toJSON(allowFloat: boolean = false): IProgressJSON {
-    return {
-      lengthComputable: this.lengthComputable,
-      loaded: this.loaded,
-      total: (allowFloat || this.lengthComputable) ? this.total : 0,
-    };
+  toJSON(allowFloat?: boolean): IProgressJSON {
+    return ProgressToJSON(this, allowFloat);
+  }
+
+  toString(): string {
+    return ProgressToString(this);
   }
 }
