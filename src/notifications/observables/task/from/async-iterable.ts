@@ -1,6 +1,7 @@
 import { IProgress } from '../../../../misc/progress/interfaces';
 import { ITask, ITaskContext } from '../interfaces';
 import { Task } from '../implementation';
+import { Progress } from '../../../../misc/progress/implementation';
 
 
 export interface ITaskAsyncIteratorValue<T> {
@@ -66,4 +67,16 @@ export function taskFromAsyncIterator<T>(iterator: AsyncIterator<TTaskAsyncItera
     startListener.activate();
     cancelListener.activate();
   });
+}
+
+
+export function taskFromAsyncIteratorWithCountProgress<T>(iterator: AsyncIterator<T>): ITask<T> {
+  return taskFromAsyncIterator<T>((async function * generator() {
+    let count: number = 0;
+    let result: IteratorResult<T>;
+    while (!(result = await iterator.next()).done) {
+      count++;
+      yield { progress: new Progress(count) };
+    }
+  })());
 }
