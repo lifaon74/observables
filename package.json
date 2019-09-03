@@ -1,6 +1,6 @@
 {
   "name": "@lifaon/observables",
-  "version": "1.4.7",
+  "version": "1.4.8",
   "description": "Better observables for everyone",
   "main": "bundle/public.umd.esnext.min.js",
   "module": "index.js",
@@ -45,6 +45,7 @@
     "gulp-load-plugins": "^2.0.0",
     "gulp-progeny": "^0.4.1",
     "gulp-rename": "^1.4.0",
+    "gulp-rm": "^2.0.0",
     "gulp-rollup": "^2.16.2",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-typescript": "^5.0.1",

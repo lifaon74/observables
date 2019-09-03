@@ -26,7 +26,7 @@ const paths = {
 paths.ts = [
   $path.join(paths.source, '**', '*.ts'),
   '!' + $path.join(paths.source, '**', 'old', '**', '*.ts'),
-  '!' + $path.join(paths.source, '**', '*_*.ts'),
+  // '!' + $path.join(paths.source, '**', '*_*.ts'),
 ];
 
 paths.others = [
@@ -61,6 +61,34 @@ function compileTs(buildOptions) {
       // .pipe(gulpPlugins.extReplace('.mjs'))
       .pipe(gulp.dest($path.join(paths.destination)));
   };
+}
+
+function renameIndex(buildOptions) {
+
+  function rename(from, to) {
+    return gulp.src($path.join(paths.destination, from), { base: paths.source, allowEmpty: true })
+        .pipe(gulpPlugins.rename(to))
+        .pipe(gulp.dest($path.join(paths.destination)));
+  }
+
+  function remove(path) {
+    return gulp.src($path.join(paths.destination, path), { base: paths.source, allowEmpty: true })
+        .pipe(gulpPlugins.rm());
+  }
+
+  function properRename(from, to) {
+    return gulp.series(() => rename(from, to), () => remove(from));
+  }
+
+  function _renameIndex() {
+    return properRename('_index.js', 'index.js');
+  }
+
+  function _renameIndexDefinition() {
+    return properRename('_index.d.ts', 'index.d.ts');
+  }
+
+  return gulp.parallel(_renameIndex(), _renameIndexDefinition());
 }
 
 function copyOtherFiles(buildOptions) {
@@ -123,7 +151,7 @@ function bundle(buildOptions) {
 
 
 function build(buildOptions) {
-  return gulp.parallel(compileTs(buildOptions), copyOtherFiles(buildOptions));
+  return gulp.series(gulp.parallel(compileTs(buildOptions), copyOtherFiles(buildOptions)), renameIndex(buildOptions));
 }
 
 function buildAndBundle(buildOptions) {

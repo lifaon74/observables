@@ -8,6 +8,7 @@ export interface IProgressConstructor {
   fromEvent(event: ProgressEvent): IProgress;
   fromJSON(json: IProgressJSON): IProgress;
 
+  new(loaded?: number, total?: number): IProgress;
   new(options?: IProgressOptions): IProgress;
 }
 
@@ -23,4 +24,5 @@ export interface IProgress {
   readonly total: number; // total number of bytes, percents, etc... to load. INFO may be Number.POSITIVE_INFINITE, if length if not computable (lengthComputable => false)
 
   toJSON(allowFloat?: boolean): IProgressJSON; // because JSON doesnt support 'Infinite', use lengthComputable.
+  toString(): string;
 }
