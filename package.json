@@ -6,6 +6,7 @@
   "module": "index.js",
   "jsnext:main": "bundle/public.umd.esnext.min.js",
   "scripts": {
+    "build_all": "cd ./scripts && tsc -p tsconfig.json && node dist/scripts/build.js help -c=version -h=\"abc df df\"",
     "start": "npm run clean && gulp watch",
     "clean": "rimraf ./dist",
     "build.prod": "npm run clean && gulp build.prod && npm run minify",
@@ -57,7 +58,7 @@
     "rollup": "^1.17.0",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rxjs": "^6.5.2",
-    "typescript": "^3.5.3",
+    "typescript": "3.6.2",
     "typescript-tuple": "^2.2.1",
     "uglify-es": "^3.3.9",
     "vinyl-source-stream": "latest"
