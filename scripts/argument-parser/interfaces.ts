@@ -1,4 +1,4 @@
-import { ICommand } from './command/interfaces';
+import { ICommand, TCommandFunctionArguments } from './command/interfaces';
 import { ICommandArgument } from './command/argument/interfaces';
 import { IReadonlyMap } from '../../src/misc/readonly-map/interfaces';
 
@@ -18,13 +18,12 @@ export interface IParseResult {
   readonly args: IReadonlyMap<ICommandArgument, string>;
 
   toJSON(): IParseResultJSON;
+  run(): Promise<void>;
 }
 
 export interface IParseResultJSON {
   command: string;
-  args: {
-    [key: string]: any;
-  };
+  args: TCommandFunctionArguments;
 }
 
 /*----------------------------*/
@@ -38,5 +37,6 @@ export interface IArgumentParser {
   version(): string;
   help(name?: string): string;
   parseArgs(args: string[]): IParseResult;
+  run(args?: string[]): Promise<void>;
 }
 

@@ -3,7 +3,7 @@ import { CommandArgument } from './command/argument/implementation';
 import { Command } from './command/implementation';
 
 
-export function testArgumentParser() {
+export async function testArgumentParser() {
   const parser = new ArgumentParser({ programName: 'build.js', version: '1.0.0' });
 
   parser.add(new Command({
@@ -24,6 +24,9 @@ export function testArgumentParser() {
         defaultValue: 14,
       }),
     ],
+    run() {
+      console.log('running');
+    }
   }));
 
   // console.log(parser.help());
@@ -47,13 +50,18 @@ export function testArgumentParser() {
   // args = ['command', 'value0', '123', '456']; // too much arguments
   // args = ['command', '--key0', 'value0', '--key0', 'value3']; // '--key0' already used
 
-  args = ['help', 'version']; // inline arg
+  // args = ['help']; // whole command
+  // args = ['help', 'version']; // inline arg
   // args = ['help', '-c', 'version']; // named arg
   // args = ['help', '-c=version']; // named arg with assignment
   // args = ['help', '-c="version"']; // named arg with assignment
+  args = ['-h', 'version']; // named arg with assignment
 
   // args = process.argv.slice(2);
   // console.log(process.argv.slice(2));
 
-  console.log(parser.parseArgs(args).toJSON());
+  // console.log(parser.parseArgs(args).toJSON());
+  // await parser.parseArgs(args).run();
+  await parser.run(args);
+  // await parser.run();
 }

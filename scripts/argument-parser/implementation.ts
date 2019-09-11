@@ -2,7 +2,7 @@ import { IArgumentParser, IArgumentParserOptions, IParseResult, IParseResultJSON
 import { ConstructClassWithPrivateMembers } from '../../src/misc/helpers/ClassWithPrivateMembers';
 import { IndentLines } from './snipets';
 import { Command } from './command/implementation';
-import { ICommand } from './command/interfaces';
+import { ICommand, TCommandFunctionArguments } from './command/interfaces';
 import { ICommandArgument } from './command/argument/interfaces';
 import {
   COMMAND_ARGUMENT_NAME_AND_VALUE_REGEXP, COMMAND_ARGUMENT_NAME_REGEXP, COMMAND_ARGUMENT_VALUE_REGEXP, CommandArgument
@@ -15,12 +15,16 @@ import { SIFT4 } from '../../src/classes/sift4';
 export function ParseResultToJSON(instance: IParseResult): IParseResultJSON {
   return {
     command: instance.command.name,
-      args: Object.fromEntries(
+    args: Object.fromEntries(
       Array.from<[ICommandArgument, any], [string, any]>(instance.args.entries(), ([commandArgument, value]: [ICommandArgument, string]) => {
         return [commandArgument.name, commandArgument.castValue(value)];
       })
     )
   };
+}
+
+export function ParseResultRun(instance: IParseResult): Promise<void> {
+  return instance.command.run(instance.toJSON().args);
 }
 
 export class ParseResult implements IParseResult {
@@ -34,6 +38,10 @@ export class ParseResult implements IParseResult {
 
   toJSON(): IParseResultJSON {
     return ParseResultToJSON(this);
+  }
+
+  run(): Promise<void> {
+    return ParseResultRun(this);
   }
 }
 
@@ -68,23 +76,10 @@ export function ConstructArgumentParser(
   privates.commands = [];
   privates.mappedCommands = new Map<string, ICommand>();
 
-  instance.add(new Command({
-    aliases: ['help', '-h', '--help'],
-    description: 'Show this help message and exit.',
-    args: [
-      new CommandArgument({
-        aliases: ['--command', '-c'],
-        type: 'string',
-        description: 'The command to show the help for',
-      })
-    ],
-  }));
+  instance.add(ArgumentParserGetHelpCommand(instance));
 
   if (privates.version !== '') {
-    instance.add(new Command({
-      aliases: ['version', '-v', '--version'],
-      description: 'Show program\'s version number and exit.',
-    }));
+    instance.add(ArgumentParserGetVersionCommand(instance));
   }
 }
 
@@ -228,6 +223,33 @@ export function CommandsToString(commands: Pick<ICommand[], 'map' | 'flat'>): st
 
 /** METHODS **/
 
+export function ArgumentParserGetHelpCommand(instance: IArgumentParser): ICommand {
+  return new Command({
+    aliases: ['help', '-h', '--help'],
+    description: 'Show this help message and exit.',
+    args: [
+      new CommandArgument({
+        aliases: ['--command', '-c'],
+        type: 'string',
+        description: 'The command to show the help for',
+      })
+    ],
+    run(args: TCommandFunctionArguments) {
+      console.log(instance.help(args['--command']));
+    }
+  });
+}
+
+export function ArgumentParserGetVersionCommand(instance: IArgumentParser): ICommand {
+  return new Command({
+    aliases: ['version', '-v', '--version'],
+    description: 'Show program\'s version number and exit.',
+    run() {
+      console.log(instance.version());
+    }
+  });
+}
+
 export function ArgumentParserAdd(instance: IArgumentParser, command: ICommand): void {
   const privates: IArgumentParserPrivate = (instance as IArgumentParserInternal)[ARGUMENT_PARSER_PRIVATE];
 
@@ -257,6 +279,9 @@ export function ArgumentParserHelpAll(instance: IArgumentParser): string[] {
   const privates: IArgumentParserPrivate = (instance as IArgumentParserInternal)[ARGUMENT_PARSER_PRIVATE];
   return [
     `usage: ${ privates.programName }`,
+    ``,
+    `commands:`,
+    ``,
     ...IndentLines(CommandsToString(privates.commands))
   ];
 }
@@ -264,7 +289,10 @@ export function ArgumentParserHelpAll(instance: IArgumentParser): string[] {
 export function ArgumentParserHelpSingle(instance: IArgumentParser, name: string): string[] {
   const privates: IArgumentParserPrivate = (instance as IArgumentParserInternal)[ARGUMENT_PARSER_PRIVATE];
   if (privates.mappedCommands.has(name)) {
-    return CommandToString(privates.mappedCommands.get(name) as ICommand);
+    return [
+      `Help for command:`,
+      ...CommandToString(privates.mappedCommands.get(name) as ICommand)
+    ];
   } else {
     throw new Error(`Help not available for '${ name }'`);
   }
@@ -280,11 +308,11 @@ export function ArgumentParserHelp(instance: IArgumentParser, name?: string): st
 
 function CreateCommandArgumentDoesntExistsError(argument: string, command: ICommand): Error {
   const closest: IClosestCommandArgument | null = FindClosestCommandArgument(argument, command);
-  return new Error(`Command's argument '${ argument }' doesn't exist.${ (closest === null) ? '' : ` Did you mean '${ closest.alias }' ?`}`);
+  return new Error(`Command's argument '${ argument }' doesn't exist for the command '${ command.name }'.${ (closest === null) ? '' : ` Did you mean '${ closest.alias }' ?`}`);
 }
 
-function CreateCommandArgumentAlreadySpecifiedError(argument: string): Error {
-  return new Error(`Command's argument '${ argument }' has already been specified`);
+function CreateCommandArgumentAlreadySpecifiedError(argument: string, command: ICommand): Error {
+  return new Error(`Command's argument '${ argument }' has already been specified for the command '${ command.name }'`);
 }
 
 interface IClosestCommandArgument {
@@ -347,7 +375,7 @@ export function ArgumentParserParseArgs(instance: IArgumentParser, args: string[
             } else if (remainingCommandArguments.has(commandArgument)) {
               commandArgumentValue = match[3];
             } else {
-              throw CreateCommandArgumentAlreadySpecifiedError(match[1]);
+              throw CreateCommandArgumentAlreadySpecifiedError(match[1], command);
             }
           } else if ((match = COMMAND_ARGUMENT_NAME_REGEXP.exec(argument)) !== null) {
             // console.log(match);
@@ -363,13 +391,13 @@ export function ArgumentParserParseArgs(instance: IArgumentParser, args: string[
                 if ((match = COMMAND_ARGUMENT_VALUE_REGEXP.exec(argument)) !== null) {
                   commandArgumentValue = match[2];
                 } else {
-                  throw new Error(`Invalid syntax for the command argument's value '${ argument }'`);
+                  throw new Error(`Invalid syntax for the command argument's value '${ argument }' for the command '${ command.name }'`);
                 }
               } else {
-                throw new Error(`Not enough input arguments: expected a value for '${ argument }'`);
+                throw new Error(`Not enough input arguments for the command '${ command.name }': expected a value for '${ argument }'`);
               }
             } else {
-              throw CreateCommandArgumentAlreadySpecifiedError(argument);
+              throw CreateCommandArgumentAlreadySpecifiedError(argument, command);
             }
           } else { // inline arg
             commandArgumentValue = argument;
@@ -382,13 +410,13 @@ export function ArgumentParserParseArgs(instance: IArgumentParser, args: string[
           remainingCommandArguments.delete(commandArgument);
           commandArgumentMap.set(commandArgument, commandArgumentValue);
         } else {
-          throw new Error(`Too much input arguments: '${ args.slice(argsIndex).join(' ') }'`);
+          throw new Error(`Too much input arguments for the command '${ command.name }': '${ args.slice(argsIndex).join(' ') }'`);
         }
       }
 
       remainingCommandArguments.forEach((commandArgument: ICommandArgument) => {
         if (commandArgument.required) {
-          throw new Error(`Missing required command's argument '${ commandArgument.name }'`);
+          throw new Error(`Missing required command's argument '${ commandArgument.name }' for the command '${ command.name }'`);
         } else {
           commandArgumentMap.set(commandArgument, commandArgument.defaultValue);
         }
@@ -403,11 +431,13 @@ export function ArgumentParserParseArgs(instance: IArgumentParser, args: string[
   }
 }
 
+export function ArgumentParserRun(instance: IArgumentParser, args: string[] = process.argv.slice(2)): Promise<void> {
+  return instance.parseArgs(args).run();
+}
 
 /** CLASS **/
 
 export class ArgumentParser implements IArgumentParser {
-
 
   constructor(options: IArgumentParserOptions) {
     ConstructArgumentParser(this, options);
@@ -428,5 +458,9 @@ export class ArgumentParser implements IArgumentParser {
 
   parseArgs(args: string[]): IParseResult {
     return ArgumentParserParseArgs(this, args);
+  }
+
+  run(args?: string[]): Promise<void> {
+    return ArgumentParserRun(this, args);
   }
 }

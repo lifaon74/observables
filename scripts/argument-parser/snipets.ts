@@ -87,10 +87,3 @@ export function $lines(input: string): string[] {
 }
 
 
-// console.log(
-//   $lines(`
-//     PRIMARY KEY (contact_id, group_id),
-//       SELECT
-//     HELLO DEAR
-//   `)
-// );

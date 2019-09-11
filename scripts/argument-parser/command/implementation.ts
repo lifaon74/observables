@@ -1,9 +1,10 @@
-import { ICommand, ICommandOptions } from './interfaces';
+import { ICommand, ICommandOptions, TCommandFunction, TCommandFunctionArguments } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../src/misc/helpers/ClassWithPrivateMembers';
 import { ICommandArgument } from './argument/interfaces';
 import { IsObject } from '../../../src/helpers';
 import { IReadonlySet } from '../../../src/misc/readonly-set/interfaces';
 import { ReadonlySet } from '../../../src/misc/readonly-set/implementation';
+import { PromiseTry } from '../../../src/promises/helpers';
 
 export const COMMAND_NAME_PATTERN = '([\\w]+)';
 export const COMMAND_NAME_REGEXP = new RegExp(`^${ COMMAND_NAME_PATTERN }$`);
@@ -22,6 +23,7 @@ export const COMMAND_PRIVATE = Symbol('command-private');
 
 export interface ICommandPrivate {
   aliases: IReadonlySet<string>;
+  run: TCommandFunction;
   description: string;
   args: IReadonlySet<ICommandArgument>;
 }
@@ -55,6 +57,12 @@ export function ConstructCommand(
       }
     } else {
       throw new TypeError(`Expected Iterable<string> or void as options.aliases`);
+    }
+
+    if (typeof options.run === 'function') {
+      privates.run = options.run;
+    } else {
+      throw new TypeError(`Expected function options.run`);
     }
 
     if (options.description === void 0) {
@@ -92,6 +100,15 @@ export function CommandFindArgument(
   return null;
 }
 
+export function CommandRun(
+  instance: ICommand,
+  args: TCommandFunctionArguments = {},
+): Promise<void> {
+  return PromiseTry<void>(() => {
+    return (instance as ICommandInternal)[COMMAND_PRIVATE].run.call(instance, args);
+  })
+}
+
 export class Command implements ICommand {
   constructor(options: ICommandOptions) {
     ConstructCommand(this, options);
@@ -115,5 +132,9 @@ export class Command implements ICommand {
 
   findArgument(alias: string): ICommandArgument | null {
     return CommandFindArgument(this, alias);
+  }
+
+  run(args?: TCommandFunctionArguments): Promise<void> {
+    return CommandRun(this, args);
   }
 }
