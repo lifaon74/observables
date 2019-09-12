@@ -13,8 +13,10 @@ I will try to define here a better definition and implementation of them from my
 Before flaming, please give it a try 😉
 
 To install:
-```text
+```bash
 npm i @lifaon/observables --save
+# or 
+yarn add npm-run-all --dev
 ```
 
 Entry point: `public.js`, others may contain some private or garbage experiment code. I recommend you to use rollup to import/bundle the package,

@@ -5,6 +5,7 @@ import { ConstructClassWithPrivateMembers } from '../../../../../misc/helpers/Cl
 import { IsObject } from '../../../../../helpers';
 import { FiniteStateObservable } from '../../implementation';
 import { GenerateFiniteStateObservableHookFromXHR } from './hook-generators';
+import { TFiniteStateObservableCreateCallback } from '../../interfaces';
 
 export const FETCH_OBSERVABLE_PRIVATE = Symbol('fetch-observable-private');
 
@@ -60,7 +61,7 @@ export class XHRObservable extends FiniteStateObservable<Response, TXHRObservabl
 
   constructor(requestInfo: RequestInfo, requestInit?: RequestInit, options?: IXHRObservableOptions) {
     super(
-      GenerateFiniteStateObservableHookFromXHR(requestInfo, requestInit),
+      GenerateFiniteStateObservableHookFromXHR(requestInfo, requestInit) as TFiniteStateObservableCreateCallback<Response, TXHRObservableFinalState, TXHRObservableMode, IXHRObservableKeyValueMap>,
       options
     );
     ConstructXHRObservable(this, requestInfo, requestInit, options);

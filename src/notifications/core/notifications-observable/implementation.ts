@@ -384,8 +384,9 @@ export class NotificationsObservableContext<TKVMap extends KeyValueMapGenericCon
   }
 
   get observable(): INotificationsObservable<TKVMap> {
-    // return ((this as unknown) as IObservableContextBaseInternal<KeyValueMapToNotifications<TKVMap>>)[OBSERVABLE_CONTEXT_BASE_PRIVATE].observable as INotificationsObservable<TKVMap>;
+    // @ts-ignore
     return super.observable as INotificationsObservable<TKVMap>;
+    // return ((this as unknown) as IObservableContextBaseInternal<KeyValueMapToNotifications<TKVMap>>)[OBSERVABLE_CONTEXT_BASE_PRIVATE].observable as INotificationsObservable<TKVMap>;
   }
 
   emit(value: KeyValueMapToNotifications<TKVMap>): void {

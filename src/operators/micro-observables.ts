@@ -68,7 +68,7 @@ export function testMicroObservablesv1() {
         };
       },
       (value: T) => {
-        for (const cb of observers.values()) {
+        for (const cb of Array.from(observers.values())) {
           cb(value);
         }
       }
@@ -175,8 +175,8 @@ export function testMicroObservablesv1() {
     const [pipe, emit] = $source<E>();
 
     let count: number = 0;
-    let listener = (event: E) => {
-      emit(event);
+    const listener = (event: Event) => {
+      emit(event as E);
     };
     return (observer: MObserver<E>) => {
       const undo: MUndo = pipe(observer);
@@ -237,7 +237,7 @@ export function testMicroObservables() {
         };
       },
       observer: (value: T) => {
-        for (const cb of observers.values()) {
+        for (const cb of Array.from(observers.values())) {
           cb(value);
         }
       }
@@ -413,8 +413,8 @@ export function testMicroObservables() {
 
   function $listen<E extends Event>(target: EventTarget, name: string): MObservable<E> {
     const { observable: pipe, observer: emit } = $$source<E>();
-    const listener = (event: E) => {
-      emit(event);
+    const listener = (event: Event) => {
+      emit(event as E);
     };
     return $create(
       pipe,

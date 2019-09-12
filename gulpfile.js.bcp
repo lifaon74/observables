@@ -25,6 +25,8 @@ const paths = {
 
 paths.ts = [
   $path.join(paths.source, '**', '*.ts'),
+  '!' + $path.join(paths.source, '**', 'old', '**', '*.ts'),
+  // '!' + $path.join(paths.source, '**', '*_*.ts'),
 ];
 
 paths.others = [

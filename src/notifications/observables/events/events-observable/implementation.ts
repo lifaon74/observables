@@ -51,8 +51,8 @@ export function EventsObservableOnObserved<TKVMap extends EventKeyValueMapConstr
     if (name === null) {
       throw new TypeError(`Cannot observe an EventsObservable without a name (null), with a standard Observer (use a NotificationsObserver instead).`);
     } else {
-      const listener = (event: KeyValueMapValues<TKVMap>) => {
-        observer.emit(new Notification<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>(name, event) as KeyValueMapToNotifications<TKVMap>);
+      const listener = (event: Event) => {
+        observer.emit(new Notification<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>(name, event as KeyValueMapValues<TKVMap>) as KeyValueMapToNotifications<TKVMap>);
       };
       privates.observerListenerMap.set(observer, listener);
       privates.target.addEventListener(name, listener);
@@ -63,7 +63,7 @@ export function EventsObservableOnObserved<TKVMap extends EventKeyValueMapConstr
     } else {
       privates.target.addEventListener(
         nameAndCallback.name,
-        nameAndCallback.callback
+        nameAndCallback.callback as ((event: Event) => void)
       );
     }
   }
@@ -79,7 +79,7 @@ export function EventsObservableOnUnobserved<TKVMap extends EventKeyValueMapCons
     } else {
       privates.target.removeEventListener(
         name,
-        privates.observerListenerMap.get(observer) as (event: KeyValueMapValues<TKVMap>) => void
+        privates.observerListenerMap.get(observer) as (event: Event) => void
       );
       privates.observerListenerMap.delete(observer);
     }
@@ -89,7 +89,7 @@ export function EventsObservableOnUnobserved<TKVMap extends EventKeyValueMapCons
     } else {
       privates.target.removeEventListener(
         nameAndCallback.name,
-        nameAndCallback.callback
+        nameAndCallback.callback as ((event: Event) => void)
       );
     }
   }

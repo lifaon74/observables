@@ -85,10 +85,10 @@ export function ConstructFiniteStateObservable<
 
   type TObservable = KeyValueMapToNotifications<TKVMap>;
 
-  InitObservableHook<TObservable>(
+  InitObservableHook(
     instance,
     privates,
-    NewFiniteStateObservableContext as unknown as (observable: IObservable<TObservable>) => IObservableContextBase<TObservable>,
+    NewFiniteStateObservableContext,
     create as unknown as (context: IObservableContextBase<TObservable>) => (IObservableHook<TObservable> | void),
   );
 }
@@ -413,6 +413,14 @@ export function FiniteStateObservableFactory<TBase extends Constructor<INotifica
   });
 }
 
+export function FiniteStateObservableSoftFactory<TBase extends Constructor<INotificationsObservable<IFiniteStateObservableKeyValueMapGeneric<any, TFiniteStateObservableFinalState>>>>(superClass: TBase) {
+  return MakeFactory<IFiniteStateObservableSoftConstructor, [], TBase>(PureFiniteStateObservableFactory, [], superClass, {
+    name: 'FiniteStateObservable',
+    instanceOf: FiniteStateObservable,
+    waterMarks: [IS_COMPLETE_STATE_OBSERVABLE_CONSTRUCTOR],
+  });
+}
+
 export function FiniteStateObservableBaseFactory<TBase extends Constructor>(superClass: TBase) { // INotificationsObservableTypedConstructor<FiniteStateObservableKeyValueMapGeneric<any>>
   return MakeFactory<IFiniteStateObservableSoftConstructor, [
     INotificationsObservableTypedConstructor<IFiniteStateObservableKeyValueMapGeneric<any, TFiniteStateObservableFinalState>>,
@@ -462,6 +470,7 @@ export class FiniteStateObservableContext<
   }
 
   get observable(): IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> {
+    // @ts-ignore
     return super.observable as IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>;
   }
 

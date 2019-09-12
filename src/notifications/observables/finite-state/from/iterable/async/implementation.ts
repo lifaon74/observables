@@ -1,10 +1,10 @@
 import { IFiniteStateObservable, IFiniteStateObservableTypedConstructor } from '../../../interfaces';
 import {
   IFromAsyncIterableObservable, IFromAsyncIterableObservableConstructor, IFromAsyncIterableObservableKeyValueMap,
-  IFromAsyncIterableObservableOptions, TFromAsyncIterableObservableConstructorArgs, TFromAsyncIterableObservableFinalState,
-  TFromAsyncIterableObservableMode
+  IFromAsyncIterableObservableOptions, TFromAsyncIterableObservableConstructorArgs,
+  TFromAsyncIterableObservableFinalState, TFromAsyncIterableObservableMode
 } from './interfaces';
-import { FiniteStateObservableFactory, IsFiniteStateObservableConstructor } from '../../../implementation';
+import { FiniteStateObservableSoftFactory, IsFiniteStateObservableConstructor } from '../../../implementation';
 import { ObservableFactory } from '../../../../../../core/observable/implementation';
 import { IObservableConstructor } from '../../../../../../core/observable/interfaces';
 import {
@@ -73,12 +73,13 @@ export function FromAsyncIterableObservableFactory<TBase extends Constructor<IFi
   });
 }
 
+
 export function FromAsyncIterableObservableBaseFactory<TBase extends Constructor>(superClass: TBase) {
   return MakeFactory<IFromAsyncIterableObservableConstructor, [
     IFiniteStateObservableTypedConstructor<any, TFromAsyncIterableObservableFinalState, TFromAsyncIterableObservableMode, IFromAsyncIterableObservableKeyValueMap<any>>,
     INotificationsObservableTypedConstructor<IFromAsyncIterableObservableKeyValueMap<any>>,
     IObservableConstructor
-    ], TBase>(PureFromAsyncIterableObservableFactory, [FiniteStateObservableFactory, NotificationsObservableFactory, ObservableFactory], superClass, {
+  ], TBase>(PureFromAsyncIterableObservableFactory, [FiniteStateObservableSoftFactory, NotificationsObservableFactory, ObservableFactory], superClass, {
     name: 'FromAsyncIterableObservable',
     instanceOf: FromAsyncIterableObservable,
     waterMarks: [IS_FROM_ASYNC_ITERABLE_OBSERVABLE_CONSTRUCTOR],

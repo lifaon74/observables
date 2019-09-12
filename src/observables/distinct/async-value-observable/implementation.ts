@@ -90,7 +90,7 @@ export function AsyncValueObservableEmit<T>(observable: IAsyncValueObservable<T>
   privates.token = token;
   privates.promise = promise;
 
-  return token.wrapPromise(privates.promise)
+  return token.wrapPromise<T, 'never', never>(privates.promise)
     .then((value: T) => {
       privates.context.emit(value);
     });

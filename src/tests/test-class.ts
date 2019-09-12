@@ -356,7 +356,7 @@ export function ClassBuilderSetInstanceOf(instance: IClassBuilder, _class: Funct
 export function ClassBuilderBuild(instance: IClassBuilder): Constructor {
   const privates: IClassBuilderPrivate = (instance as IClassBuilderInternal)[CLASS_BUILDER_PRIVATE];
 
-  const _class = function(...args: any[]) {
+  const _class = function(this: object, ...args: any[]) {
     if (new.target === void 0) {
       throw new SyntaxError(`Must call class '${ privates.name  }' with new.`);
     }

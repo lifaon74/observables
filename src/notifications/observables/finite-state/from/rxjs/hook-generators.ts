@@ -51,7 +51,7 @@ export function GenerateFiniteStateObservableHookFromRXJS<TValue>(
 
     return {
       onObserved(): void {
-        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this;
+        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this as IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>;
         if (
           (rxSubscription === void 0)
           && (instance.observers.length === 1) // optional check
@@ -73,7 +73,7 @@ export function GenerateFiniteStateObservableHookFromRXJS<TValue>(
         }
       },
       onUnobserved(): void {
-        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this;
+        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this as IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>;
         if (
           (!instance.observed)
           && (instance.state === 'next')

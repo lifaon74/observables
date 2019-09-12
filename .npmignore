@@ -1,7 +1,5 @@
-old/
 src/
-cert.pem
-key.pem
+certificates/
 gulpfile.js
 tsconfig.json
 .npmrc

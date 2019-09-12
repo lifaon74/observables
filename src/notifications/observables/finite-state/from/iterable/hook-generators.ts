@@ -53,7 +53,7 @@ export function GenerateFiniteStateObservableHookFromIterableWithPauseWorkflow<T
 
     return {
       onObserved(): void {
-        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this;
+        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this as IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>;
         if (
           (iterator === void 0)
           && (instance.observers.length === 1) // optional check
@@ -67,7 +67,7 @@ export function GenerateFiniteStateObservableHookFromIterableWithPauseWorkflow<T
         }
       },
       onUnobserved(): void {
-        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this;
+        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this as IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>;
         if (
           (!instance.observed)
           && (instance.state === 'next') // optional check
@@ -126,7 +126,7 @@ export function GenerateFiniteStateObservableHookFromAsyncIterableWithPauseWorkf
 
     return {
       onObserved(): void {
-        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this;
+        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this as IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>;
         if (
           (iterator === void 0)
           && (instance.observers.length === 1) // optional check
@@ -140,7 +140,7 @@ export function GenerateFiniteStateObservableHookFromAsyncIterableWithPauseWorkf
         }
       },
       onUnobserved(): void {
-        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this;
+        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this as IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>;
         if (
           (!instance.observed)
           && (instance.state === 'next') // optional check

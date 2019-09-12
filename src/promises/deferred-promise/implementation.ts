@@ -35,7 +35,7 @@ export function ConstructDeferredPromise<T>(
   privates.status = 'pending';
 
   privates.promise = new Promise<T>((resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void) => {
-    privates.resolve = (value: TPromiseOrValue<T>): void => {
+    privates.resolve = (value?: TPromiseOrValue<T>): void => {
       privates.status = 'resolving';
       resolve(value);
     };

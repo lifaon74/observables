@@ -7,8 +7,8 @@ pids
 *.pid
 *.seed
 
-node_modules
-
+node_modules/
+dist/
 
 # Users Environment Variables
 .lock-wscript
@@ -19,8 +19,6 @@ node_modules
 .idea
 .vscode
 *.iml
-
-dist
 
 
 # OS X trash files

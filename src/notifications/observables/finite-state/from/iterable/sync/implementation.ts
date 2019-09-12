@@ -4,7 +4,7 @@ import {
   IFromIterableObservableOptions, TFromIterableObservableConstructorArgs, TFromIterableObservableFinalState,
   TFromIterableObservableMode
 } from './interfaces';
-import { FiniteStateObservableFactory, IsFiniteStateObservableConstructor } from '../../../implementation';
+import { FiniteStateObservableSoftFactory, IsFiniteStateObservableConstructor } from '../../../implementation';
 import { ObservableFactory } from '../../../../../../core/observable/implementation';
 import { IObservableConstructor } from '../../../../../../core/observable/interfaces';
 import {
@@ -78,7 +78,7 @@ export function FromIterableObservableBaseFactory<TBase extends Constructor>(sup
     IFiniteStateObservableTypedConstructor<any, TFromIterableObservableFinalState, TFromIterableObservableMode, IFromIterableObservableKeyValueMap<any>>,
     INotificationsObservableTypedConstructor<IFromIterableObservableKeyValueMap<any>>,
     IObservableConstructor
-    ], TBase>(PureFromIterableObservableFactory, [FiniteStateObservableFactory, NotificationsObservableFactory, ObservableFactory], superClass, {
+  ], TBase>(PureFromIterableObservableFactory, [FiniteStateObservableSoftFactory, NotificationsObservableFactory, ObservableFactory], superClass, {
     name: 'FromIterableObservable',
     instanceOf: FromIterableObservable,
     waterMarks: [IS_FROM_ITERABLE_OBSERVABLE_CONSTRUCTOR],

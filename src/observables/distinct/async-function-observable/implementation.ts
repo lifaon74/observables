@@ -58,11 +58,15 @@ export function ConstructAsyncFunctionObservable<T extends TAsyncFunctionObserva
 
   privates.values = Array.from({ length: privates.args.length }, () => void 0) as TAsyncFunctionObservableFactoryParameters<T>;
 
-  privates.argumentsObserver = new Observer<TAsyncFunctionObservableParametersUnion<T>>((value: TAsyncFunctionObservableParametersUnion<T>, argObservable: IObservable<TAsyncFunctionObservableParametersUnion<T>>) => {
-    AsyncFunctionObservableSetObservableValue<T>(observable, argObservable, value);
-    if (privates.argumentsObserverPauseCount === -1) {
-      AsyncFunctionObservableCallFactory<T>(observable)
-        .catch(CancelReason.discard);
+  privates.argumentsObserver = new Observer<TAsyncFunctionObservableParametersUnion<T>>((value: TAsyncFunctionObservableParametersUnion<T>, argObservable?: IObservable<TAsyncFunctionObservableParametersUnion<T>>) => {
+    if (argObservable === void 0) {
+      throw new Error(`Expected an observable`);
+    } else {
+      AsyncFunctionObservableSetObservableValue<T>(observable, argObservable, value);
+      if (privates.argumentsObserverPauseCount === -1) {
+        AsyncFunctionObservableCallFactory<T>(observable)
+          .catch(CancelReason.discard);
+      }
     }
   }).observe(...Array.from(new Set(privates.args))); // ensure we observe it only once
 

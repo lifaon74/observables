@@ -8,7 +8,6 @@ import {
   COMMAND_ARGUMENT_NAME_AND_VALUE_REGEXP, COMMAND_ARGUMENT_NAME_REGEXP, COMMAND_ARGUMENT_VALUE_REGEXP, CommandArgument
 } from './command/argument/implementation';
 import { IReadonlyMap } from '../../src/misc/readonly-map/interfaces';
-import { IReadonlySet } from '../../src/misc/readonly-set/interfaces';
 import { SIFT4 } from '../../src/classes/sift4';
 
 

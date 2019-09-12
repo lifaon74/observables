@@ -47,7 +47,7 @@ export function GenerateFiniteStateObservableHookFromPromise<TValue>(
 
     return {
       onObserved(): void {
-        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this;
+        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this as IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>;
         if (
           (token === null)
           && (instance.observers.length === 1) // optional check
@@ -60,7 +60,7 @@ export function GenerateFiniteStateObservableHookFromPromise<TValue>(
             clear();
           }).activate();
 
-          (token.wrapFunction(promiseFactory).call(instance, token) as Promise<TValue | void>)
+          (token.wrapFunction(promiseFactory).call(instance, token) as Promise<TValue>)
             .then((value: TValue) => {
                 if ((token !== null) && !token.cancelled) {
                   context.next(value);
@@ -81,7 +81,7 @@ export function GenerateFiniteStateObservableHookFromPromise<TValue>(
         }
       },
       onUnobserved(): void {
-        FiniteStateObservableHookDefaultOnUnobserved<TValue, TFinalState, TMode, TKVMap>(this, context, clear);
+        FiniteStateObservableHookDefaultOnUnobserved<TValue, TFinalState, TMode, TKVMap>(this as IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>, context, clear);
       },
     };
   };
@@ -103,7 +103,7 @@ export function GenerateFiniteStateObservableHookFromPromiseForEachObservers<TVa
 
     return {
       onObserved(observer: IObserver<KeyValueMapToNotifications<TKVMap>>): void {
-        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this;
+        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this as IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>;
 
         let state: TFiniteStateObservableState<TPromiseObservableFinalState> = 'next';
         const token: ICancelToken = new CancelToken();
@@ -123,7 +123,7 @@ export function GenerateFiniteStateObservableHookFromPromiseForEachObservers<TVa
           clear();
         }).activate();
 
-        (token.wrapFunction(promiseFactory).call(instance, token) as Promise<TValue | void>)
+        (token.wrapFunction(promiseFactory).call(instance, token) as Promise<TValue>)
           .then((value: TValue) => {
               if (!token.cancelled) {
                 observer.emit(new Notification<'next', TValue>('next', value));
