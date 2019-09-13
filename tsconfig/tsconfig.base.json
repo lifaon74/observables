@@ -5,8 +5,8 @@
     "baseUrl": "../src",
     "sourceRoot": "../src",
     "paths": {
-      "rxjs": ["./"],
-      "rxjs/*": ["./*"]
+      "observables": ["./"],
+      "observables/*": ["./*"]
     }
   },
   "files": [

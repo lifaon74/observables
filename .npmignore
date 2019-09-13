@@ -3,4 +3,6 @@ certificates/
 gulpfile.js
 tsconfig.json
 .npmrc
+yarn.lock
+.git
 
