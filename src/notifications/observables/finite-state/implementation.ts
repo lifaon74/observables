@@ -1,6 +1,6 @@
 import { InitObservableHook, IObservableHookPrivate } from '../../../core/observable/hook';
 import {
-  IObservable, IObservableConstructor, IObservableContextBase, IObservableHook
+  IObservableConstructor, IObservableContextBase, IObservableHook
 } from '../../../core/observable/interfaces';
 import {
   INotificationsObservable, INotificationsObservableContext, INotificationsObservableTypedConstructor,
@@ -22,7 +22,8 @@ import { Notification } from '../../core/notification/implementation';
 import { KeyValueMapKeys, KeyValueMapValues } from '../../core/interfaces';
 import { EnumToString, IsObject } from '../../../helpers';
 import {
-  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
+  BaseClass,
+  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IBaseClassConstructor, IsFactoryClass, MakeFactory
 } from '../../../classes/factory';
 import { IObserver } from '../../../core/observer/interfaces';
 import { ExtractObserverNameAndCallback } from '../../core/notifications-observer/implementation';
@@ -433,7 +434,7 @@ export function FiniteStateObservableBaseFactory<TBase extends Constructor>(supe
 }
 
 
-FiniteStateObservable = class FiniteStateObservable extends FiniteStateObservableBaseFactory<ObjectConstructor>(Object) {
+FiniteStateObservable = class FiniteStateObservable extends FiniteStateObservableBaseFactory<IBaseClassConstructor>(BaseClass) {
   constructor(
     create?: (context: IFiniteStateObservableContext<any, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<any, TFiniteStateObservableFinalState>>) => (IObservableHook<any> | void),
     options?: IFiniteStateObservableOptions<TFiniteStateObservableFinalState, TFiniteStateObservableMode>

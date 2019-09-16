@@ -14,13 +14,13 @@ Before flaming, please give it a try 😉
 
 To install:
 ```bash
-npm i @lifaon/observables --save
+yarn add @lifaon/observables
 # or 
-yarn add npm-run-all --dev
+npm i @lifaon/observables --save
 ```
 
-Entry point: `public.js`, others may contain some private or garbage experiment code. I recommend you to use rollup to import/bundle the package,
-but you may use an already bundled version in `bundle/`.
+Entry point: `index.js`, others may contain some private or garbage experiment code. I recommend you to use rollup to import/bundle the package,
+but you may use an already bundled version in `bundles/`.
 The minified, gzipped, esnext version of <span style="color: #1062A4">**the core is less than 3KB !**</span>
 
 You may also use unpkg: `https://unpkg.com/@lifaon/observables`

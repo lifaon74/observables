@@ -9,7 +9,7 @@
     "build_esm5": "npm-run-all clean_dist_esm5 compile_dist_esm5",
     "build_esm5_for_rollup": "npm-run-all clean_dist_esm5_for_rollup compile_dist_esm5_for_rollup && mkdirp dist/esm5_for_rollup/node_modules",
     "build_esm2015": "npm-run-all clean_dist_esm2015 compile_dist_esm2015",
-    "build_esnext": "npm-run-all clean_dist_esm5 compile_dist_esnext",
+    "build_esnext": "npm-run-all clean_dist_esnext compile_dist_esnext",
     "build_esnext_for_rollup": "npm-run-all clean_dist_esnext_for_rollup compile_dist_esnext_for_rollup && mkdirp dist/esnext_for_rollup/node_modules",
     "build_types": "npm-run-all clean_dist_types compile_dist_types",
     "build_umd": "npm-run-all clean_dist_global && mkdirp ./dist/global && npm-run-all build_umd_all build_umd_esnext",
@@ -46,6 +46,7 @@
     "compile_dist_types": "tsc -p ./tsconfig/tsconfig.types.json",
     "copy_sources": "mkdirp dist && shx cp -r ./src/ ./dist/src",
     "generate_packages": "node tools/make-packages.js",
+    "publish.package": "yarn publish ./dist/package --access public",
     "start": "npm run clean && gulp watch",
     "clean": "shx rm -rf ./dist",
     "build.prod": "npm run clean && gulp build.prod && npm run minify",
@@ -59,7 +60,6 @@
     "min.esnext.soft": "uglifyjs ./dist/bundle/public.umd.esnext.js -o ./dist/bundle/public.umd.esnext.min.js -c inline=false -m",
     "min.core.hard": "uglifyjs ./dist/bundle/public.core.umd.esnext.pre-min.js -o ./dist/bundle/public.core.umd.esnext.min.hard.js -c inline=false -m",
     "min.core.soft": "uglifyjs ./dist/bundle/public.core.umd.esnext.js -o ./dist/bundle/public.core.umd.esnext.min.js -c inline=false -m",
-    "publish.prod": "cd ./dist && npm publish --access=public",
     "serve": "http-server ./dist --ssl --cert certificates/cert.pem --key certificates/key.pem -p 1234",
     "serve-cors": "no-cors-proxy -p 4321 -t https://localhost:1234",
     "toc": "markdown-toc README.md"
@@ -80,12 +80,14 @@
   "author": "valentin",
   "license": "MIT",
   "access": "public",
+  "__devDependencies": {
+    "google-closure-compiler-js": "20170218.0.0"
+  },
   "peerDependencies": {
     "rxjs": ">6.5.3"
   },
   "devDependencies": {
     "@types/node": "latest",
-    "google-closure-compiler-js": "20170218.0.0",
     "http-server": "^0.11.1",
     "markdown-toc": "^1.2.0",
     "mkdirp": "^0.5.1",
@@ -94,7 +96,6 @@
     "rollup-plugin-alias": "^2.0.0",
     "rollup-plugin-inject": "^3.0.0",
     "rollup-plugin-node-resolve": "^5.2.0",
-    "rxjs": "^6.5.3",
     "shx": "^0.3.2",
     "tslib": "^1.10.0",
     "typescript": "3.6.3",

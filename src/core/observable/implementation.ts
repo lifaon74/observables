@@ -10,7 +10,7 @@ import { IReadonlyList } from '../../misc/readonly-list/interfaces';
 import { IObserverInternal, Observer, OBSERVER_PRIVATE, IsObserver } from '../observer/implementation';
 import { IObservableObserver } from '../observable-observer/interfaces';
 import { InitObservableHook, IObservableHookPrivate } from './hook';
-import { Constructor, HasFactoryWaterMark, MakeFactory } from '../../classes/factory';
+import { BaseClass, Constructor, HasFactoryWaterMark, IBaseClassConstructor, MakeFactory } from '../../classes/factory';
 import { IsObject } from '../../helpers';
 
 
@@ -199,7 +199,7 @@ export function ObservableFactory<TBase extends Constructor>(superClass: TBase) 
   });
 }
 
-Observable = class Observable extends ObservableFactory<ObjectConstructor>(Object) {
+Observable = class Observable extends ObservableFactory<IBaseClassConstructor>(BaseClass) {
   constructor(create?: (context: IObservableContext<any>) => (IObservableHook<any> | void)) {
     super([create]);
   }

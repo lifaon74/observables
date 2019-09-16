@@ -8,7 +8,8 @@ import { FiniteStateObservableSoftFactory, IsFiniteStateObservableConstructor } 
 import { ObservableFactory } from '../../../../../core/observable/implementation';
 import { IObservableConstructor } from '../../../../../core/observable/interfaces';
 import {
-  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
+  BaseClass,
+  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IBaseClassConstructor, IsFactoryClass, MakeFactory
 } from '../../../../../classes/factory';
 import { ConstructClassWithPrivateMembers } from '../../../../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../../../../helpers';
@@ -85,7 +86,7 @@ export function FromReadableStreamObservableBaseFactory<TBase extends Constructo
   });
 }
 
-FromReadableStreamObservable = class FromReadableStreamObservable extends FromReadableStreamObservableBaseFactory<ObjectConstructor>(Object) {
+FromReadableStreamObservable = class FromReadableStreamObservable extends FromReadableStreamObservableBaseFactory<IBaseClassConstructor>(BaseClass) {
   constructor(reader: ReadableStreamReader<any>, options?: IFromReadableStreamObservableOptions) {
     super([reader, options], [], [], []);
   }

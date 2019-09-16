@@ -8,7 +8,8 @@ import { FiniteStateObservableSoftFactory, IsFiniteStateObservableConstructor } 
 import { ObservableFactory } from '../../../../../../core/observable/implementation';
 import { IObservableConstructor } from '../../../../../../core/observable/interfaces';
 import {
-  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
+  BaseClass,
+  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IBaseClassConstructor, IsFactoryClass, MakeFactory
 } from '../../../../../../classes/factory';
 import { ConstructClassWithPrivateMembers } from '../../../../../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../../../../../helpers';
@@ -85,7 +86,7 @@ export function FromIterableObservableBaseFactory<TBase extends Constructor>(sup
   });
 }
 
-FromIterableObservable = class FromIterableObservable extends FromIterableObservableBaseFactory<ObjectConstructor>(Object) {
+FromIterableObservable = class FromIterableObservable extends FromIterableObservableBaseFactory<IBaseClassConstructor>(BaseClass) {
   constructor(iterable: Iterable<any>, options?: IFromIterableObservableOptions) {
     super([iterable, options], [], [], []);
   }

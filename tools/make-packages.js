@@ -68,7 +68,10 @@ function fixUMDSourceMaps() {
 }
 
 function makeSRC() {
-  return $fsh.copyDirectory(SRC_ROOT, SRC_ROOT_PKG);
+  return $fsh.copyDirectory(SRC_ROOT, SRC_ROOT_PKG)
+    .then(() => {
+      return $fs.copyFile($path.join(ROOT, 'tsconfig.base.json'), $path.join(PKG_ROOT, 'src/tsconfig.json'));
+    });
 }
 
 function makeCJS() {
@@ -142,7 +145,6 @@ const indexTDContent = `export * from './types/public';
 function makeOthers() {
   return Promise.all([
     makePackageJSON(),
-    $fs.copyFile($path.join(ROOT, 'tsconfig.base.json'), $path.join(PKG_ROOT, 'src/tsconfig.json')),
     $fs.copyFile($path.join(ROOT, 'README.md'), $path.join(PKG_ROOT, 'README.md')),
     $fs.copyFile($path.join(ROOT, 'LICENSE'), $path.join(PKG_ROOT, 'LICENSE')),
     $fs.writeFile($path.join(PKG_ROOT, 'index.js'), indexJSContent),

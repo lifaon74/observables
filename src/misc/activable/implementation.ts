@@ -1,5 +1,5 @@
 import { ConstructClassWithPrivateMembers } from '../helpers/ClassWithPrivateMembers';
-import { Constructor, HasFactoryWaterMark, MakeFactory } from '../../classes/factory';
+import { BaseClass, Constructor, HasFactoryWaterMark, IBaseClassConstructor, MakeFactory } from '../../classes/factory';
 import {
   IActivable, IActivableConstructor, IActivableHook, TActivableConstructorArgs, TActivableSateListener
 } from './interfaces';
@@ -164,7 +164,7 @@ export function ActivableFactory<TBase extends Constructor>(superClass: TBase) {
   });
 }
 
-Activable = class Activable extends ActivableFactory<ObjectConstructor>(Object) {
+Activable = class Activable extends ActivableFactory<IBaseClassConstructor>(BaseClass) {
   constructor(hook: IActivableHook) {
     super([hook]);
   }

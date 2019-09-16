@@ -1,12 +1,15 @@
 import {
-  IInputOutput, IInputOutputBaseConstructor, IInputOutputBaseOptions, IInputOutputConstructor, IInputOutputKeyValueMap,
+  IInputOutput, IInputOutputBaseConstructor, IInputOutputBaseOptions, IInputOutputKeyValueMap,
   IInputOutputConstructorSimple,
   IInputOutputSuperClass, IOKeyValueMapGenericConstraint, TInputOutputBaseOptionsForSuperResult,
   TInputOutputBaseOptionsForSuperResultSimple, TInputOutputConstructorArgs
 } from './interfaces';
 import { IObservable, IObservableConstructor } from '../../../core/observable/interfaces';
 import { IObserver } from '../../../core/observer/interfaces';
-import { Constructor, HasFactoryWaterMark, MakeFactory, TMakeFactoryClass } from '../../../classes/factory';
+import {
+  BaseClass,
+  Constructor, HasFactoryWaterMark, IBaseClassConstructor, MakeFactory
+} from '../../../classes/factory';
 import {
   INotificationsObservableTypedConstructor, KeyValueMapToNotifications
 } from '../../../notifications/core/notifications-observable/interfaces';
@@ -127,7 +130,7 @@ export function InputOutputBaseOptionsForSuper<TKVMap extends IOKeyValueMapGener
   ];
 }
 
-InputOutput = class InputOutput<TObservable extends IObservable<any>, TObserver extends IObserver<any>> extends InputOutputBaseFactory<ObjectConstructor>(Object) {
+InputOutput = class InputOutput<TObservable extends IObservable<any>, TObserver extends IObserver<any>> extends InputOutputBaseFactory<IBaseClassConstructor>(BaseClass) {
   constructor(options: IInputOutputBaseOptions<IInputOutputKeyValueMap, TObservable, TObserver>) {
     super(...InputOutputBaseOptionsForSuper<IInputOutputKeyValueMap, TObservable, TObserver>(options) as TInputOutputBaseOptionsForSuperResultSimple<TObservable, TObserver>);
   }
