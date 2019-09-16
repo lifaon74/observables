@@ -47,7 +47,7 @@ export function GenerateFiniteStateObservableHookFromFileReader<T extends TFileR
 
     return {
       onObserved(): void {
-        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this;
+        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this as IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>;
         if (
           (reader === null)
           && (instance.observers.length === 1) // optional check
@@ -92,7 +92,7 @@ export function GenerateFiniteStateObservableHookFromFileReader<T extends TFileR
         }
       },
       onUnobserved(): void {
-        FiniteStateObservableHookDefaultOnUnobserved<TValue, TFinalState, TMode, TKVMap>(this, context, clear);
+        FiniteStateObservableHookDefaultOnUnobserved<TValue, TFinalState, TMode, TKVMap>(this as IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>, context, clear);
       },
     };
   };

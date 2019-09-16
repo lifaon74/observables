@@ -21,7 +21,8 @@ import { INotification } from '../notification/interfaces';
 import { KeyValueMapGeneric, KeyValueMapGenericConstraint, KeyValueMapKeys, KeyValueMapValues } from '../interfaces';
 import { InitObservableHook, IObservableHookPrivate } from '../../../core/observable/hook';
 import {
-  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
+  BaseClass,
+  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IBaseClassConstructor, IsFactoryClass, MakeFactory
 } from '../../../classes/factory';
 import { IsObject } from '../../../helpers';
 import { IObserver } from '../../../core/observer/interfaces';
@@ -344,7 +345,7 @@ export function NotificationsObservableBaseFactory<TBase extends Constructor>(su
   });
 }
 
-NotificationsObservable = class NotificationsObservable extends NotificationsObservableBaseFactory<ObjectConstructor>(Object) {
+NotificationsObservable = class NotificationsObservable extends NotificationsObservableBaseFactory<IBaseClassConstructor>(BaseClass) {
   constructor(create?: (context: INotificationsObservableContext<KeyValueMapGeneric>) => (TNotificationsObservableHook<KeyValueMapGeneric> | void)) {
     super([create], []);
   }
@@ -384,8 +385,9 @@ export class NotificationsObservableContext<TKVMap extends KeyValueMapGenericCon
   }
 
   get observable(): INotificationsObservable<TKVMap> {
-    // return ((this as unknown) as IObservableContextBaseInternal<KeyValueMapToNotifications<TKVMap>>)[OBSERVABLE_CONTEXT_BASE_PRIVATE].observable as INotificationsObservable<TKVMap>;
+    // @ts-ignore
     return super.observable as INotificationsObservable<TKVMap>;
+    // return ((this as unknown) as IObservableContextBaseInternal<KeyValueMapToNotifications<TKVMap>>)[OBSERVABLE_CONTEXT_BASE_PRIVATE].observable as INotificationsObservable<TKVMap>;
   }
 
   emit(value: KeyValueMapToNotifications<TKVMap>): void {

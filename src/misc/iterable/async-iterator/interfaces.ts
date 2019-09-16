@@ -9,7 +9,7 @@ export interface IAsyncIteratorConstructor {
   new<T, U>(next: TAsyncIteratorNextCallback<T, U>): IAsyncIterator<T, U>;
 }
 
-export interface IAsyncIterator<T, U> extends AsyncIterableIterator<T | undefined> {
+export interface IAsyncIterator<T, U> /*extends AsyncIterableIterator<T | undefined>*/ {
   readonly done: boolean;
 
   next(value: U): Promise<IteratorResult<T>>;

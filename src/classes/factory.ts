@@ -41,7 +41,7 @@ export type ConstructorsParameters<T extends (new (...args: any[]) => any)[]> = 
 // returns a tuple where types are the expected factories types
 export type TMakeFactoryFactories<TSuperClasses extends (new (...args: any[]) => any)[]> = {
   [P in keyof TSuperClasses]: TSuperClasses[P] extends (new (...args: any[]) => infer R)
-    ? (superClass: any) => new(ownArgs: any[], ...args: any[]) => R
+    ? (superClass: any) => new(/*ownArgs: any[], */...args: any[]) => R
     : never;
 };
 
@@ -195,6 +195,15 @@ export function GetSetSuperArgsFunction(isFactoryClass: boolean): TSetSuperArgs 
     : SetSuperArgsForStandardClass;
 }
 
+export interface IBaseClass {
+}
+
+export interface IBaseClassConstructor {
+  new(): IBaseClass;
+}
+
+export class BaseClass {
+}
 
 /*------------------------------------*/
 
@@ -232,7 +241,7 @@ function FactoryA<TBase extends Constructor>(superClass: TBase) {
 
       constructor(...args: any[]) {
         const [a] = args[0];
-        super(...args.slice(1));
+        super(...args);
         this.a = a;
       }
     };

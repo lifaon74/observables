@@ -9,6 +9,7 @@ import { FiniteStateObservable, GetFiniteStateObservableDefaultModes } from '../
 import {
   GenerateFiniteStateObservableHookFromPromise, GenerateFiniteStateObservableHookFromPromiseForEachObservers
 } from './hook-generators';
+import { TFiniteStateObservableCreateCallback } from '../../interfaces';
 
 
 export const PROMISE_OBSERVABLE_PRIVATE = Symbol('promise-observable-private');
@@ -32,6 +33,9 @@ export function IsPromiseObservable(value: any): value is IPromiseObservable<any
     && value.hasOwnProperty(PROMISE_OBSERVABLE_PRIVATE as symbol);
 }
 
+/**
+ * INIT
+ */
 
 export interface IPromiseObservableOptionsStrict extends IPromiseObservableOptions {
   modes: Set<TPromiseObservableMode>;
@@ -50,6 +54,17 @@ export function NormalizePromiseObservableOptions(options: IPromiseObservableOpt
   }
 }
 
+export function PromiseObservableGetObservableHookCallback<T>(promiseFactory: TPromiseObservableFactory<T>, options: IPromiseObservableOptionsStrict): TFiniteStateObservableCreateCallback<T, TPromiseObservableFinalState, TPromiseObservableMode, IPromiseObservableKeyValueMap<T>> {
+  return (
+    (options.mode === 'every')
+      ? GenerateFiniteStateObservableHookFromPromiseForEachObservers<T>(promiseFactory)
+      : GenerateFiniteStateObservableHookFromPromise<T>(promiseFactory)
+  ) as TFiniteStateObservableCreateCallback<T, TPromiseObservableFinalState, TPromiseObservableMode, IPromiseObservableKeyValueMap<T>>;
+}
+
+/**
+ * STATIC
+ */
 
 export function PromiseObservableFromPromise<T>(promise: Promise<T>, token?: ICancelToken, options?: IPromiseObservableOptions): IPromiseObservable<T> {
   return new PromiseObservable<T>((_token: ICancelToken) => {
@@ -60,6 +75,10 @@ export function PromiseObservableFromPromise<T>(promise: Promise<T>, token?: ICa
   }, options);
 }
 
+/**
+ * CLASS
+ */
+
 export class PromiseObservable<T> extends FiniteStateObservable<T, TPromiseObservableFinalState, TPromiseObservableMode, IPromiseObservableKeyValueMap<T>> implements IPromiseObservable<T> {
 
   static fromPromise<T>(promise: Promise<T>, token?: ICancelToken, options?: IPromiseObservableOptions): IPromiseObservable<T> {
@@ -69,9 +88,7 @@ export class PromiseObservable<T> extends FiniteStateObservable<T, TPromiseObser
   constructor(promiseFactory: TPromiseObservableFactory<T>, options?: IPromiseObservableOptions) {
     const _options: IPromiseObservableOptionsStrict = NormalizePromiseObservableOptions(options);
     super(
-      (_options.mode === 'every')
-        ? GenerateFiniteStateObservableHookFromPromiseForEachObservers<T>(promiseFactory)
-        : GenerateFiniteStateObservableHookFromPromise<T>(promiseFactory),
+      PromiseObservableGetObservableHookCallback<T>(promiseFactory, _options),
       _options
     );
     ConstructPromiseObservable<T>(this);

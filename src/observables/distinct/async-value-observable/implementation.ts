@@ -10,7 +10,8 @@ import {
   IAsyncValueObservableContextConstructor, TAsyncValueObservableConstructorArgs
 } from './interfaces';
 import {
-  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
+  BaseClass,
+  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IBaseClassConstructor, IsFactoryClass, MakeFactory
 } from '../../../classes/factory';
 import { ICancelToken } from '../../../misc/cancel-token/interfaces';
 import { IValueObservable, IValueObservableConstructor, IValueObservableContext } from '../value-observable/interfaces';
@@ -90,7 +91,7 @@ export function AsyncValueObservableEmit<T>(observable: IAsyncValueObservable<T>
   privates.token = token;
   privates.promise = promise;
 
-  return token.wrapPromise(privates.promise)
+  return token.wrapPromise<T, 'never', never>(privates.promise)
     .then((value: T) => {
       privates.context.emit(value);
     });
@@ -144,7 +145,7 @@ export function AsyncValueObservableBaseFactory<TBase extends Constructor>(super
   });
 }
 
-AsyncValueObservable = class AsyncValueObservable extends AsyncValueObservableBaseFactory<ObjectConstructor>(Object) {
+AsyncValueObservable = class AsyncValueObservable extends AsyncValueObservableBaseFactory<IBaseClassConstructor>(BaseClass) {
   constructor(create?: (context: IAsyncValueObservableContext<any>) => (IObservableHook<any> | void)) {
     super([create], [], []);
   }

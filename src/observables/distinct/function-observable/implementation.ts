@@ -52,11 +52,15 @@ export function ConstructFunctionObservable<T extends TFunctionObservableFactory
 
   privates.values = Array.from({ length: privates.args.length }, () => void 0) as TFunctionObservableFactoryParameters<T>;
 
-  privates.argumentsObserver = new Observer<TFunctionObservableParametersUnion<T>>((value: TFunctionObservableParametersUnion<T>, argObservable: IObservable<TFunctionObservableParametersUnion<T>>) => {
-    privates.argumentsObserverCount++;
-    FunctionObservableSetObservableValue<T>(observable, argObservable, value);
-    if (privates.argumentsObserverPauseCount === -1) {
-      FunctionObservableCallFactory<T>(observable);
+  privates.argumentsObserver = new Observer<TFunctionObservableParametersUnion<T>>((value: TFunctionObservableParametersUnion<T>, argObservable?: IObservable<TFunctionObservableParametersUnion<T>>) => {
+    if (argObservable === void 0) {
+      throw new Error(`Expected an observable`);
+    } else {
+      privates.argumentsObserverCount++;
+      FunctionObservableSetObservableValue<T>(observable, argObservable, value);
+      if (privates.argumentsObserverPauseCount === -1) {
+        FunctionObservableCallFactory<T>(observable);
+      }
     }
   }).observe(...Array.from(new Set(privates.args))); // ensure we observe it only once
 

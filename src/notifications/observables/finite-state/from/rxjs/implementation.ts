@@ -7,9 +7,10 @@ import {
 } from './interfaces';
 import { IsObject } from '../../../../../helpers';
 import {
-  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
+  BaseClass,
+  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IBaseClassConstructor, IsFactoryClass, MakeFactory
 } from '../../../../../classes/factory';
-import { FiniteStateObservableFactory, IsFiniteStateObservableConstructor } from '../../implementation';
+import { FiniteStateObservableSoftFactory, IsFiniteStateObservableConstructor } from '../../implementation';
 import { INotificationsObservableTypedConstructor } from '../../../../core/notifications-observable/interfaces';
 import { IObservableConstructor } from '../../../../../core/observable/interfaces';
 import { NotificationsObservableFactory } from '../../../../core/notifications-observable/implementation';
@@ -79,14 +80,14 @@ export function FromRXJSObservableBaseFactory<TBase extends Constructor>(superCl
     IFiniteStateObservableTypedConstructor<any, TFromRXJSObservableFinalState, TFromRXJSObservableMode, FromRXJSObservableKeyValueMap<any>>,
     INotificationsObservableTypedConstructor<FromRXJSObservableKeyValueMap<any>>,
     IObservableConstructor
-    ], TBase>(PureFromRXJSObservableFactory, [FiniteStateObservableFactory, NotificationsObservableFactory, ObservableFactory], superClass, {
+  ], TBase>(PureFromRXJSObservableFactory, [FiniteStateObservableSoftFactory, NotificationsObservableFactory, ObservableFactory], superClass, {
     name: 'FromRXJSObservable',
     instanceOf: FromRXJSObservable,
     waterMarks: [IS_FROM_RXJS_OBSERVABLE_CONSTRUCTOR],
   });
 }
 
-FromRXJSObservable = class FromRXJSObservable extends FromRXJSObservableBaseFactory<ObjectConstructor>(Object) {
+FromRXJSObservable = class FromRXJSObservable extends FromRXJSObservableBaseFactory<IBaseClassConstructor>(BaseClass) {
   constructor(rxObservable: RXObservable<any>, options?: IFromRXJSObservableOptions) {
     super([rxObservable, options], [], [], []);
   }

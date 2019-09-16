@@ -73,7 +73,7 @@ export function GenerateFiniteStateObservableHookFromXHR(
 
     return {
       onObserved(): void {
-        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this;
+        const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this as IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>;
         if (
           (xhr === null)
           && (instance.observers.length === 1) // optional check
@@ -137,7 +137,7 @@ export function GenerateFiniteStateObservableHookFromXHR(
         }
       },
       onUnobserved(): void {
-        FiniteStateObservableHookDefaultOnUnobserved<TValue, TFinalState, TMode, TKVMap>(this, context, clear);
+        FiniteStateObservableHookDefaultOnUnobserved<TValue, TFinalState, TMode, TKVMap>(this as IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>, context, clear);
       },
     };
   };

@@ -328,7 +328,7 @@ export function RaceCancelled<T>(
     }),
     promise
   ])
-    .then(...Finally<T>(() => {
+    .then(...Finally<T | void>(() => {
       if (observer !== void 0) {
         observer.deactivate();
       }
@@ -350,10 +350,10 @@ export function CancelTokenWrapPromise<T, TStrategy extends TCancelStrategy, TCa
   options: ICancelTokenWrapPromiseOptionsStrict<TStrategy, TCancelled>,
 ): TCancelStrategyReturnedPromise<T, TStrategy, TCancelled> {
   return RaceCancelled<T>(instance, promise)
-    .then((value: T): TPromiseOrValue<T | TCancelStrategyReturn<TStrategy> | TCancelled> => {
+    .then((value: T | void): TPromiseOrValue<T | TCancelStrategyReturn<TStrategy> | TCancelled> => {
       return instance.cancelled
         ? ApplyOnCancelCallback<TStrategy, TCancelled>(instance, options)
-        : value;
+        : value as T;
     }, (error: any): TPromiseOrValue<never | TCancelStrategyReturn<TStrategy> | TCancelled> => {
       if (instance.cancelled) {
         return ApplyOnCancelCallback<TStrategy, TCancelled>(instance, options);
@@ -391,7 +391,7 @@ export function CancelTokenWrapFunction<CB extends (...args: any[]) => any, TStr
   return function (...args: Parameters<CB>): TCancelStrategyReturnedPromise<T, TStrategy, TCancelled> {
     return instance.cancelled
       ? ApplyOnCancelCallback<TStrategy, TCancelled>(instance, options)
-      : CancelTokenWrapPromise<T, TStrategy, TCancelled>(instance, PromiseTry<T>(() => callback.apply(this, args)), options);
+      : CancelTokenWrapPromise<T, TStrategy, TCancelled>(instance, PromiseTry<T>(() => callback.apply(instance, args)), options);
   };
 }
 

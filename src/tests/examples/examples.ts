@@ -79,7 +79,7 @@ function createTimerObservable(period: number) {
 
 function createEventObservable<T extends Event>(target: EventTarget, name: string) {
   return new Observable<Event>((context: IObservableContext<Event>) => {
-    const listener = (event: T) => context.emit(event);
+    const listener = (event: Event) => context.emit(event as T);
     return {
       // everytime an Observer wants to receive data from this Observable, this method will be called
       onObserved() {
@@ -257,7 +257,7 @@ function finiteStateObservableExample1(): void {
       return {
         onObserved(): void {
           if (context.observable.state === 'next') {
-            for (const value of iterable) {
+            for (const value of Array.from(iterable)) {
               context.next(value);
             }
             context.complete();
@@ -347,8 +347,8 @@ function fromIterableObservableExample1(): void {
 function cancelTokenFetchExample1(): void {
   function loadNews(page: number, token: ICancelToken = new CancelToken()): Promise<void> {
     return token.wrapPromise(fetch(`https://my-domain/api/news?page${ page }`, { signal: token.toAbortController().signal }))
-      .then(token.wrapFunction((response: Response) => {
-        return response.json();
+      .then(token.wrapFunction((response: Response): Promise<any> => { // <(response: Response) => any, 'never', never>
+        return response.json() as any;
       }))
       .then(token.wrapFunction((news: any) => {
         // render news in DOM for example

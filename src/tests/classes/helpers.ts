@@ -39,7 +39,7 @@ export function $this<T extends object = object>(_this: T): T {
 export function RegisterThis<T extends object>(newThis: T, thisList: Set<T>): T {
   if (!thisList.has(newThis)) {
     thisList.add(newThis);
-    for (const _this of thisList) {
+    for (const _this of Array.from(thisList)) {
       thisMap.set(_this, newThis);
     }
   }

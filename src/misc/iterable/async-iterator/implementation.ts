@@ -1,4 +1,6 @@
-import { Constructor, HasFactoryWaterMark, MakeFactory } from '../../../classes/factory';
+import {
+  BaseClass, Constructor, HasFactoryWaterMark, IBaseClassConstructor, MakeFactory
+} from '../../../classes/factory';
 import {
   IAsyncIterator, IAsyncIteratorConstructor, TAsyncIteratorConstructorArgs, TAsyncIteratorNextCallback
 } from './interfaces';
@@ -175,9 +177,9 @@ export function AsyncIteratorFactory<TBase extends Constructor>(superClass: TBas
   });
 }
 
-AsyncIteratorClass = class AsyncIterator extends AsyncIteratorFactory<ObjectConstructor>(Object) {
+AsyncIteratorClass = class AsyncIterator extends AsyncIteratorFactory<IBaseClassConstructor>(BaseClass) {
   constructor(next: TAsyncIteratorNextCallback<any, any>) {
-    super([next], []);
+    super([next]);
   }
 } as IAsyncIteratorConstructor;
 

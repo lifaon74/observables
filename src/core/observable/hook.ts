@@ -1,5 +1,5 @@
 import { IObserver } from '../observer/interfaces';
-import { IObservable, IObservableContext, IObservableContextBase, IObservableHook } from './interfaces';
+import { IObservable, IObservableContext, IObservableContextBase, IObservableHook, ObservableType } from './interfaces';
 import { IsObject, noop } from '../../helpers';
 
 export interface IObservableHookPrivate<T> {
@@ -8,17 +8,23 @@ export interface IObservableHookPrivate<T> {
   onUnobserveHook(observer: IObserver<T>): void;
 }
 
-export function InitObservableHook<T, H extends IObservableHook<T> = IObservableHook<T>>(
-  observable: IObservable<T>,
-  privates: IObservableHookPrivate<T>,
-  createContext: (observable: IObservable<T>) => IObservableContextBase<T>,
-  create?: (context: IObservableContextBase<T>) => (H | void),
-): H | void {
+// export function InitObservableHook<T, H extends IObservableHook<T> = IObservableHook<T>, TObservable extends IObservable<T> = IObservable<T>>(
+//   observable: TObservable,
+//   privates: IObservableHookPrivate<T>,
+//   createContext: (observable: TObservable) => IObservableContextBase<T>,
+//   create?: (context: IObservableContextBase<T>) => (H | void),
+// ): H | void {
+export function InitObservableHook<TObservable extends IObservable<any>, TObservableContext extends IObservableContextBase<ObservableType<TObservable>>, TObservableHook extends IObservableHook<ObservableType<TObservable>>>(
+  observable: TObservable,
+  privates: IObservableHookPrivate<ObservableType<TObservable>>,
+  createContext: (observable: TObservable) => TObservableContext,
+  create?: (context: TObservableContext) => (TObservableHook | void),
+): TObservableHook | void {
   privates.onObserveHook = noop;
   privates.onUnobserveHook = noop;
 
   if (typeof create === 'function') {
-    const hook: H | void = create.call(observable, createContext(observable));
+    const hook: TObservableHook | void = create.call(observable, createContext(observable));
 
     if (hook !== void 0) {
       if (IsObject(hook)) {

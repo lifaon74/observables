@@ -111,6 +111,10 @@ export interface ICancelToken extends INotificationsObservable<ICancelTokenKeyVa
    *  token.cancel();
    *
    */
+  wrapPromise<T>(
+    promiseOrCallback: Promise<T> | TCancelTokenWrapPromiseCallback<T>,
+    options?: ICancelTokenWrapPromiseOptions<'never', never>,
+  ): TCancelStrategyReturnedPromise<T, 'never', never>;
   wrapPromise<T, TStrategy extends TCancelStrategy, TCancelled>(
     promiseOrCallback: Promise<T> | TCancelTokenWrapPromiseCallback<T>,
     options?: ICancelTokenWrapPromiseOptions<TStrategy, TCancelled>,
@@ -146,6 +150,10 @@ export interface ICancelToken extends INotificationsObservable<ICancelTokenKeyVa
    *      console.log('never called');
    *    });
    */
+  wrapFunction<CB extends (...args: any[]) => any>(
+    callback: CB,
+    options?: ICancelTokenWrapPromiseOptions<'never', never>,
+  ): (...args: Parameters<CB>) => TCancelStrategyReturnedPromise<TPromiseType<ReturnType<CB>>, 'never', never>;
   wrapFunction<CB extends (...args: any[]) => any, TStrategy extends TCancelStrategy, TCancelled>(
     callback: CB,
     options?: ICancelTokenWrapPromiseOptions<TStrategy, TCancelled>,

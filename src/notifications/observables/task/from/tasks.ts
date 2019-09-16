@@ -106,7 +106,7 @@ export type TProgressMode =
  * Takes N 'progresses' in input and returns (if possible) the aggregated progress
  */
 function AggregateProgresses(progresses: (Required<IProgressOptions> | null)[]): null | Required<IProgressOptions> {
-  return progresses.reduce<null | Required<IProgressOptions>>((previousValue: null | Required<IProgressOptions>, currentValue: IProgress | null) => {
+  return progresses.reduce<null | Required<IProgressOptions>>((previousValue: null | Required<IProgressOptions>, currentValue: Required<IProgressOptions> | null) => {
     if ((previousValue === null) || (currentValue === null)) {
       return null;
     } else {

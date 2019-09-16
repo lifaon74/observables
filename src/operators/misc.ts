@@ -307,7 +307,7 @@ export function $fetch<T>(requestInfo: TObservableOrValue<RequestInfo>, requestI
 }
 
 export function _fetch<T>(token: ICancelToken, requestInfo: RequestInfo, requestInit?: RequestInit): Promise<T> {
-  return token.wrapPromise(fetch(...token.wrapFetchArguments(requestInfo, requestInit)))
+  return token.wrapPromise<Response, 'never', never>(fetch(...token.wrapFetchArguments(requestInfo, requestInit)))
     .then((response: Response): Promise<T> => {
       return response.json();
     });
@@ -477,7 +477,7 @@ export async function testMisc(): Promise<void> {
 
   await assertFunctionObservableEmits(
     [1, 2],
-    $function((a: number, b: number) => (a + b), [$source(), $source()]),
+    $function((a: number, b: number) => (a + b), [$source<number>(), $source<number>()]),
     [3]
   );
 
@@ -499,20 +499,20 @@ export async function testMisc(): Promise<void> {
 
   await assertFunctionObservableEmits(
     [1, 2, 3],
-    $add($source(), $source(), $source()),
+    $add($source<number>(), $source<number>(), $source<number>()),
     [6]
   );
 
 
   await assertFunctionObservableEmits(
     [true, true, true],
-    $and($source(), $source(), $source()),
+    $and($source<boolean>(), $source<boolean>(), $source<boolean>()),
     [true]
   );
 
   await assertFunctionObservableEmits(
     [true, true, false],
-    $and($source(), $source(), $source()),
+    $and($source<boolean>(), $source<boolean>(), $source<boolean>()),
     [false]
   );
 

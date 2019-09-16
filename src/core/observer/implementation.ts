@@ -9,7 +9,7 @@ import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPr
 import {
   IsObservable, LinkObservableAndObserver, UnLinkObservableAndObserver
 } from '../observable/implementation';
-import { Constructor, MakeFactory } from '../../classes/factory';
+import { BaseClass, Constructor, IBaseClassConstructor, MakeFactory } from '../../classes/factory';
 import { IsObject } from '../../helpers';
 
 export const OBSERVER_PRIVATE = Symbol('observer-private');
@@ -247,7 +247,7 @@ export function ObserverFactory<TBase extends Constructor>(superClass: TBase) {
   });
 }
 
-Observer = class Observer extends ObserverFactory<ObjectConstructor>(Object) {
+Observer = class Observer extends ObserverFactory<IBaseClassConstructor>(BaseClass) {
   constructor(onEmit: (value: any, observable?: IObservable<any>) => void) {
     super([onEmit]);
   }

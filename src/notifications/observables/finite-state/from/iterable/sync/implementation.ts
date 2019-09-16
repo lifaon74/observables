@@ -4,11 +4,12 @@ import {
   IFromIterableObservableOptions, TFromIterableObservableConstructorArgs, TFromIterableObservableFinalState,
   TFromIterableObservableMode
 } from './interfaces';
-import { FiniteStateObservableFactory, IsFiniteStateObservableConstructor } from '../../../implementation';
+import { FiniteStateObservableSoftFactory, IsFiniteStateObservableConstructor } from '../../../implementation';
 import { ObservableFactory } from '../../../../../../core/observable/implementation';
 import { IObservableConstructor } from '../../../../../../core/observable/interfaces';
 import {
-  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
+  BaseClass,
+  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IBaseClassConstructor, IsFactoryClass, MakeFactory
 } from '../../../../../../classes/factory';
 import { ConstructClassWithPrivateMembers } from '../../../../../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../../../../../helpers';
@@ -78,14 +79,14 @@ export function FromIterableObservableBaseFactory<TBase extends Constructor>(sup
     IFiniteStateObservableTypedConstructor<any, TFromIterableObservableFinalState, TFromIterableObservableMode, IFromIterableObservableKeyValueMap<any>>,
     INotificationsObservableTypedConstructor<IFromIterableObservableKeyValueMap<any>>,
     IObservableConstructor
-    ], TBase>(PureFromIterableObservableFactory, [FiniteStateObservableFactory, NotificationsObservableFactory, ObservableFactory], superClass, {
+  ], TBase>(PureFromIterableObservableFactory, [FiniteStateObservableSoftFactory, NotificationsObservableFactory, ObservableFactory], superClass, {
     name: 'FromIterableObservable',
     instanceOf: FromIterableObservable,
     waterMarks: [IS_FROM_ITERABLE_OBSERVABLE_CONSTRUCTOR],
   });
 }
 
-FromIterableObservable = class FromIterableObservable extends FromIterableObservableBaseFactory<ObjectConstructor>(Object) {
+FromIterableObservable = class FromIterableObservable extends FromIterableObservableBaseFactory<IBaseClassConstructor>(BaseClass) {
   constructor(iterable: Iterable<any>, options?: IFromIterableObservableOptions) {
     super([iterable, options], [], [], []);
   }

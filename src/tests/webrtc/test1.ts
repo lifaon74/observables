@@ -74,7 +74,7 @@ export async function testWEBRTC1() {
             return new Uint8Array([
               0x01,  // algorithms.find(([name]) => (name === 'ECDSA'))[1],
               NamedCurveToCurveId((key.algorithm as EcKeyAlgorithm).namedCurve),
-              ...new Uint8Array(buffer)
+              ...Array.from(new Uint8Array(buffer))
             ]);
           });
       default:
@@ -106,7 +106,7 @@ export async function testWEBRTC1() {
         return new Uint8Array([
           FindOrThrow(algorithms, ([name]) => (name === algorithm.name))[1],
           FindOrThrow(hashes, ([name]) => (name === (algorithm as EcdsaParams).hash))[1],
-          ...new Uint8Array(buffer)
+          ...Array.from(new Uint8Array(buffer))
         ]);
       });
   }
@@ -172,8 +172,8 @@ export async function testWEBRTC1() {
             new TextEncoder().encode(JSON.stringify(this._connection.localDescription))
           ))
       ])
-        .then(([id, signature]: [Uint8Array, Uint8Array]) => {
-          peers.set(String.fromCodePoint(...id), {
+        .then(([id, signature]: [Readonly<Uint8Array>, Uint8Array]) => {
+          peers.set(String.fromCodePoint(...Array.from(id)), {
             offer: this._connection.localDescription as RTCSessionDescription,
             signature: signature,
           });

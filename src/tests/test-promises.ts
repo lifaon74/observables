@@ -48,7 +48,7 @@ export function testCancellablePromise() {
           return 4;
         });
     })
-    .then((value: number) => {
+    .then((value: number | void) => {
       console.log('after cancelled caught', value);
     });
 
@@ -85,7 +85,7 @@ export function testCancellablePromise() {
 }
 
 export function testDeferredPromise() {
-  const a = new DeferredPromise();
+  const a = new DeferredPromise<number>();
   a
     .then((value: number) => {
       console.log('1', value);

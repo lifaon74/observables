@@ -13,7 +13,8 @@ import {
   TValueObservableConstructorArgs
 } from './interfaces';
 import {
-  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
+  BaseClass,
+  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IBaseClassConstructor, IsFactoryClass, MakeFactory
 } from '../../../classes/factory';
 import { InitObservableHook, IObservableHookPrivate } from '../../../core/observable/hook';
 import { IsObject } from '../../../helpers';
@@ -168,7 +169,7 @@ export function ValueObservableBaseFactory<TBase extends Constructor>(superClass
   });
 }
 
-ValueObservable = class ValueObservable extends ValueObservableBaseFactory<ObjectConstructor>(Object) {
+ValueObservable = class ValueObservable extends ValueObservableBaseFactory<IBaseClassConstructor>(BaseClass) {
   constructor(create?: (context: IValueObservableContext<any>) => (IObservableHook<any> | void)) {
     super([create], []);
   }

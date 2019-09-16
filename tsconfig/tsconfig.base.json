@@ -1,0 +1,15 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "baseUrl": "../src",
+    "sourceRoot": "../src",
+    "paths": {
+      "observables": ["./"],
+      "observables/*": ["./*"]
+    }
+  },
+  "files": [
+    "../src/public.ts"
+  ]
+}
