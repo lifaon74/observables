@@ -105,8 +105,9 @@ export type TProgressMode =
 /**
  * Takes N 'progresses' in input and returns (if possible) the aggregated progress
  */
-function AggregateProgresses(progresses: (Required<IProgressOptions> | null)[]): null | Required<IProgressOptions> {
-  return progresses.reduce<null | Required<IProgressOptions>>((previousValue: null | Required<IProgressOptions>, currentValue: Required<IProgressOptions> | null) => {
+export type TAggregatedProgress = Required<Omit<IProgressOptions, 'name'>>;
+function AggregateProgresses(progresses: (TAggregatedProgress | null)[]): TAggregatedProgress | null {
+  return progresses.reduce<TAggregatedProgress | null>((previousValue:  TAggregatedProgress | null, currentValue: TAggregatedProgress | null) => {
     if ((previousValue === null) || (currentValue === null)) {
       return null;
     } else {
@@ -127,7 +128,7 @@ function AggregateProgresses(progresses: (Required<IProgressOptions> | null)[]):
 export function taskFromTasksInParallel<T>(tasks: ITask<any>[], mode: TProgressMode = 'count'): ITask<void> {
   return new Task<void>((context: ITaskContext<void>) => {
     let count: number = 0;
-    const progresses: (Required<IProgressOptions> | null)[] = Array.from({ length: tasks.length }, () => {
+    const progresses: (TAggregatedProgress | null)[] = Array.from({ length: tasks.length }, () => {
       return {
         loaded: 0,
         total: Number.POSITIVE_INFINITY
@@ -152,7 +153,7 @@ export function taskFromTasksInParallel<T>(tasks: ITask<any>[], mode: TProgressM
         if (mode === 'aggregate') {
           const progressListener = task.addListener('progress', (progress: IProgress) => {
             progresses[index] = progress;
-            const aggregatedProgress: null | Required<IProgressOptions> = AggregateProgresses(progresses);
+            const aggregatedProgress: null | TAggregatedProgress = AggregateProgresses(progresses);
             if (aggregatedProgress !== null) {
               context.progressUntilRun(aggregatedProgress);
             }

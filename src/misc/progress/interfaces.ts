@@ -1,6 +1,7 @@
 export interface IProgressOptions {
   loaded?: number; // (default => 0)
   total?: number; // (default => Number.POSITIVE_INFINITE)
+  name?: string; // (default => undefined)
 }
 
 
@@ -8,11 +9,11 @@ export interface IProgressConstructor {
   fromEvent(event: ProgressEvent): IProgress;
   fromJSON(json: IProgressJSON): IProgress;
 
-  new(loaded?: number, total?: number): IProgress;
+  new(loaded?: number, total?: number, name?: string): IProgress;
   new(options?: IProgressOptions): IProgress;
 }
 
-export interface IProgressJSON extends Pick<IProgress, 'loaded' | 'total' | 'lengthComputable'> {
+export interface IProgressJSON extends Pick<IProgress, 'loaded' | 'total' | 'lengthComputable' | 'name'> {
 }
 
 /**
@@ -22,6 +23,7 @@ export interface IProgress {
   readonly lengthComputable: boolean; // returns true if the length is computable
   readonly loaded: number; // number of bytes, percents, etc... loaded
   readonly total: number; // total number of bytes, percents, etc... to load. INFO may be Number.POSITIVE_INFINITE, if length if not computable (lengthComputable => false)
+  readonly name?: string;
 
   toJSON(allowFloat?: boolean): IProgressJSON; // because JSON doesnt support 'Infinite', use lengthComputable.
   toString(): string;
