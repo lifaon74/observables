@@ -3,11 +3,7 @@
   "compilerOptions": {
     "noEmit": false,
     "baseUrl": "../src",
-    "sourceRoot": "../src",
-    "paths": {
-      "observables": ["./"],
-      "observables/*": ["./*"]
-    }
+    "sourceRoot": "../src"
   },
   "files": [
     "../src/public.ts"

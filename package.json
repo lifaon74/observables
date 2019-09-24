@@ -46,22 +46,17 @@
     "compile_dist_types": "tsc -p ./tsconfig/tsconfig.types.json",
     "copy_sources": "mkdirp dist && shx cp -r ./src/ ./dist/src",
     "generate_packages": "node tools/make-packages.js",
-    "publish.package": "yarn publish ./dist/package --access public",
-    "start": "npm run clean && gulp watch",
-    "clean": "shx rm -rf ./dist",
-    "build.prod": "npm run clean && gulp build.prod && npm run minify",
-    "babelify": "babel ./dist/bundle/public.umd.esnext.js --out-file ./dist/bundle/public.umd.es5.js --presets=@babel/preset-env",
-    "minify": "npm run minify.hard && npm run minify.soft",
-    "minify.hard": "npm run pre-minify && npm run min.esnext.hard && npm run min.core.hard && npm run post-minify",
-    "minify.soft": "npm run min.esnext.soft && npm run min.core.soft",
-    "pre-minify": "node scripts/pre-minify.js",
-    "post-minify": "node scripts/post-minify.js",
-    "min.esnext.hard": "uglifyjs ./dist/bundle/public.umd.esnext.pre-min.js -o ./dist/bundle/public.umd.esnext.min.hard.js -c inline=false -m",
-    "min.esnext.soft": "uglifyjs ./dist/bundle/public.umd.esnext.js -o ./dist/bundle/public.umd.esnext.min.js -c inline=false -m",
-    "min.core.hard": "uglifyjs ./dist/bundle/public.core.umd.esnext.pre-min.js -o ./dist/bundle/public.core.umd.esnext.min.hard.js -c inline=false -m",
-    "min.core.soft": "uglifyjs ./dist/bundle/public.core.umd.esnext.js -o ./dist/bundle/public.core.umd.esnext.min.js -c inline=false -m",
-    "serve": "http-server ./dist --ssl --cert certificates/cert.pem --key certificates/key.pem -p 1234",
-    "serve-cors": "no-cors-proxy -p 4321 -t https://localhost:1234",
+    "publish_package": "yarn publish ./dist/package --access public",
+
+    "dev_browser": "npm-run-all clean_dev_browser watch_dev_browser",
+    "watch_dev_browser": "npm-run-all -p tsc_watch_dev_browser serve_dev_browser",
+    "tsc_watch_dev_browser": "tsc-watch -p ./tsconfig/tsconfig.dev.browser.json --onSuccess \"npm run build_dev_browser\"",
+    "build_dev_browser": "npm-run-all -p bundle_dev_browser copy_index_dev_browser",
+    "bundle_dev_browser": "node tools/bundle/make-umd-bundle-dev-browser.js",
+    "copy_index_dev_browser": "shx cp src/index.html dist/browser/index.html",
+    "serve_dev_browser": " browser-sync start --config bs-config.js",
+    "clean_dev_browser": "shx rm -rf ./dist/browser",
+
     "toc": "markdown-toc README.md"
   },
   "repository": {
@@ -84,10 +79,11 @@
     "google-closure-compiler-js": "20170218.0.0"
   },
   "peerDependencies": {
-    "rxjs": ">6.5.3"
+    "rxjs": "^6.5.3"
   },
   "devDependencies": {
     "@types/node": "latest",
+    "browser-sync": "^2.26.7",
     "http-server": "^0.11.1",
     "markdown-toc": "^1.2.0",
     "mkdirp": "^0.5.1",
@@ -97,6 +93,7 @@
     "rollup-plugin-inject": "^3.0.0",
     "rollup-plugin-node-resolve": "^5.2.0",
     "shx": "^0.3.2",
+    "tsc-watch": "^4.0.0",
     "tslib": "^1.10.0",
     "typescript": "3.6.3",
     "typescript-tuple": "^2.2.1",
