@@ -105,7 +105,7 @@ export function MakeFactory<TChildClass extends Constructor, TSuperClasses exten
   const _class: TMakeFactoryClass<TChildClass, TSuperClasses, TBase> = create(_superClass) as unknown as TMakeFactoryClass<TChildClass, TSuperClasses, TBase>;
 
   Object.defineProperty(_class, IS_FACTORY_CLASS, {
-    value: null,
+    value: true,
   });
 
   if (typeof options.name === 'string') {
@@ -120,7 +120,7 @@ export function MakeFactory<TChildClass extends Constructor, TSuperClasses exten
   if (Array.isArray(options.waterMarks)) {
     for (let i = 0, l = options.waterMarks.length; i < l; i++) {
       Object.defineProperty(_class, options.waterMarks[i], {
-        value: null,
+        value: true,
       });
     }
   }
@@ -140,9 +140,7 @@ export function MakeFactory<TChildClass extends Constructor, TSuperClasses exten
  * @param direct
  */
 export function HasFactoryWaterMark(_class: (new(...args: any[]) => any), waterMark: symbol, direct: boolean = true): boolean {
-  return direct
-    ? _class.hasOwnProperty(waterMark)
-    : (waterMark in _class);
+  return (_class[waterMark] === true) && (direct ? _class.hasOwnProperty(waterMark) : true);
 }
 
 
@@ -154,10 +152,7 @@ const IS_FACTORY_CLASS = Symbol('is-factory-class');
  * @param direct
  */
 export function IsFactoryClass(_class: (new(...args: any[]) => any), direct: boolean = true): boolean {
-  // return (IS_FACTORY_CLASS in _class);
-  return direct
-    ? _class.hasOwnProperty(IS_FACTORY_CLASS)
-    : (IS_FACTORY_CLASS in _class);
+  return (_class[IS_FACTORY_CLASS] === true) && (direct ? _class.hasOwnProperty(IS_FACTORY_CLASS) : true);
 }
 
 

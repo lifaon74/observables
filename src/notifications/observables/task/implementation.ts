@@ -41,7 +41,7 @@ export function ConstructTask<TValue>(
 
 export function IsTask(value: any): value is ITask<any> {
   return IsObject(value)
-    && (TASK_PRIVATE in value);
+    && value.hasOwnProperty(TASK_PRIVATE as symbol);
 }
 
 

@@ -39,7 +39,7 @@ export function ConstructEventsObservable<TKVMap extends EventKeyValueMapConstra
 
 export function IsEventsObservable(value: any): value is IEventsObservable<any> {
   return IsObject(value)
-    && (EVENTS_OBSERVABLE_PRIVATE in value);
+    && value.hasOwnProperty(EVENTS_OBSERVABLE_PRIVATE as symbol);
 }
 
 

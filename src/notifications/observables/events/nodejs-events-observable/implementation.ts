@@ -35,7 +35,7 @@ export function ConstructNodeJSEventsObservable<TKVMap extends NodeJSEventKeyVal
 
 export function IsNodeJSEventsObservable(value: any): value is INodeJSEventsObservable<any> {
   return IsObject(value)
-    && (NODE_JS_EVENTS_OBSERVABLE_PRIVATE in value);
+    && value.hasOwnProperty(NODE_JS_EVENTS_OBSERVABLE_PRIVATE as symbol);
 }
 
 export function NormalizeNodeJSListenerValue(args: any[]): any {

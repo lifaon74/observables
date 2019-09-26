@@ -39,13 +39,13 @@ export function ConstructPipe<TObserver extends IObserver<any>, TObservable exte
 
     if (IsObject(result)) {
 
-      if (OBSERVER_PRIVATE in result.observer) {
+      if (result.observer.hasOwnProperty(OBSERVER_PRIVATE)) {
         privates.observer = result.observer;
       } else {
         throw new TypeError(`Expected property observer of type Observer in return of Pipe's create function`);
       }
 
-      if (OBSERVABLE_PRIVATE in result.observable) {
+      if (result.observable.hasOwnProperty(OBSERVABLE_PRIVATE)) {
         privates.observable = result.observable;
         type TValueObservable = ObservableType<TObservable>;
         const observablePrivates: IObservablePrivate<TValueObservable> = ((privates.observable as IObservable<TValueObservable>) as IObservableInternal<TValueObservable>)[OBSERVABLE_PRIVATE];

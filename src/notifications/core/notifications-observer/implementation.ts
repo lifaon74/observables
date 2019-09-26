@@ -42,7 +42,7 @@ export function IsNotificationsObserverLike(value: any): value is INotifications
 export function ExtractObserverNameAndCallback<TName extends string, TValue>(value: any): INotificationsObserverLike<TName, TValue> | null {
   if (!IsObject(value)) {
     return null;
-  } else if (NOTIFICATIONS_OBSERVER_PRIVATE in value) {
+  } else if (value.hasOwnProperty(NOTIFICATIONS_OBSERVER_PRIVATE as symbol)) {
     return (value as INotificationsObserverInternal<TName, TValue>)[NOTIFICATIONS_OBSERVER_PRIVATE];
   } else if (
     (typeof (value as any).name === 'string')
