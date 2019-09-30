@@ -30,6 +30,7 @@ import { testExamples } from './examples/examples';
 import { testPromises } from './test-promises';
 import { testTask } from './test-task';
 import { IProgress } from '../misc/progress/interfaces';
+import { testSAndF } from './test-s-and-s';
 
 
 
@@ -598,7 +599,8 @@ export async function test() {
   // testPromises();
   // testClasses();
   // testProgram();
-  await testTask();
+  // await testTask();
+  await testSAndF();
 
   console.log('tests done');
 }
