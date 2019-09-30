@@ -26,8 +26,16 @@ function lvlToStepMultiplier(lvl: number): number {
 
 
 
+// function lvlToCost(lvl: number, initialCost: number): number {
+//   return initialCost * (1.03 ** lvl);
+// }
+
 function lvlToCost(lvl: number, initialCost: number): number {
-  return initialCost * (1.03 ** lvl);
+  let cost: number = initialCost;
+  for (let i = 0; i < lvl; i++) {
+    cost = Math.ceil(cost * 1.03);
+  }
+  return cost;
 }
 
 function lvlToIncome(lvl: number, initialIncome: number): number {
@@ -83,7 +91,7 @@ function listStats(lvl: number, part: RevenuePart): void {
 
 
 const chair: RevenuePart = {
-  cost: 22,
+  cost: 5,
   income: 1,
   duration: 72,
   durationRatio: 0.5,
@@ -91,7 +99,7 @@ const chair: RevenuePart = {
 };
 
 const popCorn: RevenuePart = {
-  cost: 116 /*100*/,
+  cost: 100,
   income: 10,
   duration: 6 * 60,
   durationRatio: 1,
@@ -99,7 +107,7 @@ const popCorn: RevenuePart = {
 };
 
 const parking: RevenuePart = {
-  cost: 2515 /*2500*/,
+  cost: 2500,
   income: 40,
   duration: 12 * 60,
   durationRatio: 1,
@@ -107,7 +115,7 @@ const parking: RevenuePart = {
 };
 
 const trap: RevenuePart = {
-  cost: 50015/*50000*/,
+  cost: 50000,
   income: 120,
   duration: 18 * 60,
   durationRatio: 1,
@@ -201,9 +209,9 @@ function optimize(): void {
   // const initialPartsLvl: number[] = parts.map(() => 0);
   // initialPartsLvl[0] = 1;
   const initialPartsLvl: number[] = [
-    378,
+    379,
     320,
-    187,
+    188,
     88,
     1,
     0
