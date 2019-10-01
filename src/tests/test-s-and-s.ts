@@ -38,12 +38,27 @@ function lvlToCost(lvl: number, initialCost: number): number {
   return cost;
 }
 
+function lvlToTotalCost(lvl: number, initialCost: number): number {
+  let cost: number = initialCost;
+  let totalCost: number = 0;
+  for (let i = 0; i < lvl; i++) {
+    totalCost += cost;
+    cost = Math.ceil(cost * 1.03);
+  }
+  return totalCost;
+}
+
 function lvlToIncome(lvl: number, initialIncome: number): number {
   return initialIncome * (2 ** lvlToStepMultiplier(lvl)) * lvl;
 }
 
 function lvlToDuration(lvl: number, initialDuration: number): number {
   return initialDuration * (0.8 ** lvlToStepMultiplier(lvl));
+}
+
+function lvlToIncomePerSecond(lvl: number, part: RevenuePart): number {
+  return (lvlToIncome(lvl, part.income) * part.incomeRation)
+  / (lvlToDuration(lvl, part.duration)  * part.durationRatio);
 }
 
 function lvlToRecoverDuration(lvl: number, part: RevenuePart): number {
@@ -88,6 +103,13 @@ function listStats(lvl: number, part: RevenuePart): void {
   console.log('income / s', Math.floor(income / duration));
   console.log('recover duration', recoverDuration(cost, income, duration));
 }
+
+function getInitialPartsLvl(): number[] {
+  const initialPartsLvl: number[] = parts.map(() => 0);
+  initialPartsLvl[0] = 1;
+  return initialPartsLvl;
+}
+
 
 
 const chair: RevenuePart = {
@@ -158,6 +180,45 @@ const parts = [
 ];
 
 
+
+const initialPartsLvl: number[] = [ // lifaon
+  394,
+  331,
+  203,
+  102,
+  1,
+  0
+];
+
+// const initialPartsLvl: number[] = [ // redgeek
+//   250,
+//   250,
+//   241,
+//   101,
+//   1,
+//   0
+// ];
+
+
+// const initialPartsLvl: number[] = [ // zorkain
+//   250,
+//   250,
+//   250,
+//   140,
+//   0,
+//   0
+// ];
+
+// const initialPartsLvl: number[] = [ // crakdos
+//   200,
+//   50,
+//   25,
+//   8,
+//   0,
+//   0
+// ];
+
+
 function plotter(dataLists: Float64Array[]) {
   const canvas: HTMLCanvasElement = document.createElement('canvas');
   document.body.appendChild(canvas);
@@ -204,27 +265,15 @@ function plotter(dataLists: Float64Array[]) {
   }
 }
 
-function optimize(): void {
+function getOptimizedOrder(partsLvl: number[], length: number) {
   const partsLength: number = parts.length;
-  // const initialPartsLvl: number[] = parts.map(() => 0);
-  // initialPartsLvl[0] = 1;
-  const initialPartsLvl: number[] = [
-    379,
-    320,
-    188,
-    88,
-    1,
-    0
-  ];
 
   const optimalLvL: number = 100;
   const optimalLvLRecoverDurations = parts.map((part) => {
     return lvlToRecoverDuration(optimalLvL, part);
   });
 
-  const partsLvl: number[] = initialPartsLvl.slice();
-
-  const order = Array.from({ length: 500, }, () => {
+  return Array.from({ length: length, }, () => {
     const partsNextLvLRecoverDuration = parts
       .map((part, partIndex) => {
         return (partsLvl[partIndex] < optimalLvL)
@@ -246,6 +295,11 @@ function optimize(): void {
 
     return minIndex;
   });
+}
+
+function optimize(): void {
+
+  const order = getOptimizedOrder(initialPartsLvl.slice(), 50);
 
   function resumeOrder(order: number[]) {
     const lines: string[] = [];
@@ -262,7 +316,7 @@ function optimize(): void {
           // if (partsLvl[currentValue] === initialPartsLvl[currentValue] + 1) {
           //   lines.push('\n-------------------------------------------------------------------------------');
           // }
-          lines.push(`part #${ currentValue } up to lvl ${ partsLvl[currentValue] } => ${ count } times, cost ${ Math.floor(lvlToCost(partsLvl[currentValue], parts[currentValue].cost)) }`);
+          lines.push(`part #${ currentValue } up to lvl ${ partsLvl[currentValue] } => ${ count } times`);
         }
         currentValue = value;
         count = 1;
@@ -276,22 +330,34 @@ function optimize(): void {
     }
 
     console.log(lines.join('\n'));
+    console.log('partsLvl', partsLvl.join(', '));
   }
 
   resumeOrder(order);
-  console.log(order);
-  console.log(partsLvl);
+  // console.log(order);
+
+}
+
+function computeTotalCost(partsLvl: number[]): number {
+  return partsLvl.reduce((sum: number, lvl: number, index: number) => {
+    return sum + lvlToTotalCost(lvl, parts[index].cost);
+  }, 0);
+}
+
+function computeAllCosts(partsLvl: number[]): number {
+  return partsLvl.reduce((sum: number, lvl: number, index: number) => {
+    return sum + ((lvl === 0) ? 0 : lvlToCost(lvl - 1, parts[index].cost));
+  }, 0);
+}
+
+function computeTotalIncome(partsLvl: number[]) {
+  return partsLvl.reduce((sum: number, lvl: number, index: number) => {
+    return sum + lvlToIncomePerSecond(lvl, parts[index]);
+  }, 0);
 }
 
 
-export function testSAndF() {
-  // listStats(0, chair);
-
-  // console.log('best chair', findBestLvl(chair));
-  // console.log('best popCorn', findBestLvl(popCorn));
-  // console.log('best parking', findBestLvl(parking));
-  // console.log('best trap', findBestLvl(trap));
-  //
+function plotLvlToRecoverDuration() {
   const dataLists = [
     chair,
     popCorn,
@@ -300,11 +366,70 @@ export function testSAndF() {
     drink,
     deadlyTrap,
   ].map(type => new Float64Array(Array.from({ length: 400, }, (v: any, index: number) => lvlToRecoverDuration(index + 1, type))));
-  //
+
   // console.log(dataLists);
   plotter(dataLists);
+}
+
+
+function plotLvlToIncome() {
+  const order = getOptimizedOrder(getInitialPartsLvl(), 2000);
+  const partsLvl: number[] = getInitialPartsLvl();
+
+  const totalCosts = new Float64Array(order.length);
+  const incomes = new Float64Array(order.length);
+  const allCosts = new Float64Array(order.length);
+  const ratio = new Float64Array(order.length);
+
+  for (let i = 0; i < order.length; i++) {
+    totalCosts[i] = computeTotalCost(partsLvl);
+    allCosts[i] = computeAllCosts(partsLvl);
+    incomes[i] = computeTotalIncome(partsLvl);
+    ratio[i] = allCosts[i] / incomes[i];
+    partsLvl[order[i]]++;
+  }
+
+  plotter([totalCosts]);
+  plotter([allCosts]);
+  plotter([incomes]);
+  plotter([ratio]);
+  // console.log(order);
+  const min = Math.min(...ratio);
+  console.log(min, ratio.findIndex(_ => _ === min));
+  console.log(partsLvl); // 2100 => [594, 534, 414, 328, 231, 0]
+  // 1020 => [391, 329, 201, 100, 0, 0]
+}
+
+function plotRunes() {
+  const runes = new Float64Array(40);
+  runes[2] = 815370;
+  runes[24] = 143740176;
+  runes[28] = 216181353;
+  runes[29] = 217166981;
+  runes[32] = 245970598;
+
+  plotter([runes]);
+}
+
+export function testSAndF() {
+  // plotLvlToRecoverDuration();
+  // plotLvlToIncome();
 
   optimize();
+  plotRunes();
 
-  console.log('ok');
+  console.log('totalCost', computeTotalCost(initialPartsLvl));
+  console.log('totalIncome', computeTotalIncome(initialPartsLvl));
+  //
+  // console.log('ok');
 }
+
+
+
+// total cost => runes
+// 815370 => 2
+// 143740176 => 24
+// 216181353 => 28
+// 217166981 => 29 => precise
+// 245970598 => 32
+
