@@ -24,11 +24,9 @@ function lvlToStepMultiplier(lvl: number): number {
 }
 
 
-
-
-// function lvlToCost(lvl: number, initialCost: number): number {
-//   return initialCost * (1.03 ** lvl);
-// }
+function runesToIncomeBonus(runes: number): number {
+  return 1 + (runes * 0.05);
+}
 
 function lvlToCost(lvl: number, initialCost: number): number {
   let cost: number = initialCost;
@@ -49,7 +47,7 @@ function lvlToTotalCost(lvl: number, initialCost: number): number {
 }
 
 function lvlToIncome(lvl: number, initialIncome: number): number {
-  return initialIncome * (2 ** lvlToStepMultiplier(lvl)) * lvl;
+  return initialIncome * (2 ** lvlToStepMultiplier(lvl)) * lvl * runesToIncomeBonus(BONUS_RUNES);
 }
 
 function lvlToDuration(lvl: number, initialDuration: number): number {
@@ -111,114 +109,6 @@ function getInitialPartsLvl(): number[] {
 }
 
 
-
-const chair: RevenuePart = {
-  cost: 5,
-  income: 1,
-  duration: 72,
-  durationRatio: 0.5,
-  incomeRation: 1,
-};
-
-const popCorn: RevenuePart = {
-  cost: 100,
-  income: 10,
-  duration: 6 * 60,
-  durationRatio: 1,
-  incomeRation: 1,
-};
-
-const parking: RevenuePart = {
-  cost: 2500,
-  income: 40,
-  duration: 12 * 60,
-  durationRatio: 1,
-  incomeRation: 1,
-};
-
-const trap: RevenuePart = {
-  cost: 50000,
-  income: 120,
-  duration: 18 * 60,
-  durationRatio: 1,
-  incomeRation: 1,
-};
-
-
-const drink: RevenuePart = {
-  cost: 1000000,
-  income: 320,
-  duration: 24 * 60,
-  durationRatio: 1,
-  incomeRation: 2,
-};
-
-const deadlyTrap: RevenuePart = {
-  cost: 25000000,
-  income: 1100,
-  duration: 36 * 60,
-  durationRatio: 1,
-  incomeRation: 1,
-};
-
-
-const vipChair: RevenuePart = { // TODO
-  cost: 500000000,
-  income: 1100,
-  duration: 36 * 60,
-  durationRatio: 1,
-  incomeRation: 1,
-};
-
-const parts = [
-  chair,
-  popCorn,
-  parking,
-  trap,
-  drink,
-  deadlyTrap
-];
-
-
-
-const initialPartsLvl: number[] = [ // lifaon
-  394,
-  331,
-  203,
-  102,
-  1,
-  0
-];
-
-// const initialPartsLvl: number[] = [ // redgeek
-//   250,
-//   250,
-//   241,
-//   101,
-//   1,
-//   0
-// ];
-
-
-// const initialPartsLvl: number[] = [ // zorkain
-//   250,
-//   250,
-//   250,
-//   140,
-//   0,
-//   0
-// ];
-
-// const initialPartsLvl: number[] = [ // crakdos
-//   200,
-//   50,
-//   25,
-//   8,
-//   0,
-//   0
-// ];
-
-
 function plotter(dataLists: Float64Array[]) {
   const canvas: HTMLCanvasElement = document.createElement('canvas');
   document.body.appendChild(canvas);
@@ -237,7 +127,7 @@ function plotter(dataLists: Float64Array[]) {
     const data: Float64Array = dataLists[i];
     const l2: number = data.length;
 
-    max_x = Math.max(max_x, l2);
+    max_x = Math.max(max_x, l2 - 1);
 
     for (let j = 0; j < l2; j++) {
       min_y = Math.min(min_y, data[j]);
@@ -246,7 +136,7 @@ function plotter(dataLists: Float64Array[]) {
   }
 
   const scale_x = ctx.canvas.width / max_x;
-  const scale_y = ctx.canvas.height/ max_y;
+  const scale_y = ctx.canvas.height / max_y;
 
   for (let i = 0; i < l1; i++) {
     const data: Float64Array = dataLists[i];
@@ -299,7 +189,7 @@ function getOptimizedOrder(partsLvl: number[], length: number) {
 
 function optimize(): void {
 
-  const order = getOptimizedOrder(initialPartsLvl.slice(), 50);
+  const order = getOptimizedOrder(initialPartsLvl.slice(), 30);
 
   function resumeOrder(order: number[]) {
     const lines: string[] = [];
@@ -394,22 +284,171 @@ function plotLvlToIncome() {
   plotter([incomes]);
   plotter([ratio]);
   // console.log(order);
-  const min = Math.min(...ratio);
+  const min = Math.min(...ratio as any);
   console.log(min, ratio.findIndex(_ => _ === min));
   console.log(partsLvl); // 2100 => [594, 534, 414, 328, 231, 0]
   // 1020 => [391, 329, 201, 100, 0, 0]
 }
 
 function plotRunes() {
-  const runes = new Float64Array(40);
-  runes[2] = 815370;
-  runes[24] = 143740176;
-  runes[28] = 216181353;
-  runes[29] = 217166981;
-  runes[32] = 245970598;
+  const runes = new Float64Array(20);
+  runes[1] = 2062418;
+  runes[2] = 6518191;
+  runes[3] = 13259511;
+  runes[4] = 18297536;
+  runes[5] = 23797603;
+  runes[6] = 30504895;
+  runes[7] = 37920122;
+  runes[8] = 44100056;
+  runes[9] = 51288496;
+  runes[10] = 58517955;
+  runes[11] = 69892866;
+  runes[12] = 74291930;
+  runes[13] = 81554596;
+  runes[14] = 0;
+  runes[15] = 0;
+  runes[16] = 105664156;
+
+  // runes[24] = 143740176;
+  // runes[28] = 216181353;
+  // runes[29] = 217166981;
+  // runes[30] = 230439372;
+  // runes[32] = 245970598;
+  // runes[34] = 272390343;
+  // runes[35] = 292390343;
+
+  // 2062418 => 1 => precise
+  // 6518191 => 2 => precise
+  // 13259511 => 3 => precise (+-5min @ 2200$/s)
+  // 18297536 => 4 => precise
+  // 23797603 => 5 => precise ( => +5 500 000)
+  // 30504895 => 6 => precise ( => +6 700 000)
+  // 37920122 => 7 => precise ( => +7 415 227)
+  // 44100056 => 8 => precise ( => +6 179 934)
+  // 51288496 => 9 => precise ( => +7 188 440)
+  // 58517955 => 10 => precise (+-5min @ 3400$/s)
+  // 69892866 => 11 => (+-5min @ 3400$/s)
+  // 74291930 => 12 => (+-5min @ 3400$/s)
+  // 81554596 => 13 => precise
+  // 95582133 => 14
+
+  // 105664156 => 16 => precise
 
   plotter([runes]);
 }
+
+
+
+const BONUS_RUNES: number = 35;
+
+
+const chair: RevenuePart = {
+  cost: 5,
+  income: 1,
+  duration: 72,
+  durationRatio: 0.5,
+  incomeRation: 2,
+};
+
+const popCorn: RevenuePart = {
+  cost: 100,
+  income: 10,
+  duration: 6 * 60,
+  durationRatio: 1,
+  incomeRation: 1,
+};
+
+const parking: RevenuePart = {
+  cost: 2500,
+  income: 40,
+  duration: 12 * 60,
+  durationRatio: 1,
+  incomeRation: 1,
+};
+
+const trap: RevenuePart = {
+  cost: 50000,
+  income: 120,
+  duration: 18 * 60,
+  durationRatio: 1,
+  incomeRation: 1,
+};
+
+
+const drink: RevenuePart = {
+  cost: 1000000,
+  income: 320,
+  duration: 24 * 60,
+  durationRatio: 1,
+  incomeRation: 2,
+};
+
+const deadlyTrap: RevenuePart = {
+  cost: 25000000,
+  income: 1100,
+  duration: 36 * 60,
+  durationRatio: 1,
+  incomeRation: 1,
+};
+
+
+const vipChair: RevenuePart = { // TODO
+  cost: 500000000,
+  income: 1100,
+  duration: 36 * 60,
+  durationRatio: 1,
+  incomeRation: 1,
+};
+
+const parts = [
+  chair,
+  popCorn,
+  parking,
+  trap,
+  drink,
+  deadlyTrap
+];
+
+
+
+const initialPartsLvl: number[] = [ // lifaon
+  394,
+  306,
+  177,
+  1,
+  0,
+  0
+];
+
+// const initialPartsLvl: number[] = [ // redgeek
+//   250,
+//   250,
+//   241,
+//   101,
+//   1,
+//   0
+// ];
+
+
+// const initialPartsLvl: number[] = [ // zorkain
+//   250,
+//   250,
+//   250,
+//   140,
+//   0,
+//   0
+// ];
+
+// const initialPartsLvl: number[] = [ // crakdos
+//   200,
+//   50,
+//   25,
+//   8,
+//   0,
+//   0
+// ];
+
+
 
 export function testSAndF() {
   // plotLvlToRecoverDuration();
@@ -425,11 +464,4 @@ export function testSAndF() {
 }
 
 
-
-// total cost => runes
-// 815370 => 2
-// 143740176 => 24
-// 216181353 => 28
-// 217166981 => 29 => precise
-// 245970598 => 32
 
