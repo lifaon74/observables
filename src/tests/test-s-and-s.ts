@@ -413,10 +413,10 @@ const parts = [
 
 
 const initialPartsLvl: number[] = [ // lifaon
-  414,
-  324,
-  201,
-  101,
+  423,
+  362,
+  208,
+  109,
   0,
   0
 ];
