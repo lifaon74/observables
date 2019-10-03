@@ -333,6 +333,7 @@ function plotRunes() {
   // 95582133 => 14
 
   // 105664156 => 16 => precise
+  // 268250129 => 34 => precise
 
   plotter([runes]);
 }
@@ -354,7 +355,7 @@ const popCorn: RevenuePart = {
   cost: 100,
   income: 10,
   duration: 6 * 60,
-  durationRatio: 1,
+  durationRatio: 0.5,
   incomeRation: 1,
 };
 
@@ -412,10 +413,10 @@ const parts = [
 
 
 const initialPartsLvl: number[] = [ // lifaon
-  394,
-  306,
-  177,
-  1,
+  414,
+  324,
+  201,
+  101,
   0,
   0
 ];
