@@ -189,7 +189,7 @@ function getOptimizedOrder(partsLvl: number[], length: number) {
 
 function optimize(): void {
 
-  const order = getOptimizedOrder(initialPartsLvl.slice(), 30);
+  const order = getOptimizedOrder(initialPartsLvl.slice(), 100);
 
   function resumeOrder(order: number[]) {
     const lines: string[] = [];
@@ -340,7 +340,7 @@ function plotRunes() {
 
 
 
-const BONUS_RUNES: number = 35;
+const BONUS_RUNES: number = 66338;
 
 
 const chair: RevenuePart = {
@@ -413,11 +413,11 @@ const parts = [
 
 
 const initialPartsLvl: number[] = [ // lifaon
-  423,
-  362,
-  208,
-  109,
-  0,
+  571,
+  511,
+  364,
+  277,
+  176,
   0
 ];
 
