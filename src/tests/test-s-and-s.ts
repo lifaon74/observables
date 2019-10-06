@@ -189,7 +189,7 @@ function getOptimizedOrder(partsLvl: number[], length: number) {
 
 function optimize(): void {
 
-  const order = getOptimizedOrder(initialPartsLvl.slice(), 100);
+  const order = getOptimizedOrder(initialPartsLvl.slice(), 30);
 
   function resumeOrder(order: number[]) {
     const lines: string[] = [];
@@ -393,10 +393,18 @@ const deadlyTrap: RevenuePart = {
 };
 
 
-const vipChair: RevenuePart = { // TODO
+const vipChair: RevenuePart = {
   cost: 500000000,
-  income: 1100,
-  duration: 36 * 60,
+  income: 2560,
+  duration: 48 * 60,
+  durationRatio: 1,
+  incomeRation: 1,
+};
+
+const snack: RevenuePart = {
+  cost: 10e9,
+  income: 2560,
+  duration: 48 * 60,
   durationRatio: 1,
   incomeRation: 1,
 };
@@ -407,47 +415,108 @@ const parts = [
   parking,
   trap,
   drink,
-  deadlyTrap
+  deadlyTrap,
+  vipChair
 ];
 
 
 
 const initialPartsLvl: number[] = [ // lifaon
-  571,
-  511,
-  364,
-  277,
-  176,
-  0
+  662,
+  603,
+  458,
+  374,
+  313,
+  154,
+  2
 ];
 
-// const initialPartsLvl: number[] = [ // redgeek
-//   250,
-//   250,
-//   241,
-//   101,
-//   1,
-//   0
-// ];
+function powerSupply() {
+  const freq = 62.5e3;
+  const v_in_min = 20;
+  const v_in_max = 42;
+  const v_out = 29.4;
+  const v_out_ripple = 50e-3;
+  const i_out_min = 20 * 0.9;
+  const i_out_max = 20 * 1.1;
+  const eff = 0.85;
+  const lir = 0.5;
+  const v_d = 0.5;
+  const r_ds_on = 3e-3;
+
+  // const freq = 440e3;
+  // const v_in_min = 3;
+  // const v_in_max = 42;
+  // const v_out = 5;
+  // const v_out_ripple = 50e-3;
+  // const i_out_min = 1.8;
+  // const i_out_max = 2.2;
+  // const eff = 0.85;
+  // const lir = 0.5;
+  // const v_d = 0.5;
+  // const r_ds_on = 3e-3;
+
+  const i_in_avg_min = (v_out * i_out_min) / (v_in_max * eff);
+  const i_in_avg_max = (v_out * i_out_max) / (v_in_min * eff);
+
+  console.log('i_ls_avg_min', i_out_min);
+  console.log('i_ls_avg_max', i_out_max);
+
+  const i_mos_peak_max_estimated = i_in_avg_max * (1 + (lir / 2)) + i_out_max + (1 + (lir / 2));
+  console.log('i_mos_peak_max_estimated', i_mos_peak_max_estimated);
+
+  const v_mos_ds_max = v_in_max + v_d + v_out;
+  console.log('v_mos_ds_max', v_mos_ds_max);
+
+  const v_d_rev_max = v_in_max + v_out;
+  console.log('v_d_rev_max', v_d_rev_max);
+
+  const d_min = (v_out + v_d) / (v_in_max + v_out + v_d - (r_ds_on * (i_in_avg_min + i_out_min)));
+  const d_max = (v_out + v_d) / (v_in_min + v_out + v_d - (r_ds_on * (i_in_avg_max + i_out_max)));
+  console.log('d_min', d_min, 'd_max', d_max);
+
+  const l_p_c = ((v_out + v_d) * (1 - d_min)) / (2 * freq * i_in_avg_min);
+  const l_s_c = ((v_out + v_d) * (1 - d_min)) / (2 * freq * i_out_min);
+  console.log('l_p_c >', l_p_c.toExponential(), 'l_s_c >', l_s_c.toExponential());
+
+  const l_p = l_p_c;
+  const l_s = l_s_c;
+  // const l_p = 22e-6;
+  // const l_s = 4.7e-6;
+
+  const l_p_lir = ((v_out + v_d) * (1 - d_max)) / (freq * l_p * i_in_avg_max);
+  const l_s_lir = ((v_out + v_d) * (1 - d_max)) / (freq * l_s * i_out_max);
+  console.log('l_p_lir', l_p_lir, 'l_s_lir', l_s_lir);
 
 
-// const initialPartsLvl: number[] = [ // zorkain
-//   250,
-//   250,
-//   250,
-//   140,
-//   0,
-//   0
-// ];
+  const i_l_p_peak = i_in_avg_max * (1 + (l_p_lir / 2));
+  const i_l_s_peak = i_out_max * (1 + (l_s_lir / 2));
+  console.log('i_l_p_peak', i_l_p_peak, 'i_l_s_peak', i_l_s_peak);
 
-// const initialPartsLvl: number[] = [ // crakdos
-//   200,
-//   50,
-//   25,
-//   8,
-//   0,
-//   0
-// ];
+  const i_mos_peak = i_l_p_peak + i_l_s_peak;
+  console.log('i_mos_peak', i_mos_peak);
+
+  const c_s = (i_out_max * d_max) / (0.05 * v_in_min * freq);
+  console.log('c_s >', c_s.toExponential());
+
+  const c_s_esr = Math.min(
+    (0.01 * v_in_min) / i_l_p_peak,
+    (0.01 * v_in_min) / i_l_s_peak,
+  );
+  console.log('c_s_esr <', c_s_esr.toExponential());
+
+  const i_c_s_rms = i_out_max * Math.sqrt(d_max / (1 - d_max));
+  console.log('i_c_s_rms', i_c_s_rms);
+
+
+  const c_out = (i_out_max * d_max) / (0.5 * v_out_ripple * freq);
+  console.log('c_out >', c_out.toExponential());
+
+  const c_out_esr = (0.5 * v_out_ripple) / (i_l_p_peak + i_l_s_peak - i_out_max);
+  console.log('c_out_esr <', c_out_esr.toExponential());
+}
+
+
 
 
 
@@ -455,11 +524,14 @@ export function testSAndF() {
   // plotLvlToRecoverDuration();
   // plotLvlToIncome();
 
+  // console.log('lvlToIncome', lvlToIncome(235, drink.income) * 2);
+
   optimize();
   plotRunes();
 
   console.log('totalCost', computeTotalCost(initialPartsLvl));
   console.log('totalIncome', computeTotalIncome(initialPartsLvl));
+  powerSupply();
   //
   // console.log('ok');
 }
