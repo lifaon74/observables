@@ -189,7 +189,7 @@ function getOptimizedOrder(partsLvl: number[], length: number) {
 
 function optimize(): void {
 
-  const order = getOptimizedOrder(initialPartsLvl.slice(), 30);
+  const order = getOptimizedOrder(initialPartsLvl.slice(), 100);
 
   function resumeOrder(order: number[]) {
     const lines: string[] = [];
@@ -340,7 +340,7 @@ function plotRunes() {
 
 
 
-const BONUS_RUNES: number = 66338;
+const BONUS_RUNES: number = 2.098e6;
 
 
 const chair: RevenuePart = {
@@ -403,8 +403,8 @@ const vipChair: RevenuePart = {
 
 const snack: RevenuePart = {
   cost: 10e9,
-  income: 2560,
-  duration: 48 * 60,
+  income: 7680,
+  duration: 72 * 60,
   durationRatio: 1,
   incomeRation: 1,
 };
@@ -416,19 +416,21 @@ const parts = [
   trap,
   drink,
   deadlyTrap,
-  vipChair
+  vipChair,
+  snack
 ];
 
 
 
 const initialPartsLvl: number[] = [ // lifaon
-  662,
-  603,
-  458,
-  374,
-  313,
-  154,
-  2
+  727,
+  668,
+  557,
+  441,
+  381,
+  265,
+  126,
+  1
 ];
 
 function powerSupply() {
@@ -527,11 +529,12 @@ export function testSAndF() {
   // console.log('lvlToIncome', lvlToIncome(235, drink.income) * 2);
 
   optimize();
-  plotRunes();
+  // plotRunes();
 
   console.log('totalCost', computeTotalCost(initialPartsLvl));
   console.log('totalIncome', computeTotalIncome(initialPartsLvl));
-  powerSupply();
+
+  // powerSupply();
   //
   // console.log('ok');
 }
