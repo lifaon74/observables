@@ -427,17 +427,17 @@ const parts = [
 
 
 const BONUS_RUNES: number = 5.687e6;
-const LIMIT: number = 120;
+const LIMIT: number = 80;
 
 const initialPartsLvl: number[] = [ // lifaon
-  769,
-  710,
-  600,
+  836,
+  777,
+  667,
+  555,
   500,
-  425,
-  310,
-  178,
-  0,
+  359,
+  250,
+  100,
 ];
 
 function powerSupply() {
