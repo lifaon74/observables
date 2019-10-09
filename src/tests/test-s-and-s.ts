@@ -189,7 +189,7 @@ function getOptimizedOrder(partsLvl: number[], length: number) {
 
 function optimize(): void {
 
-  const order = getOptimizedOrder(initialPartsLvl.slice(), 100);
+  const order = getOptimizedOrder(initialPartsLvl.slice(), LIMIT);
 
   function resumeOrder(order: number[]) {
     const lines: string[] = [];
@@ -340,9 +340,6 @@ function plotRunes() {
 
 
 
-const BONUS_RUNES: number = 2.098e6;
-
-
 const chair: RevenuePart = {
   cost: 5,
   income: 1,
@@ -409,6 +406,14 @@ const snack: RevenuePart = {
   incomeRation: 1,
 };
 
+const monster: RevenuePart = { // todo
+  cost: 10e9,
+  income: 7680,
+  duration: 144 * 60,
+  durationRatio: 1,
+  incomeRation: 1,
+};
+
 const parts = [
   chair,
   popCorn,
@@ -421,16 +426,18 @@ const parts = [
 ];
 
 
+const BONUS_RUNES: number = 5.687e6;
+const LIMIT: number = 120;
 
 const initialPartsLvl: number[] = [ // lifaon
-  727,
-  668,
-  557,
-  441,
-  381,
-  265,
-  126,
-  1
+  769,
+  710,
+  600,
+  500,
+  425,
+  310,
+  178,
+  0,
 ];
 
 function powerSupply() {
