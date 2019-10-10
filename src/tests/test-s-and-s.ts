@@ -406,9 +406,17 @@ const snack: RevenuePart = {
   incomeRation: 1,
 };
 
-const monster: RevenuePart = { // todo
-  cost: 10e9,
-  income: 7680,
+const monster: RevenuePart = {
+  cost: 250e9,
+  income: 30720,
+  duration: 144 * 60,
+  durationRatio: 1,
+  incomeRation: 1,
+};
+
+const toilets: RevenuePart = { // TODO
+  cost: 5e12,
+  income: 30720,
   duration: 144 * 60,
   durationRatio: 1,
   incomeRation: 1,
@@ -422,23 +430,26 @@ const parts = [
   drink,
   deadlyTrap,
   vipChair,
-  snack
+  snack,
+  monster
 ];
 
 
-const BONUS_RUNES: number = 5.687e6;
-const LIMIT: number = 80;
+const BONUS_RUNES: number = 84.6e6;
+const LIMIT: number = 10;
 
 const initialPartsLvl: number[] = [ // lifaon
-  836,
-  777,
-  667,
-  555,
-  500,
-  359,
-  250,
-  100,
+  873,
+  813,
+  703,
+  622,
+  567,
+  419,
+  326,
+  204,
+  1,
 ];
+
 
 function powerSupply() {
   const freq = 62.5e3;
