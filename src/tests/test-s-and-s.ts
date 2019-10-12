@@ -414,10 +414,10 @@ const monster: RevenuePart = {
   incomeRation: 1,
 };
 
-const toilets: RevenuePart = { // TODO
+const toilets: RevenuePart = {
   cost: 5e12,
-  income: 30720,
-  duration: 144 * 60,
+  income: 153600,
+  duration: 6 * 60 * 60,
   durationRatio: 1,
   incomeRation: 1,
 };
@@ -431,23 +431,25 @@ const parts = [
   deadlyTrap,
   vipChair,
   snack,
-  monster
+  monster,
+  toilets
 ];
 
 
-const BONUS_RUNES: number = 84.6e6;
-const LIMIT: number = 50;
+const BONUS_RUNES: number = 5.127e9;
+const LIMIT: number = 30;
 
 const initialPartsLvl: number[] = [ // lifaon
-  975,
-  868,
-  756,
-  665,
-  608,
-  500,
-  374,
-  287,
-  148,
+  1107,
+  1045,
+  905,
+  814,
+  757,
+  647,
+  558,
+  441,
+  347,
+  252,
 ];
 
 
