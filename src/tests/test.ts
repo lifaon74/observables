@@ -29,6 +29,12 @@ import { finiteStateObservableToPromise, toPromise } from '../operators/to/toPro
 import { testExamples } from './examples/examples';
 import { testPromises } from './test-promises';
 import { testTask } from './test-task';
+import { IProgress } from '../misc/progress/interfaces';
+
+
+
+
+
 // import { toAsyncIterable } from '../operators/to/async-iterator/toAsyncIterable';
 
 
@@ -522,16 +528,14 @@ export function testInstanceof() {
 
 
 export async function testFileReaderObservable() {
-
   // function assertFileReaderObservableEmits<T>(observable: IFileReaderObservable<any>, notifications: [string, T | any][]): Promise<void> {
   //   return assertObservableEmits(observable, notifications, 100, notificationsEquals);
   // }
-
   const blob = new Blob([new Uint8Array([0, 1, 2, 3, 4, 5])]);
 
   const read = <T extends IFileReaderObservable<any>>(reader: T): T => {
     return reader
-      .on('progress', (progress: Progress) => {
+      .on('progress', (progress: IProgress) => {
         console.log('progress', progress);
       })
       .on('next', (value: ArrayBuffer | string) => {
@@ -562,7 +566,7 @@ export async function testFileReaderObservable() {
 
 export async function test() {
   console.log('1');
-  // await testExamples();
+  await testExamples();
   // testMicroObservables();
 
   // testReadOnlyList();
@@ -595,7 +599,7 @@ export async function test() {
   // testPromises();
   // testClasses();
   // testProgram();
-  await testTask();
+  // await testTask();
 
   console.log('tests done');
 }

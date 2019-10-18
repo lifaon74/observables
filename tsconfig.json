@@ -1,10 +1,7 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "observables": ["./src/public"]
-    }
+    "baseUrl": "."
   },
   "exclude": ["./dist"]
 }

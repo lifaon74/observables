@@ -1,5 +1,10 @@
 const INSTANCE_OF_SYMBOL = Symbol('instanceof');
 
+export function HasInstanceOfSymbol(_class: Function): boolean {
+  return (_class[INSTANCE_OF_SYMBOL] instanceof Set); // required due to core-js adding every Symbols to Object.prototype
+}
+
+
 /**
  * Updates Symbol.hasInstance of source in such a way than 'destination' will become an instanceof 'source'
  * @param source
@@ -20,7 +25,7 @@ export function SetInstanceOf(source: Function, destination: Function): void {
     }
   });
 
-  if (!(INSTANCE_OF_SYMBOL in destination)) {
+  if (!HasInstanceOfSymbol(destination)) {
     Object.defineProperty(destination, INSTANCE_OF_SYMBOL, {
       value: new Set<Function>(),
     });
@@ -31,7 +36,7 @@ export function SetInstanceOf(source: Function, destination: Function): void {
 
 export function IsInstanceOf(instance: any, _class: Function): void {
   return (instance instanceof _class) || (
-    (instance.constructor && (INSTANCE_OF_SYMBOL in instance.constructor))
+    (instance.constructor && HasInstanceOfSymbol(instance.constructor))
       ? (instance.constructor as any)[INSTANCE_OF_SYMBOL].has(_class)
       : false
   );

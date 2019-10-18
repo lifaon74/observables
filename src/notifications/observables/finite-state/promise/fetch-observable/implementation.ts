@@ -55,7 +55,7 @@ export function ConstructFetchObservable(
 
 export function IsFetchObservable(value: any): value is IFetchObservable {
   return IsObject(value)
-    && (FETCH_OBSERVABLE_PRIVATE in value);
+    && value.hasOwnProperty(FETCH_OBSERVABLE_PRIVATE as symbol);
 }
 
 export function FetchObservablePromiseFactory(instance: IFetchObservable, token: ICancelToken): Promise<Response> {

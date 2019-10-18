@@ -1,5 +1,6 @@
 export * from './readonly-list/public';
 export * from './readonly-map/public';
+export * from './readonly-set/public';
 export * from './reason/public';
 export * from './iterable/public';
 export * from './progress/public';

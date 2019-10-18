@@ -42,7 +42,7 @@ export function ConstructXHRObservable(
 
 export function IsXHRObservable(value: any): value is IXHRObservable {
   return IsObject(value)
-    && (FETCH_OBSERVABLE_PRIVATE in value);
+    && value.hasOwnProperty(FETCH_OBSERVABLE_PRIVATE as symbol);
 }
 
 

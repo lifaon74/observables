@@ -45,6 +45,9 @@ import { IFetchObservable } from '../../notifications/observables/finite-state/p
 import { XHRObservable } from '../../notifications/observables/finite-state/promise/xhr-observable/implementation';
 import { FromReadableStreamObservable } from '../../notifications/observables/finite-state/from/readable-stream/implementation';
 import { FromAsyncIterableObservable } from '../../notifications/observables/finite-state/from/iterable/async/implementation';
+import { ClientRequest, IncomingMessage } from 'http';
+import { IGenericEvent } from '../../notifications/observables/events/events-listener/event-like/generic/interfaces';
+import { EventEmitterEventsListener } from '../../notifications/observables/events/events-listener/nodejs/implementation';
 
 
 /**
@@ -229,10 +232,7 @@ function eventsObservableExample1(): void {
     );*/
 
   setTimeout(() => {
-    let observer: IObserver<any> | null;
-    while ((observer = observable.observers.item(0)) !== null) {
-      observer.unobserve();
-    }
+    observable.clearObservers();
   }, 5000);
 }
 
@@ -250,6 +250,23 @@ function eventsObservableExample2(): void {
   }, 5000);
 }
 
+/**
+ * Demo how listen response from an http request on NodeJS using EventsObservable
+ */
+function eventsObservableExample3(): void {
+  interface ClientRequestEventMap {
+    'response': IGenericEvent<IncomingMessage>;
+  }
+
+  const http = require('http');
+
+  const request: ClientRequest = http.get(`https://nodejs.org`);
+
+  const observable = new EventsObservable<ClientRequestEventMap>(new EventEmitterEventsListener(request))
+    .on('response', (event: IGenericEvent<IncomingMessage>) => {
+      console.log(`response`, event.value);
+    });
+}
 
 function finiteStateObservableExample1(): void {
   function fromIterable<T>(iterable: Iterable<T>): IFiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>> {
@@ -932,9 +949,9 @@ export async function testExamples() {
   // timerObservableExample1();
   // observeTimerObservable();
   // observeNotificationsObservable();
-  // eventsObservableExample1();
+  eventsObservableExample1();
   // finiteStateObservableExample1();
-  finiteStateObservableExample2();
+  // finiteStateObservableExample2();
   // fromIterableObservableExample1();
   // cancelTokenExample1();
   // promiseObservableExample1();

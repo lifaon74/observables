@@ -45,7 +45,7 @@ export function ConstructCancelToken(
 
 export function IsCancelToken(value: any): value is ICancelToken {
   return IsObject(value)
-    && (CANCEL_TOKEN_PRIVATE in value);
+    && (value.hasOwnProperty(CANCEL_TOKEN_PRIVATE as symbol));
 }
 
 export function CancelTokenCancel(instance: ICancelToken, reason: any = void 0): void {

@@ -8,6 +8,7 @@ export const PROGRESS_PRIVATE = Symbol('progress-private');
 export interface IProgressPrivate {
   loaded: number;
   total: number;
+  name: string | undefined;
 }
 
 export interface IProgressInternal extends IProgress {
@@ -17,7 +18,8 @@ export interface IProgressInternal extends IProgress {
 export function ConstructProgress(
   instance: IProgress,
   options?: IProgressOptions | number,
-  total?: number
+  total?: number,
+  name?: string,
 ): void {
   ConstructClassWithPrivateMembers(instance, PROGRESS_PRIVATE);
   const privates: IProgressPrivate = (instance as IProgressInternal)[PROGRESS_PRIVATE];
@@ -27,11 +29,12 @@ export function ConstructProgress(
     _options = {
       loaded: options,
       total: total,
+      name: name,
     };
-  } else if (IsObject(options) && (total === void 0)) {
+  } else if (IsObject(options) && (total === void 0) && (name === void 0)) {
     _options = options;
   } else {
-    throw new TypeError(`Expected Progress(object?) or Progress(number?, number?)`);
+    throw new TypeError(`Expected Progress(object?) or Progress(number?, number?, string?)`);
   }
 
   if (_options.total === void 0) {
@@ -56,6 +59,13 @@ export function ConstructProgress(
     }
   }
 
+  if (_options.name === void 0) {
+    privates.name = void 0;
+  } else if (typeof _options.name === 'string') {
+    privates.name = _options.name;
+  } else {
+    throw new TypeError(`Expected string or void as Progress.options.name`);
+  }
 }
 
 export function IsProgress(value: any): value is IProgress {
@@ -105,10 +115,10 @@ export class Progress implements IProgress {
     return ProgressFromJSONStatic(this, json);
   }
 
-  constructor(loaded?: number, total?: number);
+  constructor(loaded?: number, total?: number, name?: string);
   constructor(options?: IProgressOptions);
-  constructor(options?: IProgressOptions | number, total?: number) {
-    ConstructProgress(this, options, total);
+  constructor(options?: IProgressOptions | number, total?: number, name?: string) {
+    ConstructProgress(this, options, total, name);
   }
 
   get lengthComputable(): boolean {
@@ -121,6 +131,10 @@ export class Progress implements IProgress {
 
   get total(): number {
     return ((this as unknown) as IProgressInternal)[PROGRESS_PRIVATE].total;
+  }
+
+  get name(): string | undefined {
+    return ((this as unknown) as IProgressInternal)[PROGRESS_PRIVATE].name;
   }
 
   toJSON(allowFloat?: boolean): IProgressJSON {
