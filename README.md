@@ -1258,7 +1258,7 @@ const http = require('http');
 
 const request: ClientRequest = http.get(`https://nodejs.org`);
 
-// NodeJS uses EventEmiiter instead of EventTarget, so we'll wrap the EventEmitter (response) into an EventEmitterEventsListener
+// NodeJS uses EventEmitter instead of EventTarget, so we'll wrap the EventEmitter (response) into an EventEmitterEventsListener
 const observable = new EventsObservable<ClientRequestEventMap>(new EventEmitterEventsListener(request))
   .on('response', (event: IGenericEvent<IncomingMessage>) => {
     console.log(`response`, event.value);

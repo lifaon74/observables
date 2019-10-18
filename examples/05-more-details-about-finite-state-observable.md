@@ -79,7 +79,7 @@ interface IFiniteStateObservableContext<TValue, TFinalState extends FinalStateCo
 A FiniteStateObservable is simply an Observable with a final state (at least *complete* or *error*), just like the RXJS's Observables. 
 It is an helper to build Observables having a final state and should be used with care.
 
-It extends `NotificationsObservable` with the minimum following 3 *'events'*:
+It extends `NotificationsObservable` with the minimum 3 following *'events'*:
 - `next: TValue`: the emitted values
 - `complete: void`: when the Observable has no more data to emit
 - `error: any`: when the Observable errored
