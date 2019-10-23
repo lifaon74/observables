@@ -437,19 +437,19 @@ const parts = [
 
 
 const BONUS_RUNES: number = 1.105e12;
-const LIMIT: number = 60;
+const LIMIT: number = 130;
 
 const initialPartsLvl: number[] = [ // lifaon
-  1505,
-  1447,
-  1342,
-  1261,
-  1205,
-  1098,
-  1000,
-  901,
-  810,
-  719,
+  1558,
+  1499,
+  1393,
+  1313,
+  1257,
+  1149,
+  1052,
+  940,
+  852,
+  770,
 ];
 
 
