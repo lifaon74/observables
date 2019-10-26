@@ -2,6 +2,8 @@
 // type TCostFn = (lvl: number) => number;
 // type TIncomeFn = (lvl: number) => number;
 
+import { testUnit } from './units/unit';
+
 interface RevenuePart {
   cost: number;
   income: number;
@@ -436,20 +438,20 @@ const parts = [
 ];
 
 
-const BONUS_RUNES: number = 28.878e12;
-const LIMIT: number = 500;
+const BONUS_RUNES: number = 54.941e12;
+const LIMIT: number = 60;
 
 const initialPartsLvl: number[] = [ // lifaon
-  1550,
-  1492,
-  1385,
-  1306,
-  1250,
-  1142,
-  1059,
-  945,
-  857,
-  761,
+  1615,
+  1559,
+  1452,
+  1373,
+  1316,
+  1204,
+  1123,
+  1041,
+  921,
+  840,
 ];
 
 
@@ -542,21 +544,26 @@ function powerSupply() {
 
 
 
+
+
+
 export function testSAndF() {
-  // plotLvlToRecoverDuration();
-  // plotLvlToIncome();
+  testUnit();
 
-  // console.log('lvlToIncome', lvlToIncome(235, drink.income) * 2);
-
-  optimize();
-  // plotRunes();
-
-  console.log('totalCost', computeTotalCost(initialPartsLvl));
-  console.log('totalIncome', computeTotalIncome(initialPartsLvl));
-
-  // powerSupply();
+  // // plotLvlToRecoverDuration();
+  // // plotLvlToIncome();
   //
-  // console.log('ok');
+  // // console.log('lvlToIncome', lvlToIncome(235, drink.income) * 2);
+  //
+  // optimize();
+  // // plotRunes();
+  //
+  // console.log('totalCost', computeTotalCost(initialPartsLvl));
+  // console.log('totalIncome', computeTotalIncome(initialPartsLvl));
+  //
+  // // powerSupply();
+  // //
+  // // console.log('ok');
 }
 
 
