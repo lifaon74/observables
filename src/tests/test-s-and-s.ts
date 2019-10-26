@@ -439,19 +439,19 @@ const parts = [
 
 
 const BONUS_RUNES: number = 54.941e12;
-const LIMIT: number = 60;
+const LIMIT: number = 30;
 
 const initialPartsLvl: number[] = [ // lifaon
-  1615,
-  1559,
-  1452,
-  1373,
-  1316,
-  1204,
-  1123,
-  1041,
-  921,
-  840,
+  1671,
+  1614,
+  1507,
+  1428,
+  1362,
+  1255,
+  1180,
+  1090,
+  1000,
+  894,
 ];
 
 
@@ -548,22 +548,22 @@ function powerSupply() {
 
 
 export function testSAndF() {
-  testUnit();
+  // testUnit();
 
-  // // plotLvlToRecoverDuration();
-  // // plotLvlToIncome();
+  // plotLvlToRecoverDuration();
+  // plotLvlToIncome();
+
+  // console.log('lvlToIncome', lvlToIncome(235, drink.income) * 2);
+
+  optimize();
+  // plotRunes();
+
+  console.log('totalCost', computeTotalCost(initialPartsLvl));
+  console.log('totalIncome', computeTotalIncome(initialPartsLvl));
+
+  // powerSupply();
   //
-  // // console.log('lvlToIncome', lvlToIncome(235, drink.income) * 2);
-  //
-  // optimize();
-  // // plotRunes();
-  //
-  // console.log('totalCost', computeTotalCost(initialPartsLvl));
-  // console.log('totalIncome', computeTotalIncome(initialPartsLvl));
-  //
-  // // powerSupply();
-  // //
-  // // console.log('ok');
+  // console.log('ok');
 }
 
 

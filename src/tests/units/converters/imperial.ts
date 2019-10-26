@@ -1,92 +1,82 @@
-import { RegisterCompleteTypeConverter } from './core';
+import { NumericTypeConverter, RegisterNumericTypeConverter } from './core';
 
-export interface ImperialLengthMultiplier {
-  name: string;
-  symbols:  [string, ...string[]];
-  feet: number;
-  meters: number;
+export interface ImperialLengthConverter extends NumericTypeConverter {
+  feet?: number;
 }
 
-export const ImperialLengthMultipliers: ImperialLengthMultiplier[] = [
+export const IMPERIAL_LENGTH_CONVERTERS: ImperialLengthConverter[] = [
   {
     name: 'thou',
     symbols: ['th'],
     feet: 1 / 12e3,
-    meters: 2.54e-5,
+    multiplier: 2.54e-5,
   }, {
     name: 'inch',
     symbols: ['in', '"'],
     feet: 1 / 12,
-    meters: 2.54e-2,
+    multiplier: 2.54e-2,
   }, {
     name: 'foot',
     symbols: ['ft'],
     feet: 1,
-    meters: 0.3048,
+    multiplier: 0.3048,
   }, {
     name: 'yard',
     symbols: ['yd'],
     feet: 3,
-    meters: 0.9144,
+    multiplier: 0.9144,
   }, {
     name: 'chain',
     symbols: ['ch'],
     feet: 66,
-    meters: 20.1168,
+    multiplier: 20.1168,
   }, {
     name: 'furlong',
     symbols: ['fur'],
     feet: 660,
-    meters: 201.168,
+    multiplier: 201.168,
   }, {
     name: 'mile',
     symbols: ['mi'],
     feet: 5280,
-    meters: 1609.344,
+    multiplier: 1609.344,
   }, {
     name: 'league',
     symbols: ['lea'],
     feet: 15840,
-    meters: 4828.032,
+    multiplier: 4828.032,
   }, /* maritime units */ {
     name: 'fathom',
     symbols: ['ftm'],
     feet: 6.0761,
-    meters: 1.852,
+    multiplier: 1.852,
   }, {
     name: 'cable',
-    symbols: ['cable'],
+    symbols: [],
     feet: 607.61,
-    meters: 185.2,
+    multiplier: 185.2,
   }, {
     name: 'nautical mile',
-    symbols: ['nautical mile'],
+    symbols: [],
     feet: 6076.1,
-    meters: 1852,
+    multiplier: 1852,
   }, {
     name: 'link',
-    symbols: ['link'],
+    symbols: [],
     feet: 66 / 100,
-    meters: 0.201168,
+    multiplier: 0.201168,
   }, {
     name: 'rod',
-    symbols: ['rod'],
+    symbols: [],
     feet: 66 / 4,
-    meters: 5.0292,
+    multiplier: 5.0292,
   }
 ];
 
-export function GenerateImperialLengthUnitConverters(): void {
-  for (let imperialLengthMultipliersIndex = 0, imperialLengthMultipliersLength = ImperialLengthMultipliers.length; imperialLengthMultipliersIndex < imperialLengthMultipliersLength; imperialLengthMultipliersIndex++) {
-    const imperialLengthMultiplier: ImperialLengthMultiplier = ImperialLengthMultipliers[imperialLengthMultipliersIndex];
-    const symbols: string[] =  imperialLengthMultiplier.symbols;
-    const meters: number = imperialLengthMultiplier.meters;
-    for (let symbolsIndex = 0, symbolsLength = symbols.length; symbolsIndex < symbolsLength; symbolsIndex++) {
-      RegisterCompleteTypeConverter(
-        'm', symbols[symbolsIndex],
-        (input: number): number => (input / meters),
-        (input: number): number => (input * meters),
-      );
-    }
-  }
+export function GenerateImperialLengthUnitConverters(meterUnit: string = 'meter'): void {
+  IMPERIAL_LENGTH_CONVERTERS.forEach((converter: ImperialLengthConverter) => {
+    RegisterNumericTypeConverter(meterUnit, converter);
+  });
 }
+
+

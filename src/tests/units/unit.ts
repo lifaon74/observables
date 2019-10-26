@@ -1,178 +1,163 @@
-// enum CSSNumericBaseType {
-//   "length",
-//   "angle",
-//   "time",
-//   "frequency",
-//   "resolution",
-//   "flex",
-//   "percent",
-// };
+import { GenerateAllUnitConverters, GenerateLengthUnitConverters } from './converters/converters';
+import { GetTypeConverterOrThrow, GetTypeConverters } from './converters/core';
 
-// dictionary CSSNumericType {
-//   long length;
-//   long angle;
-//   long time;
-//   long frequency;
-//   long resolution;
-//   long flex;
-//   long percent;
-//   CSSNumericBaseType percentHint;
-// };
-//
-// [Exposed=(Window, Worker, PaintWorklet, LayoutWorklet)]
-// interface CSSNumericValue : CSSStyleValue {
-//   CSSNumericValue add(CSSNumberish... values);
-//   CSSNumericValue sub(CSSNumberish... values);
-//   CSSNumericValue mul(CSSNumberish... values);
-//   CSSNumericValue div(CSSNumberish... values);
-//   CSSNumericValue min(CSSNumberish... values);
-//   CSSNumericValue max(CSSNumberish... values);
-//
-//   boolean equals(CSSNumberish... value);
-//
-//   CSSUnitValue to(USVString unit);
-//   CSSMathSum toSum(USVString... units);
-//   CSSNumericType type();
-//
-//   [Exposed=Window] static CSSNumericValue parse(USVString cssText);
-// };
+// import { ReadonlySet } from '../../misc/readonly-set/implementation';
 
-
-// unit is "number"
-// Return «[ ]» (empty map)
-//
-// unit is "percent"
-// Return «[ "percent" → 1 ]»
-//
-// unit is a <length> unit
-// Return «[ "length" → 1 ]»
-//
-// unit is an <angle> unit
-// Return «[ "angle" → 1 ]»
-//
-// unit is a <time> unit
-// Return «[ "time" → 1 ]»
-//
-// unit is a <frequency> unit
-// Return «[ "frequency" → 1 ]»
-//
-// unit is a <resolution> unit
-// Return «[ "resolution" → 1 ]»
-//
-// unit is a <flex> unit
-// Return «[ "flex" → 1 ]»
-//
-// anything else
-// Return failure.
-
-import { ReadonlyList } from '../../misc/readonly-list/implementation';
-import { GenerateLengthUnitConverters } from './converters/converters';
-import { GetTypeConverterOrThrow } from './converters/core';
-
-export type TNumberLike = NumericValue | number;
-
-export abstract class ValueNode {
-  abstract reduce(): ValueNode;
+export interface IUnitOptions<T> {
+  value: T;
+  unit: string;
 }
 
-export abstract class NumericValue extends ValueNode {
-  // public readonly value: number;
-  // public readonly type: number;
+export type TUnitOrValue<T> = Unit<T> | T;
 
-  protected constructor() {
-    super();
-  }
-
-  abstract to(unit: string): Unit;
+export function ConvertUnitToOtherUnitValue<TFrom, TTo>(instance: Unit<TFrom>, unit: string): TTo {
+  return (instance.unit === unit)
+    ? instance.value
+    : GetTypeConverterOrThrow(instance.unit, unit)(instance.value);
 }
 
-
-/*----------------*/
-
-export type TMathOperationOperator =
-  'addition'
-  | 'subtraction'
-  | 'product'
-  | 'division'
-  ;
-
-
-export abstract class MathOperation extends NumericValue {
-  public readonly operator: TMathOperationOperator;
-
-  protected constructor(operator: TMathOperationOperator) {
-    super();
-    this.operator = operator;
-  }
+export function ConvertUnitOrConstantToOtherUnitValue<T>(value: TUnitOrValue<T>, unit: string): T {
+  return (value instanceof Unit)
+    ? ConvertUnitToOtherUnitValue<T, T>(value, unit)
+    : value;
 }
 
-export abstract class Addition extends MathOperation {
-  public readonly values: ReadonlyList<NumericValue>;
-
-  protected constructor(values: NumericValue[]) {
-    super('addition');
-    this.values = new ReadonlyList<NumericValue>(values);
-  }
-}
-
-/*----------------*/
-
-
-export abstract class Unit extends NumericValue {
-  public readonly value: number;
+export class Unit<T> {
+  public readonly value: T;
   public readonly unit: string;
 
-  protected constructor(value: number, unit: string) {
-    super();
-    this.value = value;
-    this.unit = unit;
+  constructor(options: IUnitOptions<T>) {
+    this.value = options.value;
+    this.unit = options.unit;
   }
 
-  reduce(): Unit {
-    return this;
+  to<TTo>(unit: string): Unit<TTo> {
+    return new Unit<TTo>({
+      value: ConvertUnitToOtherUnitValue<T, TTo>(this, unit),
+      unit
+    });
+  }
+
+  equals(value: TUnitOrValue<T>): boolean {
+    return ConvertUnitOrConstantToOtherUnitValue<T>(value, this.unit) === this.value;
   }
 }
 
-// export abstract class LengthUnit extends Unit {
-//   protected constructor() {
-//
+/*----*/
+
+export type TNumericUnitOrValue = NumericUnit | number;
+
+export function NumericUnitReduce(instance: NumericUnit, values: TNumericUnitOrValue[], reducer: (previousValue: number, currentValue: number) => number): number {
+  return values.reduce((value: number, unit: TNumericUnitOrValue) => {
+    return reducer(value, ConvertUnitOrConstantToOtherUnitValue<number>(unit, instance.unit));
+  }, instance.value)
+}
+
+const add = (a: number, b: number) => (a + b);
+const sub = (a: number, b: number) => (a - b);
+const mul = (a: number, b: number) => (a * b);
+const div = (a: number, b: number) => (a / b);
+
+export class NumericUnit extends Unit<number> {
+  constructor(options: IUnitOptions<number>) {
+    super(options);
+  }
+
+  /** ARITHMETIC **/
+
+  add(...values: TNumericUnitOrValue[]): NumericUnit {
+    return new NumericUnit({
+      value: NumericUnitReduce(this, values, add),
+      unit: this.unit,
+    });
+  }
+
+  sub(...values: TNumericUnitOrValue[]): NumericUnit {
+    return new NumericUnit({
+      value: NumericUnitReduce(this, values, sub),
+      unit: this.unit,
+    });
+  }
+
+  mul(...values: TNumericUnitOrValue[]): NumericUnit {
+    return new NumericUnit({
+      value: NumericUnitReduce(this, values, mul),
+      unit: this.unit,
+    });
+  }
+
+  div(...values: TNumericUnitOrValue[]): NumericUnit {
+    return new NumericUnit({
+      value: NumericUnitReduce(this, values, div),
+      unit: this.unit,
+    });
+  }
+
+  /** MATH **/
+
+  min(...values: TNumericUnitOrValue[]): NumericUnit {
+    return new NumericUnit({
+      value: NumericUnitReduce(this, values, Math.min),
+      unit: this.unit,
+    });
+  }
+
+  max(...values: TNumericUnitOrValue[]): NumericUnit {
+    return new NumericUnit({
+      value: NumericUnitReduce(this, values, Math.max),
+      unit: this.unit,
+    });
+  }
+
+}
+
+function mm(value: number): NumericUnit {
+  return new NumericUnit({
+    value,
+    unit: 'millimeter'
+  });
+}
+
+function cm(value: number): NumericUnit {
+  return new NumericUnit({
+    value,
+    unit: 'centimeter'
+  });
+}
+
+function meter(value: number): NumericUnit {
+  return new NumericUnit({
+    value,
+    unit: 'meter'
+  });
+}
+
+// export class LengthUnit extends NumericUnit {
+//   constructor(options: IUnitOptions<number>) {
+//     super(options);
 //   }
-//   toSiUnit(): LengthUnit {
-//     switch (this.unit) {
+// }
 //
-//     }
+// export class MeterUnit extends LengthUnit {
+//   constructor(value: number) {
+//     super({
+//       value,
+//       unit: 'm'
+//     });
 //   }
 // }
 
-export abstract class MilliMeterUnit extends Unit {
-  public readonly value: number;
-
-  protected constructor(value: number) {
-    super(value, 'mm');
-  }
-
-  // to(unit: string): Unit {
-  //   let universalUnit: number;
-  //   switch (unit) {
-  //
-  //   }
-  // }
-
-  reduce(): Unit {
-    return this;
-  }
-}
-
 /*----------------*/
 
+
 export interface IPCBItemOptions {
-  x: Unit;
-  y: Unit;
+  x: number;
+  y: number;
 }
 
 export abstract class PCBItem {
-  public readonly x: Unit;
-  public readonly y: Unit;
+  public readonly x: number;
+  public readonly y: number;
 
   protected constructor(options: IPCBItemOptions) {
     this.x = options.x;
@@ -211,20 +196,22 @@ export class PCBHole extends PCBItem {
 
 
 
-
-
-
-
-
-
 export function testUnit() {
-  GenerateLengthUnitConverters();
+  GenerateAllUnitConverters();
 
-  // console.log(GetTypeConverterOrThrow('m', 'mm')(0.3));
+  // console.log(GetTypeConverters('m', 'in'));
+  // console.log(GetTypeConverterOrThrow('meter', 'metre')(0.3));
+  // console.log(GetTypeConverterOrThrow('meter', 'm')(0.3));
   // console.log(GetTypeConverterOrThrow('m', 'cm')(0.3));
-  // console.log(GetTypeConverterOrThrow('mm', 'cm', 0)(15));
+  // console.log(GetTypeConverterOrThrow('mm', 'cm')(15));
+  //
+  // console.log(GetTypeConverterOrThrow('in', 'cm')(1));
+  // console.log(GetTypeConverterOrThrow('cm', 'in')(2.54 * 4));
+  // console.log(GetTypeConverterOrThrow('th', 'mm')(1));
+  // console.log(GetTypeConverterOrThrow('minute', 'second')(1));
+  //
+  // console.log(GetTypeConverterOrThrow('minute', 'meter')(1));
 
-  console.log(GetTypeConverterOrThrow('in', 'cm')(1));
-  console.log(GetTypeConverterOrThrow('cm', 'in')(2.54 * 4));
-  console.log(GetTypeConverterOrThrow('th', 'mm')(1));
+
+  console.log(meter(1).add(mm(1000)).sub(cm(10)).to('cm'));
 }

@@ -1,113 +1,133 @@
-import { RegisterCompleteTypeConverter } from './core';
+import {
+  NumericTypeConverter, RegisterNumericTypeConverterByName, RegisterNumericTypeConverter,
+  RegisterNumericTypeConverterBySymbols, RegisterNumericTypeConverterSymbolsAsAliases, RegisterTypeAliases
+} from './core';
 
-export interface SIMultiplier {
-  multiplier: number;
-  symbols: [string, ...string[]];
+
+export interface SIMultiplier extends NumericTypeConverter {
 }
 
-export const SIMMultipliers: SIMultiplier[] = [
+export const SI_MULTIPLIERS: SIMultiplier[] = [
   {
+    name: 'deci',
     multiplier: 0.1,
     symbols: ['d']
   }, {
+    name: 'centi',
     multiplier: 0.01,
     symbols: ['c']
   }, {
+    name: 'milli',
     multiplier: 0.001,
     symbols: ['m']
   }, {
+    name: 'micro',
     multiplier: 0.000001,
     symbols: ['µ', 'u']
   }, {
+    name: 'nano',
     multiplier: 1e-9,
     symbols: ['n']
   }, {
+    name: 'pico',
     multiplier: 1e-12,
     symbols: ['p']
   },
-  {
+   {
+    name: 'femto',
     multiplier: 1e-15,
     symbols: ['f']
   }, {
+    name: 'atto',
     multiplier: 1e-18,
     symbols: ['a']
   }, {
+    name: 'zepto',
     multiplier: 1e-21,
     symbols: ['z']
   }, {
+    name: 'yocto',
     multiplier: 1e-24,
     symbols: ['y']
   }, {
+    name: 'deca',
     multiplier: 10,
     symbols: ['da']
   }, {
+    name: 'hecto',
     multiplier: 10,
     symbols: ['h']
   }, {
+    name: 'kilo',
     multiplier: 1000,
     symbols: ['k']
   }, {
+    name: 'mega',
     multiplier: 1000000,
     symbols: ['M']
   }, {
+    name: 'giga',
     multiplier: 1000000000,
     symbols: ['G']
   }, {
+    name: 'tera',
     multiplier: 1000000000000,
     symbols: ['T']
   }, {
+    name: 'peta',
     multiplier: 1000000000000000,
     symbols: ['P']
   }, {
+    name: 'exa',
     multiplier: 1000000000000000000,
     symbols: ['E']
   }, {
+    name: 'zetta',
     multiplier: 1e+21, symbols: ['Z']
   }, {
+    name: 'yotta',
     multiplier: 1e+24,
     symbols: ['Y']
   }
 ];
 
-export function GenerateSIUnitConverters(unit: string): void {
-  const siMultipliersLength: number = SIMMultipliers.length;
-  for (let siMultipliersIndex = 0; siMultipliersIndex < siMultipliersLength; siMultipliersIndex++) {
-    const siMultiplier: SIMultiplier = SIMMultipliers[siMultipliersIndex];
-    const multiplier: number = siMultiplier.multiplier;
-    const symbols: string[] = siMultiplier.symbols;
-    for (let symbolsIndex = 0, symbolsLength = symbols.length; symbolsIndex < symbolsLength; symbolsIndex++) {
-      RegisterCompleteTypeConverter(
-        unit, `${ symbols[symbolsIndex] }${ unit }`,
-        (input: number): number => (input / multiplier),
-        (input: number): number => (input * multiplier),
-      );
-    }
-  }
-  //
-  // if (full) {
-  //   for (let siMultipliersIndex1 = 0; siMultipliersIndex1 < siMultipliersLength; siMultipliersIndex1++) {
-  //     const siMultiplier1: SIMultiplier = SIMMultipliers[siMultipliersIndex1];
-  //     const multiplier1: number = siMultiplier1.multiplier;
-  //     const symbols1: string[] = siMultiplier1.symbols;
-  //     for (let symbolsIndex1 = 0, symbolsLength2 = symbols1.length; symbolsIndex1 < symbolsLength2; symbolsIndex1++) {
-  //       const unit1: TType = `${ symbols1[symbolsIndex1] }${ unit }`;
-  //       for (let siMultipliersIndex2 = 0; siMultipliersIndex2 < siMultipliersLength; siMultipliersIndex2++) {
-  //         const siMultiplier2: SIMultiplier = SIMMultipliers[siMultipliersIndex2];
-  //         const symbols2: string[] = siMultiplier2.symbols;
-  //         const multiplier: number = multiplier1 / siMultiplier2.multiplier;
-  //         for (let symbolsIndex2 = 0, symbolsLength2 = symbols2.length; symbolsIndex2 < symbolsLength2; symbolsIndex2++) {
-  //           RegisterTypeConverter(
-  //             unit1, `${ symbols2[symbolsIndex2] }${ unit }`,
-  //             (input: number): number => (input * multiplier),
-  //           );
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
+export function PrefixSIUnit(unit: string, siMultiplierName: string): string {
+  return `${ siMultiplierName }${ unit }`;
 }
 
+export function SIMultiplierToNumericTypeConverter(unit: string, symbol: string, siMultiplier: SIMultiplier): NumericTypeConverter {
+  return {
+    ...siMultiplier,
+    name: PrefixSIUnit(unit, siMultiplier.name),
+    symbols: (siMultiplier.symbols === void 0)
+      ? []
+      : siMultiplier.symbols.map(siSymbol => PrefixSIUnit(symbol, siSymbol))
+  }
+}
+
+export function GenerateSIUnitMultiplierConvertersUsingNames(unit: string): void {
+  SI_MULTIPLIERS.forEach((siMultiplier: SIMultiplier) => {
+    RegisterNumericTypeConverterByName(unit, SIMultiplierToNumericTypeConverter(unit, '', siMultiplier));
+  });
+}
+
+export function GenerateSIUnitMultiplierConvertersUsingSymbols(symbol: string): void {
+  SI_MULTIPLIERS.forEach((siMultiplier: SIMultiplier) => {
+    RegisterNumericTypeConverterBySymbols(symbol, SIMultiplierToNumericTypeConverter('', symbol, siMultiplier));
+  });
+}
+
+export function GenerateSIUnitMultiplierConverters(unit: string, symbol: string): void {
+  SI_MULTIPLIERS.forEach((siMultiplier: SIMultiplier) => {
+    RegisterNumericTypeConverter(unit, SIMultiplierToNumericTypeConverter(unit, symbol, siMultiplier));
+  });
+  RegisterTypeAliases(unit, [symbol]);
+}
+
+/*-------*/
+
 export function GenerateSILengthUnitConverters(): void {
-  GenerateSIUnitConverters('m');
+  GenerateSIUnitMultiplierConverters('meter', 'm');
+  RegisterTypeAliases('meter', ['metre']);
 }
 
