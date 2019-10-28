@@ -10,8 +10,10 @@ import { IReadonlyList } from '../../misc/readonly-list/interfaces';
 import { IObserverInternal, Observer, OBSERVER_PRIVATE, IsObserver } from '../observer/implementation';
 import { IObservableObserver } from '../observable-observer/interfaces';
 import { InitObservableHook, IObservableHookPrivate } from './hook';
-import { BaseClass, Constructor, HasFactoryWaterMark, IBaseClassConstructor, MakeFactory } from '../../classes/factory';
+import { HasFactoryWaterMark, MakeFactory } from '../../classes/class-helpers/factory';
 import { IsObject } from '../../helpers';
+import { Constructor } from '../../classes/class-helpers/types';
+import { BaseClass, IBaseClassConstructor } from '../../classes/class-helpers/base-class';
 
 
 export const OBSERVABLE_PRIVATE = Symbol('observable-private');

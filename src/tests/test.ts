@@ -31,6 +31,8 @@ import { testPromises } from './test-promises';
 import { testTask } from './test-task';
 import { IProgress } from '../misc/progress/interfaces';
 import { testSAndF } from './test-s-and-s';
+import { testFactory } from './test-factory';
+import { testUnit } from './units/unit';
 
 
 
@@ -600,7 +602,9 @@ export async function test() {
   // testClasses();
   // testProgram();
   // await testTask();
-  await testSAndF();
+  // await testSAndF();
+  // await testFactory();
+  await testUnit();
 
   console.log('tests done');
 }

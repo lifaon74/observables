@@ -7,9 +7,8 @@ import {
 import { IObservable, IObservableConstructor } from '../../../core/observable/interfaces';
 import { IObserver } from '../../../core/observer/interfaces';
 import {
-  BaseClass,
-  Constructor, HasFactoryWaterMark, IBaseClassConstructor, MakeFactory
-} from '../../../classes/factory';
+  HasFactoryWaterMark, MakeFactory
+} from '../../../classes/class-helpers/factory';
 import {
   INotificationsObservableTypedConstructor, KeyValueMapToNotifications
 } from '../../../notifications/core/notifications-observable/interfaces';
@@ -23,6 +22,8 @@ import {
   IsNotificationsObservableConstructor, NotificationsObservableFactory
 } from '../../../notifications/core/notifications-observable/implementation';
 import { IActivableConstructor } from '../../../misc/activable/interfaces';
+import { Constructor } from '../../../classes/class-helpers/types';
+import { BaseClass, IBaseClassConstructor } from '../../../classes/class-helpers/base-class';
 
 
 export const INPUT_OUTPUT_PRIVATE = Symbol('input-output-private');

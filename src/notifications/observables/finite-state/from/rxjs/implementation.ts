@@ -7,15 +7,16 @@ import {
 } from './interfaces';
 import { IsObject } from '../../../../../helpers';
 import {
-  BaseClass,
-  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IBaseClassConstructor, IsFactoryClass, MakeFactory
-} from '../../../../../classes/factory';
+  GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
+} from '../../../../../classes/class-helpers/factory';
 import { FiniteStateObservableSoftFactory, IsFiniteStateObservableConstructor } from '../../implementation';
 import { INotificationsObservableTypedConstructor } from '../../../../core/notifications-observable/interfaces';
 import { IObservableConstructor } from '../../../../../core/observable/interfaces';
 import { NotificationsObservableFactory } from '../../../../core/notifications-observable/implementation';
 import { ObservableFactory } from '../../../../../core/observable/implementation';
 import { GenerateFiniteStateObservableHookFromRXJS } from './hook-generators';
+import { Constructor } from '../../../../../classes/class-helpers/types';
+import { BaseClass, IBaseClassConstructor } from '../../../../../classes/class-helpers/base-class';
 
 
 export const FROM_RXJS_OBSERVABLE_PRIVATE = Symbol('from-rxjs-observable-private');

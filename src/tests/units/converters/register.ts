@@ -1,3 +1,6 @@
+/**
+ * Contains functions to register and get type converters
+ */
 
 export type TType = string;
 export type TTypeConverter<TFrom, TTo> = (input: TFrom) => TTo;
@@ -13,6 +16,9 @@ const TYPE_CONVERTER = new Map<TType, Map<TType, TTypeConverter<any, any>>>();
 (window as any).TYPE_CONVERTER = TYPE_CONVERTER; // TODO
 const passthrough = (value: any) => value;
 
+/**
+ * Registers a converter from one type to another
+ */
 export function RegisterTypeConverter(from: TType, to: TType, converter: TTypeConverter<any, any>): void {
   // console.log('register', from, to);
   if (from === to) {
@@ -33,6 +39,9 @@ export function RegisterTypeConverter(from: TType, to: TType, converter: TTypeCo
   }
 }
 
+/**
+ * Registers a converter from one type to another, and vice-versa
+ */
 export function RegisterCompleteTypeConverter(
   type1: TType,
   type2: TType,
@@ -44,6 +53,9 @@ export function RegisterCompleteTypeConverter(
 }
 
 
+/**
+ * Registers some alias for a 'type'
+ */
 export function RegisterTypeAliases(type: TType, aliases: TType[]): void {
   for (let i = 0, l = aliases.length; i < l; i++) {
     RegisterCompleteTypeConverter(type, aliases[i], passthrough, passthrough);
@@ -53,12 +65,18 @@ export function RegisterTypeAliases(type: TType, aliases: TType[]): void {
 
 /*---------------------*/
 
-export interface NumericTypeConverter {
+/**
+ * Structure used to create automatically some converters, from one number to another by using a simple multiplication
+ */
+export interface MultiplierTypeConverter {
   name: string;
   multiplier: number;
   symbols?: string[];
 }
 
+/**
+ * Creates and register converters from one type to another (both direction) using a simple multiplier
+ */
 export function RegisterMultiplierConverter(type1: TType, type2: TType, multiplier: number): void {
   RegisterCompleteTypeConverter(
     type1, type2,
@@ -67,11 +85,11 @@ export function RegisterMultiplierConverter(type1: TType, type2: TType, multipli
   );
 }
 
-export function RegisterNumericTypeConverterByName(type: TType, converter: NumericTypeConverter): void {
+export function RegisterMultiplierTypeConverterByName(type: TType, converter: MultiplierTypeConverter): void {
   RegisterMultiplierConverter(type, converter.name, converter.multiplier);
 }
 
-export function RegisterNumericTypeConverterBySymbols(type: TType, converter: NumericTypeConverter): void {
+export function RegisterMultiplierTypeConverterBySymbols(type: TType, converter: MultiplierTypeConverter): void {
   if (converter.symbols !== void 0) {
     const symbols: string[] = converter.symbols;
     for (let i = 0, l = symbols.length; i < l; i++) {
@@ -80,66 +98,36 @@ export function RegisterNumericTypeConverterBySymbols(type: TType, converter: Nu
   }
 }
 
-export function RegisterNumericTypeConverterSymbolsAsAliases(type: TType, converter: NumericTypeConverter): void {
+export function RegisterMultiplierTypeConverterSymbolsAsAliases(type: TType, converter: MultiplierTypeConverter): void {
   if (converter.symbols !== void 0) {
     RegisterTypeAliases(type, converter.symbols);
   }
 }
 
-export function RegisterNumericTypeConverterSymbolsAsAliasesOfName(converter: NumericTypeConverter): void {
+export function RegisterMultiplierTypeConverterSymbolsAsAliasesOfName(converter: MultiplierTypeConverter): void {
   if (converter.symbols !== void 0) {
     RegisterTypeAliases(converter.name, converter.symbols);
   }
 }
 
-export function RegisterNumericTypeConverter(type: TType, converter: NumericTypeConverter): void {
-  RegisterNumericTypeConverterByName(type, converter);
-  RegisterNumericTypeConverterBySymbols(type, converter);
-  RegisterNumericTypeConverterSymbolsAsAliasesOfName(converter);
+export function RegisterMultiplierTypeConverter(type: TType, converter: MultiplierTypeConverter): void {
+  RegisterMultiplierTypeConverterByName(type, converter);
+  RegisterMultiplierTypeConverterBySymbols(type, converter);
+  RegisterMultiplierTypeConverterSymbolsAsAliasesOfName(converter);
 }
 
 /*---------------------*/
 
-
-// export function GetTypeConverter<TConverter extends TTypeConverter<any, any>>(from: TType, to: TType, store: boolean = false, depth: number = 5): TConverter | null {
-//   if (from === to) {
-//     return passthrough as TConverter;
-//   } else if (TYPE_CONVERTER.has(from)) {
-//     const toMap: Map<TType, TTypeConverter<any, any>> = TYPE_CONVERTER.get(from) as Map<TType, TTypeConverter<any, any>>;
-//     if (toMap.has(to)) {
-//       return toMap.get(to) as TConverter;
-//     } else {
-//       if (depth <= 0) {
-//         return null;
-//       } else {
-//         const iterator: Iterator<[TType, TTypeConverter<any, any>]> = toMap.entries();
-//         let result: IteratorResult<[TType, TTypeConverter<any, any>]>;
-//         while (!(result = iterator.next()).done) {
-//           const [intermediateType, fromTypeToIntermediateTypeConverter] = result.value;
-//           const intermediateTypeToToTypeConverter: TTypeConverter<any, any> | null = GetTypeConverter(intermediateType, to, store, depth - 1);
-//           if (intermediateTypeToToTypeConverter !== null) {
-//             const converter: TConverter = ((input: TTypeConverterFromType<TConverter>): TTypeConverterToType<TConverter> => {
-//               return intermediateTypeToToTypeConverter(fromTypeToIntermediateTypeConverter(input));
-//             }) as TConverter;
-//             if (store) {
-//               RegisterTypeConverter(from, to, converter);
-//             }
-//             return converter;
-//           }
-//         }
-//         return null;
-//       }
-//     }
-//   } else {
-//     return null;
-//   }
-// }
 
 export interface ITypeConverterAndPath<TConverter extends TTypeConverter<any, any>> {
   types: TType[];
   converter: TConverter;
 }
 
+/**
+ * Returns the converter matching 'from' to 'to'.
+ * If not available, returns 'undefined'
+ */
 export function FastGetTypeConverter<TConverter extends TTypeConverter<any, any>>(from: TType, to: TType): TConverter | undefined {
   if (from === to) {
     return passthrough as TConverter;
@@ -150,6 +138,10 @@ export function FastGetTypeConverter<TConverter extends TTypeConverter<any, any>
   }
 }
 
+
+/**
+ * Returns a list of type converters (some may be built on the fly) from one type to another, sorted by fastest path.
+ */
 export function GetTypeConverters<TConverter extends TTypeConverter<any, any>>(from: TType, to: TType, depth: number = 5, memory: Set<string> = new Set<string>()): ITypeConverterAndPath<TConverter>[] {
   if (depth >= 0) {
     const key: string = `${ JSON.stringify(from) }-${ JSON.stringify(to) }`;
@@ -207,13 +199,9 @@ export function GetTypeConverters<TConverter extends TTypeConverter<any, any>>(f
   }
 }
 
-// export function GetTypeConverter<TConverter extends TTypeConverter<any, any>>(from: TType, to: TType, depth?: number): TConverter | null {
-//   const converters: ITypeConverterAndPath<TConverter>[] = GetTypeConverters<TConverter>(from, to, depth);
-//   return (converters.length === 0)
-//     ? null
-//     : converters[0].converter;
-// }
-
+/**
+ * Returns a type converter (may be built on the fly) from one type to another, or throws
+ */
 export function GetTypeConverterOrThrow<TConverter extends TTypeConverter<any, any>>(from: TType, to: TType, depth?: number): TConverter {
   const converter: TConverter | undefined= FastGetTypeConverter<TConverter>(from, to);
   if (converter === undefined) {

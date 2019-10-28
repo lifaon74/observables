@@ -2,8 +2,6 @@
 // type TCostFn = (lvl: number) => number;
 // type TIncomeFn = (lvl: number) => number;
 
-import { testUnit } from './units/unit';
-
 interface RevenuePart {
   cost: number;
   income: number;
@@ -439,19 +437,19 @@ const parts = [
 
 
 const BONUS_RUNES: number = 110.2e12;
-const LIMIT: number = 420;
+const LIMIT: number = 200;
 
 const initialPartsLvl: number[] = [ // lifaon
-  1655,
-  1597,
-  1491,
-  1411,
-  1355,
-  1248,
-  1163,
-  1082,
-  1000,
-  882,
+  1709,
+  1643,
+  1547,
+  1467,
+  1412,
+  1305,
+  1220,
+  1155,
+  1066,
+  954,
 ];
 
 
@@ -548,8 +546,6 @@ function powerSupply() {
 
 
 export function testSAndF() {
-  // testUnit();
-
   // plotLvlToRecoverDuration();
   // plotLvlToIncome();
 

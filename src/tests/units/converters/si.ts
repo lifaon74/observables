@@ -1,12 +1,20 @@
 import {
-  NumericTypeConverter, RegisterNumericTypeConverterByName, RegisterNumericTypeConverter,
-  RegisterNumericTypeConverterBySymbols, RegisterNumericTypeConverterSymbolsAsAliases, RegisterTypeAliases
-} from './core';
+  MultiplierTypeConverter, RegisterMultiplierTypeConverterByName, RegisterMultiplierTypeConverter,
+  RegisterMultiplierTypeConverterBySymbols, RegisterMultiplierTypeConverterSymbolsAsAliases, RegisterTypeAliases
+} from './register';
 
+/**
+ * Contains function used by the International System of Units (SI)
+ * https://en.wikipedia.org/wiki/International_System_of_Units
+ */
 
-export interface SIMultiplier extends NumericTypeConverter {
+export interface SIMultiplier extends MultiplierTypeConverter {
 }
 
+/**
+ * The list of SI multiplier prefixes:
+ * @example: <kilo | milli | ...>[unit]
+ */
 export const SI_MULTIPLIERS: SIMultiplier[] = [
   {
     name: 'deci',
@@ -91,11 +99,18 @@ export const SI_MULTIPLIERS: SIMultiplier[] = [
   }
 ];
 
+/**
+ * Returns the composed name of an unit ant an SI multiplier
+ */
 export function PrefixSIUnit(unit: string, siMultiplierName: string): string {
   return `${ siMultiplierName }${ unit }`;
 }
 
-export function SIMultiplierToNumericTypeConverter(unit: string, symbol: string, siMultiplier: SIMultiplier): NumericTypeConverter {
+
+/**
+ * Merges an SI multiplier with an unit and a symbol to create a new MultiplierTypeConverter
+ */
+export function SIMultiplierToMultiplierTypeConverter(unit: string, symbol: string, siMultiplier: SIMultiplier): MultiplierTypeConverter {
   return {
     ...siMultiplier,
     name: PrefixSIUnit(unit, siMultiplier.name),
@@ -107,27 +122,20 @@ export function SIMultiplierToNumericTypeConverter(unit: string, symbol: string,
 
 export function GenerateSIUnitMultiplierConvertersUsingNames(unit: string): void {
   SI_MULTIPLIERS.forEach((siMultiplier: SIMultiplier) => {
-    RegisterNumericTypeConverterByName(unit, SIMultiplierToNumericTypeConverter(unit, '', siMultiplier));
+    RegisterMultiplierTypeConverterByName(unit, SIMultiplierToMultiplierTypeConverter(unit, '', siMultiplier));
   });
 }
 
 export function GenerateSIUnitMultiplierConvertersUsingSymbols(symbol: string): void {
   SI_MULTIPLIERS.forEach((siMultiplier: SIMultiplier) => {
-    RegisterNumericTypeConverterBySymbols(symbol, SIMultiplierToNumericTypeConverter('', symbol, siMultiplier));
+    RegisterMultiplierTypeConverterBySymbols(symbol, SIMultiplierToMultiplierTypeConverter('', symbol, siMultiplier));
   });
 }
 
 export function GenerateSIUnitMultiplierConverters(unit: string, symbol: string): void {
   SI_MULTIPLIERS.forEach((siMultiplier: SIMultiplier) => {
-    RegisterNumericTypeConverter(unit, SIMultiplierToNumericTypeConverter(unit, symbol, siMultiplier));
+    RegisterMultiplierTypeConverter(unit, SIMultiplierToMultiplierTypeConverter(unit, symbol, siMultiplier));
   });
   RegisterTypeAliases(unit, [symbol]);
-}
-
-/*-------*/
-
-export function GenerateSILengthUnitConverters(): void {
-  GenerateSIUnitMultiplierConverters('meter', 'm');
-  RegisterTypeAliases('meter', ['metre']);
 }
 

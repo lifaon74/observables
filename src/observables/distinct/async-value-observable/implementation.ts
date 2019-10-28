@@ -10,9 +10,8 @@ import {
   IAsyncValueObservableContextConstructor, TAsyncValueObservableConstructorArgs
 } from './interfaces';
 import {
-  BaseClass,
-  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IBaseClassConstructor, IsFactoryClass, MakeFactory
-} from '../../../classes/factory';
+  GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
+} from '../../../classes/class-helpers/factory';
 import { ICancelToken } from '../../../misc/cancel-token/interfaces';
 import { IValueObservable, IValueObservableConstructor, IValueObservableContext } from '../value-observable/interfaces';
 import {
@@ -23,6 +22,8 @@ import {
   CancelReason, CancelToken
 } from '../../../misc/cancel-token/implementation';
 import { IsObject } from '../../../helpers';
+import { Constructor } from '../../../classes/class-helpers/types';
+import { BaseClass, IBaseClassConstructor } from '../../../classes/class-helpers/base-class';
 
 
 export const ASYNC_VALUE_OBSERVABLE_PRIVATE = Symbol('async-value-observable-private');

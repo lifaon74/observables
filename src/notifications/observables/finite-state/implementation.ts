@@ -22,12 +22,13 @@ import { Notification } from '../../core/notification/implementation';
 import { KeyValueMapKeys, KeyValueMapValues } from '../../core/interfaces';
 import { EnumToString, IsObject } from '../../../helpers';
 import {
-  BaseClass,
-  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IBaseClassConstructor, IsFactoryClass, MakeFactory
-} from '../../../classes/factory';
+  GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
+} from '../../../classes/class-helpers/factory';
 import { IObserver } from '../../../core/observer/interfaces';
 import { ExtractObserverNameAndCallback } from '../../core/notifications-observer/implementation';
 import { INotificationsObserverLike } from '../../core/notifications-observer/interfaces';
+import { Constructor } from '../../../classes/class-helpers/types';
+import { BaseClass, IBaseClassConstructor } from '../../../classes/class-helpers/base-class';
 
 
 export const COMPLETE_STATE_OBSERVABLE_PRIVATE = Symbol('finite-state-observable-private');

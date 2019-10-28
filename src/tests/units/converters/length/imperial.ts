@@ -1,6 +1,6 @@
-import { NumericTypeConverter, RegisterNumericTypeConverter } from './core';
+import { MultiplierTypeConverter, RegisterMultiplierTypeConverter } from '../register';
 
-export interface ImperialLengthConverter extends NumericTypeConverter {
+export interface ImperialLengthConverter extends MultiplierTypeConverter {
   feet?: number;
 }
 
@@ -75,7 +75,7 @@ export const IMPERIAL_LENGTH_CONVERTERS: ImperialLengthConverter[] = [
 
 export function GenerateImperialLengthUnitConverters(meterUnit: string = 'meter'): void {
   IMPERIAL_LENGTH_CONVERTERS.forEach((converter: ImperialLengthConverter) => {
-    RegisterNumericTypeConverter(meterUnit, converter);
+    RegisterMultiplierTypeConverter(meterUnit, converter);
   });
 }
 

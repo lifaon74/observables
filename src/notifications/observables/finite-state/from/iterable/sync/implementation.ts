@@ -8,14 +8,15 @@ import { FiniteStateObservableSoftFactory, IsFiniteStateObservableConstructor } 
 import { ObservableFactory } from '../../../../../../core/observable/implementation';
 import { IObservableConstructor } from '../../../../../../core/observable/interfaces';
 import {
-  BaseClass,
-  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IBaseClassConstructor, IsFactoryClass, MakeFactory
-} from '../../../../../../classes/factory';
+  GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
+} from '../../../../../../classes/class-helpers/factory';
 import { ConstructClassWithPrivateMembers } from '../../../../../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../../../../../helpers';
 import { NotificationsObservableFactory } from '../../../../../core/notifications-observable/implementation';
 import { INotificationsObservableTypedConstructor } from '../../../../../core/notifications-observable/interfaces';
 import { GenerateFiniteStateObservableHookFromIterableWithPauseWorkflow } from '../hook-generators';
+import { Constructor } from '../../../../../../classes/class-helpers/types';
+import { BaseClass, IBaseClassConstructor } from '../../../../../../classes/class-helpers/base-class';
 
 
 export const FROM_ITERABLE_OBSERVABLE_PRIVATE = Symbol('from-iterable-observable-private');

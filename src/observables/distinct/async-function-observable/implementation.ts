@@ -20,7 +20,7 @@ import {
 } from '../../../misc/cancel-token/implementation';
 import { FUNCTION_OBSERVABLE_PRIVATE, IFunctionObservableInternal } from '../function-observable/implementation';
 import { IsObject } from '../../../helpers';
-import { HasFactoryWaterMark } from '../../../classes/factory';
+import { HasFactoryWaterMark } from '../../../classes/class-helpers/factory';
 
 
 export const ASYNC_FUNCTION_OBSERVABLE_PRIVATE = Symbol('async-function-observable-private');
