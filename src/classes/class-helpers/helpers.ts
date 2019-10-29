@@ -1,5 +1,5 @@
 import { SetInstanceOf } from './instanceof';
-import { AbstractClass, Constructor } from './types';
+import { AbstractClass } from './types';
 
 export const EXCLUDED_PROPERTY_NAMES: Set<PropertyKey> = new Set<PropertyKey>(['prototype', 'constructor', ...GetOwnPropertyKeys(Object.prototype)]);
 
