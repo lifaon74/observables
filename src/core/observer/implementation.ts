@@ -9,8 +9,10 @@ import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPr
 import {
   IsObservable, LinkObservableAndObserver, UnLinkObservableAndObserver
 } from '../observable/implementation';
-import { BaseClass, Constructor, IBaseClassConstructor, MakeFactory } from '../../classes/factory';
+import { MakeFactory } from '../../classes/class-helpers/factory';
 import { IsObject } from '../../helpers';
+import { Constructor } from '../../classes/class-helpers/types';
+import { BaseClass, IBaseClassConstructor } from '../../classes/class-helpers/base-class';
 
 export const OBSERVER_PRIVATE = Symbol('observer-private');
 

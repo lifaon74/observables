@@ -33,8 +33,6 @@ import { IProgress } from '../misc/progress/interfaces';
 
 
 
-
-
 // import { toAsyncIterable } from '../operators/to/async-iterator/toAsyncIterable';
 
 
@@ -600,6 +598,8 @@ export async function test() {
   // testClasses();
   // testProgram();
   // await testTask();
+  // await testFactory();
+  // await testUnit();
 
   console.log('tests done');
 }

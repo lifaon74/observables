@@ -14,7 +14,7 @@ import { IObserver } from '../../../core/observer/interfaces';
 import { Observer } from '../../../core/observer/public';
 import { IValueObservableContext } from '../value-observable/interfaces';
 import { IsObject } from '../../../helpers';
-import { HasFactoryWaterMark } from '../../../classes/factory';
+import { HasFactoryWaterMark } from '../../../classes/class-helpers/factory';
 
 
 export const FUNCTION_OBSERVABLE_PRIVATE = Symbol('function-observable-private');

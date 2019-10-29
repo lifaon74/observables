@@ -13,11 +13,12 @@ import {
   TValueObservableConstructorArgs
 } from './interfaces';
 import {
-  BaseClass,
-  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IBaseClassConstructor, IsFactoryClass, MakeFactory
-} from '../../../classes/factory';
+  GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
+} from '../../../classes/class-helpers/factory';
 import { InitObservableHook, IObservableHookPrivate } from '../../../core/observable/hook';
 import { IsObject } from '../../../helpers';
+import { Constructor } from '../../../classes/class-helpers/types';
+import { BaseClass, IBaseClassConstructor } from '../../../classes/class-helpers/base-class';
 
 export const VALUE_OBSERVABLE_PRIVATE = Symbol('value-observable-private');
 

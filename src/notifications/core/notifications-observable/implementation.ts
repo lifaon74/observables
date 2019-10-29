@@ -21,11 +21,12 @@ import { INotification } from '../notification/interfaces';
 import { KeyValueMapGeneric, KeyValueMapGenericConstraint, KeyValueMapKeys, KeyValueMapValues } from '../interfaces';
 import { InitObservableHook, IObservableHookPrivate } from '../../../core/observable/hook';
 import {
-  BaseClass,
-  Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark, IBaseClassConstructor, IsFactoryClass, MakeFactory
-} from '../../../classes/factory';
+  GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
+} from '../../../classes/class-helpers/factory';
 import { IsObject } from '../../../helpers';
 import { IObserver } from '../../../core/observer/interfaces';
+import { Constructor } from '../../../classes/class-helpers/types';
+import { BaseClass, IBaseClassConstructor } from '../../../classes/class-helpers/base-class';
 
 
 export const NOTIFICATIONS_OBSERVABLE_PRIVATE = Symbol('notifications-observable-private');
