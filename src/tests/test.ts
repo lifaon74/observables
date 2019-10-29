@@ -602,9 +602,9 @@ export async function test() {
   // testClasses();
   // testProgram();
   // await testTask();
-  // await testSAndF();
+  await testSAndF();
   // await testFactory();
-  await testUnit();
+  // await testUnit();
 
   console.log('tests done');
 }
