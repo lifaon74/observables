@@ -1,6 +1,7 @@
 import { INotification } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../../helpers';
+import { IEventLike } from '../../observables/events/events-listener/event-like/interfaces';
 
 
 export const NOTIFICATION_PRIVATE = Symbol('notification-private');
@@ -28,7 +29,7 @@ export function IsNotification(value: any): value is INotification<string, any> 
 
 export class Notification<TName extends string, TValue> implements INotification<TName, TValue> {
 
-  static fromEvent<TName extends string = string, TEvent extends Event = Event>(event: TEvent): INotification<TName, TEvent> {
+  static fromEvent<TName extends string = string, TEvent extends IEventLike = IEventLike>(event: TEvent): INotification<TName, TEvent> {
     return new Notification<TName, TEvent>(event.type as TName, event);
   }
 

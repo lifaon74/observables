@@ -23,7 +23,6 @@ export * from './notifications/core/notifications-observer/implementation';
 export * from './notifications/core/preventable/implementation';
 
 export * from './notifications/observables/events/events-observable/implementation';
-export * from './notifications/observables/events/nodejs-events-observable/implementation';
 export * from './notifications/observables/finite-state/implementation';
 export * from './notifications/observables/finite-state/from/iterable/sync/implementation';
 export * from './notifications/observables/finite-state/from/iterable/async/implementation';

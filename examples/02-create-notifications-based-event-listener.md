@@ -17,7 +17,7 @@ Because Notifications and Events are similar, we can create a Notification from 
 const notification = Notification.fromEvent<'click', MouseEvent>(new MouseEvent('click'));
 ```
 
-A NotificationsObservable is an Observable which emit Notifications, and provides some useful shortcut methods.
+A NotificationsObservable is an Observable which emits Notifications, and provides some useful shortcut methods.
 
 And, a NotificationsObserver is an Observer which receives Notifications only matching its name.
 
@@ -88,7 +88,7 @@ const observable = createEventNotificationsObservable(window, 'mousedown')
   .on('mousedown', (event: MouseEvent) => { // great way to chain listeners
     console.log(`mousedown => y: ${event.clientY}`);
   }); // INFO: the observers are automatically activated with 'on'
-  // note that if we use 'on' we need to deactivate the observers though observable.observes when releasing some resources !
+  // note that if we use 'on' we need to deactivate the observers though observable.observers when releasing some resources !
 ```
 
 

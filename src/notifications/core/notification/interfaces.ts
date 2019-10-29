@@ -1,3 +1,5 @@
+import { IEventLike } from '../../observables/events/events-listener/event-like/interfaces';
+
 /** TYPES **/
 
 export type TNotificationName<N extends INotification<any, any>> = N extends INotification<infer TName, any> ? TName : never;
@@ -8,7 +10,7 @@ export type TNotificationValue<N extends INotification<any, any>> = N extends IN
 
 export interface INotificationConstructor {
   // converts an Event to a Notification
-  fromEvent<TName extends string = string, TEvent extends Event = Event>(event: TEvent): INotification<TName, TEvent>;
+  fromEvent<TName extends string = string, TEvent extends IEventLike = IEventLike>(event: TEvent): INotification<TName, TEvent>;
 
   new<TName extends string, TValue>(name: TName, value: TValue): INotification<TName, TValue>;
 }

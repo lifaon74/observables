@@ -30,10 +30,6 @@ import { testExamples } from './examples/examples';
 import { testPromises } from './test-promises';
 import { testTask } from './test-task';
 import { IProgress } from '../misc/progress/interfaces';
-import { testSAndF } from './test-s-and-s';
-import { testFactory } from './test-factory';
-import { testUnit } from './units/unit';
-
 
 
 
@@ -568,7 +564,7 @@ export async function testFileReaderObservable() {
 
 export async function test() {
   console.log('1');
-  // await testExamples();
+  await testExamples();
   // testMicroObservables();
 
   // testReadOnlyList();
@@ -602,7 +598,6 @@ export async function test() {
   // testClasses();
   // testProgram();
   // await testTask();
-  await testSAndF();
   // await testFactory();
   // await testUnit();
 

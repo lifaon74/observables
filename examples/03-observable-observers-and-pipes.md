@@ -23,7 +23,7 @@ interface IObservableObserver<TObserver extends IObserver<any>, TObservable exte
 We may compare it with a [DuplexStream](https://nodejs.org/api/stream.html#stream_class_stream_duplex) for nodejs
 or the pipeThough argument of the [w3c stream API](https://streams.spec.whatwg.org/#rs-pipe-through).
 
-It is mainly into the `pipeThough` and the `pipe` function of the Observable or as an IO (ex: WebSockets which emit and receive data).
+It is mainly used into the `pipeThough` or the `pipe` function of the Observable to transform/filter data, or as an IO (ex: WebSockets which emit and receive data).
 
 ---
 

@@ -1119,14 +1119,14 @@ new EventsObservable<WindowEventMap>(window)
 type EventKeyValueMap<TKVMap> = KeyValueMap<TKVMap, any>;
 
 type EventsObservableKeyValueMapGeneric = {
-  [key: string]: Event;
+  [key: string]: IEventLike;
 };
 
 interface IEventsObservableConstructor {
-  new<TKVMap extends KeyValueMap<TKVMap, Event>, TTarget extends EventTarget = EventTarget>(target: TTarget, name?: KeyValueMapKeys<TKVMap> | null): IEventsObservable<TKVMap, TTarget>;
+  new<TKVMap extends KeyValueMap<TKVMap, Event>, TTarget extends IEventsListener = IEventsListener>(target: TTarget, name?: KeyValueMapKeys<TKVMap> | null): IEventsObservable<TKVMap, TTarget>;
 }
 
-interface IEventsObservable<TKVMap extends EventKeyValueMap<TKVMap>, TTarget extends EventTarget = EventTarget> extends INotificationsObservable<TKVMap> {
+interface IEventsObservable<TKVMap extends EventKeyValueMap<TKVMap>, TTarget extends IEventsListener = IEventsListener> extends INotificationsObservable<TKVMap> {
   // the target of the events' listener
   readonly target: TTarget;
 
@@ -1135,7 +1135,94 @@ interface IEventsObservable<TKVMap extends EventKeyValueMap<TKVMap>, TTarget ext
 }
 ```
 
-An EventsObservable transfers events dispatched by an EventTarget.
+An EventsObservable transfers events dispatched by an `EventsListener`.
+
+<details>
+<summary>about EventsListener</summary>
+<p>
+
+##### EventsListener - abstract
+
+An `EventsListener` (abstract class) is simply an *optional* wrapper looking like an `EventTarget`,
+used to normalize various implementations of events' listeners (*browsers* and *NodeJS* having different ones).
+
+```ts
+// ABSTRACT !
+interface IEventsListener {
+  addEventListener(type: string, listener: (event: IEventLike) => void): void;
+
+  removeEventListener(type: string, listener: (event: IEventLike) => void): void;
+
+  dispatchEvent?(event: IEventLike): void;
+}
+
+// for the browser
+interface IEventTargetEventsListenerConstructor extends Omit<IIEventsListenerConstructor, 'new'> {
+  new<TTarget extends PureEventTarget>(target: TTarget): IEventTargetEventsListener<TTarget>;
+}
+
+interface IEventTargetEventsListener<TTarget extends PureEventTarget> extends IEventsListener {
+  readonly target: TTarget;
+
+  dispatchEvent(event: Event): void;
+}
+
+// for nodejs
+interface IEventEmitterEventsListenerConstructor extends Omit<IIEventsListenerConstructor, 'new'> {
+  new<TTarget extends PureEventEmitter>(target: TTarget): IEventEmitterEventsListener<TTarget>;
+}
+
+interface IEventEmitterEventsListener<TTarget extends PureEventEmitter> extends IEventsListener {
+  readonly target: TTarget;
+}
+
+```
+
+Because `EventTarget` shares the same implementation as `EventsListener`, you may provide directly an `EventTarget`
+when creating a new `EventsObservable`.
+
+##### EventLike - abstract
+
+An `EventLike` (abstract class) is too another *optional* wrapper looking like an `Event`,
+used for the same reasons as explained upper.
+
+```ts
+// ABSTRACT !
+interface IEventLikeConstructor {
+  new(type: string): IEventLike;
+}
+
+interface IEventLike {
+  readonly type: string;
+}
+```
+
+
+To create a basic `EventLike`, you may use a `GenericEvent`:
+
+```ts
+interface IGenericEventConstructor {
+  new<T>(type: string, value: T): IGenericEvent<T>;
+}
+
+interface IGenericEvent<T> extends IEventLike {
+  readonly value: T;
+}
+```
+
+*Example:*
+
+```ts
+const myEvent = new GenericEvent('error', new Error(`Error!`));
+```
+
+**INFO:** `GenericEvent` can only be dispatched from an `EventsListener` !
+
+
+For more details, you may take a look at the source files.
+
+</p>
+</details>
 
 *Example:* Listening to *click* event on *window*
 ```ts
@@ -1158,7 +1245,25 @@ setTimeout(() => {
 }, 5000);
 ```
 
-**INFO:** For NodeJS's EventEmitter, the equivalent is `NodeJSEventsObservable`.
+*Example:* NodeJS - Listening to *response* event on an http request
+```ts
+// declare an interface
+interface ClientRequestEventMap {
+  // because NodeJS doesnt return an Event,
+  // the incomming values are automatically wrapped in a GenericEvent
+  'response': IGenericEvent<IncomingMessage>;
+}
+
+const http = require('http');
+
+const request: ClientRequest = http.get(`https://nodejs.org`);
+
+// NodeJS uses EventEmitter instead of EventTarget, so we'll wrap the EventEmitter (response) into an EventEmitterEventsListener
+const observable = new EventsObservable<ClientRequestEventMap>(new EventEmitterEventsListener(request))
+  .on('response', (event: IGenericEvent<IncomingMessage>) => {
+    console.log(`response`, event.value);
+  });
+```
 
 ---
 
