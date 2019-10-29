@@ -67,15 +67,39 @@ export interface IPCBItemOptions {
   y: TNumericUnitOrValue;
 }
 
+export interface IPCBItemRenderOptions {
+  layer: number;
+  layerColor: string;
+}
+
 export abstract class PCBItem {
-  public readonly x: number; // meter
-  public readonly y: number; // meter
+  public readonly x: INumericUnit; // meter
+  public readonly y: INumericUnit; // meter
 
   protected constructor(options: IPCBItemOptions) {
-    this.x = NormalizeLengthUnitToMeter(options.x);
-    this.y = NormalizeLengthUnitToMeter(options.y);
+    this.x = NormalizeLengthUnit(options.x);
+    this.y = NormalizeLengthUnit(options.y);
   }
+
+  // abstract render(): void;
 }
+
+// export abstract class PCBItem {
+//   public readonly x: number; // meter
+//   public readonly y: number; // meter
+//
+//   protected constructor(options: IPCBItemOptions) {
+//     this.x = NormalizeLengthUnitToMeter(options.x);
+//     this.y = NormalizeLengthUnitToMeter(options.y);
+//   }
+// }
+
+
+export interface IRectangle {
+  width: INumericUnit;
+  height: INumericUnit;
+}
+
 
 export interface IPCBCopperOptions extends IPCBItemOptions {
   layer: number;
@@ -90,6 +114,8 @@ export class PCBCopper extends PCBItem {
     this.layer = options.layer;
   }
 }
+
+
 
 export class PCBHole extends PCBItem {
 
