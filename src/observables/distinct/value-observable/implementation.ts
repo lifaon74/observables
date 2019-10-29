@@ -1,10 +1,5 @@
 import {
-  AllowObservableContextBaseConstruct, IObservableContextBaseInternal, IObservableInternal,
-  IS_OBSERVABLE_LIKE_CONSTRUCTOR, IsObservableLikeConstructor, OBSERVABLE_CONTEXT_BASE_PRIVATE, ObservableContextBase,
-  ObservableEmitAll, ObservableFactory
-} from '../../../core/observable/implementation';
-import {
-  IObservable, IObservableConstructor, IObservableContext, IObservableHook
+  IObservable, IObservableConstructor
 } from '../../../core/observable/interfaces';
 import { IObserver } from '../../../core/observer/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
@@ -15,10 +10,22 @@ import {
 import {
   GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
 } from '../../../classes/class-helpers/factory';
-import { InitObservableHook, IObservableHookPrivate } from '../../../core/observable/hook';
 import { IsObject } from '../../../helpers';
 import { Constructor } from '../../../classes/class-helpers/types';
 import { BaseClass, IBaseClassConstructor } from '../../../classes/class-helpers/base-class';
+import { IObservableInternal } from '../../../core/observable/privates';
+import { IS_OBSERVABLE_LIKE_CONSTRUCTOR, IsObservableLikeConstructor } from '../../../core/observable/constructor';
+import { ObservableEmitAll } from '../../../core/observable/functions';
+import { ObservableFactory } from '../../../core/observable/implementation';
+import { IObservableHook } from '../../../core/observable/hook/interfaces';
+import { IObservableContext } from '../../../core/observable/context/interfaces';
+import {
+  IObservableContextBaseInternal, OBSERVABLE_CONTEXT_BASE_PRIVATE
+} from '../../../core/observable/context/base/privates';
+import { AllowObservableContextBaseConstruct } from '../../../core/observable/context/base/constructor';
+import { ObservableContextBase } from '../../../core/observable/context/base/implementation';
+import { IObservableHookPrivate } from '../../../core/observable/hook/privates';
+import { InitObservableHook } from '../../../core/observable/hook/init';
 
 export const VALUE_OBSERVABLE_PRIVATE = Symbol('value-observable-private');
 

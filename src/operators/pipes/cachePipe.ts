@@ -1,7 +1,8 @@
-import { IPipe, TPipeContextBase } from '../../core/observable-observer/interfaces';
 import { IObserver } from '../../core/observer/interfaces';
 import { IObservable } from '../../core/observable/interfaces';
-import { Pipe } from '../../core/observable-observer/implementation';
+import { IPipe } from '../../core/observable-observer/pipe/interfaces';
+import { TPipeContextBase } from '../../core/observable-observer/pipe/types';
+import { Pipe } from '../../core/observable-observer/pipe/implementation';
 
 /**
  * ObservableObserver: caches incoming values to be able to emits them to future observers

@@ -5,21 +5,15 @@ import {
   KeyValueMapToNotificationsObservers,
   TNotificationsObservableConstructorArgs, TNotificationsObservableHook,
 } from './interfaces';
-import {
-  AllowObservableContextBaseConstruct, IObservableContextBaseInternal, IObservablePrivate,
-  IS_OBSERVABLE_LIKE_CONSTRUCTOR, IsObservableLikeConstructor, OBSERVABLE_CONTEXT_BASE_PRIVATE, OBSERVABLE_PRIVATE,
-  ObservableContextBase, ObservableFactory
-} from '../../../core/observable/implementation';
-import { IObservable, IObservableConstructor, IObservableContext } from '../../../core/observable/interfaces';
+import { IObservable, IObservableConstructor} from '../../../core/observable/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { INotificationsObserver } from '../notifications-observer/interfaces';
 import {
   NotificationsObserver
 } from '../notifications-observer/implementation';
-import { IObserverInternal, OBSERVER_PRIVATE, ObserverUnobserveOne } from '../../../core/observer/implementation';
+import { ObserverUnobserveOne } from '../../../core/observer/implementation';
 import { INotification } from '../notification/interfaces';
 import { KeyValueMapGeneric, KeyValueMapGenericConstraint, KeyValueMapKeys, KeyValueMapValues } from '../interfaces';
-import { InitObservableHook, IObservableHookPrivate } from '../../../core/observable/hook';
 import {
   GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
 } from '../../../classes/class-helpers/factory';
@@ -27,6 +21,18 @@ import { IsObject } from '../../../helpers';
 import { IObserver } from '../../../core/observer/interfaces';
 import { Constructor } from '../../../classes/class-helpers/types';
 import { BaseClass, IBaseClassConstructor } from '../../../classes/class-helpers/base-class';
+import { IObservablePrivate, OBSERVABLE_PRIVATE } from '../../../core/observable/privates';
+import { IS_OBSERVABLE_LIKE_CONSTRUCTOR, IsObservableLikeConstructor } from '../../../core/observable/constructor';
+import { ObservableFactory } from '../../../core/observable/implementation';
+import { IObservableContext } from '../../../core/observable/context/interfaces';
+import {
+  IObservableContextBaseInternal, OBSERVABLE_CONTEXT_BASE_PRIVATE
+} from '../../../core/observable/context/base/privates';
+import { AllowObservableContextBaseConstruct } from '../../../core/observable/context/base/constructor';
+import { ObservableContextBase } from '../../../core/observable/context/base/implementation';
+import { IObservableHookPrivate } from '../../../core/observable/hook/privates';
+import { InitObservableHook } from '../../../core/observable/hook/init';
+import { IObserverInternal, OBSERVER_PRIVATE } from '../../../core/observer/privates';
 
 
 export const NOTIFICATIONS_OBSERVABLE_PRIVATE = Symbol('notifications-observable-private');

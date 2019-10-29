@@ -1,8 +1,8 @@
-import { IPipe } from '../core/observable-observer/interfaces';
 import { IObserver } from '../core/observer/interfaces';
 import { IObservable } from '../core/observable/interfaces';
 import { mapPipe } from './pipes/mapPipe';
 import { TupleUnshift } from '../classes/types';
+import { IPipe } from '../core/observable-observer/pipe/interfaces';
 
 
 export function scopePipe<Tin, TArgs extends any[]>(...args: TArgs): IPipe<IObserver<Tin>, IObservable<TupleUnshift<TArgs, Tin>>> {

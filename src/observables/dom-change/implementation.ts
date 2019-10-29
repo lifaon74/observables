@@ -1,9 +1,9 @@
-import { IObservableContext } from '../../core/observable/interfaces';
 import { periodTime } from '../../classes/pure-pipes';
-import { Observable } from '../../core/observable/implementation';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IDOMChangeObservable } from './interfaces';
 import { IsObject } from '../../helpers';
+import { Observable } from '../../core/observable/implementation';
+import { IObservableContext } from '../../core/observable/context/interfaces';
 
 
 export const DOM_CHANGE_OBSERVABLE_PRIVATE = Symbol('dom-change-observable-private');

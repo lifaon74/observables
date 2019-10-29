@@ -15,7 +15,7 @@ import {
 import { KeyValueMapToNotifications } from '../../notifications/core/notifications-observable/interfaces';
 import { IObserver } from '../../core/observer/interfaces';
 import { IsFiniteStateObservable } from '../../notifications/observables/finite-state/implementation';
-import { IsObservable } from '../../core/observable/implementation';
+import { IsObservable } from '../../core/observable/constructor';
 
 
 export type TBasePromiseObservableNotification<T> = TPromiseObservableNotifications<T>;

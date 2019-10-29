@@ -1,5 +1,4 @@
 import { ReadonlyList } from '../misc/readonly-list/implementation';
-import { Observable } from '../core/observable/implementation';
 import { NotificationsObservable } from '../notifications/core/notifications-observable/implementation';
 import { EventsObservable } from '../notifications/observables/events/events-observable/implementation';
 import { mapPipe } from '../operators/pipes/mapPipe';
@@ -30,6 +29,7 @@ import { testExamples } from './examples/examples';
 import { testPromises } from './test-promises';
 import { testTask } from './test-task';
 import { IProgress } from '../misc/progress/interfaces';
+import { Observable } from '../core/observable/implementation';
 
 
 

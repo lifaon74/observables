@@ -1,6 +1,5 @@
-import { InitObservableHook, IObservableHookPrivate } from '../../../core/observable/hook';
 import {
-  IObservableConstructor, IObservableContextBase, IObservableHook
+  IObservableConstructor
 } from '../../../core/observable/interfaces';
 import {
   INotificationsObservable, INotificationsObservableContext, INotificationsObservableTypedConstructor,
@@ -14,7 +13,6 @@ import {
   TFiniteStateObservableMode, TFiniteStateObservableState
 } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
-import { AllowObservableContextBaseConstruct, ObservableFactory } from '../../../core/observable/implementation';
 import {
   IsNotificationsObservableConstructor, NotificationsObservableContext, NotificationsObservableFactory
 } from '../../core/notifications-observable/implementation';
@@ -29,6 +27,12 @@ import { ExtractObserverNameAndCallback } from '../../core/notifications-observe
 import { INotificationsObserverLike } from '../../core/notifications-observer/interfaces';
 import { Constructor } from '../../../classes/class-helpers/types';
 import { BaseClass, IBaseClassConstructor } from '../../../classes/class-helpers/base-class';
+import { ObservableFactory } from '../../../core/observable/implementation';
+import { IObservableHook } from '../../../core/observable/hook/interfaces';
+import { IObservableContextBase } from '../../../core/observable/context/base/interfaces';
+import { AllowObservableContextBaseConstruct } from '../../../core/observable/context/base/constructor';
+import { IObservableHookPrivate } from '../../../core/observable/hook/privates';
+import { InitObservableHook } from '../../../core/observable/hook/init';
 
 
 export const COMPLETE_STATE_OBSERVABLE_PRIVATE = Symbol('finite-state-observable-private');

@@ -1,10 +1,12 @@
 /* JUST TS THINGS, PARTIAL TYPING */
 import { INotificationsObservable } from '../src/notifications/core/notifications-observable/interfaces';
-import { IObservable, IObservableContext } from '../src/core/observable/interfaces';
-import { Observable } from '../src/core/observable/implementation';
-import { Pipe } from '../src/core/observable-observer/implementation';
+import { IObservable} from '../src/core/observable/interfaces';
 import { IObserver } from '../src/core/observer/interfaces';
-import { IPipeContext, TPipeContextBase } from '../src/core/observable-observer/interfaces';
+import { Observable } from '../src/core/observable/implementation';
+import { IObservableContext } from '../src/core/observable/context/interfaces';
+import { TPipeContextBase } from '../src/core/observable-observer/pipe/types';
+import { IPipeContext } from '../src/core/observable-observer/pipe/context/interfaces';
+import { Pipe } from '../src/core/observable-observer/pipe/implementation';
 
 
 interface WotDiscoverKVMap {

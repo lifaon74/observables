@@ -1,6 +1,7 @@
-import { IObservable, IObservableHook } from '../../../core/observable/interfaces';
+import { IObservable} from '../../../core/observable/interfaces';
 import { ICancelToken } from '../../../misc/cancel-token/interfaces';
 import { IValueObservable } from '../value-observable/interfaces';
+import { IObservableHook } from '../../../core/observable/hook/interfaces';
 
 
 export type TAsyncValueObservableConstructorArgs<T> =

@@ -12,7 +12,6 @@ import {
 import {
   INotificationsObservableTypedConstructor, KeyValueMapToNotifications
 } from '../../../notifications/core/notifications-observable/interfaces';
-import { IObservablePrivate, OBSERVABLE_PRIVATE, ObservableFactory } from '../../../core/observable/implementation';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import {
   ACTIVABLE_PRIVATE, ActivableFactory, IActivablePrivate, IsActivableConstructor
@@ -24,6 +23,8 @@ import {
 import { IActivableConstructor } from '../../../misc/activable/interfaces';
 import { Constructor } from '../../../classes/class-helpers/types';
 import { BaseClass, IBaseClassConstructor } from '../../../classes/class-helpers/base-class';
+import { IObservablePrivate, OBSERVABLE_PRIVATE } from '../../../core/observable/privates';
+import { ObservableFactory } from '../../../core/observable/implementation';
 
 
 export const INPUT_OUTPUT_PRIVATE = Symbol('input-output-private');

@@ -1,4 +1,3 @@
-import { Observable } from '../../core/observable/implementation';
 import { Observer } from '../../core/observer/implementation';
 import {
   NotificationsObservable, NotificationsObservableContext
@@ -16,12 +15,11 @@ import {
 import { Reason } from '../../misc/reason/implementation';
 import { PromiseObservable } from '../../notifications/observables/finite-state/promise/promise-observable/implementation';
 import { IObserver } from '../../core/observer/interfaces';
-import { Pipe } from '../../core/observable-observer/implementation';
 import {
   INotificationsObservable, INotificationsObservableContext
 } from '../../notifications/core/notifications-observable/interfaces';
-import { IObservableObserver, IPipe, TPipeContextBase } from '../../core/observable-observer/interfaces';
-import { IObservable, IObservableContext } from '../../core/observable/interfaces';
+import { IObservableObserver} from '../../core/observable-observer/interfaces';
+import { IObservable} from '../../core/observable/interfaces';
 import { TimerObservable } from '../../observables/timer-observable/implementation';
 import { Source } from '../../observables/distinct/source/implementation';
 import { ISource } from '../../observables/distinct/source/interfaces';
@@ -48,6 +46,11 @@ import { FromAsyncIterableObservable } from '../../notifications/observables/fin
 import { ClientRequest, IncomingMessage } from 'http';
 import { IGenericEvent } from '../../notifications/observables/events/events-listener/event-like/generic/interfaces';
 import { EventEmitterEventsListener } from '../../notifications/observables/events/events-listener/nodejs/implementation';
+import { Observable } from '../../core/observable/implementation';
+import { IObservableContext } from '../../core/observable/context/interfaces';
+import { IPipe } from '../../core/observable-observer/pipe/interfaces';
+import { TPipeContextBase } from '../../core/observable-observer/pipe/types';
+import { Pipe } from '../../core/observable-observer/pipe/implementation';
 
 
 /**

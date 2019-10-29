@@ -5,7 +5,6 @@ import {
   TFromReadableStreamObservableFinalState, TFromReadableStreamObservableMode
 } from './interfaces';
 import { FiniteStateObservableSoftFactory, IsFiniteStateObservableConstructor } from '../../implementation';
-import { ObservableFactory } from '../../../../../core/observable/implementation';
 import { IObservableConstructor } from '../../../../../core/observable/interfaces';
 import {
   GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
@@ -17,6 +16,7 @@ import { INotificationsObservableTypedConstructor } from '../../../../core/notif
 import { GenerateFiniteStateObservableHookFromReadableStreamReaderWithPauseWorkflow } from './hook-generators';
 import { Constructor } from '../../../../../classes/class-helpers/types';
 import { BaseClass, IBaseClassConstructor } from '../../../../../classes/class-helpers/base-class';
+import { ObservableFactory } from '../../../../../core/observable/implementation';
 
 
 export const FROM_READABLE_STREAM_OBSERVABLE_PRIVATE = Symbol('from-readable-stream-observable-private');

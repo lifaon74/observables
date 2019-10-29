@@ -3,7 +3,6 @@ import { IsSource, Source } from '../observables/distinct/source/implementation'
 import {
   IFunctionObservable, TFunctionObservableFactory, TFunctionObservableFactoryParameters,
 } from '../observables/distinct/function-observable/interfaces';
-import { IsObservable } from '../core/observable/implementation';
 import { IObservable } from '../core/observable/interfaces';
 import { Expression, IsExpression } from '../observables/distinct/expression/implementation';
 import { IExpression } from '../observables/distinct/expression/interfaces';
@@ -15,13 +14,14 @@ import { AsyncFunctionObservable } from '../observables/distinct/async-function-
 import { IPromiseObservable, } from '../notifications/observables/finite-state/promise/promise-observable/interfaces';
 import { toValueObservable } from './to/toValueObservable';
 import { ICancelToken } from '../misc/cancel-token/interfaces';
-import { TPipeBase, TPipeContextBase } from '../core/observable-observer/interfaces';
 import { IObserver } from '../core/observer/interfaces';
-import { Pipe } from '../core/observable-observer/implementation';
 import { IsObserver, Observer } from '../core/observer/public';
 import { assertFunctionObservableEmits, assertObservableEmits } from '../classes/asserts';
 import { IsObject } from '../helpers';
 import { LinkCancelTokenWithFetchArguments } from '../misc/cancel-token/implementation';
+import { IsObservable } from '../core/observable/constructor';
+import { TPipeBase, TPipeContextBase } from '../core/observable-observer/pipe/types';
+import { Pipe } from '../core/observable-observer/pipe/implementation';
 
 export type TObservableOrValue<T> = IObservable<T> | T;
 export type TObservableOrValueToValueType<T extends TObservableOrValue<any>> = T extends IObservable<infer R> ? R : T;

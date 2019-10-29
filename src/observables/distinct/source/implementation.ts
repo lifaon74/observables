@@ -1,4 +1,3 @@
-import { IObservableContext } from '../../../core/observable/interfaces';
 import { IAsyncSource, ISource } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { ICancelToken } from '../../../misc/cancel-token/interfaces';
@@ -11,6 +10,7 @@ import {
   ASYNC_VALUE_OBSERVABLE_PRIVATE, AsyncValueObservable, IAsyncValueObservableInternal
 } from '../async-value-observable/implementation';
 import { IsObject } from '../../../helpers';
+import { IObservableContext } from '../../../core/observable/context/interfaces';
 
 
 export const SOURCE_PRIVATE = Symbol('source-private');

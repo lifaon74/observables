@@ -1,58 +1,12 @@
-import { IObserver } from '../observer/interfaces';
-import { IObservable, IObservableContext, IObservableContextBase, IObservableHook, ObservableType } from './interfaces';
-import { IsObject, noop } from '../../helpers';
-
-export interface IObservableHookPrivate<T> {
-  onObserveHook(observer: IObserver<T>): void;
-
-  onUnobserveHook(observer: IObserver<T>): void;
-}
-
-// export function InitObservableHook<T, H extends IObservableHook<T> = IObservableHook<T>, TObservable extends IObservable<T> = IObservable<T>>(
-//   observable: TObservable,
-//   privates: IObservableHookPrivate<T>,
-//   createContext: (observable: TObservable) => IObservableContextBase<T>,
-//   create?: (context: IObservableContextBase<T>) => (H | void),
-// ): H | void {
-export function InitObservableHook<TObservable extends IObservable<any>, TObservableContext extends IObservableContextBase<ObservableType<TObservable>>, TObservableHook extends IObservableHook<ObservableType<TObservable>>>(
-  observable: TObservable,
-  privates: IObservableHookPrivate<ObservableType<TObservable>>,
-  createContext: (observable: TObservable) => TObservableContext,
-  create?: (context: TObservableContext) => (TObservableHook | void),
-): TObservableHook | void {
-  privates.onObserveHook = noop;
-  privates.onUnobserveHook = noop;
-
-  if (typeof create === 'function') {
-    const hook: TObservableHook | void = create.call(observable, createContext(observable));
-
-    if (hook !== void 0) {
-      if (IsObject(hook)) {
-        if (typeof hook.onObserved === 'function') {
-          privates.onObserveHook = hook.onObserved.bind(observable);
-        }
-
-        if (typeof hook.onUnobserved === 'function') {
-          privates.onUnobserveHook = hook.onUnobserved.bind(observable);
-        }
-      } else {
-        throw new TypeError(`Expected object or void as return of ${ observable.constructor.name }'s create function.`);
-      }
-    }
-
-    return hook;
-  } else if (create !== void 0) {
-    throw new TypeError(`Expected function or void as ${ observable.constructor.name }'s create function.`);
-  }
-}
-
-
-
+import { IObservableHook } from './interfaces';
+import { IObservableContext } from '../context/interfaces';
+import { noop } from '../../../helpers';
 
 /**
  * Wrapper around an ObservableHook:
  * Handles onActivate and onDeactivate
  */
+
 // EXAMPLE
 /*
 new Observable<void>((context: IObservableContext<void>) => {
@@ -66,6 +20,7 @@ new Observable<void>((context: IObservableContext<void>) => {
   });
 });
  */
+
 export type TSimpleObservableHook<H extends IObservableHook<any>> = H & {
   onActivate(): void; // called when this observable transits from a non-observed state to an observed state (=> when it has one observer)
   onDeactivate(): void; // called when this observable transits from an observed state to a non-observed state (=> when it has zero observer)
@@ -100,9 +55,9 @@ export function CreateSimpleObservableHook<H extends IObservableHook<any>>(conte
   return hook;
 }
 
-
 export type TSimpleAndBasicObservableHook<T> = TSimpleObservableHook<IObservableHook<T>>;
 
 export function CreateSimpleAndBasicObservableHook<T>(context: IObservableContext<T>, hook: TSimpleObservableHook<IObservableHook<T>>): IObservableHook<T> {
   return CreateSimpleObservableHook<IObservableHook<T>>(context, hook);
 }
+

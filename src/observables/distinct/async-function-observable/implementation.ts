@@ -1,6 +1,4 @@
-import {
-  IObservableInternal, ObservableIsFreshlyObserved, ObservableIsNotObserved
-} from '../../../core/observable/implementation';
+
 import { IObservable } from '../../../core/observable/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import {
@@ -21,6 +19,8 @@ import {
 import { FUNCTION_OBSERVABLE_PRIVATE, IFunctionObservableInternal } from '../function-observable/implementation';
 import { IsObject } from '../../../helpers';
 import { HasFactoryWaterMark } from '../../../classes/class-helpers/factory';
+import { IObservableInternal } from '../../../core/observable/privates';
+import { ObservableIsFreshlyObserved, ObservableIsNotObserved } from '../../../core/observable/functions';
 
 
 export const ASYNC_FUNCTION_OBSERVABLE_PRIVATE = Symbol('async-function-observable-private');

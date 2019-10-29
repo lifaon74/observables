@@ -1,4 +1,6 @@
-import { IObservable, IObservableContext, IObservableHook } from '../../../core/observable/interfaces';
+import { IObservable} from '../../../core/observable/interfaces';
+import { IObservableHook } from '../../../core/observable/hook/interfaces';
+import { IObservableContext } from '../../../core/observable/context/interfaces';
 
 
 export type TValueObservableConstructorArgs<T> =

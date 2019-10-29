@@ -1,9 +1,10 @@
 import { IPromiseObservable } from '../../notifications/observables/finite-state/promise/promise-observable/interfaces';
-import { IObservable, IObservableContext } from '../../core/observable/interfaces';
-import { Pipe } from '../../core/observable-observer/implementation';
+import { IObservable} from '../../core/observable/interfaces';
 import { NotificationsObserver } from '../../notifications/core/notifications-observer/implementation';
 import { INotificationsObserver } from '../../notifications/core/notifications-observer/interfaces';
 import { Observable } from '../../core/observable/public';
+import { IObservableContext } from '../../core/observable/context/interfaces';
+import { Pipe } from '../../core/observable-observer/pipe/implementation';
 
 export function toValueObservable<T>(observable: IPromiseObservable<T>): IObservable<T> {
   return observable

@@ -1,8 +1,9 @@
-import { IPipe, TPipeContextBase } from '../../core/observable-observer/interfaces';
 import { IObserver } from '../../core/observer/interfaces';
-import { Pipe } from '../../core/observable-observer/implementation';
 import { INotification } from '../../notifications/core/notification/interfaces';
 import { IObservable } from '../../core/observable/interfaces';
+import { IPipe } from '../../core/observable-observer/pipe/interfaces';
+import { TPipeContextBase } from '../../core/observable-observer/pipe/types';
+import { Pipe } from '../../core/observable-observer/pipe/implementation';
 
 /**
  * ObservableObserver: aggregates many notifications by filtering their name - emits the received values

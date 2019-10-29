@@ -10,13 +10,13 @@ import {
 } from '../../../../core/notifications-observer/implementation';
 import { INotificationsObserver } from '../../../../core/notifications-observer/interfaces';
 import { EventsObservable } from '../implementation';
-import { OBSERVABLE_PRIVATE } from '../../../../../core/observable/implementation';
 import { CyclicTypedVectorArray } from '../../../../../classes/cyclic/CyclicTypedVectorArray';
 import {
   KeyValueMapToNotifications, KeyValueMapToNotificationsObserversLikeGeneric, TNotificationsObservableHook
 } from '../../../../core/notifications-observable/interfaces';
 import { KeyValueMapKeys, KeyValueMapValues } from '../../../../core/interfaces';
 import { IObserver } from '../../../../../core/observer/interfaces';
+import { OBSERVABLE_PRIVATE } from '../../../../../core/observable/privates';
 
 
 // export abstract class Gesture {

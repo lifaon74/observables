@@ -1,7 +1,8 @@
-import { IPipe, TPipeContextBase } from '../../core/observable-observer/interfaces';
 import { IObservable } from '../../core/observable/interfaces';
-import { Pipe } from '../../core/observable-observer/implementation';
 import { IObserver } from '../../core/observer/interfaces';
+import { IPipe } from '../../core/observable-observer/pipe/interfaces';
+import { TPipeContextBase } from '../../core/observable-observer/pipe/types';
+import { Pipe } from '../../core/observable-observer/pipe/implementation';
 
 /**
  * ObservableObserver: emits a value only after a particular time span determined by the function 'period' has passed without another source emission.

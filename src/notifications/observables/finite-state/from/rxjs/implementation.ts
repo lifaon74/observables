@@ -13,10 +13,10 @@ import { FiniteStateObservableSoftFactory, IsFiniteStateObservableConstructor } 
 import { INotificationsObservableTypedConstructor } from '../../../../core/notifications-observable/interfaces';
 import { IObservableConstructor } from '../../../../../core/observable/interfaces';
 import { NotificationsObservableFactory } from '../../../../core/notifications-observable/implementation';
-import { ObservableFactory } from '../../../../../core/observable/implementation';
 import { GenerateFiniteStateObservableHookFromRXJS } from './hook-generators';
 import { Constructor } from '../../../../../classes/class-helpers/types';
 import { BaseClass, IBaseClassConstructor } from '../../../../../classes/class-helpers/base-class';
+import { ObservableFactory } from '../../../../../core/observable/implementation';
 
 
 export const FROM_RXJS_OBSERVABLE_PRIVATE = Symbol('from-rxjs-observable-private');

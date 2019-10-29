@@ -1,2 +1,4 @@
 export * from './interfaces';
-export { Observer, IsObserver } from './implementation';
+export * from './types';
+export { Observer } from './implementation';
+export { IsObserver } from './constructor';

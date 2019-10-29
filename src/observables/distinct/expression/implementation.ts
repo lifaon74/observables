@@ -1,8 +1,8 @@
-import { IObservableContext } from '../../../core/observable/interfaces';
 import { IExpression } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IValueObservableInternal, ValueObservable } from '../value-observable/implementation';
 import { IsObject } from '../../../helpers';
+import { IObservableContext } from '../../../core/observable/context/interfaces';
 
 
 export const EXPRESSION_PRIVATE = Symbol('expression-private');
