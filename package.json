@@ -77,7 +77,7 @@
     "google-closure-compiler-js": "20170218.0.0"
   },
   "peerDependencies": {
-    "rxjs": "^6.5.3"
+    "rxjs": "6.5.3"
   },
   "devDependencies": {
     "@types/node": "latest",
