@@ -1,4 +1,4 @@
-const { parse, generate, parseFile, log } = require('./compact-helpers');
+const { parse, generate, log } = require('./compact-helpers');
 const compactSymbols = require('./compact-symbols');
 const compactErrors = require('./compact-errors');
 const $path = require('path');
@@ -55,11 +55,31 @@ function AsyncText(id) {
 
 
 // 363B minified + url length
-function generateAsyncText(url) {
-  return `(function(context, url) {
+// function generateAsyncText(url) {
+//   return `(function(context, url) {
+//     ${ loadStrings.toString() }
+//     context.AsyncText = ${ AsyncText.toString() };
+//   })(window, ${ JSON.stringify(url) });`
+// }
+
+/*
+  TODO: should compact recurrent long properties
+  var ObjectDefineProperty = Object.defineProperty;
+  var ObjectCreate = Object.create;
+  var ArrayIsArray = Array.isArray;
+ */
+
+function generateAsyncText(url, code) {
+  return `(function(global, url) {
+    global = global || self;
     ${ loadStrings.toString() }
-    context.AsyncText = ${ AsyncText.toString() };
-  })(window, ${ JSON.stringify(url) });`
+    var AsyncText = ${ AsyncText.toString() };
+    var TypeError = global.TypeError;
+    var RangeError = global.RangeError;
+    var Error = global.Error;
+    
+    ${ code }
+  })(this, ${ JSON.stringify(url) });`
 }
 
 
@@ -69,13 +89,14 @@ function compactAST(ast, url, strings) {
   compactSymbols(ast);
 
   const compactedErrorsAST = compactErrors(JSON.parse(JSON.stringify(ast)), strings);
-  const compactedErrorsCode = generateAsyncText(url) + generate(compactedErrorsAST);
-  const compactedCode = generate(ast);
-  if (compactedCode.length < compactedErrorsCode.length) {
-    return compactedCode;
-  } else {
-    return compactedErrorsCode;
-  }
+  const compactedErrorsCode = generate(compactedErrorsAST);
+  // const compactedCode = generate(ast);
+  return generateAsyncText(url, compactedErrorsCode);
+  // if (compactedCode.length <= (compactedErrorsCode.length + 363 + url.length)) {
+  //   return compactedCode;
+  // } else {
+  //   return generateAsyncText(url) + compactedErrorsCode;
+  // }
 }
 
 function compactCode(code, url, strings) {
@@ -86,7 +107,18 @@ function compactCode(code, url, strings) {
 function compact(sourcePath) {
   const strings = [];
   const dest = sourcePath.replace(/\.js$/, '.strings.json');
-  const ast = parseFile(sourcePath);
+
+  const content = $fs.readFileSync(sourcePath, 'utf8');
+  let ast;
+
+  try {
+    ast = parse(content);
+  } catch (error) {
+    console.log(`Unable to compact: ${ sourcePath }`);
+    console.log(error);
+    return content;
+  }
+
   const code = compactAST(ast, `https://unpkg.com/browse/@lifaon/observables/bundles/${ $path.basename(dest) }`, strings);
 
   $fs.writeFileSync(dest, JSON.stringify(strings, null, 2), 'utf8');
@@ -106,7 +138,7 @@ function compact(sourcePath) {
 // AsyncText(2, 'd', 'e', 'last');
 
 // console.log(compact($path.join(__filename)));
-console.log(compact('C:\\workspace\\test\\observables\\dist\\global\\observables.esnext.umd.js'));
+// console.log(compact('C:\\workspace\\test\\observables\\dist\\global\\observables.core.umd.js'));
 
 
 module.exports = {

@@ -1,5 +1,8 @@
 const $estraverse = require('estraverse');
 
+/**
+ * TODO: should compact <"str1" + var1 + "st2"> => transpiled template string
+ */
 function compactErrors(ast, strings) {
   $estraverse.traverse(ast, {
     enter(node, parent) {
