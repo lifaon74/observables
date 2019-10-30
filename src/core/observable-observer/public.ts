@@ -1,2 +1,2 @@
 export * from './interfaces';
-export { IsPipe } from './pipe/constructor';
+export * from './pipe/public';
