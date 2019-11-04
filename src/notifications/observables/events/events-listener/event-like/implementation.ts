@@ -2,15 +2,22 @@ import { IEventLike } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../../../../helpers';
 
+/** PRIVATES **/
+
 export const EVENT_LIKE_PRIVATE = Symbol('event-like-private');
 
 export interface IEventLikePrivate {
   type: string;
 }
 
-export interface IEventLikeInternal extends IEventLike {
+export interface IEventLikePrivatesInternal {
   [EVENT_LIKE_PRIVATE]: IEventLikePrivate;
 }
+
+export interface IEventLikeInternal extends IEventLikePrivatesInternal, IEventLike {
+}
+
+/** CONSTRUCTOR **/
 
 export function ConstructEventLike(
   instance: IEventLike,
@@ -27,12 +34,14 @@ export function IsEventLike(value: any): value is IEventLike {
 }
 
 
+/** METHODS **/
+
 export function EventLikeGetType(instance: IEventLike): string {
   return (instance as IEventLikeInternal)[EVENT_LIKE_PRIVATE].type;
 }
 
 /**
- * CLASS
+ * ABSTRACT CLASS
  */
 
 export abstract class EventLike implements IEventLike {

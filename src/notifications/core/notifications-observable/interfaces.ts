@@ -1,4 +1,4 @@
-import { IObservable } from '../../../core/observable/interfaces';
+import { IObservable, IObservableConstructor, IObservableTypedConstructor } from '../../../core/observable/interfaces';
 import { INotificationsObserver } from '../notifications-observer/interfaces';
 import { KeyValueMapGenericConstraint, KeyValueMapKeys, KVRecord } from '../interfaces';
 import { IObserver } from '../../../core/observer/interfaces';
@@ -16,11 +16,11 @@ import {
 
 /** INTERFACES **/
 
-export interface INotificationsObservableConstructor {
+export interface INotificationsObservableConstructor extends Omit<IObservableConstructor, 'new'> {
   new<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(create?: (context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)): INotificationsObservable<TKVMap>;
 }
 
-export interface INotificationsObservableTypedConstructor<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> {
+export interface INotificationsObservableTypedConstructor<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> extends Omit<IObservableTypedConstructor<TKVMap>, 'new'> {
   new(create?: (context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)): INotificationsObservable<TKVMap>;
 }
 

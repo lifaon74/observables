@@ -1,19 +1,21 @@
 import { IEventsListener, IIEventsListenerConstructor } from '../interfaces';
-import EventEmitter = NodeJS.EventEmitter;
+import { PureEventEmitter } from './types';
 
 /**
- * INTERFACES & TYPES
+ * INTERFACES
  */
-export type PureEventEmitter = Pick<EventEmitter, 'addListener' | 'removeListener'> & Partial<Pick<EventEmitter, 'emit'>>;
 
-
-/**
- * CLASS
- */
+/* CONSTRUCTOR */
 
 export interface IEventEmitterEventsListenerConstructor extends Omit<IIEventsListenerConstructor, 'new'> {
   new<TTarget extends PureEventEmitter>(target: TTarget): IEventEmitterEventsListener<TTarget>;
 }
+
+export interface IEventEmitterEventsListenerTypedConstructor<TTarget extends PureEventEmitter> extends Omit<IIEventsListenerConstructor, 'new'> {
+  new(target: TTarget): IEventEmitterEventsListener<TTarget>;
+}
+
+/* CLASS */
 
 export interface IEventEmitterEventsListener<TTarget extends PureEventEmitter> extends IEventsListener {
   readonly target: TTarget;

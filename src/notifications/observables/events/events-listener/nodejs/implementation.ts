@@ -1,9 +1,11 @@
-import { IEventEmitterEventsListener, PureEventEmitter } from './interfaces';
+import { IEventEmitterEventsListener} from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../../../misc/helpers/ClassWithPrivateMembers';
-import { EventsListener } from '../implementation';
+import { EventsListener, IEventsListenerPrivatesInternal } from '../implementation';
 import { IsObject } from '../../../../../helpers';
 import { IEventLike } from '../event-like/interfaces';
+import { PureEventEmitter } from './types';
 
+/** PRIVATES **/
 
 export const EVENT_EMITTER_EVENTS_LISTENER_PRIVATE = Symbol('event-emitter-events-listener-private');
 
@@ -12,9 +14,15 @@ export interface IEventEmitterEventsListenerPrivate<TTarget extends PureEventEmi
   listenersMap: WeakMap<(event: IEventLike) => void, (...args: any) => void>;
 }
 
-export interface IEventEmitterEventsListenerInternal<TTarget extends PureEventEmitter> extends IEventEmitterEventsListener<TTarget> {
+export interface IEventEmitterEventsListenerPrivatesInternal<TTarget extends PureEventEmitter> extends IEventsListenerPrivatesInternal {
   [EVENT_EMITTER_EVENTS_LISTENER_PRIVATE]: IEventEmitterEventsListenerPrivate<TTarget>;
 }
+
+export interface IEventEmitterEventsListenerInternal<TTarget extends PureEventEmitter> extends IEventEmitterEventsListenerPrivatesInternal<TTarget>, IEventEmitterEventsListener<TTarget> {
+}
+
+
+/** CONSTRUCTOR **/
 
 export function ConstructEventEmitterEventsListener<TTarget extends PureEventEmitter>(
   instance: IEventEmitterEventsListener<TTarget>,

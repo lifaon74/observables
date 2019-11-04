@@ -3,6 +3,7 @@ import { EventLike } from '../implementation';
 import { IsObject } from '../../../../../../helpers';
 import { ConstructClassWithPrivateMembers } from '../../../../../../misc/helpers/ClassWithPrivateMembers';
 
+/** PRIVATES **/
 
 export const EVENT_LIKE_PRIVATE = Symbol('event-like-private');
 
@@ -10,9 +11,14 @@ export interface IGenericEventPrivate<T> {
   value: T;
 }
 
-export interface IGenericEventInternal<T> extends IGenericEvent<T> {
+export interface IGenericEventPrivatesInternal<T> {
   [EVENT_LIKE_PRIVATE]: IGenericEventPrivate<T>;
 }
+
+export interface IGenericEventInternal<T> extends IGenericEventPrivatesInternal<T>, IGenericEvent<T> {
+}
+
+/** CONSTRUCTOR **/
 
 export function ConstructGenericEvent<T>(
   instance: IGenericEvent<T>,

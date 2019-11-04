@@ -1,9 +1,11 @@
-import { IEventTargetEventsListener, PureEventTarget } from './interfaces';
+import { IEventTargetEventsListener} from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../../../misc/helpers/ClassWithPrivateMembers';
-import { EventsListener } from '../implementation';
+import { EventsListener, IEventsListenerPrivatesInternal } from '../implementation';
 import { IsObject } from '../../../../../helpers';
 import { IEventLike } from '../event-like/interfaces';
+import { PureEventTarget } from './types';
 
+/** PRIVATES **/
 
 export const EVENT_TARGET_EVENTS_LISTENER_PRIVATE = Symbol('event-target-events-listener-private');
 
@@ -11,9 +13,14 @@ export interface IEventTargetEventsListenerPrivate<TTarget extends PureEventTarg
   target: TTarget;
 }
 
-export interface IEventTargetEventsListenerInternal<TTarget extends PureEventTarget> extends IEventTargetEventsListener<TTarget> {
+export interface IEventTargetEventsListenerPrivatesInternal<TTarget extends PureEventTarget> extends IEventsListenerPrivatesInternal {
   [EVENT_TARGET_EVENTS_LISTENER_PRIVATE]: IEventTargetEventsListenerPrivate<TTarget>;
 }
+
+export interface IEventTargetEventsListenerInternal<TTarget extends PureEventTarget> extends IEventTargetEventsListenerPrivatesInternal<TTarget>, IEventTargetEventsListener<TTarget> {
+}
+
+/** CONSTRUCTOR **/
 
 export function ConstructEventTargetEventsListener<TTarget extends PureEventTarget>(
   instance: IEventTargetEventsListener<TTarget>,

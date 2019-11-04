@@ -1,17 +1,22 @@
 import { IEventsListener, IIEventsListenerConstructor } from '../interfaces';
+import { PureEventTarget } from './types';
 
 /**
- * INTERFACES & TYPES
+ * INTERFACES
  */
-export type PureEventTarget = Pick<EventTarget, 'addEventListener' | 'removeEventListener'> & Partial<Pick<EventTarget, 'dispatchEvent'>>;
 
-/**
- * CLASS
- */
+
+/* CONSTRUCTOR */
 
 export interface IEventTargetEventsListenerConstructor extends Omit<IIEventsListenerConstructor, 'new'> {
   new<TTarget extends PureEventTarget>(target: TTarget): IEventTargetEventsListener<TTarget>;
 }
+
+export interface IEventTargetEventsListenerTypedConstructor<TTarget extends PureEventTarget> extends Omit<IIEventsListenerConstructor, 'new'> {
+  new(target: TTarget): IEventTargetEventsListener<TTarget>;
+}
+
+/* CLASS */
 
 export interface IEventTargetEventsListener<TTarget extends PureEventTarget> extends IEventsListener {
   readonly target: TTarget;
