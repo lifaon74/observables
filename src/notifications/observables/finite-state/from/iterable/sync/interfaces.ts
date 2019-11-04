@@ -2,7 +2,7 @@ import {
   IFiniteStateObservableKeyValueMapGeneric, IFiniteStateObservable,
   TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableExposedOptions
 } from '../../../interfaces';
-import { KeyValueMapToNotifications } from '../../../../../core/notifications-observable/interfaces';
+import { KeyValueMapToNotifications } from '../../../../../core/notifications-observable/types';
 
 /** TYPES **/
 

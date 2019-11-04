@@ -1,12 +1,10 @@
 import {
-  KeyValueMapToNotifications
-} from '../../../../core/notifications-observable/interfaces';
-import {
   IFiniteStateObservable,
   IFiniteStateObservableExposedOptions,
   IFiniteStateObservableKeyValueMapGeneric, TFiniteStateObservableFinalState, TFiniteStateObservableMode
 } from '../../interfaces';
 import { IProgress } from '../../../../../misc/progress/interfaces';
+import { KeyValueMapToNotifications } from '../../../../core/notifications-observable/types';
 
 /** TYPES **/
 

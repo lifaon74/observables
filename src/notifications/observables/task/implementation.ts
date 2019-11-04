@@ -1,15 +1,16 @@
 import {
   ITask, ITaskContext, ITaskContextConstructor, ITaskKeyValueMap, TTaskCreateCallback, TTaskState
 } from './interfaces';
-import { INotificationsObservableContext } from '../../core/notifications-observable/interfaces';
 import {
-  INotificationsObservableInternal, NotificationsObservable
+  NotificationsObservable
 } from '../../core/notifications-observable/implementation';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../../helpers';
 import { IProgress, IProgressOptions } from '../../../misc/progress/interfaces';
 import { IsProgress, Progress } from '../../../misc/progress/implementation';
 import { TCancelStrategy } from '../../../misc/cancel-token/interfaces';
+import { INotificationsObservableInternal } from '../../core/notifications-observable/privates';
+import { INotificationsObservableContext } from '../../core/notifications-observable/context/interfaces';
 
 
 

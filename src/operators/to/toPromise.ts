@@ -12,10 +12,10 @@ import {
   IFiniteStateObservableKeyValueMapGeneric, TFiniteStateObservableFinalState, TFiniteStateObservableGeneric,
   TFiniteStateObservableMode
 } from '../../notifications/observables/finite-state/interfaces';
-import { KeyValueMapToNotifications } from '../../notifications/core/notifications-observable/interfaces';
 import { IObserver } from '../../core/observer/interfaces';
 import { IsFiniteStateObservable } from '../../notifications/observables/finite-state/implementation';
 import { IsObservable } from '../../core/observable/constructor';
+import { KeyValueMapToNotifications } from '../../notifications/core/notifications-observable/types';
 
 
 export type TBasePromiseObservableNotification<T> = TPromiseObservableNotifications<T>;

@@ -1,10 +1,10 @@
-import { KeyValueMapToNotifications } from '../../../../core/notifications-observable/interfaces';
 import { ICancelToken } from '../../../../../misc/cancel-token/interfaces';
 import {
   IFiniteStateObservableKeyValueMapGeneric, IFiniteStateObservable, IFiniteStateObservableOptions,
   TFiniteStateObservableMode, TFiniteStateObservableFinalState, IFiniteStateObservableExposedOptions
 } from '../../interfaces';
 import { TPromiseOrValue } from '../../../../../promises/interfaces';
+import { KeyValueMapToNotifications } from '../../../../core/notifications-observable/types';
 
 /** TYPES **/
 

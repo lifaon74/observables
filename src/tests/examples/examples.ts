@@ -1,6 +1,6 @@
 import { Observer } from '../../core/observer/implementation';
 import {
-  NotificationsObservable, NotificationsObservableContext
+  NotificationsObservable
 } from '../../notifications/core/notifications-observable/implementation';
 import { NotificationsObserver } from '../../notifications/core/notifications-observer/implementation';
 import { EventsObservable } from '../../notifications/observables/events/events-observable/implementation';
@@ -16,7 +16,7 @@ import { Reason } from '../../misc/reason/implementation';
 import { PromiseObservable } from '../../notifications/observables/finite-state/promise/promise-observable/implementation';
 import { IObserver } from '../../core/observer/interfaces';
 import {
-  INotificationsObservable, INotificationsObservableContext
+  INotificationsObservable
 } from '../../notifications/core/notifications-observable/interfaces';
 import { IObservableObserver} from '../../core/observable-observer/interfaces';
 import { IObservable} from '../../core/observable/interfaces';
@@ -51,6 +51,8 @@ import { IObservableContext } from '../../core/observable/context/interfaces';
 import { IPipe } from '../../core/observable-observer/pipe/interfaces';
 import { TPipeContextBase } from '../../core/observable-observer/pipe/types';
 import { Pipe } from '../../core/observable-observer/pipe/implementation';
+import { INotificationsObservableContext } from '../../notifications/core/notifications-observable/context/interfaces';
+import { NotificationsObservableContext } from '../../notifications/core/notifications-observable/context/implementation';
 
 
 /**

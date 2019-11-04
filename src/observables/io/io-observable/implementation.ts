@@ -10,7 +10,7 @@ import {
   HasFactoryWaterMark, MakeFactory
 } from '../../../classes/class-helpers/factory';
 import {
-  INotificationsObservableTypedConstructor, KeyValueMapToNotifications
+  INotificationsObservableTypedConstructor
 } from '../../../notifications/core/notifications-observable/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import {
@@ -18,13 +18,15 @@ import {
 } from '../../../misc/activable/implementation';
 import { IsObject } from '../../../helpers';
 import {
-  IsNotificationsObservableConstructor, NotificationsObservableFactory
+  NotificationsObservableFactory
 } from '../../../notifications/core/notifications-observable/implementation';
 import { IActivableConstructor } from '../../../misc/activable/interfaces';
 import { Constructor } from '../../../classes/class-helpers/types';
 import { BaseClass, IBaseClassConstructor } from '../../../classes/class-helpers/base-class';
 import { IObservablePrivate, OBSERVABLE_PRIVATE } from '../../../core/observable/privates';
 import { ObservableFactory } from '../../../core/observable/implementation';
+import { IsNotificationsObservableConstructor } from '../../../notifications/core/notifications-observable/constructor';
+import { KeyValueMapToNotifications } from '../../../notifications/core/notifications-observable/types';
 
 
 export const INPUT_OUTPUT_PRIVATE = Symbol('input-output-private');

@@ -7,9 +7,9 @@ import { CancelReason, CancelToken } from '../../../../../misc/cancel-token/impl
 import { Notification } from '../../../../core/notification/implementation';
 import { IPromiseObservableKeyValueMap, TPromiseObservableFactory, TPromiseObservableFinalState } from './interfaces';
 import { IObserver } from '../../../../../core/observer/interfaces';
-import { KeyValueMapToNotifications } from '../../../../core/notifications-observable/interfaces';
 import { INotificationsObserver } from '../../../../core/notifications-observer/interfaces';
 import { FiniteStateObservableHookDefaultOnUnobserved } from '../../helpers';
+import { KeyValueMapToNotifications } from '../../../../core/notifications-observable/types';
 
 
 /**

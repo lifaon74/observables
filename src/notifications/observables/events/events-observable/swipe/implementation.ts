@@ -1,22 +1,23 @@
 import {
-  INotificationsObservableInternal, NotificationsObservable, NotificationsObservableDispatch
+  NotificationsObservable
 } from '../../../../core/notifications-observable/implementation';
 import {
   ISwipeEvent, ISwipeEventInit, ISwipeObservable, ISwipeObservableKeyValueMap, TSwipeEventDirection
 } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../../../misc/helpers/ClassWithPrivateMembers';
-import {
-  ExtractObserverNameAndCallback
-} from '../../../../core/notifications-observer/implementation';
 import { INotificationsObserver } from '../../../../core/notifications-observer/interfaces';
 import { EventsObservable } from '../implementation';
 import { CyclicTypedVectorArray } from '../../../../../classes/cyclic/CyclicTypedVectorArray';
-import {
-  KeyValueMapToNotifications, KeyValueMapToNotificationsObserversLikeGeneric, TNotificationsObservableHook
-} from '../../../../core/notifications-observable/interfaces';
 import { KeyValueMapKeys, KeyValueMapValues } from '../../../../core/interfaces';
 import { IObserver } from '../../../../../core/observer/interfaces';
 import { OBSERVABLE_PRIVATE } from '../../../../../core/observable/privates';
+import { INotificationsObservableInternal } from '../../../../core/notifications-observable/privates';
+import {
+  KeyValueMapToNotifications,
+  KeyValueMapToNotificationsObserversLikeGeneric, TNotificationsObservableHook
+} from '../../../../core/notifications-observable/types';
+import { NotificationsObservableDispatch } from '../../../../core/notifications-observable/functions';
+import { ExtractObserverNameAndCallback } from '../../../../core/notifications-observer/functions';
 
 
 // export abstract class Gesture {

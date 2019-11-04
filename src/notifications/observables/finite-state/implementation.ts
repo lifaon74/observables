@@ -2,8 +2,7 @@ import {
   IObservableConstructor
 } from '../../../core/observable/interfaces';
 import {
-  INotificationsObservable, INotificationsObservableContext, INotificationsObservableTypedConstructor,
-  KeyValueMapToNotifications, KeyValueMapToNotificationsGeneric
+  INotificationsObservable, INotificationsObservableTypedConstructor
 } from '../../core/notifications-observable/interfaces';
 import {
   FinalStateConstraint, FiniteStateKeyValueMapConstraint, FiniteStateObservableModeConstraint, IFiniteStateObservable,
@@ -14,7 +13,7 @@ import {
 } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import {
-  IsNotificationsObservableConstructor, NotificationsObservableContext, NotificationsObservableFactory
+  NotificationsObservableFactory
 } from '../../core/notifications-observable/implementation';
 import { Notification } from '../../core/notification/implementation';
 import { KeyValueMapKeys, KeyValueMapValues } from '../../core/interfaces';
@@ -23,8 +22,6 @@ import {
   GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
 } from '../../../classes/class-helpers/factory';
 import { IObserver } from '../../../core/observer/interfaces';
-import { ExtractObserverNameAndCallback } from '../../core/notifications-observer/implementation';
-import { INotificationsObserverLike } from '../../core/notifications-observer/interfaces';
 import { Constructor } from '../../../classes/class-helpers/types';
 import { BaseClass, IBaseClassConstructor } from '../../../classes/class-helpers/base-class';
 import { ObservableFactory } from '../../../core/observable/implementation';
@@ -33,6 +30,14 @@ import { IObservableContextBase } from '../../../core/observable/context/base/in
 import { AllowObservableContextBaseConstruct } from '../../../core/observable/context/base/constructor';
 import { IObservableHookPrivate } from '../../../core/observable/hook/privates';
 import { InitObservableHook } from '../../../core/observable/hook/init';
+import { IsNotificationsObservableConstructor } from '../../core/notifications-observable/constructor';
+import { INotificationsObservableContext } from '../../core/notifications-observable/context/interfaces';
+import {
+  KeyValueMapToNotifications, KeyValueMapToNotificationsGeneric
+} from '../../core/notifications-observable/types';
+import { NotificationsObservableContext } from '../../core/notifications-observable/context/implementation';
+import { INotificationsObserverLike } from '../../core/notifications-observer/types';
+import { ExtractObserverNameAndCallback } from '../../core/notifications-observer/functions';
 
 
 export const COMPLETE_STATE_OBSERVABLE_PRIVATE = Symbol('finite-state-observable-private');

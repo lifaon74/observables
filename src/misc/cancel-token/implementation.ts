@@ -1,6 +1,6 @@
 import { Notification } from '../../notifications/core/notification/implementation';
 import {
-  INotificationsObservableInternal, NotificationsObservable
+  NotificationsObservable
 } from '../../notifications/core/notifications-observable/implementation';
 import { INotificationsObserver } from '../../notifications/core/notifications-observer/interfaces';
 import { ConstructClassWithPrivateMembers } from '../helpers/ClassWithPrivateMembers';
@@ -14,7 +14,8 @@ import { Reason } from '../reason/implementation';
 import { IsObject, noop } from '../../helpers';
 import { TPromise, TPromiseOrValue, TPromiseType } from '../../promises/interfaces';
 import { Finally, IsPromiseLikeBase, NEVER_PROMISE, PromiseTry, VOID_PROMISE } from '../../promises/helpers';
-import { INotificationsObservableContext } from '../../notifications/core/notifications-observable/interfaces';
+import { INotificationsObservableInternal } from '../../notifications/core/notifications-observable/privates';
+import { INotificationsObservableContext } from '../../notifications/core/notifications-observable/context/interfaces';
 
 
 

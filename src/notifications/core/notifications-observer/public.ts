@@ -1,2 +1,5 @@
 export * from './interfaces';
-export { NotificationsObserver, IsNotificationsObserver } from './implementation';
+export * from './types';
+export { NotificationsObserver } from './implementation';
+export { IsNotificationsObserver } from './constructor';
+

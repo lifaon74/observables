@@ -82,7 +82,7 @@ export type TObservableObservedByResultNonCyclic<TObservers extends TObserverOrC
         : false
   }[keyof TObservers] ? never : TReturn;
 
-export type TObservableConstructorArgs<T> = [((context: IObservableContext<T>) => (IObservableHook<T> | void))] | [];
+export type TObservableConstructorArgs<T> = [(((context: IObservableContext<T>) => (IObservableHook<T> | void)))?];
 
 // returns the type of an Observable
 export type ObservableType<T extends IObservable<any>> = T extends IObservable<infer R> ? R : never;

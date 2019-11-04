@@ -11,6 +11,9 @@ export interface IPipeContextPrivate<TObserver extends IObserver<any>, TObservab
   pipe: IPipe<TObserver, TObservable>;
 }
 
-export interface IPipeContextInternal<TObserver extends IObserver<any>, TObservable extends IObservable<any>> extends IPipeContext<TObserver, TObservable> {
+export interface IPipeContextPrivatesInternal<TObserver extends IObserver<any>, TObservable extends IObservable<any>> {
   [PIPE_CONTEXT_PRIVATE]: IPipeContextPrivate<TObserver, TObservable>;
+}
+
+export interface IPipeContextInternal<TObserver extends IObserver<any>, TObservable extends IObservable<any>> extends IPipeContextPrivatesInternal<TObserver, TObservable>, IPipeContext<TObserver, TObservable> {
 }

@@ -1,9 +1,12 @@
 import { KeyValueMapConstraint } from '../../core/interfaces';
 import {
-  INotificationsObservable, INotificationsObservableContext, KeyValueMapToNotificationsSoft,
-  TNotificationsObservableHook
+  INotificationsObservable
 } from '../../core/notifications-observable/interfaces';
 import { IsSuperSet } from '../../../classes/types';
+import { INotificationsObservableContext } from '../../core/notifications-observable/context/interfaces';
+import {
+  KeyValueMapToNotificationsSoft, TNotificationsObservableHook
+} from '../../core/notifications-observable/types';
 
 /**
  * TYPES

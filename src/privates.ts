@@ -47,4 +47,42 @@ export * from './observables/timer-observable/implementation';
 
 export * from './promises/cancellable-promise/implementation';
 export * from './promises/deferred-promise/implementation';
+export { INotificationInternal } from './notifications/core/notification/privates';
+export { INotificationPrivate } from './notifications/core/notification/privates';
+export { NOTIFICATION_PRIVATE } from './notifications/core/notification/privates';
+export { IsNotification } from './notifications/core/notification/constructor';
+export { ConstructNotification } from './notifications/core/notification/constructor';
+export { INotificationsObservableInternal } from './notifications/core/notifications-observable/privates';
+export { INotificationsObservablePrivate } from './notifications/core/notifications-observable/privates';
+export { NOTIFICATIONS_OBSERVABLE_PRIVATE } from './notifications/core/notifications-observable/privates';
+export { IsNotificationsObservableConstructor } from './notifications/core/notifications-observable/constructor';
+export { IS_NOTIFICATIONS_OBSERVABLE_CONSTRUCTOR } from './notifications/core/notifications-observable/constructor';
+export { IsNotificationsObservable } from './notifications/core/notifications-observable/constructor';
+export { ConstructNotificationsObservable } from './notifications/core/notifications-observable/constructor';
+export { NotificationsObservableContext } from './notifications/core/notifications-observable/context/implementation';
+export {
+  NotificationsObservableContextDispatch
+}from './notifications/core/notifications-observable/context/implementation';
+export {
+  NotificationsObservableContextEmit
+}from './notifications/core/notifications-observable/context/implementation';
+export {
+  NewNotificationsObservableContext
+}from './notifications/core/notifications-observable/context/implementation';
+export { NotificationsObservableDispatch } from './notifications/core/notifications-observable/functions';
+export { NormalizeNotificationsObservableMatchOptions } from './notifications/core/notifications-observable/functions';
+export { INotificationsObservableMatchOptionStrict } from './notifications/core/notifications-observable/functions';
+export { INotificationsObserverInternal } from './notifications/core/notifications-observer/privates';
+export { INotificationsObserverPrivate } from './notifications/core/notifications-observer/privates';
+export { NOTIFICATIONS_OBSERVER_PRIVATE } from './notifications/core/notifications-observer/privates';
+export { IsNotificationsObserver } from './notifications/core/notifications-observer/constructor';
+export { ConstructNotificationsObserver } from './notifications/core/notifications-observer/constructor';
+export { IsNotificationsObserverLike } from './notifications/core/notifications-observer/functions';
+export { ExtractObserverNameAndCallback } from './notifications/core/notifications-observer/functions';
+export { IPreventableInternal } from './notifications/core/preventable/privates';
+export { IPreventablePrivate } from './notifications/core/preventable/privates';
+export { PREVENTABLE_PRIVATE } from './notifications/core/preventable/privates';
+export { IsPreventable } from './notifications/core/preventable/constructor';
+export { ConstructPreventable } from './notifications/core/preventable/constructor';
+export { BasicPreventable } from './notifications/core/preventable/basic/implementation';
 

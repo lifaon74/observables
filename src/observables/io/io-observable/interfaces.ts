@@ -1,12 +1,16 @@
 import { IObserver } from '../../../core/observer/interfaces';
 import {
-  INotificationsObservable, INotificationsObservableContext, KeyValueMapToNotifications,
-  TNotificationsObservableConstructorArgs, TNotificationsObservableHook
+  INotificationsObservable
 } from '../../../notifications/core/notifications-observable/interfaces';
 import { IActivable, IActivableHook, TActivableConstructorArgs } from '../../../misc/activable/interfaces';
 import { IObservable} from '../../../core/observable/interfaces';
 import { KeyValueMapConstraint } from '../../../notifications/core/interfaces';
 import { TObservableConstructorArgs } from '../../../core/observable/types';
+import { INotificationsObservableContext } from '../../../notifications/core/notifications-observable/context/interfaces';
+import {
+  KeyValueMapToNotifications,
+  TNotificationsObservableConstructorArgs, TNotificationsObservableHook
+} from '../../../notifications/core/notifications-observable/types';
 
 export interface IInputOutputKeyValueMap {
   activate: void;

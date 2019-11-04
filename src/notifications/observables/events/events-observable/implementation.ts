@@ -1,18 +1,20 @@
 import {
-  INotificationsObservableInternal, NotificationsObservable
+  NotificationsObservable
 } from '../../../core/notifications-observable/implementation';
 import { EventKeyValueMapConstraint, IEventsObservable } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
 import { Notification } from '../../../core/notification/implementation';
-import { ExtractObserverNameAndCallback } from '../../../core/notifications-observer/implementation';
 import { KeyValueMapKeys, KeyValueMapValues } from '../../../core/interfaces';
-import {
-  KeyValueMapToNotifications, KeyValueMapToNotificationsObserversLikeGeneric, TNotificationsObservableHook,
-} from '../../../core/notifications-observable/interfaces';
 import { IObserver } from '../../../../core/observer/interfaces';
 import { IsObject } from '../../../../helpers';
 import { IEventsListener } from '../events-listener/interfaces';
 import { IEventLike } from '../events-listener/event-like/interfaces';
+import { INotificationsObservableInternal } from '../../../core/notifications-observable/privates';
+import {
+  KeyValueMapToNotifications,
+  KeyValueMapToNotificationsObserversLikeGeneric, TNotificationsObservableHook
+} from '../../../core/notifications-observable/types';
+import { ExtractObserverNameAndCallback } from '../../../core/notifications-observer/functions';
 
 
 export const EVENTS_OBSERVABLE_PRIVATE = Symbol('events-observable-private');

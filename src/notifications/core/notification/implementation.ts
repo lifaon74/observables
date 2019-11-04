@@ -1,36 +1,44 @@
-import { INotification } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
-import { IsObject } from '../../../helpers';
+import { INotification, INotificationConstructor } from './interfaces';
 import { IEventLike } from '../../observables/events/events-listener/event-like/interfaces';
+import { INotificationInternal, NOTIFICATION_PRIVATE } from './privates';
+import { ConstructNotification } from './constructor';
 
+/** METHODS **/
 
-export const NOTIFICATION_PRIVATE = Symbol('notification-private');
+/* GETTERS/SETTERS */
 
-export interface INotificationPrivate<TName extends string, TValue> {
-  name: TName;
-  value: TValue;
+export function NotificationGetName<TName extends string, TValue>(instance: INotification<TName, TValue>,): TName {
+  return (instance as INotificationInternal<TName, TValue>)[NOTIFICATION_PRIVATE].name;
 }
 
-export interface INotificationInternal<TName extends string, TValue> extends INotification<TName, TValue> {
-  [NOTIFICATION_PRIVATE]: INotificationPrivate<TName, TValue>;
+export function NotificationGetValue<TName extends string, TValue>(instance: INotification<TName, TValue>,): TValue {
+  return (instance as INotificationInternal<TName, TValue>)[NOTIFICATION_PRIVATE].value;
 }
 
-export function ConstructNotification<TName extends string, TValue>(instance: INotification<TName, TValue>, name: TName, value: TValue): void {
-  ConstructClassWithPrivateMembers(instance, NOTIFICATION_PRIVATE);
-  const privates: INotificationPrivate<TName, TValue> = (instance as INotificationInternal<TName, TValue>)[NOTIFICATION_PRIVATE];
-  privates.name = name;
-  privates.value = value;
+/* METHODS */
+
+export function NotificationToJSON<TName extends string, TValue>(instance: INotification<TName, TValue>,): Pick<INotification<TName, TValue>, 'name' | 'value'> {
+  return {
+    name: instance.name,
+    value: instance.value,
+  };
 }
 
-export function IsNotification(value: any): value is INotification<string, any> {
-  return IsObject(value)
-    && value.hasOwnProperty(NOTIFICATION_PRIVATE as symbol);
+/* STATIC METHODS */
+
+export function NotificationStaticFromEvent<TName extends string, TEvent extends IEventLike>(
+  _constructor: INotificationConstructor,
+  event: TEvent
+): INotification<TName, TEvent> {
+  return new _constructor<TName, TEvent>(event.type as TName, event);
 }
+
+/** CLASS **/
 
 export class Notification<TName extends string, TValue> implements INotification<TName, TValue> {
 
   static fromEvent<TName extends string = string, TEvent extends IEventLike = IEventLike>(event: TEvent): INotification<TName, TEvent> {
-    return new Notification<TName, TEvent>(event.type as TName, event);
+    return NotificationStaticFromEvent<TName, TEvent>(this, event);
   }
 
   constructor(name: TName, value: TValue) {
@@ -38,17 +46,14 @@ export class Notification<TName extends string, TValue> implements INotification
   }
 
   get name(): TName {
-    return ((this as unknown) as INotificationInternal<TName, TValue>)[NOTIFICATION_PRIVATE].name;
+    return NotificationGetName<TName, TValue>(this);
   }
 
   get value(): TValue {
-    return ((this as unknown) as INotificationInternal<TName, TValue>)[NOTIFICATION_PRIVATE].value;
+    return NotificationGetValue<TName, TValue>(this);
   }
 
   toJSON(): Pick<INotification<TName, TValue>, 'name' | 'value'> {
-    return {
-      name: this.name,
-      value: this.value,
-    };
+    return NotificationToJSON<TName, TValue>(this);
   }
 }

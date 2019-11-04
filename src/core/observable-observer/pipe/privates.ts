@@ -14,6 +14,9 @@ export interface IPipePrivate<TObserver extends IObserver<any>, TObservable exte
   autoDeactivate: boolean;
 }
 
-export interface IPipeInternal<TObserver extends IObserver<any>, TObservable extends IObservable<any>> extends IPipe<TObserver, TObservable> {
+export interface IPipePrivatesInternal<TObserver extends IObserver<any>, TObservable extends IObservable<any>> {
   [PIPE_PRIVATE]: IPipePrivate<TObserver, TObservable>;
+}
+
+export interface IPipeInternal<TObserver extends IObserver<any>, TObservable extends IObservable<any>> extends IPipePrivatesInternal<TObserver, TObservable>, IPipe<TObserver, TObservable> {
 }

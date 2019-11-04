@@ -3,7 +3,7 @@ import {
   TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableExposedOptions
 } from '../interfaces';
 import { IProgress } from '../../../../misc/progress/interfaces';
-import { KeyValueMapToNotifications } from '../../../core/notifications-observable/interfaces';
+import { KeyValueMapToNotifications } from '../../../core/notifications-observable/types';
 
 /** TYPES **/
 
