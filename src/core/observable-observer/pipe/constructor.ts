@@ -8,7 +8,7 @@ import { OBSERVER_PRIVATE } from '../../observer/privates';
 import { IObservableInternal, IObservablePrivate, OBSERVABLE_PRIVATE } from '../../observable/privates';
 import { ObservableType } from '../../observable/types';
 import { IPipe } from './interfaces';
-import { PipeUpdateAutoActivate, PipeUpdateAutoDeactivate } from './implementation';
+import { PipeUpdateAutoActivate, PipeUpdateAutoDeactivate } from './functions';
 
 /** CONSTRUCTOR **/
 
