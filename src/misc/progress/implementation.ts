@@ -76,11 +76,15 @@ export function IsProgress(value: any): value is IProgress {
 /** METHODS **/
 
 export function ProgressToJSON(instance: IProgress, allowFloat: boolean = false): IProgressJSON {
-  return {
+  const obj: IProgressJSON = {
     lengthComputable: instance.lengthComputable,
     loaded: instance.loaded,
     total: (allowFloat || instance.lengthComputable) ? instance.total : 0,
   };
+  if (instance.name !== void 0) {
+    obj.name = instance.name;
+  }
+  return obj;
 }
 
 export function ProgressToString(instance: IProgress): string {
@@ -99,6 +103,7 @@ export function ProgressFromJSONStatic(constructor: IProgressConstructor, json: 
   return new constructor({
     total: total,
     loaded: Math.max(0, Math.min(total, json.loaded)),
+    name: json.name
   });
 }
 
