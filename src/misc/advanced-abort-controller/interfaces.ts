@@ -5,6 +5,8 @@ import { IAdvancedAbortSignal } from './advanced-abort-signal/interfaces';
 /* PRIVATE */
 
 export interface IAdvancedAbortControllerConstructor {
+  fromAbortSignal(signal: AbortSignal): IAdvancedAbortController;
+
   new(): IAdvancedAbortController;
 }
 

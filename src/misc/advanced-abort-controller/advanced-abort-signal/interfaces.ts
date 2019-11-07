@@ -19,4 +19,6 @@ export interface IAdvancedAbortSignalConstructor extends Omit<INotificationsObse
 export interface IAdvancedAbortSignal extends INotificationsObservable<IAdvancedAbortSignalKeyValueMap> {
   readonly aborted: boolean;
   readonly reason: any;
+
+  toAbortController(): AbortController;
 }

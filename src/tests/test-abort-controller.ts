@@ -2,7 +2,12 @@ import { AdvancedAbortController } from '../misc/advanced-abort-controller/imple
 
 export function testAbortController1() {
   const controller = new AdvancedAbortController();
-  console.log(controller);
+
+  controller.signal.on('abort', (reason: any) => {
+    console.log('aborted !', reason);
+  });
+
+  controller.abort('any reason');
 }
 
 

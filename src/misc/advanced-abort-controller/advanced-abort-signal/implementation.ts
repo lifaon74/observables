@@ -3,6 +3,8 @@ import { INotificationsObservableContext } from '../../../notifications/core/not
 import { IAdvancedAbortSignal, IAdvancedAbortSignalConstructor, IAdvancedAbortSignalKeyValueMap } from './interfaces';
 import { AllowAdvancedAbortSignalConstruct, ConstructAdvancedAbortSignal } from './constructor';
 import { ADVANCED_ABORT_SIGNAL_PRIVATE, IAdvancedAbortSignalInternal } from './privates';
+import { INotificationsObserver } from '../../../notifications/core/notifications-observer/interfaces';
+
 
 
 /** NEW **/
@@ -26,6 +28,34 @@ export function AdvancedAbortSignalGetReason(instance: IAdvancedAbortSignal): an
   return (instance as IAdvancedAbortSignalInternal)[ADVANCED_ABORT_SIGNAL_PRIVATE].reason;
 }
 
+/* METHODS */
+
+export function AdvancedAbortSignalToAbortController(instance: IAdvancedAbortSignal): AbortController {
+  const controller: AbortController = new AbortController();
+
+  if (instance.aborted) {
+    if (!controller.signal.aborted) {
+      controller.abort();
+    }
+  } else {
+    const clear = () => {
+      controller.signal.removeEventListener('abort', clear, false);
+      signalListener.deactivate();
+    };
+
+    const signalListener: INotificationsObserver<'abort', any> = instance.addListener('abort', () => {
+      clear();
+      controller.abort();
+    });
+    signalListener.activate();
+
+    // in the case of controller.signal is aborted, it's no more required to listen to 'abort' from this signal
+    controller.signal.addEventListener('abort', clear, false);
+  }
+
+  return controller;
+}
+
 /** CLASS **/
 
 export class AdvancedAbortSignal extends NotificationsObservable<IAdvancedAbortSignalKeyValueMap> implements IAdvancedAbortSignal {
@@ -45,5 +75,9 @@ export class AdvancedAbortSignal extends NotificationsObservable<IAdvancedAbortS
 
   get reason(): any {
     return AdvancedAbortSignalGetReason(this);
+  }
+
+  toAbortController(): AbortController {
+    return AdvancedAbortSignalToAbortController(this);
   }
 }
