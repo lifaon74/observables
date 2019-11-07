@@ -10,6 +10,9 @@ export interface IIEventsListenerConstructor {
   new(): IEventsListener;
 }
 
+/**
+ * An EventsListener is an abstract view over an EventTarget or an EventEmitter
+ */
 export interface IEventsListener {
   addEventListener(type: string, listener: (event: IEventLike) => void): void;
 

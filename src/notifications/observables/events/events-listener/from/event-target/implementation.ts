@@ -1,45 +1,16 @@
-import { IEventTargetEventsListener} from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../../../misc/helpers/ClassWithPrivateMembers';
-import { EventsListener, IEventsListenerPrivatesInternal } from '../implementation';
-import { IsObject } from '../../../../../helpers';
-import { IEventLike } from '../event-like/interfaces';
+import { IEventTargetEventsListener } from './interfaces';
+import { EventsListener } from '../../implementation';
+import { IEventLike } from '../../event-like/interfaces';
 import { PureEventTarget } from './types';
-
-/** PRIVATES **/
-
-export const EVENT_TARGET_EVENTS_LISTENER_PRIVATE = Symbol('event-target-events-listener-private');
-
-export interface IEventTargetEventsListenerPrivate<TTarget extends PureEventTarget> {
-  target: TTarget;
-}
-
-export interface IEventTargetEventsListenerPrivatesInternal<TTarget extends PureEventTarget> extends IEventsListenerPrivatesInternal {
-  [EVENT_TARGET_EVENTS_LISTENER_PRIVATE]: IEventTargetEventsListenerPrivate<TTarget>;
-}
-
-export interface IEventTargetEventsListenerInternal<TTarget extends PureEventTarget> extends IEventTargetEventsListenerPrivatesInternal<TTarget>, IEventTargetEventsListener<TTarget> {
-}
-
-/** CONSTRUCTOR **/
-
-export function ConstructEventTargetEventsListener<TTarget extends PureEventTarget>(
-  instance: IEventTargetEventsListener<TTarget>,
-  target: TTarget,
-): void {
-  ConstructClassWithPrivateMembers(instance, EVENT_TARGET_EVENTS_LISTENER_PRIVATE);
-  const privates: IEventTargetEventsListenerPrivate<TTarget> = (instance as IEventTargetEventsListenerInternal<TTarget>)[EVENT_TARGET_EVENTS_LISTENER_PRIVATE];
-  privates.target = target;
-}
-
-export function IsEventTargetEventsListener(value: any): value is IEventTargetEventsListener<any> {
-  return IsObject(value)
-    && value.hasOwnProperty(EVENT_TARGET_EVENTS_LISTENER_PRIVATE as symbol);
-}
+import { EVENT_TARGET_EVENTS_LISTENER_PRIVATE, IEventTargetEventsListenerInternal } from './privates';
+import { ConstructEventTargetEventsListener } from './constructor';
 
 
 /**
  * METHODS
  */
+
+/* GETTERS/SETTERS */
 
 export function EventTargetEventsListenerGetTarget<TTarget extends PureEventTarget>(instance: IEventTargetEventsListener<TTarget>): TTarget {
   return (instance as IEventTargetEventsListenerInternal<TTarget>)[EVENT_TARGET_EVENTS_LISTENER_PRIVATE].target;
@@ -53,6 +24,7 @@ export function EventTargetEventsListenerAddEventListener<TTarget extends PureEv
   instance.target.addEventListener(type, listener);
 }
 
+/* METHODS */
 
 export function EventTargetEventsListenerRemoveEventListener<TTarget extends PureEventTarget>(
   instance: IEventTargetEventsListener<TTarget>,
@@ -73,9 +45,9 @@ export function EventTargetEventsListenerDispatchEvent<TTarget extends PureEvent
   }
 }
 
-/**
- * CLASS
- */
+
+/** CLASS **/
+
 export class EventTargetEventsListener<TTarget extends PureEventTarget> extends EventsListener implements IEventTargetEventsListener<TTarget> {
 
   constructor(target: TTarget) {

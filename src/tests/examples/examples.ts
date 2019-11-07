@@ -45,7 +45,7 @@ import { FromReadableStreamObservable } from '../../notifications/observables/fi
 import { FromAsyncIterableObservable } from '../../notifications/observables/finite-state/from/iterable/async/implementation';
 import { ClientRequest, IncomingMessage } from 'http';
 import { IGenericEvent } from '../../notifications/observables/events/events-listener/event-like/generic/interfaces';
-import { EventEmitterEventsListener } from '../../notifications/observables/events/events-listener/nodejs/implementation';
+import { EventEmitterEventsListener } from '../../notifications/observables/events/events-listener/from/event-emitter/implementation';
 import { Observable } from '../../core/observable/implementation';
 import { IObservableContext } from '../../core/observable/context/interfaces';
 import { IPipe } from '../../core/observable-observer/pipe/interfaces';

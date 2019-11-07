@@ -85,4 +85,10 @@ export { PREVENTABLE_PRIVATE } from './notifications/core/preventable/privates';
 export { IsPreventable } from './notifications/core/preventable/constructor';
 export { ConstructPreventable } from './notifications/core/preventable/constructor';
 export { BasicPreventable } from './notifications/core/preventable/basic/implementation';
+export { IEventsObservableInternal } from './notifications/observables/events/events-observable/privates';
+export { IEventsObservablePrivatesInternal } from './notifications/observables/events/events-observable/privates';
+export { IEventsObservablePrivate } from './notifications/observables/events/events-observable/privates';
+export { EVENTS_OBSERVABLE_PRIVATE } from './notifications/observables/events/events-observable/privates';
+export { IsEventsObservable } from './notifications/observables/events/events-observable/constructor';
+export { ConstructEventsObservable } from './notifications/observables/events/events-observable/constructor';
 

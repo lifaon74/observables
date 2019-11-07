@@ -1,6 +1,6 @@
 import { INotificationsObservable } from '../../../core/notifications-observable/interfaces';
 import { KeyValueMapConstraint, KeyValueMapKeys } from '../../../core/interfaces';
-import { Targets, TargetToEventMap } from '../events-listener/browser/target-to-event-map';
+import { Targets, TargetToEventMap } from '../events-listener/from/event-target/target-to-event-map';
 import { IEventsListener } from '../events-listener/interfaces';
 import { IEventLike } from '../events-listener/event-like/interfaces';
 
@@ -52,6 +52,8 @@ export interface IEventsObservable<TKVMap extends EventKeyValueMapConstraint<TKV
   // optional name of the event to listen to
   readonly name: KeyValueMapKeys<TKVMap> | null;
 }
+
+/*-------------*/
 
 // const a: IEventsObservableConstructor = null;
 // const b = new a(window);

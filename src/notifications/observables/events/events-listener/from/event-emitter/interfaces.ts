@@ -1,4 +1,4 @@
-import { IEventsListener, IIEventsListenerConstructor } from '../interfaces';
+import { IEventsListener, IIEventsListenerConstructor } from '../../interfaces';
 import { PureEventEmitter } from './types';
 
 /**

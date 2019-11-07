@@ -40,7 +40,7 @@ import { INotificationsObserverLike } from '../../core/notifications-observer/ty
 import { ExtractObserverNameAndCallback } from '../../core/notifications-observer/functions';
 
 
-export const COMPLETE_STATE_OBSERVABLE_PRIVATE = Symbol('finite-state-observable-private');
+export const FINITE_STATE_OBSERVABLE_PRIVATE = Symbol('finite-state-observable-private');
 
 export interface IFiniteStateObservablePrivate<
   TValue,
@@ -63,7 +63,7 @@ export interface IFiniteStateObservableInternal<
   TMode extends FiniteStateObservableModeConstraint<TMode>,
   TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>
 > extends IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> {
-  [COMPLETE_STATE_OBSERVABLE_PRIVATE]: IFiniteStateObservablePrivate<TValue, TFinalState, TMode, TKVMap>;
+  [FINITE_STATE_OBSERVABLE_PRIVATE]: IFiniteStateObservablePrivate<TValue, TFinalState, TMode, TKVMap>;
 }
 
 
@@ -78,8 +78,8 @@ export function ConstructFiniteStateObservable<
   create?: (context: IFiniteStateObservableContext<TValue, TFinalState, TMode, TKVMap>) => (IObservableHook<TValue> | void),
   options: IFiniteStateObservableOptions<TFinalState, TMode> = {}
 ): void {
-  ConstructClassWithPrivateMembers(instance, COMPLETE_STATE_OBSERVABLE_PRIVATE);
-  const privates: IFiniteStateObservablePrivate<TValue, TFinalState, TMode, TKVMap> = (instance as IFiniteStateObservableInternal<TValue, TFinalState, TMode,  TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE];
+  ConstructClassWithPrivateMembers(instance, FINITE_STATE_OBSERVABLE_PRIVATE);
+  const privates: IFiniteStateObservablePrivate<TValue, TFinalState, TMode, TKVMap> = (instance as IFiniteStateObservableInternal<TValue, TFinalState, TMode,  TKVMap>)[FINITE_STATE_OBSERVABLE_PRIVATE];
 
   privates.context = context;
   privates.values = [];
@@ -107,7 +107,7 @@ export function ConstructFiniteStateObservable<
 
 export function IsFiniteStateObservable(value: any): value is TFiniteStateObservableGeneric {
   return IsObject(value)
-    && value.hasOwnProperty(COMPLETE_STATE_OBSERVABLE_PRIVATE as symbol);
+    && value.hasOwnProperty(FINITE_STATE_OBSERVABLE_PRIVATE as symbol);
 }
 
 const IS_COMPLETE_STATE_OBSERVABLE_CONSTRUCTOR = Symbol('is-from-observable-constructor');
@@ -221,7 +221,7 @@ export function IsFiniteStateObservableFinalState<
   TMode extends FiniteStateObservableModeConstraint<TMode>,
   TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>
 >(instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>, name: string): boolean {
-  return (instance as IFiniteStateObservableInternal<TValue, TFinalState, TMode, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE].finalStates.has(name as TFinalState);
+  return (instance as IFiniteStateObservableInternal<TValue, TFinalState, TMode, TKVMap>)[FINITE_STATE_OBSERVABLE_PRIVATE].finalStates.has(name as TFinalState);
 }
 
 export function IsFiniteStateObservableNextState(name: string): boolean {
@@ -240,7 +240,7 @@ export function IsFiniteStateObservableCachingValues<
   TMode extends FiniteStateObservableModeConstraint<TMode>,
   TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>
 >(instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>): boolean {
-  return IsFiniteStateObservableCachingValuesMode<TMode>((instance as IFiniteStateObservableInternal<TValue, TFinalState, TMode, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE].mode);
+  return IsFiniteStateObservableCachingValuesMode<TMode>((instance as IFiniteStateObservableInternal<TValue, TFinalState, TMode, TKVMap>)[FINITE_STATE_OBSERVABLE_PRIVATE].mode);
 }
 
 export function IsFiniteStateObservableCachingValuesMode<TMode extends FiniteStateObservableModeConstraint<TMode>>(mode: TMode): boolean {
@@ -267,7 +267,7 @@ export function FiniteStateObservableOnEmit<
   TMode extends FiniteStateObservableModeConstraint<TMode>,
   TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>
 >(instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>, notification: KeyValueMapToNotifications<TKVMap>): void {
-  const privates: IFiniteStateObservablePrivate<TValue, TFinalState, TMode, TKVMap> = (instance as IFiniteStateObservableInternal<TValue, TFinalState, TMode, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE];
+  const privates: IFiniteStateObservablePrivate<TValue, TFinalState, TMode, TKVMap> = (instance as IFiniteStateObservableInternal<TValue, TFinalState, TMode, TKVMap>)[FINITE_STATE_OBSERVABLE_PRIVATE];
   const isFinalState: boolean = IsFiniteStateObservableFinalState<TValue, TFinalState, TMode, TKVMap>(instance, notification.name);
 
   if (isFinalState || IsFiniteStateObservableNextState(notification.name)) {
@@ -302,7 +302,7 @@ export function FiniteStateObservableClearCache<
   TMode extends FiniteStateObservableModeConstraint<TMode>,
   TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>
 >(instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>): void {
-  const privates: IFiniteStateObservablePrivate<TValue, TFinalState, TMode, TKVMap> = (instance as IFiniteStateObservableInternal<TValue, TFinalState, TMode, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE];
+  const privates: IFiniteStateObservablePrivate<TValue, TFinalState, TMode, TKVMap> = (instance as IFiniteStateObservableInternal<TValue, TFinalState, TMode, TKVMap>)[FINITE_STATE_OBSERVABLE_PRIVATE];
   if (privates.state !== 'next') {
     throw new Error(`Clearing FiniteStateObservable's cache may only be performed when its state is 'next'`);
   } else if (instance.observed)  {
@@ -319,7 +319,7 @@ export function FiniteStateObservableOnObserved<
   TMode extends FiniteStateObservableModeConstraint<TMode>,
   TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>
 >(instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>, observer: IObserver<KeyValueMapToNotifications<TKVMap>>): void {
-  const privates: IFiniteStateObservablePrivate<TValue, TFinalState, TMode, TKVMap> = (instance as IFiniteStateObservableInternal<TValue, TFinalState, TMode, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE];
+  const privates: IFiniteStateObservablePrivate<TValue, TFinalState, TMode, TKVMap> = (instance as IFiniteStateObservableInternal<TValue, TFinalState, TMode, TKVMap>)[FINITE_STATE_OBSERVABLE_PRIVATE];
   if (
     (privates.mode === 'uniq')
     && (privates.state !== 'next')
@@ -350,7 +350,7 @@ export function FiniteStateObservableOnUnobserved<
   TMode extends FiniteStateObservableModeConstraint<TMode>,
   TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>
 >(instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>, observer: IObserver<KeyValueMapToNotifications<TKVMap>>): void {
-  (instance as IFiniteStateObservableInternal<TValue, TFinalState, TMode, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE].onUnobserveHook(observer);
+  (instance as IFiniteStateObservableInternal<TValue, TFinalState, TMode, TKVMap>)[FINITE_STATE_OBSERVABLE_PRIVATE].onUnobserveHook(observer);
 }
 
 export function FiniteStateObservableGetState<
@@ -359,7 +359,7 @@ export function FiniteStateObservableGetState<
   TMode extends FiniteStateObservableModeConstraint<TMode>,
   TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>
 >(instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>): TFiniteStateObservableState<TFinalState> {
-  return (instance as IFiniteStateObservableInternal<TValue, TFinalState, TMode, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE].state;
+  return (instance as IFiniteStateObservableInternal<TValue, TFinalState, TMode, TKVMap>)[FINITE_STATE_OBSERVABLE_PRIVATE].state;
 }
 
 export function FiniteStateObservableGetMode<
@@ -368,7 +368,7 @@ export function FiniteStateObservableGetMode<
   TMode extends FiniteStateObservableModeConstraint<TMode>,
   TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>
 >(instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>): TMode {
-  return (instance as IFiniteStateObservableInternal<TValue, TFinalState, TMode, TKVMap>)[COMPLETE_STATE_OBSERVABLE_PRIVATE].mode;
+  return (instance as IFiniteStateObservableInternal<TValue, TFinalState, TMode, TKVMap>)[FINITE_STATE_OBSERVABLE_PRIVATE].mode;
 }
 
 

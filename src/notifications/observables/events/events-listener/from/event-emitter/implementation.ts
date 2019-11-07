@@ -1,62 +1,26 @@
-import { IEventEmitterEventsListener} from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../../../misc/helpers/ClassWithPrivateMembers';
-import { EventsListener, IEventsListenerPrivatesInternal } from '../implementation';
-import { IsObject } from '../../../../../helpers';
-import { IEventLike } from '../event-like/interfaces';
+import { IEventEmitterEventsListener } from './interfaces';
+import { EventsListener } from '../../implementation';
+import { IEventLike } from '../../event-like/interfaces';
 import { PureEventEmitter } from './types';
+import {
+  EVENT_EMITTER_EVENTS_LISTENER_PRIVATE, IEventEmitterEventsListenerInternal, IEventEmitterEventsListenerPrivate
+} from './privates';
+import { NodeJSListenerValueToGenericEvent, NormalizeNodeJSListenerValue } from './functions';
+import { ConstructEventEmitterEventsListener } from './constructor';
 
-/** PRIVATES **/
-
-export const EVENT_EMITTER_EVENTS_LISTENER_PRIVATE = Symbol('event-emitter-events-listener-private');
-
-export interface IEventEmitterEventsListenerPrivate<TTarget extends PureEventEmitter> {
-  target: TTarget;
-  listenersMap: WeakMap<(event: IEventLike) => void, (...args: any) => void>;
-}
-
-export interface IEventEmitterEventsListenerPrivatesInternal<TTarget extends PureEventEmitter> extends IEventsListenerPrivatesInternal {
-  [EVENT_EMITTER_EVENTS_LISTENER_PRIVATE]: IEventEmitterEventsListenerPrivate<TTarget>;
-}
-
-export interface IEventEmitterEventsListenerInternal<TTarget extends PureEventEmitter> extends IEventEmitterEventsListenerPrivatesInternal<TTarget>, IEventEmitterEventsListener<TTarget> {
-}
-
-
-/** CONSTRUCTOR **/
-
-export function ConstructEventEmitterEventsListener<TTarget extends PureEventEmitter>(
-  instance: IEventEmitterEventsListener<TTarget>,
-  target: TTarget,
-): void {
-  ConstructClassWithPrivateMembers(instance, EVENT_EMITTER_EVENTS_LISTENER_PRIVATE);
-  const privates: IEventEmitterEventsListenerPrivate<TTarget> = (instance as IEventEmitterEventsListenerInternal<TTarget>)[EVENT_EMITTER_EVENTS_LISTENER_PRIVATE];
-  privates.target = target;
-  privates.listenersMap = new WeakMap<(event: IEventLike) => void, (...args: any) => void>();
-}
-
-export function IsEventEmitterEventsListener(value: any): value is IEventEmitterEventsListener<any> {
-  return IsObject(value)
-    && value.hasOwnProperty(EVENT_EMITTER_EVENTS_LISTENER_PRIVATE as symbol);
-}
-
-/**
- * FUNCTIONS
- */
-export function NormalizeNodeJSListenerValue(args: any[]): any {
-  return (args.length === 0)
-    ? void 0
-    : (args.length === 1)
-      ? args[0]
-      : args;
-}
 
 /**
  * METHODS
  */
 
+/* GETTERS/SETTERS */
+
 export function EventEmitterEventsListenerGetTarget<TTarget extends PureEventEmitter>(instance: IEventEmitterEventsListener<TTarget>): TTarget {
   return (instance as IEventEmitterEventsListenerInternal<TTarget>)[EVENT_EMITTER_EVENTS_LISTENER_PRIVATE].target;
 }
+
+
+/* METHODS */
 
 export function EventEmitterEventsListenerAddEventListener<TTarget extends PureEventEmitter>(
   instance: IEventEmitterEventsListener<TTarget>,
@@ -65,7 +29,7 @@ export function EventEmitterEventsListenerAddEventListener<TTarget extends PureE
 ): void {
   const privates: IEventEmitterEventsListenerPrivate<TTarget> = (instance as IEventEmitterEventsListenerInternal<TTarget>)[EVENT_EMITTER_EVENTS_LISTENER_PRIVATE];
   const _listener = (...args: any) => {
-    listener.call(void 0, NormalizeNodeJSListenerValue(args));
+    listener.call(void 0, NodeJSListenerValueToGenericEvent(type, args));
   };
   privates.listenersMap.set(listener, _listener);
   instance.target.addListener(type, _listener);
@@ -95,9 +59,9 @@ export function EventEmitterEventsListenerDispatchEvent<TTarget extends PureEven
   }
 }
 
-/**
- * CLASS
- */
+
+/** CLASS **/
+
 export class EventEmitterEventsListener<TTarget extends PureEventEmitter> extends EventsListener implements IEventEmitterEventsListener<TTarget> {
 
   constructor(target: TTarget) {
