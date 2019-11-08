@@ -1,4 +1,6 @@
-import { ADVANCED_ABORT_CONTROLLER_PRIVATE, IAdvancedAbortControllerInternal, IAdvancedAbortControllerPrivate } from './privates';
+import {
+  ADVANCED_ABORT_CONTROLLER_PRIVATE, IAdvancedAbortControllerInternal, IAdvancedAbortControllerPrivate
+} from './privates';
 import { IAdvancedAbortController } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../helpers';

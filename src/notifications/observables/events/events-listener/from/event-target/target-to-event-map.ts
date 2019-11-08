@@ -60,7 +60,7 @@ export type TargetToEventMap =
   | [VTTCue, TextTrackCueEventMap]
   | [VideoTrackList, VideoTrackListEventMap]
   | [WebSocket, WebSocketEventMap]
-  | [Window, WindowEventMap]
+  | [typeof window, WindowEventMap]
   | [WindowEventHandlers, WindowEventHandlersEventMap] // -
   | [Worker, WorkerEventMap]
   | [XMLDocument, DocumentEventMap]

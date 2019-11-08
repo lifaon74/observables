@@ -4,24 +4,7 @@ import { DeferredPromise } from '../promises/deferred-promise/implementation';
 import { $delay } from '../promises/cancellable-promise/helpers';
 import { OnFinallyResult } from '../promises/cancellable-promise/interfaces';
 
-export function testConcurrentCancellablePromise() {
-  console.time('concurrent');
-  const promise = CancellablePromise.concurrentFactories(Array.from({ length: 100 }, (value: undefined, index: number) => {
-    return (token: ICancelToken) => {
-      return $delay(1000 * Math.random(), token)
-        .then(() => {
-          console.log(`promise #${index} done`);
-        });
-    };
-  }), 5)
-    .then(() => {
-      console.timeEnd('concurrent');
-    });
 
-  setTimeout(() => {
-    promise.token.cancel();
-  }, 2000);
-}
 export function testCancellablePromise() {
   const a = CancellablePromise.resolve(1);
 
@@ -84,6 +67,25 @@ export function testCancellablePromise() {
   // debugger;
 }
 
+export function testConcurrentCancellablePromise() {
+  console.time('concurrent');
+  const promise = CancellablePromise.concurrentFactories(Array.from({ length: 100 }, (value: undefined, index: number) => {
+    return (token: ICancelToken) => {
+      return $delay(1000 * Math.random(), token)
+        .then(() => {
+          console.log(`promise #${index} done`);
+        });
+    };
+  }), 5)
+    .then(() => {
+      console.timeEnd('concurrent');
+    });
+
+  setTimeout(() => {
+    promise.token.cancel();
+  }, 2000);
+}
+
 export function testDeferredPromise() {
   const a = new DeferredPromise<number>();
   a
@@ -99,7 +101,7 @@ export function testDeferredPromise() {
 }
 
 export function testPromises() {
-  // testCancellablePromise();
-  testConcurrentCancellablePromise();
+  testCancellablePromise();
+  // testConcurrentCancellablePromise();
   // testDeferredPromise();
 }

@@ -1,5 +1,5 @@
 import { NotificationsObservable } from '../../../core/notifications-observable/implementation';
-import { EventKeyValueMapConstraint, IEventsObservable } from './interfaces';
+import { EventKeyValueMapConstraint, IEventsObservable, IEventsObservableConstructor } from './interfaces';
 import { Notification } from '../../../core/notification/implementation';
 import { KeyValueMapKeys, KeyValueMapValues } from '../../../core/interfaces';
 import { IObserver } from '../../../../core/observer/interfaces';
@@ -78,7 +78,7 @@ export function EventsObservableOnUnobserved<TKVMap extends EventKeyValueMapCons
  *      console.log(event.clientX);
  *    }).activate();
  */
-export class EventsObservable<TKVMap extends EventKeyValueMapConstraint<TKVMap>, TTarget extends IEventsListener = IEventsListener> extends NotificationsObservable<TKVMap> implements IEventsObservable<TKVMap, TTarget> {
+export const EventsObservable: IEventsObservableConstructor = class EventsObservable<TKVMap extends EventKeyValueMapConstraint<TKVMap>, TTarget extends IEventsListener = IEventsListener> extends NotificationsObservable<TKVMap> implements IEventsObservable<TKVMap, TTarget> {
 
   constructor(target: TTarget, name: KeyValueMapKeys<TKVMap> | null = null) {
     super((): TNotificationsObservableHook<TKVMap> => {
@@ -101,5 +101,5 @@ export class EventsObservable<TKVMap extends EventKeyValueMapConstraint<TKVMap>,
   get name(): KeyValueMapKeys<TKVMap> | null {
     return ((this as unknown) as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].name;
   }
-}
+} as IEventsObservableConstructor;
 
