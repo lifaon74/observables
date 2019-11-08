@@ -2,7 +2,7 @@ import { CancellablePromise } from '../promises/cancellable-promise/implementati
 import { ICancelToken } from '../misc/cancel-token/interfaces';
 import { DeferredPromise } from '../promises/deferred-promise/implementation';
 import { $delay } from '../promises/cancellable-promise/helpers';
-import { OnFinallyResult } from '../promises/cancellable-promise/interfaces';
+import { OnFinallyResult } from '../promises/cancellable-promise/types';
 
 
 export function testCancellablePromise() {

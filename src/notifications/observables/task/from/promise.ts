@@ -1,7 +1,7 @@
 import { ITask, ITaskContext } from '../interfaces';
 import { Task } from '../implementation';
 import { TPromiseFactory } from '../../../../promises/interfaces';
-import { IsCancellablePromise } from '../../../../promises/cancellable-promise/implementation';
+import { IsCancellablePromise } from '../../../../promises/cancellable-promise/constructor';
 
 // export function taskFromGenericPromise<T>(promise: Promise<T>): ITask<T> {
 //   return taskFromGenericPromiseFactory<T>(() => promise);

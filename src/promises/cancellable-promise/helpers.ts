@@ -1,4 +1,4 @@
-import { ICancellablePromise, TCancellablePromiseCreateCallback } from './interfaces';
+import { ICancellablePromise} from './interfaces';
 import { setImmediate, clearImmediate } from '../../classes/set-immediate';
 import { CancellablePromise } from './implementation';
 import {
@@ -7,6 +7,7 @@ import {
 import { TPromiseOrValue } from '../interfaces';
 import { Reason } from '../../misc/reason/implementation';
 import { CancelToken } from '../../misc/cancel-token/implementation';
+import { TCancellablePromiseCreateCallback } from './types';
 
 /**
  * Returns a CancellablePromise resolved after 'timeout' milliseconds

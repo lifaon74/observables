@@ -8,6 +8,7 @@ import { Finally, NEVER_PROMISE, PromiseTry, VOID_PROMISE } from '../../../promi
 import { INotificationsObserver } from '../../../notifications/core/notifications-observer/interfaces';
 import { AdvancedAbortController } from '../implementation';
 import { IAdvancedAbortController } from '../interfaces';
+import { IsAdvancedAbortController } from '../constructor';
 
 
 /** FUNCTIONS **/
@@ -57,19 +58,19 @@ export function AdvancedAbortSignalNormalizeWrapPromiseOptions<TStrategy extends
   }
 
 
-  // if (options.onAbortedController === void 0) {
-  //   if (_options.onAborted !== void 0) {
-  //     _options.onAbortedController = new AdvancedAbortController();
-  //   }
-  // } else if (IsAdvancedAbortController(options.onAbortedController)) {
-  //   if (_options.onAborted === void 0) {
-  //     throw new Error(`options.onAbortedController is defined but options.onAborted is missing`);
-  //   } else {
-  //     _options.onAbortedController = options.onAbortedController;
-  //   }
-  // } else {
-  //   throw new TypeError(`Expected AdvancedAbortController or void as options.onAbortedController`);
-  // }
+  if (options.onAbortedController === void 0) {
+    if (_options.onAborted !== void 0) {
+      _options.onAbortedController = new AdvancedAbortController();
+    }
+  } else if (IsAdvancedAbortController(options.onAbortedController)) {
+    if (_options.onAborted === void 0) {
+      throw new Error(`options.onAbortedController is defined but options.onAborted is missing`);
+    } else {
+      _options.onAbortedController = options.onAbortedController;
+    }
+  } else {
+    throw new TypeError(`Expected AdvancedAbortController or void as options.onAbortedController`);
+  }
   return _options;
 }
 
@@ -109,7 +110,7 @@ export function ApplyOnAbortCallback<TStrategy extends TAbortStrategy, TAborted>
   options: IAdvancedAbortSignalWrapPromiseOptionsStrict<TStrategy, TAborted>,
 ): TPromise<TAborted | TAbortStrategyReturn<TStrategy>> {
   if (typeof options.onAborted === 'function') {
-    const newController: IAdvancedAbortController = new AdvancedAbortController();
+    const newController: IAdvancedAbortController = options.onAbortedController as IAdvancedAbortController;
     return newController.signal.wrapPromise<TAborted | TAbortStrategyReturn<TStrategy>, TStrategy, never>(
       PromiseTry<TAborted | TAbortStrategyReturn<TStrategy>>(() => (options.onAborted as Function).call(instance, instance.reason, newController)),
       {

@@ -1,7 +1,7 @@
-import { ICancelToken } from '../../misc/cancel-token/interfaces';
 import { TPromiseOrValue, TPromiseOrValueFactory } from '../interfaces';
 import { PromiseTry } from '../helpers';
-import { IsCancelToken } from '../../misc/cancel-token/implementation';
+import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
+import { IsAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/constructor';
 
 /**
  * INFO:
@@ -23,11 +23,8 @@ export function * PromiseFactoriesIteratorToPromiseIterable<T>(iterator: Iterato
 
 /**
  * Runs in parallel up to 'concurrent' promises
- * @param iterator
- * @param concurrent
- * @param token
  */
-export function RunConcurrentPromises<T>(iterator: Iterator<TPromiseOrValue<T>>, concurrent: number = 1, token?: ICancelToken): Promise<void> {
+export function RunConcurrentPromises<T>(iterator: Iterator<TPromiseOrValue<T>>, concurrent: number = 1, signal?: IAdvancedAbortSignal): Promise<void> {
   // ensures job is cancelled if one of the promise rejects or if the token is cancelled manually
   let errored: boolean = false;
   let next = (): TPromiseOrValue<void> => {
@@ -39,8 +36,8 @@ export function RunConcurrentPromises<T>(iterator: Iterator<TPromiseOrValue<T>>,
     }
   };
 
-  if (IsCancelToken(token)) {
-    next = token.wrapFunction<() => TPromiseOrValue<void>, 'never', never>(next);
+  if (IsAdvancedAbortSignal(signal)) {
+    next = signal.wrapFunction<() => TPromiseOrValue<void>, 'never', never>(next);
   }
 
   return Promise.all(

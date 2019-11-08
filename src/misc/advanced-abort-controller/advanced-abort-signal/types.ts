@@ -36,4 +36,5 @@ export type TCatchAborted<T, TStrategy extends TAbortStrategy> = (
 export interface IAdvancedAbortSignalWrapPromiseOptions<TStrategy extends TAbortStrategy, TAborted> {
   strategy?: TStrategy; // how to resolve the promise if signal is aborted
   onAborted?: TCatchAborted<TAborted, TStrategy>; // callback to call when the signal is aborted => we may change the promise state from 'aborted' to something else
+  onAbortedController?: IAdvancedAbortController; // controller provided to the 'onAborted' function
 }

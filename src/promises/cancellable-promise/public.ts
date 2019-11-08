@@ -1,3 +1,5 @@
 export * from './interfaces';
-export { CancellablePromise, IsCancellablePromise } from './implementation';
+export * from './types';
+export { CancellablePromise} from './implementation';
 export * from './helpers';
+export { IsCancellablePromise } from './constructor';

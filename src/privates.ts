@@ -91,4 +91,18 @@ export { IEventsObservablePrivate } from './notifications/observables/events/eve
 export { EVENTS_OBSERVABLE_PRIVATE } from './notifications/observables/events/events-observable/privates';
 export { IsEventsObservable } from './notifications/observables/events/events-observable/constructor';
 export { ConstructEventsObservable } from './notifications/observables/events/events-observable/constructor';
+export { ICancellablePromiseInternal } from './promises/cancellable-promise/privates';
+export { ICancellablePromisePrivatesInternal } from './promises/cancellable-promise/privates';
+export { ICancellablePromisePrivate } from './promises/cancellable-promise/privates';
+export { CANCELLABLE_PROMISE_PRIVATE } from './promises/cancellable-promise/privates';
+export { IsCancellablePromiseWithSameToken } from './promises/cancellable-promise/constructor';
+export { IsCancellablePromise } from './promises/cancellable-promise/constructor';
+export { ConstructCancellablePromise } from './promises/cancellable-promise/constructor';
+export { NewCancellablePromiseFromInstance } from './promises/cancellable-promise/constructor';
+export { NewCancellablePromise } from './promises/cancellable-promise/constructor';
+export { CHECK_CANCELLABLE_PROMISE_CONSTRUCT } from './promises/cancellable-promise/constructor';
+export { CancellablePromiseOptimizedFinally } from './promises/cancellable-promise/functions';
+export { CancellablePromiseInternalFinally } from './promises/cancellable-promise/functions';
+export { CancellablePromiseOptimizedThen } from './promises/cancellable-promise/functions';
+export { CancellablePromiseInternalThen } from './promises/cancellable-promise/functions';
 
