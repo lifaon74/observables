@@ -2,17 +2,21 @@ import {
   TAbortStrategy, TAbortStrategyReturn, TAbortStrategyReturnedPromise
 } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 import {
-  PromiseCancelledObject, TCancellablePromiseOnCancelledArgument, TCancellablePromiseOnFinallyArgument,
-  TCancellablePromiseOnFulfilled, TCancellablePromiseOnFulfilledArgument, TCancellablePromiseOnRejected,
-  TCancellablePromiseOnRejectedArgument, TCancellablePromiseThenReturn
+  ICancellablePromiseOptions, PromiseCancelledObject, TCancellablePromiseFactory,
+  TCancellablePromiseOnCancelledArgument, TCancellablePromiseOnFinallyArgument, TCancellablePromiseOnFulfilled,
+  TCancellablePromiseOnFulfilledArgument, TCancellablePromiseOnRejected, TCancellablePromiseOnRejectedArgument,
+  TCancellablePromiseThenReturn
 } from './types';
-import { ICancellablePromise } from './interfaces';
+import { ICancellablePromise, ICancellablePromiseConstructor } from './interfaces';
 import { CANCELLABLE_PROMISE_PRIVATE, ICancellablePromiseInternal, ICancellablePromisePrivate } from './privates';
-import { PromiseFulfilledObject, PromiseRejectedObject, TPromise, TPromiseOrValue } from '../interfaces';
+import {
+  PromiseFulfilledObject, PromiseRejectedObject, TPromise, TPromiseOrValue, TPromiseOrValueFactoryTupleToValueUnion,
+  TPromiseOrValueTupleToCancellablePromiseTuple, TPromiseOrValueTupleToValueUnion, TPromiseType
+} from '../interfaces';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
-import { PromiseTry } from '../helpers';
+import { Finally, PromiseTry } from '../helpers';
 import { NewCancellablePromiseFromInstance } from './constructor';
-import { CancellablePromiseThen } from './implementation';
+import { CancellablePromiseThen, CancellablePromiseTry } from './implementation';
 import { AdvancedAbortController } from '../../misc/advanced-abort-controller/implementation';
 import { IAdvancedAbortController } from '../../misc/advanced-abort-controller/interfaces';
 
@@ -139,4 +143,36 @@ export function CancellablePromiseOptimizedFinally<T, TStrategy extends TAbortSt
   return privates.isCancellablePromiseWithSameSignal
     ? (privates.promise as ICancellablePromise<T, TStrategy>).finally(onFinally, includeCancelled)
     : CancellablePromiseInternalFinally<T, TStrategy>(instance, onFinally, includeCancelled);
+}
+
+/**
+ * Runs 'factories' in parallel, and wraps each of them with a CancellablePromise
+ */
+export function CancellablePromiseRunFactories<TTuple extends TCancellablePromiseFactory<any>[], TStrategy extends TAbortStrategy>(
+  constructor: ICancellablePromiseConstructor,
+  factories: TTuple,
+  signal: IAdvancedAbortSignal,
+  options?: ICancellablePromiseOptions<TPromiseOrValueTupleToValueUnion<TTuple>, TStrategy>
+): TPromiseOrValueTupleToCancellablePromiseTuple<TTuple> {
+  return factories.map((factory: TCancellablePromiseFactory<any>) => {
+    return CancellablePromiseTry<TPromiseOrValueFactoryTupleToValueUnion<TTuple>, TStrategy>(constructor, factory, signal, options);
+  }) as unknown as TPromiseOrValueTupleToCancellablePromiseTuple<TTuple>;
+}
+
+/**
+ * Aborts 'controller' as soon as 'promise' is resolved (fulfilled or rejected)
+ */
+export function AbortControllerWhenPromiseResolved<TPromise extends Promise<any>>(
+  promise: TPromise,
+  controller: IAdvancedAbortController,
+  getReason: () => any
+): TPromise {
+  return promise
+    .then(
+      ...Finally<TPromiseType<TPromise>>(() => {
+        if (!controller.signal.aborted) {
+          controller.abort(getReason());
+        }
+      })
+    ) as TPromise;
 }

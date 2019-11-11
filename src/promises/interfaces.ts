@@ -1,4 +1,5 @@
 import { ICancelToken } from '../misc/cancel-token/interfaces';
+import { ICancellablePromise } from './cancellable-promise/interfaces';
 
 /**
  * BETTER DEFINITIONS AND HELPERS FOR PROMISE
@@ -152,6 +153,14 @@ export type TPromiseOrValueFactoryType<F extends TPromiseOrValueFactory<any>> = 
   ? TPromiseType<P>
   : never;
 
+
+export type TPromiseOrValueTupleToCancellablePromiseTuple<TTuple extends TPromiseOrValue<any>[]> = {
+  [K in keyof TTuple]: ICancellablePromise<
+    TTuple[K] extends TPromiseOrValueFactory<infer P>
+    ? TPromiseType<P>
+    : TTuple[K]
+  >;
+};
 
 export type TPromiseOrValueTupleToValueTuple<TTuple extends TPromiseOrValue<any>[]> = {
   [K in keyof TTuple]: TPromiseType<TTuple[K]>;

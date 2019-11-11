@@ -9,18 +9,36 @@ import { IAdvancedAbortController } from '../../misc/advanced-abort-controller/i
 
 /** TYPES **/
 
+export type TCancellablePromiseCreateCallback<T, TStrategy extends TAbortStrategy> = (
+  this: ICancellablePromise<T, TStrategy>,
+  resolve: (value?: TPromiseOrValue<T>) => void,
+  reject: (reason?: any) => void,
+  signal: IAdvancedAbortSignal
+) => void;
+
+
+export interface ICancellablePromiseOptions<T, TStrategy extends TAbortStrategy> {
+  strategy?: TStrategy;
+}
+
+
+
+
+export type TCancellablePromiseTryCallback<T, TStrategy extends TAbortStrategy> = (
+  this: ICancellablePromise<T, TStrategy>,
+  signal: IAdvancedAbortSignal
+) => TPromiseOrValue<T>;
+
 export type TCancellablePromiseFactory<T> = (signal: IAdvancedAbortSignal) => TPromiseOrValue<T>;
 
-export type TCancellablePromiseTryCallback<T, TStrategy extends TAbortStrategy> = (this: ICancellablePromise<T, TStrategy>, signal: IAdvancedAbortSignal) => TPromiseOrValue<T>;
 
-export type TCancellablePromiseRaceCallback<TTuple extends TPromiseOrValue<any>[], TStrategy extends TAbortStrategy> = (this: ICancellablePromise<TPromiseOrValueTupleToValueUnion<TTuple>, TStrategy>, signal: IAdvancedAbortSignal) => TTuple;
+/*---*/
 
-export type TCancellablePromiseAllCallback<TTuple extends TPromiseOrValue<any>[], TStrategy extends TAbortStrategy> = (this: ICancellablePromise<TPromiseOrValueTupleToValueTuple<TTuple>, TStrategy>, signal: IAdvancedAbortSignal) => TTuple;
-
-export type TCancellablePromiseCreateCallback<T, TStrategy extends TAbortStrategy> = (this: ICancellablePromise<T, TStrategy>, resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void, signal: IAdvancedAbortSignal) => void;
-
-
-export type TCancellablePromiseOnFulfilled<T, TStrategy extends TAbortStrategy, TFulfilled> = (this: ICancellablePromise<T, TStrategy>, value: T, signal: IAdvancedAbortSignal) => TPromiseOrValue<TFulfilled>;
+export type TCancellablePromiseOnFulfilled<T, TStrategy extends TAbortStrategy, TFulfilled> = (
+  this: ICancellablePromise<T, TStrategy>,
+  value: T,
+  signal: IAdvancedAbortSignal
+) => TPromiseOrValue<TFulfilled>;
 
 export type TCancellablePromiseOnFulfilledArgument<T, TStrategy extends TAbortStrategy, TFulfilled> =
   TCancellablePromiseOnFulfilled<T, TStrategy, TFulfilled>
@@ -28,7 +46,11 @@ export type TCancellablePromiseOnFulfilledArgument<T, TStrategy extends TAbortSt
   | null;
 
 
-export type TCancellablePromiseOnRejected<T, TStrategy extends TAbortStrategy, TRejected> = (this: ICancellablePromise<T, TStrategy>, reason: any, signal: IAdvancedAbortSignal) => TPromiseOrValue<TRejected>;
+export type TCancellablePromiseOnRejected<T, TStrategy extends TAbortStrategy, TRejected> = (
+  this: ICancellablePromise<T, TStrategy>,
+  reason: any,
+  signal: IAdvancedAbortSignal
+) => TPromiseOrValue<TRejected>;
 
 export type TCancellablePromiseOnRejectedArgument<T, TStrategy extends TAbortStrategy, TRejected> =
   TCancellablePromiseOnRejected<T, TStrategy, TRejected>
@@ -36,7 +58,12 @@ export type TCancellablePromiseOnRejectedArgument<T, TStrategy extends TAbortStr
   | null;
 
 
-export type TCancellablePromiseOnCancelled<T, TStrategy extends TAbortStrategy, TCancelled> = (this: ICancellablePromise<T, TStrategy>, reason: any, newController: IAdvancedAbortController, signal: IAdvancedAbortSignal) => TPromiseOrValue<TCancelled>;
+export type TCancellablePromiseOnCancelled<T, TStrategy extends TAbortStrategy, TCancelled> = (
+  this: ICancellablePromise<T, TStrategy>,
+  reason: any,
+  newController: IAdvancedAbortController,
+  signal: IAdvancedAbortSignal
+) => TPromiseOrValue<TCancelled>;
 
 export type TCancellablePromiseOnCancelledArgument<T, TStrategy extends TAbortStrategy, TCancelled> =
   TCancellablePromiseOnCancelled<T, TStrategy, TCancelled>
@@ -44,7 +71,11 @@ export type TCancellablePromiseOnCancelledArgument<T, TStrategy extends TAbortSt
   | null;
 
 
-export type TCancellablePromiseOnFinally<T, TStrategy extends TAbortStrategy> = (this: ICancellablePromise<T, TStrategy>, state: OnFinallyResult<T>, signal: IAdvancedAbortSignal) => TPromiseOrValue<void>;
+export type TCancellablePromiseOnFinally<T, TStrategy extends TAbortStrategy> = (
+  this: ICancellablePromise<T, TStrategy>,
+  state: OnFinallyResult<T>,
+  signal: IAdvancedAbortSignal
+) => TPromiseOrValue<void>;
 
 export type TCancellablePromiseOnFinallyArgument<T, TStrategy extends TAbortStrategy> =
   TCancellablePromiseOnFinally<T, TStrategy>

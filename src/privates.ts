@@ -105,4 +105,6 @@ export { CancellablePromiseOptimizedFinally } from './promises/cancellable-promi
 export { CancellablePromiseInternalFinally } from './promises/cancellable-promise/functions';
 export { CancellablePromiseOptimizedThen } from './promises/cancellable-promise/functions';
 export { CancellablePromiseInternalThen } from './promises/cancellable-promise/functions';
+export { AbortControllerWhenPromiseResolved } from './promises/cancellable-promise/functions';
+export { CancellablePromiseRunFactories } from './promises/cancellable-promise/functions';
 

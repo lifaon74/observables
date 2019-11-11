@@ -2,7 +2,7 @@ import { ICancellablePromise, ICancellablePromiseConstructor } from './interface
 import { IsObject } from '../../helpers';
 import { CANCELLABLE_PROMISE_PRIVATE, ICancellablePromiseInternal, ICancellablePromisePrivate } from './privates';
 import { TPromise, TPromiseOrValue } from '../interfaces';
-import { TCancellablePromiseCreateCallback } from './types';
+import { ICancellablePromiseOptions, TCancellablePromiseCreateCallback } from './types';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IsPromiseLikeBase } from '../helpers';
 import { TAbortStrategy, TAbortStrategyReturn } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
@@ -15,7 +15,7 @@ export function ConstructCancellablePromise<T, TStrategy extends TAbortStrategy>
   instance: ICancellablePromise<T, TStrategy>,
   promiseOrCallback: TPromise<T> | TCancellablePromiseCreateCallback<T, TStrategy>,
   signal: IAdvancedAbortSignal,
-  strategy?: TStrategy
+  options: ICancellablePromiseOptions<T, TStrategy> = {}
 ): void {
   ConstructClassWithPrivateMembers(instance, CANCELLABLE_PROMISE_PRIVATE);
   const privates: ICancellablePromisePrivate<T, TStrategy> = (instance as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE];
@@ -27,12 +27,16 @@ export function ConstructCancellablePromise<T, TStrategy extends TAbortStrategy>
       throw new TypeError(`Expected AdvancedAbortSignal as CancellablePromise second argument.`);
     }
 
-    if (strategy === void 0) {
-      privates.strategy = 'never' as TStrategy;
-    } else if (['resolve', 'reject', 'never'].includes(strategy)) {
-      privates.strategy = strategy;
+    if (IsObject(options))  {
+      if (options.strategy === void 0) {
+        privates.strategy = 'never' as TStrategy;
+      } else if (['resolve', 'reject', 'never'].includes(options.strategy)) {
+        privates.strategy = options.strategy;
+      } else {
+        throw new TypeError(`Expected 'resolve', 'reject', 'never' or void as options.strategy`);
+      }
     } else {
-      throw new TypeError(`Expected 'resolve', 'reject', 'never' or void as strategy`);
+      throw new TypeError(`Expected object or void as CancellablePromise third argument.`);
     }
 
     if (typeof promiseOrCallback === 'function') {
@@ -51,9 +55,12 @@ export function ConstructCancellablePromise<T, TStrategy extends TAbortStrategy>
     } else {
       throw new TypeError(`Expected Promise or function as CancellablePromise first argument.`);
     }
+
+
+
   } else {
     privates.signal = signal as IAdvancedAbortSignal;
-    privates.strategy = strategy as TStrategy;
+    privates.strategy = options.strategy as TStrategy;
     privates.isCancellablePromiseWithSameSignal = IsCancellablePromiseWithSameSignal<T, TStrategy>(promiseOrCallback, instance);
     privates.promise = promiseOrCallback as Promise<T | TAbortStrategyReturn<TStrategy>>;
   }
@@ -77,10 +84,10 @@ export function NewCancellablePromise<T, TStrategy extends TAbortStrategy>(
   _constructor: ICancellablePromiseConstructor,
   promise: TPromise<T>,
   signal: IAdvancedAbortSignal,
-  strategy?: TStrategy,
+  options: ICancellablePromiseOptions<T, TStrategy>
 ): ICancellablePromise<T, TStrategy> {
   CHECK_CANCELLABLE_PROMISE_CONSTRUCT = false;
-  const instance: ICancellablePromise<T, TStrategy> = new _constructor(promise, signal, strategy);
+  const instance: ICancellablePromise<T, TStrategy> = new _constructor(promise, signal, options);
   CHECK_CANCELLABLE_PROMISE_CONSTRUCT = true;
   return instance;
 }
@@ -89,7 +96,10 @@ export function NewCancellablePromiseFromInstance<T, TStrategy extends TAbortStr
   instance: ICancellablePromise<T, TStrategy>,
   promise: TPromise<TPromiseValue>,
   signal: IAdvancedAbortSignal = instance.signal,
-  strategy: TStrategy = (instance as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE].strategy,
+  options: ICancellablePromiseOptions<T, TStrategy> = {},
 ): ICancellablePromise<TPromiseValue, TStrategy> {
-  return NewCancellablePromise<TPromiseValue, TStrategy>(instance.constructor as ICancellablePromiseConstructor, promise, signal, strategy);
+  if (options.strategy === void 0) {
+    options.strategy = (instance as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE].strategy;
+  }
+  return NewCancellablePromise<TPromiseValue, TStrategy>(instance.constructor as ICancellablePromiseConstructor, promise, signal, options);
 }

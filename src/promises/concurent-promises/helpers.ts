@@ -11,8 +11,7 @@ import { IsAdvancedAbortSignal } from '../../misc/advanced-abort-controller/adva
  */
 
 /**
- * Converts a list of promise factories to an iterator of promises
- * @param iterator
+ * Converts a list of promise factories into an iterator of promises
  */
 export function * PromiseFactoriesIteratorToPromiseIterable<T>(iterator: Iterator<TPromiseOrValueFactory<T>>): IterableIterator<Promise<T>> {
   let result: IteratorResult<TPromiseOrValueFactory<T>>;

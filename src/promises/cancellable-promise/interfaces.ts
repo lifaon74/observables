@@ -2,6 +2,7 @@ import { TPromise, TPromiseOrValue } from '../interfaces';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 import { TAbortStrategy, TAbortStrategyReturn } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 import {
+  ICancellablePromiseOptions,
   TCancellablePromiseCancelledReturn, TCancellablePromiseCatchReturn, TCancellablePromiseCreateCallback,
   TCancellablePromiseOnCancelledArgument, TCancellablePromiseOnFinallyArgument, TCancellablePromiseOnFulfilledArgument,
   TCancellablePromiseOnRejectedArgument, TCancellablePromiseThenReturn
@@ -138,7 +139,7 @@ export interface ICancellablePromiseConstructor {
   /**
    * Creates a new CancellablePromise from an exiting promise or the same function you may provide to a Promise.
    */
-  new<T, TStrategy extends TAbortStrategy>(promiseOrCallback: TPromise<T> | TCancellablePromiseCreateCallback<T, TStrategy>, signal: IAdvancedAbortSignal, strategy?: TStrategy): ICancellablePromise<T, TStrategy>;
+  new<T, TStrategy extends TAbortStrategy>(promiseOrCallback: TPromise<T> | TCancellablePromiseCreateCallback<T, TStrategy>, signal: IAdvancedAbortSignal, options?: ICancellablePromiseOptions<T, TStrategy>): ICancellablePromise<T, TStrategy>;
 }
 
 
