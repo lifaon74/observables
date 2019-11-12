@@ -59,9 +59,6 @@ export interface INotificationsObservable<TKVMap extends KeyValueMapGenericConst
    * Returns true if this observable has an Observer matching "name" and "callback".
    *  If 'callback' is not defined, searches only for 'name'
    *  If options.includeGlobalObservers is true, and this Observable is observed by at least one Observer with a type different than NotificationsObserver, then returns true.
-   * @param name
-   * @param callback
-   * @param options
    */
   hasListener(name: string, callback?: (value: any) => void, options?: INotificationsObservableMatchOptions): boolean;
 
@@ -69,9 +66,6 @@ export interface INotificationsObservable<TKVMap extends KeyValueMapGenericConst
    * Returns the list of Observer matching "name" and "callback"
    *  If 'callback' is not defined, searches only for 'name'
    *  If options.includeGlobalObservers is true, includes the list of Observers with a type different than NotificationsObserver.
-   * @param name
-   * @param callback
-   * @param options
    */
   matches(name: string, callback?: (value: any) => void, options?: INotificationsObservableMatchOptions): Generator<IObserver<KeyValueMapToNotifications<TKVMap>>, void, undefined>;
 

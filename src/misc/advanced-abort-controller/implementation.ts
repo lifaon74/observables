@@ -7,7 +7,9 @@ import { IsAdvancedAbortSignal } from './advanced-abort-signal/constructor';
 import { INotificationsObserver } from '../../notifications/core/notifications-observer/interfaces';
 import { IBaseNotificationsObservable } from '../../notifications/core/notifications-observable/interfaces';
 import { EventsObservable } from '../../notifications/observables/events/events-observable/public';
-import { AbortReason } from './abort-reason';
+import { AbortReason } from '../reason/defaults/abort-reason';
+import { $timeout } from './advanced-abort-signal/snipets';
+import { TimeoutReason } from '../reason/defaults/timeout-reason';
 
 
 /** METHODS **/
@@ -86,6 +88,23 @@ export function AdvancedAbortControllerFromAbortSignals(_constructor: IAdvancedA
   return instance;
 }
 
+export function AdvancedAbortControllerTimeout(_constructor: IAdvancedAbortControllerConstructor, timeout: number, signal?: IAdvancedAbortSignal): IAdvancedAbortController {
+  const controller: AdvancedAbortController = new _constructor();
+  $timeout(
+    () => {
+      controller.abort(new TimeoutReason());
+    },
+    timeout,
+    AdvancedAbortControllerFromAbortSignals( // timeout cancelled as soon as 'controller' OR 'signal' is aborted
+      _constructor,
+      (signal === void 0)
+        ? [controller.signal]
+        : [controller.signal, signal]
+    ).signal
+  );
+
+  return controller;
+}
 
 /** CLASS **/
 
@@ -93,6 +112,10 @@ export class AdvancedAbortController implements IAdvancedAbortController {
 
   static fromAbortSignals(...signals: (AbortSignal | IAdvancedAbortSignal)[]): IAdvancedAbortController {
     return AdvancedAbortControllerFromAbortSignals(this, signals);
+  }
+
+  static timeout(timeout: number, signal?: IAdvancedAbortSignal): IAdvancedAbortController {
+    return AdvancedAbortControllerTimeout(this, timeout, signal);
   }
 
   constructor() {

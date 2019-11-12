@@ -75,6 +75,8 @@ export function IsProgress(value: any): value is IProgress {
 
 /** METHODS **/
 
+/* METHODS */
+
 export function ProgressToJSON(instance: IProgress, allowFloat: boolean = false): IProgressJSON {
   const obj: IProgressJSON = {
     lengthComputable: instance.lengthComputable,
@@ -93,9 +95,16 @@ export function ProgressToString(instance: IProgress): string {
     : instance.loaded.toString(10);
 }
 
-/** STATIC **/
+/* STATIC */
 
-export function ProgressFromJSONStatic(constructor: IProgressConstructor, json: IProgressJSON): IProgress {
+export function ProgressStaticFromEvent(constructor: IProgressConstructor, event: ProgressEvent, name: string = event.type): IProgress {
+  return ProgressStaticFromJSON(constructor, {
+    ...event,
+    name
+  });
+}
+
+export function ProgressStaticFromJSON(constructor: IProgressConstructor, json: IProgressJSON): IProgress {
   const total: number = json.lengthComputable
     ? Math.max(0, json.total)
     : Number.POSITIVE_INFINITY;
@@ -112,12 +121,12 @@ export function ProgressFromJSONStatic(constructor: IProgressConstructor, json: 
 
 export class Progress implements IProgress {
 
-  static fromEvent(event: ProgressEvent): IProgress {
-    return this.fromJSON(event);
+  static fromEvent(event: ProgressEvent, name?: string): IProgress {
+    return ProgressStaticFromEvent(this, event, name);
   }
 
   static fromJSON(json: IProgressJSON): IProgress {
-    return ProgressFromJSONStatic(this, json);
+    return ProgressStaticFromJSON(this, json);
   }
 
   constructor(loaded?: number, total?: number, name?: string);

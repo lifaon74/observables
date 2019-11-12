@@ -8,7 +8,7 @@ export interface IProgressOptions {
 
 
 export interface IProgressConstructor {
-  fromEvent(event: ProgressEvent): IProgress;
+  fromEvent(event: ProgressEvent, name?: string): IProgress;
   fromJSON(json: IProgressJSON): IProgress;
 
   new(loaded?: number, total?: number, name?: string): IProgress;

@@ -595,14 +595,14 @@ export async function test() {
   // testInstanceof();
   // testPerformances();
   // testSignalingServer();
-  // testPromises();
+  testPromises();
   // testClasses();
   // testProgram();
   // await testTask();
   // await testFactory();
   // await testUnit();
 
-  await testAbortController();
+  // await testAbortController();
 
   console.log('tests done');
 }

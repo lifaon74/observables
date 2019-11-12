@@ -10,6 +10,8 @@ export interface IAdvancedAbortControllerConstructor {
    */
   fromAbortSignals(...signals: (AbortSignal | IAdvancedAbortSignal)[]): IAdvancedAbortController;
 
+  timeout(timeout: number, signal?: IAdvancedAbortSignal): IAdvancedAbortController;
+
   new(): IAdvancedAbortController;
 }
 

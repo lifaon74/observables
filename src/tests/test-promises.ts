@@ -1,39 +1,42 @@
 import { CancellablePromise } from '../promises/cancellable-promise/implementation';
-import { ICancelToken } from '../misc/cancel-token/interfaces';
 import { DeferredPromise } from '../promises/deferred-promise/implementation';
-import { $delay } from '../promises/cancellable-promise/helpers';
+import { $delay } from '../promises/cancellable-promise/snipets';
 import { OnFinallyResult } from '../promises/cancellable-promise/types';
+import { AdvancedAbortController } from '../misc/advanced-abort-controller/implementation';
+import { IAdvancedAbortSignal } from '../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 
 
 export function testCancellablePromise() {
-  const a = CancellablePromise.resolve(1);
+  const controller = new AdvancedAbortController();
+
+  const a = CancellablePromise.resolve(1, controller.signal);
 
   const b =  a
-    .then((value: number, token: ICancelToken) => {
+    .then((value: number) => {
       console.log('then #1', value);
-      token.cancel('manual cancel');
+      controller.abort('manual cancel');
       return value * 2;
     })
     .then((value: number) => {
       console.log('never append', value);
     });
 
-  const c = b
-    .finally((state: OnFinallyResult<void>) => {
-      console.log('finally', state);
-      return $delay(1000);
-    }, true)
-    .cancelled((reason: any, newToken: ICancelToken) => {
-      console.log('cancelled', newToken.reason);
-      // newToken.cancel('another cancel');
-      return $delay(1000, newToken)
-        .then(() => {
-          return 4;
-        });
-    })
-    .then((value: number | void) => {
-      console.log('after cancelled caught', value);
-    });
+  // const c = b
+  //   .finally((state: OnFinallyResult<void>) => {
+  //     console.log('finally', state);
+  //     return $delay(1000);
+  //   }, true)
+  //   .cancelled((reason: any, newToken: IAdvancedAbortSignal) => {
+  //     console.log('cancelled', newToken.reason);
+  //     // newToken.cancel('another cancel');
+  //     return $delay(1000, newToken)
+  //       .then(() => {
+  //         return 4;
+  //       });
+  //   })
+  //   .then((value: number | void) => {
+  //     console.log('after cancelled caught', value);
+  //   });
 
   b.promise
     .then(() =>{
@@ -41,7 +44,7 @@ export function testCancellablePromise() {
     });
 
   // const b = CancellablePromise.all([Promise.resolve({ a: 1 }), { b: 1 }, 'a'])
-  //   .then((values: any[], token: ICancelToken) => {
+  //   .then((values: any[], token: IAdvancedAbortSignal) => {
   //     console.log('values', values);
   //     token.cancel('cancel b');
   //   })
@@ -52,9 +55,9 @@ export function testCancellablePromise() {
   //
   //
   // CancellablePromise.raceCancellable(Array.from({ length: 4 }, (value: void, index: number) => {
-  //   return (token: ICancelToken) => {
+  //   return (token: IAdvancedAbortSignal) => {
   //     return $delay(index * 1000, token)
-  //       .cancelled((token: ICancelToken) => {
+  //       .cancelled((token: IAdvancedAbortSignal) => {
   //         console.log(`index: ${ index } cancelled: ${ token.reason.message }`);
   //       });
   //   };
@@ -67,24 +70,24 @@ export function testCancellablePromise() {
   // debugger;
 }
 
-export function testConcurrentCancellablePromise() {
-  console.time('concurrent');
-  const promise = CancellablePromise.concurrentFactories(Array.from({ length: 100 }, (value: undefined, index: number) => {
-    return (token: ICancelToken) => {
-      return $delay(1000 * Math.random(), token)
-        .then(() => {
-          console.log(`promise #${index} done`);
-        });
-    };
-  }), 5)
-    .then(() => {
-      console.timeEnd('concurrent');
-    });
-
-  setTimeout(() => {
-    promise.token.cancel();
-  }, 2000);
-}
+// export function testConcurrentCancellablePromise() {
+//   console.time('concurrent');
+//   const promise = CancellablePromise.concurrentFactories(Array.from({ length: 100 }, (value: undefined, index: number) => {
+//     return (token: IAdvancedAbortSignal) => {
+//       return $delay(1000 * Math.random(), token)
+//         .then(() => {
+//           console.log(`promise #${index} done`);
+//         });
+//     };
+//   }), 5)
+//     .then(() => {
+//       console.timeEnd('concurrent');
+//     });
+//
+//   setTimeout(() => {
+//     promise.token.cancel();
+//   }, 2000);
+// }
 
 export function testDeferredPromise() {
   const a = new DeferredPromise<number>();
