@@ -15,8 +15,6 @@ import {
   LinkAdvancedAbortSignalWithFetchArgumentsSpread, RaceAborted
 } from './functions';
 import { IsPromiseLikeBase, PromiseTry } from '../../../promises/helpers';
-import { IAdvancedAbortController } from '../interfaces';
-import { AdvancedAbortController } from '../implementation';
 
 
 /** NEW **/

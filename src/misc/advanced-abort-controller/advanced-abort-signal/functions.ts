@@ -1,4 +1,4 @@
-import { IAdvancedAbortSignal, IAdvancedAbortSignalConstructor } from './interfaces';
+import { IAdvancedAbortSignal } from './interfaces';
 import { ADVANCED_ABORT_SIGNAL_PRIVATE, IAdvancedAbortSignalInternal, IAdvancedAbortSignalPrivate } from './privates';
 import { AbortNotification } from '../abort-notification';
 import { IsObject } from '../../../helpers';

@@ -7,7 +7,8 @@ import { IAdvancedAbortSignal } from './interfaces';
 
 export function $timeout(callback: () => void, timeout: number, cancelSignal?: IAdvancedAbortSignal): void {
   const stopAbortListener: () => void = (cancelSignal === void 0)
-    ? () => {}
+    ? () => {
+    }
     : cancelSignal.whenAborted(() => {
       clearTimeout(timer);
     });
