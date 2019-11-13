@@ -1,7 +1,7 @@
 import { IObserver } from '../core/observer/interfaces';
-import { IPromiseObservable } from '../notifications/observables/finite-state/promise/promise-observable/interfaces';
+import { IPromiseObservable } from '../notifications/observables/finite-state/built-in/promise/promise-observable/interfaces';
 import { Observer } from '../core/observer/implementation';
-import { PromiseObservable } from '../notifications/observables/finite-state/promise/promise-observable/implementation';
+import { PromiseObservable } from '../notifications/observables/finite-state/built-in/promise/promise-observable/implementation';
 import { IObservable } from '../core/observable/interfaces';
 import {
   singleFiniteStateObservableToPromise

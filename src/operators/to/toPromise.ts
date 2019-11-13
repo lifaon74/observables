@@ -1,4 +1,3 @@
-import { TPromiseObservableNotifications } from '../../notifications/observables/finite-state/promise/promise-observable/interfaces';
 import { IObservable } from '../../core/observable/interfaces';
 import { CancelToken } from '../../misc/cancel-token/implementation';
 import {
@@ -7,15 +6,20 @@ import {
 import { Observer } from '../../core/observer/implementation';
 import { ICancellablePromiseTuple, TPromiseOrValue } from '../../promises/interfaces';
 import {
-  FinalStateConstraint,
-  FiniteStateKeyValueMapConstraint, FiniteStateObservableModeConstraint, IFiniteStateObservable,
-  IFiniteStateObservableKeyValueMapGeneric, TFiniteStateObservableFinalState, TFiniteStateObservableGeneric,
-  TFiniteStateObservableMode
+  IFiniteStateObservable
 } from '../../notifications/observables/finite-state/interfaces';
 import { IObserver } from '../../core/observer/interfaces';
-import { IsFiniteStateObservable } from '../../notifications/observables/finite-state/implementation';
 import { IsObservable } from '../../core/observable/constructor';
 import { KeyValueMapToNotifications } from '../../notifications/core/notifications-observable/types';
+import {
+  TFinalStateConstraint,
+  TFiniteStateObservableModeConstraint,
+  TFiniteStateObservableKeyValueMapGeneric,
+  TFiniteStateKeyValueMapConstraint, TFiniteStateObservableFinalState, TFiniteStateObservableGeneric,
+  TFiniteStateObservableMode
+} from '../../notifications/observables/finite-state/types';
+import { IsFiniteStateObservable } from '../../notifications/observables/finite-state/constructor';
+import { TPromiseObservableNotifications } from '../../notifications/observables/finite-state/built-in/promise/promise-observable/types';
 
 
 export type TBasePromiseObservableNotification<T> = TPromiseObservableNotifications<T>;
@@ -67,9 +71,9 @@ export function genericObservableToCancellablePromiseTuple<T, TStrategy extends 
  */
 export function finiteStateObservableToCancellablePromiseTuple<
   TValue,
-  TFinalState extends FinalStateConstraint<TFinalState>,
-  TMode extends FiniteStateObservableModeConstraint<TMode>,
-  TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>,
+  TFinalState extends TFinalStateConstraint<TFinalState>,
+  TMode extends TFiniteStateObservableModeConstraint<TMode>,
+  TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>,
   TStrategy extends TCancelStrategy
 >(
   observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
@@ -125,9 +129,9 @@ export function finiteStateObservableToCancellablePromiseTuple<
 
 export function singleFiniteStateObservableToCancellablePromiseTuple<
   TValue,
-  TFinalState extends FinalStateConstraint<TFinalState>,
-  TMode extends FiniteStateObservableModeConstraint<TMode>,
-  TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>,
+  TFinalState extends TFinalStateConstraint<TFinalState>,
+  TMode extends TFiniteStateObservableModeConstraint<TMode>,
+  TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>,
   TStrategy extends TCancelStrategy
 >(
   observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
@@ -154,7 +158,7 @@ export function toCancellablePromiseTuple<T, TStrategy extends TCancelStrategy>(
   token?: ICancelToken
 ): ICancellablePromiseTuple<T | TCancelStrategyReturn<TStrategy> | void> {
   if (IsFiniteStateObservable(observable)) {
-    return singleFiniteStateObservableToCancellablePromiseTuple<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>, TStrategy>(observable, strategy, token);
+    return singleFiniteStateObservableToCancellablePromiseTuple<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>, TStrategy>(observable, strategy, token);
   } else if (IsObservable(observable)) {
     return genericObservableToCancellablePromiseTuple<T, TStrategy>(observable as IObservable<T>, strategy, token);
   } else {
@@ -174,9 +178,9 @@ export function genericObservableToPromise<T, TStrategy extends TCancelStrategy>
 
 
 export function finiteStateObservableToPromise<
-  TValue, TFinalState extends FinalStateConstraint<TFinalState>,
-  TMode extends FiniteStateObservableModeConstraint<TMode>,
-  TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>,
+  TValue, TFinalState extends TFinalStateConstraint<TFinalState>,
+  TMode extends TFiniteStateObservableModeConstraint<TMode>,
+  TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>,
   TStrategy extends TCancelStrategy
 >(
   observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
@@ -187,9 +191,9 @@ export function finiteStateObservableToPromise<
 }
 
 export function singleFiniteStateObservableToPromise<
-  TValue, TFinalState extends FinalStateConstraint<TFinalState>,
-  TMode extends FiniteStateObservableModeConstraint<TMode>,
-  TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>,
+  TValue, TFinalState extends TFinalStateConstraint<TFinalState>,
+  TMode extends TFiniteStateObservableModeConstraint<TMode>,
+  TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>,
   TStrategy extends TCancelStrategy
 >(
   observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,

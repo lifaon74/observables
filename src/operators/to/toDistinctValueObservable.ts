@@ -1,4 +1,4 @@
-import { IPromiseObservable } from '../../notifications/observables/finite-state/promise/promise-observable/interfaces';
+import { IPromiseObservable } from '../../notifications/observables/finite-state/built-in/promise/promise-observable/interfaces';
 import { IObservable} from '../../core/observable/interfaces';
 import { NotificationsObserver } from '../../notifications/core/notifications-observer/implementation';
 import { INotificationsObserver } from '../../notifications/core/notifications-observer/interfaces';

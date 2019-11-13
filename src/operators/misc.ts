@@ -11,7 +11,7 @@ import {
   IAsyncFunctionObservable, TAsyncFunctionObservableFactory, TAsyncFunctionObservableFactoryParameters
 } from '../observables/distinct/async-function-observable/interfaces';
 import { AsyncFunctionObservable } from '../observables/distinct/async-function-observable/implementation';
-import { IPromiseObservable, } from '../notifications/observables/finite-state/promise/promise-observable/interfaces';
+import { IPromiseObservable, } from '../notifications/observables/finite-state/built-in/promise/promise-observable/interfaces';
 import { toDistinctValueObservable } from './to/toDistinctValueObservable';
 import { ICancelToken } from '../misc/cancel-token/interfaces';
 import { IObserver } from '../core/observer/interfaces';

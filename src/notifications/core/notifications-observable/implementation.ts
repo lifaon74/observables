@@ -1,7 +1,7 @@
 import {
   INotificationsObservable, INotificationsObservableConstructor, INotificationsObservableTypedConstructor,
 } from './interfaces';
-import { IObservable, IObservableConstructor } from '../../../core/observable/interfaces';
+import { IObservable, IObservableConstructor, IObservableTypedConstructor } from '../../../core/observable/interfaces';
 import { INotificationsObserver } from '../notifications-observer/interfaces';
 import { NotificationsObserver } from '../notifications-observer/implementation';
 import { ObserverUnobserveOne } from '../../../core/observer/implementation';
@@ -235,7 +235,7 @@ function PureNotificationsObservableFactory<TBase extends Constructor<IObservabl
 
 export let NotificationsObservable: INotificationsObservableConstructor;
 
-export function NotificationsObservableFactory<TBase extends Constructor<IObservable<any>>, TKVMap extends KeyValueMapGenericConstraint<TKVMap> = KeyValueMapGeneric>(superClass: TBase) {
+export function NotificationsObservableFactory<TBase extends Constructor<IObservable<KeyValueMapToNotifications<TKVMap>>>, TKVMap extends KeyValueMapGenericConstraint<TKVMap> = KeyValueMapGeneric>(superClass: TBase) {
   return MakeFactory<INotificationsObservableTypedConstructor<TKVMap>, [], TBase>(PureNotificationsObservableFactory, [], superClass, {
     name: 'NotificationsObservable',
     instanceOf: NotificationsObservable,
@@ -244,7 +244,7 @@ export function NotificationsObservableFactory<TBase extends Constructor<IObserv
 }
 
 export function NotificationsObservableBaseFactory<TBase extends Constructor, TKVMap extends KeyValueMapGenericConstraint<TKVMap> = KeyValueMapGeneric>(superClass: TBase) {
-  return MakeFactory<INotificationsObservableTypedConstructor<TKVMap>, [IObservableConstructor], TBase>(PureNotificationsObservableFactory, [ObservableFactory], superClass, {
+  return MakeFactory<INotificationsObservableTypedConstructor<TKVMap>, [IObservableTypedConstructor<KeyValueMapToNotifications<TKVMap>>], TBase>(PureNotificationsObservableFactory, [ObservableFactory], superClass, {
     name: 'NotificationsObservable',
     instanceOf: NotificationsObservable,
     waterMarks: [IS_NOTIFICATIONS_OBSERVABLE_CONSTRUCTOR, IS_OBSERVABLE_LIKE_CONSTRUCTOR],

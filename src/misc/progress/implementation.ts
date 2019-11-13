@@ -99,7 +99,10 @@ export function ProgressToString(instance: IProgress): string {
 
 export function ProgressStaticFromEvent(constructor: IProgressConstructor, event: ProgressEvent, name: string = event.type): IProgress {
   return ProgressStaticFromJSON(constructor, {
-    ...event,
+    // can't do "...event" because these properties are readonly getters (not returned by Object.keys)
+    lengthComputable: event.lengthComputable,
+    total: event.total,
+    loaded: event.loaded,
     name
   });
 }

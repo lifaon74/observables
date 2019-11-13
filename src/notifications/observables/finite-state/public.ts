@@ -1,8 +1,7 @@
 export * from './interfaces';
-export { FiniteStateObservable, IsFiniteStateObservable } from './implementation';
+export * from './types';
+export { FiniteStateObservable} from './implementation';
+export * from './built-in/public';
 
-export * from './from/public';
-export * from './file-reader/public';
-export * from './promise/public';
 
 

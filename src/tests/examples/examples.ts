@@ -4,7 +4,7 @@ import {
 } from '../../notifications/core/notifications-observable/implementation';
 import { NotificationsObserver } from '../../notifications/core/notifications-observer/implementation';
 import { EventsObservable } from '../../notifications/observables/events/events-observable/implementation';
-import { FetchObservable } from '../../notifications/observables/finite-state/promise/fetch-observable/implementation';
+import { FetchObservable } from '../../notifications/observables/finite-state/built-in/promise/fetch-observable/implementation';
 import {
   finiteStateObservableToPromise, singleFiniteStateObservableToCancellablePromiseTuple,
   singleFiniteStateObservableToPromise, genericObservableToCancellablePromiseTuple, genericObservableToPromise
@@ -13,7 +13,7 @@ import {
   CancelReason, CancelToken
 } from '../../misc/cancel-token/implementation';
 import { Reason } from '../../misc/reason/implementation';
-import { PromiseObservable } from '../../notifications/observables/finite-state/promise/promise-observable/implementation';
+import { PromiseObservable } from '../../notifications/observables/finite-state/built-in/promise/promise-observable/implementation';
 import { IObserver } from '../../core/observer/interfaces';
 import {
   INotificationsObservable
@@ -36,14 +36,13 @@ import { ICancellablePromiseTuple } from '../../promises/interfaces';
 import { SpreadCancellablePromiseTuple } from '../../promises/helpers';
 import { FiniteStateObservable } from '../../notifications/observables/finite-state/implementation';
 import {
-  IFiniteStateObservable, IFiniteStateObservableKeyValueMapGeneric, TFiniteStateObservableFinalState,
-  TFiniteStateObservableMode
+  IFiniteStateObservable
 } from '../../notifications/observables/finite-state/interfaces';
-import { FromIterableObservable } from '../../notifications/observables/finite-state/from/iterable/sync/public';
-import { IFetchObservable } from '../../notifications/observables/finite-state/promise/fetch-observable/interfaces';
-import { XHRObservable } from '../../notifications/observables/finite-state/promise/xhr-observable/implementation';
-import { FromReadableStreamObservable } from '../../notifications/observables/finite-state/from/readable-stream/implementation';
-import { FromAsyncIterableObservable } from '../../notifications/observables/finite-state/from/iterable/async/implementation';
+import { FromIterableObservable } from '../../notifications/observables/finite-state/built-in/from/iterable/sync/public';
+import { IFetchObservable } from '../../notifications/observables/finite-state/built-in/promise/fetch-observable/interfaces';
+import { XHRObservable } from '../../notifications/observables/finite-state/built-in/promise/xhr-observable/implementation';
+import { FromReadableStreamObservable } from '../../notifications/observables/finite-state/built-in/from/readable-stream/implementation';
+import { FromAsyncIterableObservable } from '../../notifications/observables/finite-state/built-in/from/iterable/async/implementation';
 import { ClientRequest, IncomingMessage } from 'http';
 import { IGenericEvent } from '../../notifications/observables/events/events-listener/event-like/generic/interfaces';
 import { EventEmitterEventsListener } from '../../notifications/observables/events/events-listener/from/event-emitter/implementation';
@@ -54,6 +53,9 @@ import { TPipeContextBase } from '../../core/observable-observer/pipe/types';
 import { Pipe } from '../../core/observable-observer/pipe/implementation';
 import { INotificationsObservableContext } from '../../notifications/core/notifications-observable/context/interfaces';
 import { NotificationsObservableContext } from '../../notifications/core/notifications-observable/context/implementation';
+import {
+  TFiniteStateObservableKeyValueMapGeneric, TFiniteStateObservableFinalState, TFiniteStateObservableMode
+} from '../../notifications/observables/finite-state/types';
 
 
 /**
@@ -275,8 +277,8 @@ function eventsObservableExample3(): void {
 }
 
 function finiteStateObservableExample1(): void {
-  function fromIterable<T>(iterable: Iterable<T>): IFiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>> {
-    return new FiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>>((context) => {
+  function fromIterable<T>(iterable: Iterable<T>): IFiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>> {
+    return new FiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>>((context) => {
       return {
         onObserved(): void {
           if (context.observable.state === 'next') {
@@ -299,8 +301,8 @@ function finiteStateObservableExample1(): void {
 
 
 async function finiteStateObservableExample2() {
-  function fromReadableStream<T>(reader: ReadableStreamReader<T>): IFiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>> {
-    return new FiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>>((context) => {
+  function fromReadableStream<T>(reader: ReadableStreamReader<T>): IFiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>> {
+    return new FiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>>((context) => {
       async function readAll() {
         let result: ReadableStreamReadResult<T>;
         while (!(result = await reader.read()).done) {
@@ -322,7 +324,7 @@ async function finiteStateObservableExample2() {
     }, { mode: 'cache' });
   }
 
-  function fromReadableStreamUsingFromAsyncIterableObservable<T>(reader: ReadableStreamReader<T>): IFiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>> {
+  function fromReadableStreamUsingFromAsyncIterableObservable<T>(reader: ReadableStreamReader<T>): IFiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>> {
     return new FromAsyncIterableObservable((async function * () {
       let result: ReadableStreamReadResult<T>;
       while (!(result = await reader.read()).done) {

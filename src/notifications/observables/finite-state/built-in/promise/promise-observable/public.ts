@@ -1,0 +1,11 @@
+export * from './interfaces';
+export { PromiseObservable } from './implementation';
+export * from './hook-generators';
+export { TPromiseObservableFactory } from './types';
+export { IPromiseObservableFromPromiseOptions } from './types';
+export { IPromiseObservableOptions } from './types';
+export { TPromiseObservableNotifications } from './types';
+export { IPromiseObservableKeyValueMap } from './types';
+export { TPromiseObservableMode } from './types';
+export { TPromiseObservableFinalState } from './types';
+export { IsPromiseObservable } from './constructor';

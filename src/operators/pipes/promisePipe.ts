@@ -1,15 +1,16 @@
 import { ICancelToken } from '../../misc/cancel-token/interfaces';
 import { IObserver } from '../../core/observer/interfaces';
 import {
-  IPromiseObservable, TPromiseObservableNotifications
-} from '../../notifications/observables/finite-state/promise/promise-observable/interfaces';
+  IPromiseObservable
+} from '../../notifications/observables/finite-state/built-in/promise/promise-observable/interfaces';
 import { CancelToken } from '../../misc/cancel-token/implementation';
 import { Observer } from '../../core/observer/implementation';
-import { PromiseObservable } from '../../notifications/observables/finite-state/promise/promise-observable/implementation';
+import { PromiseObservable } from '../../notifications/observables/finite-state/built-in/promise/promise-observable/implementation';
 import { INotification } from '../../notifications/core/notification/interfaces';
 import { TPromiseOrValue } from '../../promises/interfaces';
 import { IPipe } from '../../core/observable-observer/pipe/interfaces';
 import { Pipe } from '../../core/observable-observer/pipe/implementation';
+import { TPromiseObservableNotifications } from '../../notifications/observables/finite-state/built-in/promise/promise-observable/types';
 
 /**
  * ObservableObserver: equivalent of the 'then' of a promise, but for PromiseObservable instead

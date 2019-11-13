@@ -20,7 +20,7 @@ export interface INotificationsObservableConstructor extends Omit<IObservableCon
   new<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(create?: (context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)): INotificationsObservable<TKVMap>;
 }
 
-export interface INotificationsObservableTypedConstructor<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> extends Omit<IObservableTypedConstructor<TKVMap>, 'new'> {
+export interface INotificationsObservableTypedConstructor<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> extends Omit<IObservableTypedConstructor<KeyValueMapToNotifications<TKVMap>>, 'new'> {
   new(create?: (context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)): INotificationsObservable<TKVMap>;
 }
 
