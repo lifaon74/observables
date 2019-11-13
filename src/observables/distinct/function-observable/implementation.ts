@@ -1,7 +1,7 @@
 
 import { IObservable } from '../../../core/observable/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
-import { VALUE_OBSERVABLE_PRIVATE, ValueObservable } from '../value-observable/implementation';
+import { VALUE_OBSERVABLE_PRIVATE, DistinctValueObservable } from '../distinct-value-observable/implementation';
 import {
   IFunctionObservable, TFunctionObservableFactory, TFunctionObservableFactoryParameters, TFunctionObservableParameters,
   TFunctionObservableParametersUnion, TFunctionObservableValue
@@ -10,7 +10,7 @@ import { IReadonlyTuple } from '../../../misc/readonly-list/interfaces';
 import { ReadonlyTuple } from '../../../misc/readonly-list/implementation';
 import { IObserver } from '../../../core/observer/interfaces';
 import { Observer } from '../../../core/observer/public';
-import { IValueObservableContext } from '../value-observable/interfaces';
+import { IDistinctValueObservableContext } from '../distinct-value-observable/interfaces';
 import { IsObject } from '../../../helpers';
 import { HasFactoryWaterMark } from '../../../classes/class-helpers/factory';
 import { IObservableInternal } from '../../../core/observable/privates';
@@ -20,7 +20,7 @@ import { ObservableIsFreshlyObserved, ObservableIsNotObserved } from '../../../c
 export const FUNCTION_OBSERVABLE_PRIVATE = Symbol('function-observable-private');
 
 export interface IFunctionObservablePrivate<T extends TFunctionObservableFactory> {
-  context: IValueObservableContext<TFunctionObservableValue<T>>;
+  context: IDistinctValueObservableContext<TFunctionObservableValue<T>>;
   factory: T;
   args: TFunctionObservableParameters<T>;
   readonlyArguments: IReadonlyTuple<TFunctionObservableParameters<T>>;
@@ -37,7 +37,7 @@ export interface IFunctionObservableInternal<T extends TFunctionObservableFactor
 
 export function ConstructFunctionObservable<T extends TFunctionObservableFactory>(
   observable: IFunctionObservable<T>,
-  context: IValueObservableContext<TFunctionObservableValue<T>>,
+  context: IDistinctValueObservableContext<TFunctionObservableValue<T>>,
   factory: T,
   args: TFunctionObservableParameters<T>
 ): void {
@@ -151,7 +151,7 @@ export function FunctionObservableRun<T extends TFunctionObservableFactory>(obse
 // }
 
 
-export class FunctionObservable<T extends TFunctionObservableFactory> extends ValueObservable<TFunctionObservableValue<T>> implements IFunctionObservable<T> {
+export class FunctionObservable<T extends TFunctionObservableFactory> extends DistinctValueObservable<TFunctionObservableValue<T>> implements IFunctionObservable<T> {
 
   static create<T extends TFunctionObservableFactory>(factory: T): (...args: TFunctionObservableParameters<T>) => IFunctionObservable<T> {
     return (...args: TFunctionObservableParameters<T>) => {
@@ -160,8 +160,8 @@ export class FunctionObservable<T extends TFunctionObservableFactory> extends Va
   }
 
   constructor(factory: T, args: TFunctionObservableParameters<T>) {
-    let context: IValueObservableContext<TFunctionObservableValue<T>>;
-    super((_context: IValueObservableContext<TFunctionObservableValue<T>>) => {
+    let context: IDistinctValueObservableContext<TFunctionObservableValue<T>>;
+    super((_context: IDistinctValueObservableContext<TFunctionObservableValue<T>>) => {
       context = _context;
       return {
         onObserved: (): void => {

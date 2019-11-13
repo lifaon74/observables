@@ -2,12 +2,12 @@ import { IAsyncSource, ISource } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { ICancelToken } from '../../../misc/cancel-token/interfaces';
 import {
-  IValueObservableInternal, VALUE_OBSERVABLE_PRIVATE, ValueObservable
-} from '../value-observable/implementation';
-import { IValueObservableContext } from '../value-observable/interfaces';
-import { IAsyncValueObservableContext } from '../async-value-observable/interfaces';
+  IDistinctValueObservableInternal, VALUE_OBSERVABLE_PRIVATE, DistinctValueObservable
+} from '../distinct-value-observable/implementation';
+import { IDistinctValueObservableContext } from '../distinct-value-observable/interfaces';
+import { IAsyncDistinctValueObservableContext } from '../async-value-observable/interfaces';
 import {
-  ASYNC_VALUE_OBSERVABLE_PRIVATE, AsyncValueObservable, IAsyncValueObservableInternal
+  ASYNC_VALUE_OBSERVABLE_PRIVATE, AsyncDistinctValueObservable, IAsyncDistinctValueObservableInternal
 } from '../async-value-observable/implementation';
 import { IsObject } from '../../../helpers';
 import { IObservableContext } from '../../../core/observable/context/interfaces';
@@ -16,10 +16,10 @@ import { IObservableContext } from '../../../core/observable/context/interfaces'
 export const SOURCE_PRIVATE = Symbol('source-private');
 
 export interface ISourcePrivate<T> {
-  context: IValueObservableContext<T>;
+  context: IDistinctValueObservableContext<T>;
 }
 
-export interface ISourceInternal<T> extends ISource<T>, IValueObservableInternal<T> {
+export interface ISourceInternal<T> extends ISource<T>, IDistinctValueObservableInternal<T> {
   [SOURCE_PRIVATE]: ISourcePrivate<T>;
 }
 
@@ -39,10 +39,10 @@ export function SourceEmit<T>(source: ISource<T>, value: T): void {
 }
 
 
-export class Source<T> extends ValueObservable<T> implements ISource<T> {
+export class Source<T> extends DistinctValueObservable<T> implements ISource<T> {
   constructor() {
-    let context: IValueObservableContext<T>;
-    super((_context: IValueObservableContext<T>) => {
+    let context: IDistinctValueObservableContext<T>;
+    super((_context: IDistinctValueObservableContext<T>) => {
       context = _context;
     });
     // @ts-ignore
@@ -70,14 +70,14 @@ export class Source<T> extends ValueObservable<T> implements ISource<T> {
 export const ASYNC_SOURCE_PRIVATE = Symbol('async-source-private');
 
 export interface IAsyncSourcePrivate<T> {
-  context: IAsyncValueObservableContext<T>;
+  context: IAsyncDistinctValueObservableContext<T>;
 }
 
-export interface IAsyncSourceInternal<T> extends IAsyncSource<T>, IAsyncValueObservableInternal<T> {
+export interface IAsyncSourceInternal<T> extends IAsyncSource<T>, IAsyncDistinctValueObservableInternal<T> {
   [ASYNC_SOURCE_PRIVATE]: IAsyncSourcePrivate<T>;
 }
 
-export function ConstructAsyncSource<T>(source: IAsyncSource<T>, context: IAsyncValueObservableContext<T>): void {
+export function ConstructAsyncSource<T>(source: IAsyncSource<T>, context: IAsyncDistinctValueObservableContext<T>): void {
   ConstructClassWithPrivateMembers(source, ASYNC_SOURCE_PRIVATE);
   (source as IAsyncSourceInternal<T>)[ASYNC_SOURCE_PRIVATE].context = context;
 }
@@ -89,10 +89,10 @@ export function AsyncSourceEmit<T, S extends IAsyncSource<T>>(source: S, promise
 }
 
 
-export class AsyncSource<T> extends AsyncValueObservable<T> implements IAsyncSource<T> {
+export class AsyncSource<T> extends AsyncDistinctValueObservable<T> implements IAsyncSource<T> {
   constructor() {
-    let context: IAsyncValueObservableContext<T>;
-    super((_context: IAsyncValueObservableContext<T>) => {
+    let context: IAsyncDistinctValueObservableContext<T>;
+    super((_context: IAsyncDistinctValueObservableContext<T>) => {
       context = _context;
     });
     // @ts-ignore

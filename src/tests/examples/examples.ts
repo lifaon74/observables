@@ -28,7 +28,8 @@ import { INotification } from '../../notifications/core/notification/interfaces'
 import { INotificationsObserver } from '../../notifications/core/notifications-observer/interfaces';
 import { FunctionObservable } from '../../observables/distinct/function-observable/implementation';
 import { Expression } from '../../observables/distinct/expression/implementation';
-import { $equal, $expression, $string } from '../../operators/misc';
+import { $equal, $expression } from '../../operators/shortcuts/public';
+import { $string } from '../../operators/misc';
 import { ICancelToken } from '../../misc/cancel-token/interfaces';
 import { EventKeyValueMapConstraint } from '../../notifications/observables/events/events-observable/interfaces';
 import { ICancellablePromiseTuple } from '../../promises/interfaces';

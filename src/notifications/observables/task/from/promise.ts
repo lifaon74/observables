@@ -92,9 +92,9 @@ export function taskFromPromiseFactory<T>(promiseFactory: TPromiseFactory<T>): I
 
     const cancelListener = context.task.addListener('cancel', (reason: any) => {
       clear();
-      if ((promise !== void 0) && IsCancellablePromise(promise)) {
-        promise.token.cancel(reason);
-      }
+      // if ((promise !== void 0) && IsCancellablePromise(promise)) {
+      //   promise.token.cancel(reason);
+      // }
     });
 
     const startListener = context.task.addListener('start', () => {

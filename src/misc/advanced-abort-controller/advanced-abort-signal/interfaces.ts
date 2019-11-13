@@ -106,7 +106,9 @@ export interface IAdvancedAbortSignal extends INotificationsObservable<IAdvanced
 
   /**
    * Calls 'callback' as soon as this AdvancedAbortSignal is aborted.
-   *  Returns an undo function
+   *  - callback is executed only on the next event loop (setImmediate like)
+   *  - returns an undo function to cancel the listener
+   *  - the undo function is called automatically when 'callback' is executed => you dont need to call it inside
    */
   whenAborted(callback: (this: IAdvancedAbortSignal, reason: any) => void): () => void;
 

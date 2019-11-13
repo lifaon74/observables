@@ -15,6 +15,7 @@ import {
   LinkAdvancedAbortSignalWithFetchArgumentsSpread, RaceAborted
 } from './functions';
 import { IsPromiseLikeBase, PromiseTry } from '../../../promises/helpers';
+import { setImmediate, clearImmediate } from '../../../classes/set-immediate';
 
 
 /** NEW **/
@@ -109,8 +110,9 @@ export function AdvancedAbortSignalWrapFetchArguments(
 
 export function AdvancedAbortSignalWhenAborted(instance: IAdvancedAbortSignal, callback: (this: IAdvancedAbortSignal, reason: any) => void): () => void {
   if (instance.aborted) {
-    callback.call(instance, instance.reason);
+    const timer = setImmediate(() => callback.call(instance, instance.reason));
     return () => {
+      clearImmediate(timer);
     };
   } else {
     const clear = () => {

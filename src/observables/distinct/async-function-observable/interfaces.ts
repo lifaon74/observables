@@ -1,5 +1,5 @@
 import { IReadonlyTuple, TupleTypes } from '../../../misc/readonly-list/interfaces';
-import { IAsyncValueObservable } from '../async-value-observable/interfaces';
+import { IAsyncDistinctValueObservable } from '../async-value-observable/interfaces';
 import { ObservableCastTupleArray } from '../function-observable/interfaces';
 import { ICancelToken } from '../../../misc/cancel-token/interfaces';
 
@@ -11,7 +11,7 @@ export interface IAsyncFunctionObservableConstructor {
 }
 
 
-export interface IAsyncFunctionObservable<T extends TAsyncFunctionObservableFactory> extends IAsyncValueObservable<TAsyncFunctionObservableValue<T>> {
+export interface IAsyncFunctionObservable<T extends TAsyncFunctionObservableFactory> extends IAsyncDistinctValueObservable<TAsyncFunctionObservableValue<T>> {
   readonly factory: T;
   readonly args: IReadonlyTuple<TAsyncFunctionObservableParameters<T>>;
 

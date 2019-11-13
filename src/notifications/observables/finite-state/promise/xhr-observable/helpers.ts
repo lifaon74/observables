@@ -1,10 +1,10 @@
-import { ICancelToken } from '../../../../../misc/cancel-token/interfaces';
 import { ICancellablePromise } from '../../../../../promises/cancellable-promise/interfaces';
 import { CancellablePromise } from '../../../../../promises/cancellable-promise/implementation';
 import { StringMaxLength, ToIterable } from '../../../../../helpers';
 import { PartialProperties } from '../../../../../classes/types';
 import { INotificationsObserver } from '../../../../core/notifications-observer/interfaces';
-import { CancelReason } from '../../../../../misc/cancel-token/implementation';
+import { IAdvancedAbortSignal } from '../../../../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
+import { AbortReason } from '../../../../../misc/reason/defaults/abort-reason';
 
 export type XMLHttpRequestExtendedResponseType = XMLHttpRequestResponseType | 'binary-string';
 
@@ -16,14 +16,18 @@ export function CreateFetchError(url: string): Error {
 export function CreateNetworkError(): Error {
   return new Error(`Network error`);
 }
-export function CreateFetchCancelReason(url: string): CancelReason {
-  return new CancelReason(`Fetching '${ StringMaxLength(url, 100) }' has been aborted`);
+
+export function CreateFetchAbortReason(url: string): AbortReason {
+  return new AbortReason(`Fetching '${ StringMaxLength(url, 100) }' has been aborted`);
+}
+
+
+export function AreReadableStreamSupported(): boolean {
+  return globalThis.ReadableStream !== void 0;
 }
 
 /**
  * Sets headers (type Headers) into xhr (typo XMLHttpRequest)
- * @param headers
- * @param xhr
  */
 export function SetHeadersIntoXHR(headers: Headers, xhr: XMLHttpRequest): void {
   headers.forEach((value: string, key: string) => {
@@ -36,7 +40,6 @@ export function SetHeadersIntoXHR(headers: Headers, xhr: XMLHttpRequest): void {
 
 /**
  * Returns a boolean to assign to xhr.withCredentials from the parameters extracted from request
- * @param request
  */
 export function GetXHRWithCredentialsValueFromRequest(request: Request): boolean {
   // xhr.withCredentials = ['same-origin', 'include'].includes(request.credentials);
@@ -58,9 +61,6 @@ export function GetXHRWithCredentialsValueFromRequest(request: Request): boolean
 
 /**
  * Inits an XMLHttpRequest from a Request
- * @param request
- * @param xhr
- * @param responseType
  */
 export function InitXHRFromRequest(request: Request, xhr: XMLHttpRequest, responseType: XMLHttpRequestExtendedResponseType): void {
   const clear = () => {
@@ -98,9 +98,6 @@ export function InitXHRFromRequest(request: Request, xhr: XMLHttpRequest, respon
 
 /**
  * Do an XMLHttpRequest from a Request. ReadableStream must be supported.
- * @param request
- * @param xhr
- * @param responseType
  */
 export function DoXHRFromRequestUsingReadableStream(
   request: Request,
@@ -114,24 +111,20 @@ export function DoXHRFromRequestUsingReadableStream(
 
 /**
  * Do an XMLHttpRequest from a Request. Casts body to Blob, so ReadableStream are not required.
- * @param request
- * @param xhr
- * @param responseType
- * @param token
  */
-export function DoXHRFromRequest(
+export function DoXHRFromRequestUsingBlob(
   request: Request,
   xhr: XMLHttpRequest = new XMLHttpRequest(),
   responseType: XMLHttpRequestExtendedResponseType,
-  token?: ICancelToken
+  signal: IAdvancedAbortSignal
 ): ICancellablePromise<XMLHttpRequest, 'never'> {
-  // return CancellablePromise.of<ArrayBuffer>(request.arrayBuffer(), token)
+  // return CancellablePromise.of<ArrayBuffer>(request.arrayBuffer(), signal)
   //   .then((buffer: ArrayBuffer) => {
   //     InitXHRFromRequest(request, xhr, responseType);
   //     xhr.send(buffer);
   //     return xhr;
   //   });
-  return CancellablePromise.of<Blob>(request.blob(), token)
+  return CancellablePromise.of<Blob>(request.blob(), signal)
     .then((blob: Blob) => {
       InitXHRFromRequest(request, xhr, responseType);
       xhr.send(blob);
@@ -139,9 +132,20 @@ export function DoXHRFromRequest(
     });
 }
 
+// TODO
+export function DoXHRFromRequest(
+  request: Request,
+  xhr: XMLHttpRequest = new XMLHttpRequest(),
+  responseType: XMLHttpRequestExtendedResponseType,
+  signal: IAdvancedAbortSignal
+): ICancellablePromise<XMLHttpRequest, 'never'> {
+  return DoXHRFromRequestUsingBlob(request, xhr, responseType, signal);
+}
+
+
+
 /**
  * Converts a raw headers' string to an array of tuple [key, value]
- * @param headers
  */
 export function ParseRawHeaders(headers: string): [string, string][] {
   return headers
@@ -154,7 +158,6 @@ export function ParseRawHeaders(headers: string): [string, string][] {
     })
     .filter(([key]) => (key !== ''));
 }
-
 
 
 
@@ -177,8 +180,6 @@ export function BinaryStringToUint8Array(input: string): Uint8Array {
 
 /**
  * Assumes xhr.readyState is DONE and response is not null
- * @param xhr
- * @param responseType
  */
 export function XHRResponseToUint8Array(xhr: XMLHttpRequest, responseType: XMLHttpRequestExtendedResponseType = xhr.responseType): Uint8Array {
   switch (responseType) {
@@ -203,8 +204,6 @@ export function XHRResponseToUint8Array(xhr: XMLHttpRequest, responseType: XMLHt
 
 /**
  * Assumes xhr.readyState is DONE and response is not null
- * @param xhr
- * @param responseType
  */
 export function XHRResponseToBlob(xhr: XMLHttpRequest, responseType: XMLHttpRequestExtendedResponseType = xhr.responseType): Blob {
   const contentType: string | null = xhr.getResponseHeader('content-type');
@@ -229,32 +228,29 @@ export function XHRResponseToBlob(xhr: XMLHttpRequest, responseType: XMLHttpRequ
 
 /**
  * Assumes xhr.readyState before or equals to xhr.HEADERS_RECEIVED
- * @param xhr
- * @param responseType
- * @param token
  */
 export function XHRResponseToReadableStream(
   xhr: XMLHttpRequest,
   responseType: XMLHttpRequestExtendedResponseType = xhr.responseType,
-  token?: ICancelToken
+  signal?: IAdvancedAbortSignal
 ): ReadableStream<Uint8Array> {
 
   let clear: () => void;
 
   return new ReadableStream<Uint8Array>({
     start(controller) {
-      if ((token === void 0) || (!token.cancelled)) {
+      if ((signal === void 0) || (!signal.aborted)) {
         const isStreamableResponseType: boolean = (responseType === 'binary-string');
 
-        let tokenObserver: INotificationsObserver<'cancel', any>;
+        let signalObserver: INotificationsObserver<'abort', any>;
         let readIndex: number = 0;
 
         clear = () => {
           xhr.removeEventListener('load', onLoad);
           xhr.removeEventListener('error', onError);
           xhr.removeEventListener('progress', onProgress);
-          if (tokenObserver !== void 0) {
-            tokenObserver.deactivate();
+          if (signalObserver !== void 0) {
+            signalObserver.deactivate();
           }
         };
 
@@ -282,10 +278,10 @@ export function XHRResponseToReadableStream(
           controller.error(CreateNetworkError());
         };
 
-        const onCancelled = () => {
-          if (token !== void 0) { // optional check
+        const onAborted = () => {
+          if (signal !== void 0) { // optional check
             clear();
-            controller.error(token.reason);
+            controller.error(signal.reason);
           }
         };
 
@@ -297,9 +293,9 @@ export function XHRResponseToReadableStream(
         }
 
 
-        if (token !== void 0) {
-          tokenObserver = token
-            .addListener('cancel', onCancelled)
+        if (signal !== void 0) {
+          signalObserver = signal
+            .addListener('abort', onAborted)
             .activate();
         }
       }
@@ -317,8 +313,6 @@ export function XHRResponseToReadableStream(
 
 /**
  * Assumes xhr.readyState after or equals to xhr.HEADERS_RECEIVED
- * @param xhr
- * @constructor
  */
 export function XHRResponseToResponseInit(xhr: XMLHttpRequest): ResponseInit {
   return {
@@ -331,8 +325,6 @@ export function XHRResponseToResponseInit(xhr: XMLHttpRequest): ResponseInit {
 /**
  * Creates a Response from an XMLHttpRequest.
  * Assumes xhr.readyState is DONE and response is not null
- * @param xhr
- * @param responseType
  */
 export function XHRResponseToResponse(xhr: XMLHttpRequest, responseType: XMLHttpRequestExtendedResponseType = xhr.responseType): Response {
   const init: ResponseInit = XHRResponseToResponseInit(xhr);
@@ -355,8 +347,6 @@ export function XHRResponseToResponse(xhr: XMLHttpRequest, responseType: XMLHttp
 
 /**
  * Assumes xhr.readyState is after or equal to HEADERS_RECEIVED
- * @param responseType
- * @param xhr
  */
 export function XHRResponseToResponseUsingReadableStream(xhr: XMLHttpRequest, responseType?: XMLHttpRequestExtendedResponseType): Response {
   return new Response(XHRResponseToReadableStream(xhr, responseType), XHRResponseToResponseInit(xhr));
@@ -381,7 +371,6 @@ export interface RequestInitWithURL extends RequestInit {
 
 /**
  * Creates a Request from RequestInitWithURL
- * @param init
  */
 export function CreateRequestFromRequestInitWithURL(init: string | RequestInitWithURL): Request {
   return (typeof init === 'string')
@@ -438,10 +427,6 @@ export function CloneRequest(request: RequestInfo, init: PartialProperties<Reque
 /**
  * Creates a simple Request with an url, method and body.
  * Body is automatically casted to the best fitting type.
- * @param url
- * @param method
- * @param body
- * @param init
  *
  * @example:
  *  CreateSimpleRequest('https://chart.googleapis.com/chart', 'GET', {
@@ -485,7 +470,6 @@ export function CreateSimpleRequest(url: string, method: string, body: any = nul
 
 /**
  * Rejects responses with status not 'OK'
- * @param response
  */
 export function RejectInvalidResponse(response: Response): Promise<Response> {
   return ((200 <= response.status) && (response.status < 400))
@@ -501,7 +485,6 @@ export function RejectInvalidResponse(response: Response): Promise<Response> {
 
 /**
  * Converts an Iterator to a searchParams string
- * @param input
  */
 export function IteratorToSearchParamsString(input: Iterator<[string, any]>): string {
   let str: string = '';
@@ -528,8 +511,6 @@ export function ObjectToSearchParamsString(input: object): string {
 
 /**
  * Converts an Iterator to an URL where url.searchParams reflects this iterator
- * @param input
- * @param url
  */
 export function IteratorToURLSearchParams(input: Iterator<[string, any]>, url?: string | URL): URL {
   const _url: URL = ToURL(url);
@@ -553,8 +534,6 @@ export function ObjectToURLSearchParams(input: object, url?: string | URL): URL 
 
 /**
  * Converts an Iterator to a FormData
- * @param input
- * @param formData
  */
 export function IteratorToFormData(input: Iterator<[string, any]>, formData: FormData = new FormData()): FormData {
   let result: IteratorResult<[string, any]>;

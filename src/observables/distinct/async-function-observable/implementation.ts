@@ -10,8 +10,8 @@ import { IReadonlyTuple } from '../../../misc/readonly-list/interfaces';
 import { ReadonlyTuple } from '../../../misc/readonly-list/implementation';
 import { IObserver } from '../../../core/observer/interfaces';
 import { Observer } from '../../../core/observer/public';
-import { IAsyncValueObservableContext } from '../async-value-observable/interfaces';
-import { AsyncValueObservable } from '../async-value-observable/implementation';
+import { IAsyncDistinctValueObservableContext } from '../async-value-observable/interfaces';
+import { AsyncDistinctValueObservable } from '../async-value-observable/implementation';
 import { ICancelToken } from '../../../misc/cancel-token/interfaces';
 import {
   CancelReason, CancelToken
@@ -26,7 +26,7 @@ import { ObservableIsFreshlyObserved, ObservableIsNotObserved } from '../../../c
 export const ASYNC_FUNCTION_OBSERVABLE_PRIVATE = Symbol('async-function-observable-private');
 
 export interface IAsyncFunctionObservablePrivate<T extends TAsyncFunctionObservableFactory> {
-  context: IAsyncValueObservableContext<TAsyncFunctionObservableValue<T>>;
+  context: IAsyncDistinctValueObservableContext<TAsyncFunctionObservableValue<T>>;
   factory: T;
   args: TAsyncFunctionObservableParameters<T>;
   readonlyArguments: IReadonlyTuple<TAsyncFunctionObservableParameters<T>>;
@@ -43,7 +43,7 @@ export interface IAsyncFunctionObservableInternal<T extends TAsyncFunctionObserv
 
 export function ConstructAsyncFunctionObservable<T extends TAsyncFunctionObservableFactory>(
   observable: IAsyncFunctionObservable<T>,
-  context: IAsyncValueObservableContext<TAsyncFunctionObservableValue<T>>,
+  context: IAsyncDistinctValueObservableContext<TAsyncFunctionObservableValue<T>>,
   factory: T,
   args: TAsyncFunctionObservableParameters<T>
 ): void {
@@ -142,7 +142,7 @@ export function AsyncFunctionObservableRun<T extends TAsyncFunctionObservableFac
 }
 
 
-export class AsyncFunctionObservable<T extends TAsyncFunctionObservableFactory> extends AsyncValueObservable<TAsyncFunctionObservableValue<T>> implements IAsyncFunctionObservable<T> {
+export class AsyncFunctionObservable<T extends TAsyncFunctionObservableFactory> extends AsyncDistinctValueObservable<TAsyncFunctionObservableValue<T>> implements IAsyncFunctionObservable<T> {
 
   static create<T extends TAsyncFunctionObservableFactory>(factory: T): (...args: TAsyncFunctionObservableParameters<T>) => IAsyncFunctionObservable<T> {
     return (...args: TAsyncFunctionObservableParameters<T>) => {
@@ -151,8 +151,8 @@ export class AsyncFunctionObservable<T extends TAsyncFunctionObservableFactory> 
   }
 
   constructor(factory: T, args: TAsyncFunctionObservableParameters<T>) {
-    let context: IAsyncValueObservableContext<TAsyncFunctionObservableValue<T>>;
-    super((_context: IAsyncValueObservableContext<TAsyncFunctionObservableValue<T>>) => {
+    let context: IAsyncDistinctValueObservableContext<TAsyncFunctionObservableValue<T>>;
+    super((_context: IAsyncDistinctValueObservableContext<TAsyncFunctionObservableValue<T>>) => {
       context = _context;
       return {
         onObserved: (): void => {

@@ -1,6 +1,6 @@
 import { IObservable, IObservableConstructor } from '../../../core/observable/interfaces';
 import { ICancelToken } from '../../../misc/cancel-token/interfaces';
-import { IValueObservable } from '../value-observable/interfaces';
+import { IDistinctValueObservable } from '../distinct-value-observable/interfaces';
 
 
 export interface ISourceConstructor {
@@ -21,7 +21,7 @@ export interface ISourceConstructor {
  *      source.emit(0); // print 0
  *
  */
-export interface ISource<T> extends IValueObservable<T> {
+export interface ISource<T> extends IDistinctValueObservable<T> {
   readonly value: T | undefined; // last emitted value
   valueOf(): T | undefined;
 

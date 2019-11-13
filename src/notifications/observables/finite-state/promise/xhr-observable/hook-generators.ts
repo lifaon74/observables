@@ -2,7 +2,6 @@ import {
   IFiniteStateObservable, IFiniteStateObservableContext, TFiniteStateObservableCreateCallback,
   TFiniteStateObservableMode
 } from '../../interfaces';
-import { CancelReason, CancelToken } from '../../../../../misc/cancel-token/implementation';
 import { Notification } from '../../../../core/notification/implementation';
 import { IXHRObservableKeyValueMap, TXHRObservableFinalState } from './interfaces';
 import { EventsObservable } from '../../../events/events-observable/implementation';
@@ -10,11 +9,13 @@ import { IEventsObservable } from '../../../events/events-observable/interfaces'
 import { IProgress } from '../../../../../misc/progress/interfaces';
 import { Progress } from '../../../../../misc/progress/implementation';
 import {
-  XMLHttpRequestExtendedResponseType, XHRResponseToReadableStream, XHRResponseToResponseInit, CreateFetchCancelReason,
-  CreateFetchError, DoXHRFromRequest
+  XMLHttpRequestExtendedResponseType, XHRResponseToReadableStream, XHRResponseToResponseInit, CreateFetchAbortReason,
+  CreateFetchError, DoXHRFromRequest, AreReadableStreamSupported, XHRResponseToResponse
 } from './helpers';
-import { ICancelToken } from '../../../../../misc/cancel-token/interfaces';
 import { FiniteStateObservableHookDefaultOnUnobserved } from '../../helpers';
+import { AdvancedAbortController } from '../../../../../misc/advanced-abort-controller/implementation';
+import { IAdvancedAbortController } from '../../../../../misc/advanced-abort-controller/interfaces';
+import { AbortReason } from '../../../../../misc/reason/defaults/abort-reason';
 
 
 export interface IGenerateFiniteStateObservableHookFromXHROptions {
@@ -22,15 +23,12 @@ export interface IGenerateFiniteStateObservableHookFromXHROptions {
 }
 
 /**
- * Generates an Hook for a FiniteStateObservable, based on a Promise:
- *  - when the Observable is freshly observed, calls the factory
- *  - emits 'next' when the promise if fulfilled with the incoming value, then emits 'complete'
+ * Generates an Hook for a FiniteStateObservable, based on an XHR request:
+ *  - when the Observable is freshly observed, starts the request
+ *  - emits 'next' when the request if complete with the incoming value, then emits 'complete'
  *  - emits 'error' if promise is errored
- *  - emits 'cancel' if promise is cancelled from the factory
- *  - if the FiniteStateObservable is no more observed and the promise is still pending, cancels the token, and resets the state
- * @param requestInfo
- * @param requestInit
- * @param options
+ *  - emits 'abort' if promise is abortled from the factory
+ *  - if the FiniteStateObservable is no more observed and the promise is still pending, aborts the token, and resets the state
  */
 export function GenerateFiniteStateObservableHookFromXHR(
   requestInfo: RequestInfo,
@@ -54,42 +52,58 @@ export function GenerateFiniteStateObservableHookFromXHR(
   type TKVMap = IXHRObservableKeyValueMap;
 
   return function (context: IFiniteStateObservableContext<TValue, TFinalState, TMode, TKVMap>) {
-    let xhr: XMLHttpRequest | null = null;
+    let xhr: XMLHttpRequest | null = null; // null if no request
     let xhrObservable: IEventsObservable<XMLHttpRequestEventMap, XMLHttpRequest>;
     let xhrUploadObservable: IEventsObservable<XMLHttpRequestEventTargetEventMap, XMLHttpRequestUpload>;
-    let token: ICancelToken;
+    let abortController: IAdvancedAbortController;
 
-    function clear() {
+    const useReadableStream: boolean = AreReadableStreamSupported()
+      && ((options.useReadableStream === void 0) ? true : options.useReadableStream);
+
+    const clear = () => {
       if (xhr !== null) {
         if (xhr.readyState !== xhr.DONE) {
           xhr.abort();
-          token.cancel(CreateFetchCancelReason(request.url));
+          abortController.abort(CreateFetchAbortReason(request.url));
         }
         xhrObservable.clearObservers();
         xhrUploadObservable.clearObservers();
         xhr = null;
       }
-    }
+    };
 
     return {
       onObserved(): void {
         const instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> = this as IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>;
+
         if (
           (xhr === null)
           && (instance.observers.length === 1) // optional check
           && (instance.state === 'next') // optional check
         ) {
           xhr = new XMLHttpRequest();
-          token = new CancelToken();
-          // const responseType: XMLHttpRequestExtendedResponseType = 'blob';
-          const responseType: XMLHttpRequestExtendedResponseType = 'binary-string';
-          const stream: ReadableStream<Uint8Array> = XHRResponseToReadableStream(xhr, responseType, token);
+          abortController = new AdvancedAbortController();
+          let stream: ReadableStream<Uint8Array> | undefined;
+          let responseType: XMLHttpRequestExtendedResponseType;
+
+          if (useReadableStream) {
+            responseType = 'binary-string';
+            stream = XHRResponseToReadableStream(xhr, responseType, abortController.signal);
+          } else { // in case ReadableStream is not supported
+            responseType = 'blob';
+          }
 
           xhrObservable = new EventsObservable<XMLHttpRequestEventMap, XMLHttpRequest>(xhr)
             .on('readystatechange', () => {
               if (xhr !== null) {  // optional check
-                if (xhr.readyState === xhr.HEADERS_RECEIVED) {
-                  context.next(new Response(stream, XHRResponseToResponseInit(xhr)));
+                if (stream === void 0) { // in case ReadableStream is not supported
+                  if (xhr.readyState === xhr.DONE) {
+                    context.next(XHRResponseToResponse(xhr, responseType));
+                  }
+                } else {
+                  if (xhr.readyState === xhr.HEADERS_RECEIVED) {
+                    context.next(new Response(stream, XHRResponseToResponseInit(xhr)));
+                  }
                 }
               }
             })
@@ -107,13 +121,13 @@ export function GenerateFiniteStateObservableHookFromXHR(
             })
             .on('progress', (event: ProgressEvent) => {
               if (xhr !== null) { // optional check
-                context.emit(new Notification<'download-progress', IProgress>('download-progress', Progress.fromEvent(event)));
+                context.emit(new Notification<'progress', IProgress>('progress', Progress.fromEvent(event, 'download')));
               }
             })
             .on('abort', () => {
               if (xhr !== null) { // optional check
                 if (instance.observed) {
-                  context.emit(new Notification<'cancel', CancelReason>('cancel', new CancelReason(`XHR aborted`)));
+                  context.emit(new Notification<'abort', AbortReason>('abort', new AbortReason(`XHR aborted`)));
                 }
               }
             })
@@ -127,13 +141,13 @@ export function GenerateFiniteStateObservableHookFromXHR(
             })
             .on('progress', (event: ProgressEvent) => {
               if (xhr !== null) {  // optional check
-                context.emit(new Notification<'upload-progress', IProgress>('upload-progress', Progress.fromEvent(event)));
+                context.emit(new Notification<'progress', IProgress>('progress', Progress.fromEvent(event, 'upload')));
               }
             })
           ;
 
           // DoXHRFromRequestUsingReadableStream(request, xhr, responseType); // INFO should replace following in the future when supported
-          DoXHRFromRequest(request, xhr, responseType, token);
+          DoXHRFromRequest(request, xhr, responseType, abortController.signal);
         }
       },
       onUnobserved(): void {

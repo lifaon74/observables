@@ -21,4 +21,4 @@ export type TPipeHookBase<TObserverType, TObservableType> = IPipeHook<IObserver<
 
 export type TPipeActivateMode = 'auto' | 'manual';
 
-export type TBasePipe<TValueObserver, TValueObservable> = IPipe<IObserver<TValueObserver>, IObservable<TValueObservable>>;
+export type TBasePipe<TValueObserver, TDistinctValueObservable> = IPipe<IObserver<TValueObserver>, IObservable<TDistinctValueObservable>>;

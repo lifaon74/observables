@@ -1,6 +1,6 @@
 import { IExpression } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
-import { IValueObservableInternal, ValueObservable } from '../value-observable/implementation';
+import { IDistinctValueObservableInternal, DistinctValueObservable } from '../distinct-value-observable/implementation';
 import { IsObject } from '../../../helpers';
 import { IObservableContext } from '../../../core/observable/context/interfaces';
 
@@ -15,7 +15,7 @@ export interface IExpressionPrivate<T> {
   requestIdleTimer: any;
 }
 
-export interface IExpressionInternal<T> extends IExpression<T>, IValueObservableInternal<T> {
+export interface IExpressionInternal<T> extends IExpression<T>, IDistinctValueObservableInternal<T> {
   [EXPRESSION_PRIVATE]: IExpressionPrivate<T>;
 }
 
@@ -57,7 +57,7 @@ export function ExpressionUpdate<T>(expression: IExpression<T>): void {
 }
 
 
-export class Expression<T> extends ValueObservable<T> implements IExpression<T> {
+export class Expression<T> extends DistinctValueObservable<T> implements IExpression<T> {
   constructor(factory: () => T) {
     let context: IObservableContext<T>;
     super((_context: IObservableContext<T>) => {

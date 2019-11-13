@@ -36,7 +36,7 @@ export * from './observables/distinct/async-value-observable/implementation';
 export * from './observables/distinct/expression/implementation';
 export * from './observables/distinct/function-observable/implementation';
 export * from './observables/distinct/source/implementation';
-export * from './observables/distinct/value-observable/implementation';
+export * from './observables/distinct/distinct-value-observable/implementation';
 
 export * from './observables/dom-change/implementation';
 
@@ -95,16 +95,9 @@ export { ICancellablePromiseInternal } from './promises/cancellable-promise/priv
 export { ICancellablePromisePrivatesInternal } from './promises/cancellable-promise/privates';
 export { ICancellablePromisePrivate } from './promises/cancellable-promise/privates';
 export { CANCELLABLE_PROMISE_PRIVATE } from './promises/cancellable-promise/privates';
-export { IsCancellablePromiseWithSameToken } from './promises/cancellable-promise/constructor';
 export { IsCancellablePromise } from './promises/cancellable-promise/constructor';
 export { ConstructCancellablePromise } from './promises/cancellable-promise/constructor';
 export { NewCancellablePromiseFromInstance } from './promises/cancellable-promise/constructor';
 export { NewCancellablePromise } from './promises/cancellable-promise/constructor';
-export { CHECK_CANCELLABLE_PROMISE_CONSTRUCT } from './promises/cancellable-promise/constructor';
-export { CancellablePromiseOptimizedFinally } from './promises/cancellable-promise/functions';
-export { CancellablePromiseInternalFinally } from './promises/cancellable-promise/functions';
-export { CancellablePromiseOptimizedThen } from './promises/cancellable-promise/functions';
-export { CancellablePromiseInternalThen } from './promises/cancellable-promise/functions';
-export { AbortControllerWhenPromiseResolved } from './promises/cancellable-promise/functions';
-export { CancellablePromiseRunFactories } from './promises/cancellable-promise/functions';
+
 

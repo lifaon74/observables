@@ -1,2 +1,2 @@
 export * from './interfaces';
-export { AsyncValueObservable, IsAsyncValueObservable } from './implementation';
+export { AsyncDistinctValueObservable, IsAsyncDistinctValueObservable } from './implementation';

@@ -12,7 +12,7 @@ import {
 } from '../observables/distinct/async-function-observable/interfaces';
 import { AsyncFunctionObservable } from '../observables/distinct/async-function-observable/implementation';
 import { IPromiseObservable, } from '../notifications/observables/finite-state/promise/promise-observable/interfaces';
-import { toValueObservable } from './to/toValueObservable';
+import { toDistinctValueObservable } from './to/toDistinctValueObservable';
 import { ICancelToken } from '../misc/cancel-token/interfaces';
 import { IObserver } from '../core/observer/interfaces';
 import { IsObserver, Observer } from '../core/observer/public';
@@ -22,108 +22,21 @@ import { LinkCancelTokenWithFetchArguments } from '../misc/cancel-token/implemen
 import { IsObservable } from '../core/observable/constructor';
 import { TPipeBase, TPipeContextBase } from '../core/observable-observer/pipe/types';
 import { Pipe } from '../core/observable-observer/pipe/implementation';
+import {
+  TObservableOrValueTupleToObservables, TExpressionOrFunction, TObservableOrValue, TObservableOrValues, TSourceOrValue
+} from './shortcuts/types';
+import { $observables } from './shortcuts/primitives/$observables';
+import { $observable } from './shortcuts/primitives/$observable';
+import { $add } from './shortcuts/arithmetic/$add';
+import { $source } from './shortcuts/primitives/$source';
+import { $equal } from './shortcuts/comparision/$equal';
+import { $function } from './shortcuts/primitives/$function';
+import { $expression } from './shortcuts/primitives/$expression';
+import { $and } from './shortcuts/logic/$and';
 
-export type TObservableOrValue<T> = IObservable<T> | T;
-export type TObservableOrValueToValueType<T extends TObservableOrValue<any>> = T extends IObservable<infer R> ? R : T;
-export type TObserverOrCallback<T> = IObserver<T> | ((value: T) => void);
-export type TSourceOrValue<T> = ISource<T> | T;
-export type TExpressionOrFunction<T> = IExpression<T> | (() => T);
-
-export type TObservableOrValues<T extends any[]> = {
-  [K in keyof T]: TObservableOrValue<T[K]>;
-};
-
-export type TObservableOrValuesNonStrict<T extends any[]> = Array<any> & TObservableOrValues<T>;
-
-
-// export type CastToObservable<T> = (T extends IObservable<any> ? T : IObservable<T>);
-export type CastToObservableValue<T> = (T extends IObservable<infer V> ? V : T);
-export type CastToObservable<T> = IObservable<CastToObservableValue<T>>;
-
-// export type CastToObservablesTuple<T extends ([any, boolean] | Any)[]> = {
-//   // [K in keyof T]: T[K] extends IObservable<any> ? T[K] : IObservable<T[K] extends [infer V, boolean] ? V : T[K]>;
-//   [K in keyof T]: T[K] extends [infer V, boolean]
-//     ? CastToObservable<V>
-//     : CastToObservable<T[K]>;
-// };
-
-export type CastToObservables<T extends any[]> = {
-  [K in keyof T]: CastToObservable<T[K]>;
-};
-
-
-
-
-
-
-
-
-
-
-
-
-export function $observable<T>(input: TObservableOrValue<T>): IObservable<T> {
-  return IsObservable(input)
-    ? input
-    : new Source<T>().emit(input as T);
-}
-
-export function $observer<T>(input: TObserverOrCallback<T>): IObserver<T> {
-  return IsObserver(input)
-    ? input
-    : new Observer<T>(input as (value: T) => void);
-}
-
-// export function $observables<T extends ([any, boolean] | Any)[]>(...inputs: T): CastToObservablesTuple<T> {
-export function $observables<T extends any[]>(...inputs: T): CastToObservables<T> {
-  return inputs.map(_ => $observable(_)) as any;
-}
-
-
-export function $source<T>(input?: TSourceOrValue<T>): ISource<T> {
-  if (IsSource(input)) {
-    return input;
-  } else if (IsObservable(input)) {
-    throw new Error(`Cannot convert an input of type Observable to a Source`);
-  } else {
-    const source: ISource<T> = new Source<T>();
-    if (arguments.length > 0) {
-      source.emit(input as T);
-    }
-    return source;
-  }
-}
-
-export function $expression<T>(input: TExpressionOrFunction<T>): IExpression<T> {
-  if (IsExpression(input)) {
-    return input;
-  } else if (typeof input === 'function') {
-    return new Expression<T>(input);
-  } else {
-    throw new TypeError(`Expected Expression or function as input`);
-  }
-}
-
-
-
-
-
-/**
- * Creates a FunctionObservable from a factory and some inputs
- * @param factory
- * @param args
- */
-export function $function<T extends TFunctionObservableFactory>(factory: T, args: TObservableOrValues<TFunctionObservableFactoryParameters<T>>): IFunctionObservable<T> {
-  return new FunctionObservable(factory, $observables(...args as any) as any);
-}
-
-
-export function $asyncFunction<T extends TAsyncFunctionObservableFactory>(factory: T, args: TObservableOrValue<TAsyncFunctionObservableFactoryParameters<T>>): IAsyncFunctionObservable<T> {
-  return new AsyncFunctionObservable(factory, $observables(...args as any) as any);
-}
 
 export function $async<T>(observable: IPromiseObservable<T>): IObservable<T> {
-  return toValueObservable<T>(observable);
+  return toDistinctValueObservable<T>(observable);
 }
 
 
@@ -134,149 +47,6 @@ export function $async<T>(observable: IPromiseObservable<T>): IObservable<T> {
 // myVar.pipeTo((v: boolean) => {
 //
 // });
-
-
-
-/**** COMPARISION ****/
-
-export function $equal(value1: TObservableOrValue<any>, value2: TObservableOrValue<any>): IFunctionObservable<typeof equal> {
-  return new FunctionObservable(equal, [$observable(value1), $observable(value2)]);
-  // return $fnc(equal, [value1, value2]);
-}
-
-function equal(a: any, b: any): boolean {
-  return a === b;
-}
-
-
-export function $notEqual(value1: TObservableOrValue<any>, value2: TObservableOrValue<any>): IFunctionObservable<typeof notEqual> {
-  return new FunctionObservable(notEqual, [$observable(value1), $observable(value2)]);
-}
-
-function notEqual(a: any, b: any): boolean {
-  return a !== b;
-}
-
-
-/**** ARITHMETIC ****/
-
-
-export function $add(...values: TObservableOrValue<number>[]): IFunctionObservable<typeof add> {
-  if (values.length > 1) {
-    return new FunctionObservable(add, $observables(...values));
-  } else {
-    throw new TypeError(`Expected at least 2 arguments for $add`);
-  }
-}
-
-function add(...values: number[]): number {
-  let sum: number = 0;
-  for (let i = 0, l = values.length; i < l; i++) {
-    sum += values[i];
-  }
-  return sum;
-}
-
-
-export function $subtract(...values: TObservableOrValue<number>[]): IFunctionObservable<typeof subtract> {
-  if (values.length > 1) {
-    return new FunctionObservable(subtract, $observables(...values));
-  } else {
-    throw new TypeError(`Expected at least 2 arguments for $subtract`);
-  }
-}
-
-function subtract(...values: number[]): number {
-  let value: number = values[0];
-  for (let i = 1, l = values.length; i < l; i++) {
-    value -= values[i];
-  }
-  return value;
-}
-
-
-export function $multiply(value1: TObservableOrValue<number>, value2: TObservableOrValue<number>): IFunctionObservable<typeof multiply> {
-  return new FunctionObservable(multiply, [$observable(value1), $observable(value2)]);
-}
-
-function multiply(value1: number, value2: number): number {
-  return value1 * value2;
-}
-
-
-export function $divide(value1: TObservableOrValue<number>, value2: TObservableOrValue<number>): IFunctionObservable<typeof divide> {
-  return new FunctionObservable(divide, [$observable(value1), $observable(value2)]);
-}
-
-function divide(value1: number, value2: number): number {
-  return value1 / value2;
-}
-
-
-export function $min(...values: TObservableOrValue<number>[]): IFunctionObservable<typeof min> {
-  return new FunctionObservable(min, $observables(...values));
-}
-
-function min(...values: number[]): number {
-  return Math.min(...values);
-}
-
-
-export function $max(...values: TObservableOrValue<number>[]): IFunctionObservable<typeof max> {
-  return new FunctionObservable(max, $observables(...values));
-}
-
-function max(...values: number[]): number {
-  return Math.max(...values);
-}
-
-
-
-/**** LOGIC ****/
-
-export function $and(...values: TObservableOrValue<boolean>[]): IFunctionObservable<typeof and> {
-  if (values.length > 1) {
-    return new FunctionObservable(and, $observables(...values));
-  } else {
-    throw new TypeError(`Expected at least 2 arguments for $and`);
-  }
-}
-
-function and(...values: boolean[]): boolean {
-  for (let i = 0, l = values.length; i < l; i++) {
-    if (!values[i]) {
-      return false;
-    }
-  }
-  return true;
-}
-
-
-export function $or(...values: TObservableOrValue<boolean>[]): IFunctionObservable<typeof or> {
-  if (values.length > 1) {
-    return new FunctionObservable(or, $observables(...values));
-  } else {
-    throw new TypeError(`Expected at least 2 arguments for $or`);
-  }
-}
-
-function or(...values: boolean[]): boolean {
-  for (let i = 0, l = values.length; i < l; i++) {
-    if (values[i]) {
-      return true;
-    }
-  }
-  return false;
-}
-
-
-export function $not(value: TObservableOrValue<boolean>): IFunctionObservable<typeof not> {
-  return new FunctionObservable(not, [$observable(value)]);
-}
-
-function not(value: boolean): boolean {
-  return !value;
-}
 
 
 /**** OTHERS ****/

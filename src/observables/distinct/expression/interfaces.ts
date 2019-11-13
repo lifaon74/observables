@@ -1,5 +1,5 @@
 import { IObservableConstructor } from '../../../core/observable/interfaces';
-import { IValueObservable } from '../value-observable/interfaces';
+import { IDistinctValueObservable } from '../distinct-value-observable/interfaces';
 
 export interface IExpressionConstructor extends IObservableConstructor {
   new<T>(factory: () => T): IExpression<T>;
@@ -15,6 +15,6 @@ export interface IExpressionConstructor extends IObservableConstructor {
  *    console.log((onLine ? 'on' : 'off') + 'line');
  *  }).activate();
  */
-export interface IExpression<T> extends IValueObservable<T> {
+export interface IExpression<T> extends IDistinctValueObservable<T> {
   readonly factory: () => T;
 }

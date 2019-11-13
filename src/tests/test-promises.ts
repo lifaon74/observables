@@ -4,6 +4,7 @@ import { $delay } from '../promises/cancellable-promise/snipets';
 import { OnFinallyResult } from '../promises/cancellable-promise/types';
 import { AdvancedAbortController } from '../misc/advanced-abort-controller/implementation';
 import { IAdvancedAbortSignal } from '../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
+import { IAdvancedAbortController } from '../misc/advanced-abort-controller/interfaces';
 
 
 export function testCancellablePromise() {
@@ -21,22 +22,22 @@ export function testCancellablePromise() {
       console.log('never append', value);
     });
 
-  // const c = b
-  //   .finally((state: OnFinallyResult<void>) => {
-  //     console.log('finally', state);
-  //     return $delay(1000);
-  //   }, true)
-  //   .cancelled((reason: any, newToken: IAdvancedAbortSignal) => {
-  //     console.log('cancelled', newToken.reason);
-  //     // newToken.cancel('another cancel');
-  //     return $delay(1000, newToken)
-  //       .then(() => {
-  //         return 4;
-  //       });
-  //   })
-  //   .then((value: number | void) => {
-  //     console.log('after cancelled caught', value);
-  //   });
+  const c = b
+    .finally((state: OnFinallyResult<void>) => {
+      console.log('finally', state);
+      return $delay(1000);
+    }, true)
+    .cancelled((reason: any, newController: IAdvancedAbortController) => {
+      console.log('cancelled', reason);
+      // newController.abort('another cancel');
+      return $delay(1000, newController.signal)
+        .then(() => {
+          return 4;
+        });
+    })
+    .then((value: number | void) => {
+      console.log('after cancelled caught', value);
+    });
 
   b.promise
     .then(() =>{

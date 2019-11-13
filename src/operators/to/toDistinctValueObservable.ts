@@ -6,7 +6,7 @@ import { Observable } from '../../core/observable/public';
 import { IObservableContext } from '../../core/observable/context/interfaces';
 import { Pipe } from '../../core/observable-observer/pipe/implementation';
 
-export function toValueObservable<T>(observable: IPromiseObservable<T>): IObservable<T> {
+export function toDistinctValueObservable<T>(observable: IPromiseObservable<T>): IObservable<T> {
   return observable
     .on('error', (error: any) => {
       console.error('error', error);

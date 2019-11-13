@@ -8,14 +8,13 @@ import { KeyValueMapToNotifications } from '../../../../core/notifications-obser
 
 /** TYPES **/
 
-export type TXHRObservableFinalState = TFiniteStateObservableFinalState | 'cancel';
+export type TXHRObservableFinalState = TFiniteStateObservableFinalState | 'abort';
 export type TXHRObservableMode = TFiniteStateObservableMode | 'every';
 
 export interface IXHRObservableKeyValueMap extends IFiniteStateObservableKeyValueMapGeneric<Response, TXHRObservableFinalState> {
-  'download-progress': IProgress;
-  'cancel': any;
+  'progress': IProgress;
+  'abort': any;
   'upload-complete': void;
-  'upload-progress': IProgress;
 }
 
 export type TXHRObservableNotifications = KeyValueMapToNotifications<IXHRObservableKeyValueMap>;

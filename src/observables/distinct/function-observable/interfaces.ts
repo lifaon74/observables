@@ -1,4 +1,4 @@
-import { IValueObservable } from '../value-observable/interfaces';
+import { IDistinctValueObservable } from '../distinct-value-observable/interfaces';
 import { IReadonlyTuple, TupleTypes } from '../../../misc/readonly-list/interfaces';
 import { IObservable } from '../../../core/observable/interfaces';
 import { TupleArray } from '../../../classes/types';
@@ -11,7 +11,7 @@ export interface IFunctionObservableConstructor {
 }
 
 
-export interface IFunctionObservable<T extends TFunctionObservableFactory> extends IValueObservable<TFunctionObservableValue<T>> {
+export interface IFunctionObservable<T extends TFunctionObservableFactory> extends IDistinctValueObservable<TFunctionObservableValue<T>> {
   readonly factory: T;
   readonly args: IReadonlyTuple<TFunctionObservableParameters<T>>;
 

@@ -7,7 +7,7 @@ import { FiniteStateObservable } from '../../implementation';
 import { GenerateFiniteStateObservableHookFromXHR } from './hook-generators';
 import { TFiniteStateObservableCreateCallback } from '../../interfaces';
 
-export const FETCH_OBSERVABLE_PRIVATE = Symbol('fetch-observable-private');
+export const XHR_OBSERVABLE_PRIVATE = Symbol('xhr-observable-private');
 
 export interface IXHRObservablePrivate {
   requestInfo: RequestInfo;
@@ -15,7 +15,7 @@ export interface IXHRObservablePrivate {
 }
 
 export interface IXHRObservableInternal extends IXHRObservable {
-  [FETCH_OBSERVABLE_PRIVATE]: IXHRObservablePrivate;
+  [XHR_OBSERVABLE_PRIVATE]: IXHRObservablePrivate;
 }
 
 export function ConstructXHRObservable(
@@ -24,8 +24,8 @@ export function ConstructXHRObservable(
   requestInit?: RequestInit,
   options: IXHRObservableOptions = {}
 ): void {
-  ConstructClassWithPrivateMembers(instance, FETCH_OBSERVABLE_PRIVATE);
-  const privates: IXHRObservablePrivate = (instance as IXHRObservableInternal)[FETCH_OBSERVABLE_PRIVATE];
+  ConstructClassWithPrivateMembers(instance, XHR_OBSERVABLE_PRIVATE);
+  const privates: IXHRObservablePrivate = (instance as IXHRObservableInternal)[XHR_OBSERVABLE_PRIVATE];
 
   if ((typeof requestInfo === 'string') || (requestInfo instanceof Request)) {
     privates.requestInfo = requestInfo;
@@ -42,7 +42,7 @@ export function ConstructXHRObservable(
 
 export function IsXHRObservable(value: any): value is IXHRObservable {
   return IsObject(value)
-    && value.hasOwnProperty(FETCH_OBSERVABLE_PRIVATE as symbol);
+    && value.hasOwnProperty(XHR_OBSERVABLE_PRIVATE as symbol);
 }
 
 
