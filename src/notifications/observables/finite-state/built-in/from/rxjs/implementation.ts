@@ -9,7 +9,7 @@ import { IsObject } from '../../../../../../helpers';
 import {
   GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
 } from '../../../../../../classes/class-helpers/factory';
-import { FiniteStateObservableFactory} from '../../../implementation';
+import { FiniteStateObservableFactory } from '../../../implementation';
 import { INotificationsObservableTypedConstructor } from '../../../../../core/notifications-observable/interfaces';
 import { IObservableConstructor } from '../../../../../../core/observable/interfaces';
 import { NotificationsObservableFactory } from '../../../../../core/notifications-observable/implementation';

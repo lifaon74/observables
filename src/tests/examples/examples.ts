@@ -9,9 +9,6 @@ import {
   finiteStateObservableToPromise, singleFiniteStateObservableToCancellablePromiseTuple,
   singleFiniteStateObservableToPromise, genericObservableToCancellablePromiseTuple, genericObservableToPromise
 } from '../../operators/to/toPromise';
-import {
-  CancelReason, CancelToken
-} from '../../misc/cancel-token/implementation';
 import { Reason } from '../../misc/reason/implementation';
 import { PromiseObservable } from '../../notifications/observables/finite-state/built-in/promise/promise-observable/implementation';
 import { IObserver } from '../../core/observer/interfaces';
@@ -30,7 +27,6 @@ import { FunctionObservable } from '../../observables/distinct/function-observab
 import { Expression } from '../../observables/distinct/expression/implementation';
 import { $equal, $expression } from '../../operators/shortcuts/public';
 import { $string } from '../../operators/misc';
-import { ICancelToken } from '../../misc/cancel-token/interfaces';
 import { EventKeyValueMapConstraint } from '../../notifications/observables/events/events-observable/interfaces';
 import { ICancellablePromiseTuple } from '../../promises/interfaces';
 import { SpreadCancellablePromiseTuple } from '../../promises/helpers';
@@ -38,11 +34,9 @@ import { FiniteStateObservable } from '../../notifications/observables/finite-st
 import {
   IFiniteStateObservable
 } from '../../notifications/observables/finite-state/interfaces';
-import { FromIterableObservable } from '../../notifications/observables/finite-state/built-in/from/iterable/sync/public';
 import { IFetchObservable } from '../../notifications/observables/finite-state/built-in/promise/fetch-observable/interfaces';
 import { XHRObservable } from '../../notifications/observables/finite-state/built-in/promise/xhr-observable/implementation';
 import { FromReadableStreamObservable } from '../../notifications/observables/finite-state/built-in/from/readable-stream/implementation';
-import { FromAsyncIterableObservable } from '../../notifications/observables/finite-state/built-in/from/iterable/async/implementation';
 import { ClientRequest, IncomingMessage } from 'http';
 import { IGenericEvent } from '../../notifications/observables/events/events-listener/event-like/generic/interfaces';
 import { EventEmitterEventsListener } from '../../notifications/observables/events/events-listener/from/event-emitter/implementation';
@@ -56,6 +50,11 @@ import { NotificationsObservableContext } from '../../notifications/core/notific
 import {
   TFiniteStateObservableKeyValueMapGeneric, TFiniteStateObservableFinalState, TFiniteStateObservableMode
 } from '../../notifications/observables/finite-state/types';
+import { FromIterableObservable } from '../../notifications/observables/finite-state/built-in/from/iterable/public';
+import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
+import { IAdvancedAbortController } from '../../misc/advanced-abort-controller/interfaces';
+import { AbortReason } from '../../misc/reason/defaults/abort-reason';
+import { AdvancedAbortController } from '../../misc/advanced-abort-controller/implementation';
 
 
 /**
@@ -325,7 +324,7 @@ async function finiteStateObservableExample2() {
   }
 
   function fromReadableStreamUsingFromAsyncIterableObservable<T>(reader: ReadableStreamReader<T>): IFiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>> {
-    return new FromAsyncIterableObservable((async function * () {
+    return new FromIterableObservable((async function * () {
       let result: ReadableStreamReadResult<T>;
       while (!(result = await reader.read()).done) {
         yield result.value;
@@ -370,36 +369,35 @@ function fromIterableObservableExample1(): void {
 }
 
 function cancelTokenFetchExample1(): void {
-  function loadNews(page: number, token: ICancelToken = new CancelToken()): Promise<void> {
-    return token.wrapPromise(fetch(`https://my-domain/api/news?page${ page }`, { signal: token.toAbortController().signal }))
-      .then(token.wrapFunction((response: Response): Promise<any> => { // <(response: Response) => any, 'never', never>
+  function loadNews(page: number, signal: IAdvancedAbortSignal): Promise<void> {
+    return signal.wrapPromise(fetch(`https://my-domain/api/news?page${ page }`, { signal: signal.toAbortController().signal }))
+      .then(signal.wrapFunction((response: Response): Promise<any> => { // <(response: Response) => any, 'never', never>
         return response.json() as any;
       }))
-      .then(token.wrapFunction((news: any) => {
+      .then(signal.wrapFunction((news: any) => {
         // render news in DOM for example
       }));
   }
 
   let page: number = 0;
-  let token: ICancelToken;
+  let controller: IAdvancedAbortController;
   (document.querySelector('button') as HTMLElement)
     .addEventListener(`click`, () => {
-      if (token !== void 0) {
-        token.cancel(new CancelReason('Manual cancel'));
+      if (controller !== void 0) {
+        controller.abort(new AbortReason('Manual abort'));
       }
-      token = new CancelToken();
+      controller = new AdvancedAbortController();
       page++;
-      loadNews(page, token)
-        .catch(CancelReason.discard);
+      loadNews(page, controller.signal)
+        .catch(AbortReason.discard);
     });
 }
 
 /**
  * Creates a simple GET http request which loads an url and returns result as [Promise<string>, CancelToken]
- * @param url
- * @param token - optional CancelToken, will be returned in the tuple
  */
-function createHttpRequest(url: string, token: ICancelToken = new CancelToken()): ICancellablePromiseTuple<string> {
+function createHttpRequest(url: string, signal?: IAdvancedAbortSignal): ICancellablePromiseTuple<string> {
+  const controller: IAdvancedAbortController = (signal === void 0) ? new AdvancedAbortController() : AdvancedAbortController.fromAbortSignals(signal);
   return {
     promise: new Promise<string>((resolve, reject) => {
       const request = new XMLHttpRequest(); // create an XMLHttpRequest
@@ -411,17 +409,17 @@ function createHttpRequest(url: string, token: ICancelToken = new CancelToken())
           reject(new Error(`Failed to fetch data: ${ request.statusText }`));
         })
         .on('abort', () => {
-          reject(token.reason || new CancelReason());
+          reject(controller.signal.reason || new AbortReason());
         });
 
-      token.addListener('cancel', () => { // if the token is cancelled, abort the request
+      controller.signal.addListener('abort', () => { // if the token is cancelled, abort the request
         request.abort();
       }).activate();
 
       request.open('GET', url, true);
       request.send();
     }),
-    token: token
+    controller: controller
   };
 }
 
@@ -513,7 +511,7 @@ function promiseObservableExample1(): void {
     .on('error', (reason: any) => {
       console.error('error', reason);
     })
-    .on('cancel', (reason: any) => {
+    .on('abort', (reason: any) => {
       console.warn('cancel', reason);
     });
 
@@ -535,7 +533,7 @@ function observeFetchObservable(observable: IFetchObservable): IFetchObservable 
     .on('error', (error: any) => {
       console.error('error', error);
     })
-    .on('cancel', (reason: any) => {
+    .on('abort', (reason: any) => {
       console.warn('cancelled', reason);
     });
 }

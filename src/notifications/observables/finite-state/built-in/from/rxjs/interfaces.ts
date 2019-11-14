@@ -1,10 +1,8 @@
 import { Observable as RXObservable } from 'rxjs';
-import {
-  IFiniteStateObservable
-} from '../../../interfaces';
+import { IFiniteStateObservable } from '../../../interfaces';
 import { KeyValueMapToNotifications } from '../../../../../core/notifications-observable/types';
 import {
-  IFiniteStateObservableExposedOptions, TFiniteStateObservableKeyValueMapGeneric, TFiniteStateObservableFinalState,
+  IFiniteStateObservableExposedOptions, TFiniteStateObservableFinalState, TFiniteStateObservableKeyValueMapGeneric,
   TFiniteStateObservableMode
 } from '../../../types';
 

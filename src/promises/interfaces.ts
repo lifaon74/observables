@@ -1,5 +1,5 @@
-import { ICancelToken } from '../misc/cancel-token/interfaces';
 import { ICancellablePromise } from './cancellable-promise/interfaces';
+import { IAdvancedAbortController } from '../misc/advanced-abort-controller/interfaces';
 
 /**
  * BETTER DEFINITIONS AND HELPERS FOR PROMISE
@@ -183,7 +183,7 @@ export type TPromiseConstructorLike<P extends PromiseLike<any> = TPromiseLike<an
 // export type TCancellablePromiseTuple<T> = [Promise<T>, ICancelToken];
 export type ICancellablePromiseTuple<T> = {
   promise: TPromise<T>,
-  token: ICancelToken,
+  controller: IAdvancedAbortController,
 };
 
 

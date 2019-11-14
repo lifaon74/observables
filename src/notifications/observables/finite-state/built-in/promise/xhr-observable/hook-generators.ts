@@ -27,7 +27,7 @@ export interface IGenerateFiniteStateObservableHookFromXHROptions {
  *  - emits 'next' when the request if complete with the incoming value, then emits 'complete'
  *  - emits 'error' if promise is errored
  *  - emits 'abort' if promise is abortled from the factory
- *  - if the FiniteStateObservable is no more observed and the promise is still pending, aborts the token, and resets the state
+ *  - if the FiniteStateObservable is no more observed and the promise is still pending, aborts the request, and resets the state
  */
 export function GenerateFiniteStateObservableHookFromXHR(
   requestInfo: RequestInfo,

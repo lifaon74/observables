@@ -1,9 +1,8 @@
-/** TYPES **/
 import { IProgress, IProgressOptions } from '../../../misc/progress/interfaces';
 import { INotificationsObservable } from '../../core/notifications-observable/interfaces';
-import { TaskContextCompleteUntilRun, TaskContextErrorUntilRun, TaskContextNextUntilRun } from './implementation';
-import { TCancelStrategy } from '../../../misc/cancel-token/interfaces';
+import { TAbortStrategy } from '../../../misc/advanced-abort-controller/advanced-abort-signal/types';
 
+/** TYPES **/
 
 export type TTaskState =
   'await' // task is awaiting for a 'start'
@@ -12,7 +11,7 @@ export type TTaskState =
   | 'cancel' // task is cancelled
   | 'complete' // task finished with success
   | 'error' // task errored
-;
+  ;
 
 export interface ITaskKeyValueMap<TValue> {
   'start': void;
@@ -55,7 +54,7 @@ export interface ITask<TValue> extends INotificationsObservable<ITaskKeyValueMap
 
   cancel(reason?: any): this;
 
-  toPromise(strategy?: TCancelStrategy): Promise<TValue>;
+  toPromise(strategy?: TAbortStrategy): Promise<TValue>;
 }
 
 /* CONTEXT */
@@ -73,6 +72,7 @@ export interface ITaskContext<TValue> {
   error(error?: any): void; // emits Notification('error', void)
 
   progress(loaded: number, total?: number): void;
+
   progress(progress?: IProgress | IProgressOptions): void; // emits Notification('progress', progress)
 
   /**
@@ -87,5 +87,6 @@ export interface ITaskContext<TValue> {
   errorUntilRun(error?: any): void;
 
   progressUntilRun(loaded: number, total?: number): void;
+
   progressUntilRun(progress?: IProgress | IProgressOptions): void;
 }

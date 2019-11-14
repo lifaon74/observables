@@ -1,13 +1,11 @@
-import {
-  IFiniteStateObservable
-} from './interfaces';
+import { IFiniteStateObservable } from './interfaces';
 import { IObservableHookPrivate } from '../../../core/observable/hook/privates';
 import { KeyValueMapToNotifications } from '../../core/notifications-observable/types';
 import { INotificationsObservableContext } from '../../core/notifications-observable/context/interfaces';
 import { INotificationsObservablePrivatesInternal } from '../../core/notifications-observable/privates';
 import {
-  TFinalStateConstraint,
-  TFiniteStateObservableModeConstraint, TFiniteStateKeyValueMapConstraint, TFiniteStateObservableState
+  TFinalStateConstraint, TFiniteStateKeyValueMapConstraint, TFiniteStateObservableModeConstraint,
+  TFiniteStateObservableState
 } from './types';
 
 

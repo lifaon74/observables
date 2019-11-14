@@ -1,7 +1,7 @@
 import {
   INotificationsObservable, INotificationsObservableConstructor, INotificationsObservableTypedConstructor,
 } from './interfaces';
-import { IObservable, IObservableConstructor, IObservableTypedConstructor } from '../../../core/observable/interfaces';
+import { IObservable, IObservableTypedConstructor } from '../../../core/observable/interfaces';
 import { INotificationsObserver } from '../notifications-observer/interfaces';
 import { NotificationsObserver } from '../notifications-observer/implementation';
 import { ObserverUnobserveOne } from '../../../core/observer/implementation';

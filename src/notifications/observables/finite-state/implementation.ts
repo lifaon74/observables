@@ -134,13 +134,11 @@ function PureFiniteStateObservableFactory<TBase extends Constructor<INotificatio
 export let FiniteStateObservable: IFiniteStateObservableConstructor;
 
 
-export function FiniteStateObservableFactory<
-  TBase extends Constructor<INotificationsObservable<TFiniteStateObservableKeyValueMapGeneric<TValue, TFiniteStateObservableFinalState>>>,
+export function FiniteStateObservableFactory<TBase extends Constructor<INotificationsObservable<TFiniteStateObservableKeyValueMapGeneric<TValue, TFiniteStateObservableFinalState>>>,
   TValue,
   TFinalState extends TFinalStateConstraint<TFinalState>,
   TMode extends TFiniteStateObservableModeConstraint<TMode>,
-  TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>
-  >(superClass: TBase) {
+  TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>>(superClass: TBase) {
   return MakeFactory<IFiniteStateObservableTypedConstructor<TValue, TFinalState, TMode, TKVMap>, [], TBase>(PureFiniteStateObservableFactory, [], superClass, {
     name: 'FiniteStateObservable',
     instanceOf: FiniteStateObservable,
@@ -148,13 +146,11 @@ export function FiniteStateObservableFactory<
   });
 }
 
-export function FiniteStateObservableBaseFactory<
-  TBase extends Constructor,
+export function FiniteStateObservableBaseFactory<TBase extends Constructor,
   TValue,
   TFinalState extends TFinalStateConstraint<TFinalState>,
   TMode extends TFiniteStateObservableModeConstraint<TMode>,
-  TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>
-  >(superClass: TBase) {
+  TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>>(superClass: TBase) {
   type TSuperClasses = [
     INotificationsObservableTypedConstructor<TKVMap>,
     IObservableTypedConstructor<KeyValueMapToNotifications<TKVMap>>
@@ -172,13 +168,11 @@ export function FiniteStateObservableBaseFactory<
 }
 
 
-FiniteStateObservable = class AFiniteStateObservable extends FiniteStateObservableBaseFactory<
-  IBaseClassConstructor,
+FiniteStateObservable = class AFiniteStateObservable extends FiniteStateObservableBaseFactory<IBaseClassConstructor,
   unknown,
   TFiniteStateObservableFinalState,
   TFiniteStateObservableMode,
-  TFiniteStateObservableKeyValueMapGeneric<unknown, TFiniteStateObservableFinalState>
->(BaseClass) {
+  TFiniteStateObservableKeyValueMapGeneric<unknown, TFiniteStateObservableFinalState>>(BaseClass) {
   constructor(
     create?: TFiniteStateObservableCreateCallback<unknown, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<unknown, TFiniteStateObservableFinalState>>,
     options?: IFiniteStateObservableOptions<TFiniteStateObservableFinalState, TFiniteStateObservableMode>

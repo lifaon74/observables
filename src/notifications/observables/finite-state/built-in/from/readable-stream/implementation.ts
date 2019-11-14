@@ -1,16 +1,8 @@
 import { IFiniteStateObservable, IFiniteStateObservableTypedConstructor } from '../../../interfaces';
-import {
-  IFromReadableStreamObservable, IFromReadableStreamObservableConstructor, IFromReadableStreamObservableKeyValueMap,
-  IFromReadableStreamObservableOptions, TFromReadableStreamObservableConstructorArgs,
-  TFromReadableStreamObservableFinalState, TFromReadableStreamObservableMode
-} from './interfaces';
-import { FiniteStateObservableFactory} from '../../../implementation';
+import { IFromReadableStreamObservable, IFromReadableStreamObservableConstructor } from './interfaces';
+import { FiniteStateObservableFactory } from '../../../implementation';
 import { IObservableConstructor } from '../../../../../../core/observable/interfaces';
-import {
-  GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
-} from '../../../../../../classes/class-helpers/factory';
-import { ConstructClassWithPrivateMembers } from '../../../../../../misc/helpers/ClassWithPrivateMembers';
-import { IsObject } from '../../../../../../helpers';
+import { GetSetSuperArgsFunction, IsFactoryClass, MakeFactory } from '../../../../../../classes/class-helpers/factory';
 import { NotificationsObservableFactory } from '../../../../../core/notifications-observable/implementation';
 import { INotificationsObservableTypedConstructor } from '../../../../../core/notifications-observable/interfaces';
 import { GenerateFiniteStateObservableHookFromReadableStreamReaderWithPauseWorkflow } from './hook-generators';
@@ -18,34 +10,15 @@ import { Constructor } from '../../../../../../classes/class-helpers/types';
 import { BaseClass, IBaseClassConstructor } from '../../../../../../classes/class-helpers/base-class';
 import { ObservableFactory } from '../../../../../../core/observable/implementation';
 import { IsFiniteStateObservableConstructor } from '../../../constructor';
+import {
+  IFromReadableStreamObservableKeyValueMap, IFromReadableStreamObservableOptions,
+  TFromReadableStreamObservableConstructorArgs, TFromReadableStreamObservableFinalState,
+  TFromReadableStreamObservableMode
+} from './types';
+import { ConstructFromReadableStreamObservable, IS_FROM_READABLE_STREAM_CONSTRUCTOR } from './constructor';
 
 
-export const FROM_READABLE_STREAM_OBSERVABLE_PRIVATE = Symbol('from-readable-stream-observable-private');
-
-export interface IFromReadableStreamObservablePrivate<T> {
-}
-
-export interface IFromReadableStreamObservableInternal<T> extends IFromReadableStreamObservable<T> {
-  [FROM_READABLE_STREAM_OBSERVABLE_PRIVATE]: IFromReadableStreamObservablePrivate<T>;
-}
-
-export function ConstructFromReadableStreamObservable<T>(
-  instance: IFromReadableStreamObservable<T>,
-): void {
-  ConstructClassWithPrivateMembers(instance, FROM_READABLE_STREAM_OBSERVABLE_PRIVATE);
-}
-
-export function IsFromReadableStreamObservable(value: any): value is IFromReadableStreamObservable<any> {
-  return IsObject(value)
-    && value.hasOwnProperty(FROM_READABLE_STREAM_OBSERVABLE_PRIVATE as symbol);
-}
-
-const IS_FROM_READABLE_STREAM_CONSTRUCTOR = Symbol('is-from-iterable-observable-constructor');
-
-export function IsFromReadableStreamObservableConstructor(value: any): boolean {
-  return (typeof value === 'function')
-    && HasFactoryWaterMark(value, IS_FROM_READABLE_STREAM_CONSTRUCTOR);
-}
+/** CLASS AND FACTORY **/
 
 export function PureFromReadableStreamObservableFactory<TBase extends Constructor<IFiniteStateObservable<any, TFromReadableStreamObservableFinalState, TFromReadableStreamObservableMode, IFromReadableStreamObservableKeyValueMap<any>>>>(superClass: TBase) {
   type T = any;

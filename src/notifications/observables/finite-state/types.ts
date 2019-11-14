@@ -3,7 +3,7 @@ import {
   KeyValueMapToNotificationsSoft, TNotificationsObservableHook
 } from '../../core/notifications-observable/types';
 import { KeyValueMapConstraint } from '../../core/interfaces';
-import { IFiniteStateObservable} from './interfaces';
+import { IFiniteStateObservable } from './interfaces';
 import { IFiniteStateObservableContext } from './context/interfaces';
 
 /** TYPES **/

@@ -5,7 +5,7 @@ import { PureEventEmitter } from './types';
 import {
   EVENT_EMITTER_EVENTS_LISTENER_PRIVATE, IEventEmitterEventsListenerInternal, IEventEmitterEventsListenerPrivate
 } from './privates';
-import { NodeJSListenerValueToGenericEvent, NormalizeNodeJSListenerValue } from './functions';
+import { NodeJSListenerValueToGenericEvent } from './functions';
 import { ConstructEventEmitterEventsListener } from './constructor';
 
 

@@ -12,7 +12,6 @@ export type EventsObservableKeyValueMapGeneric = {
 export type EventKeyValueMapConstraint<TKVMap extends object> = KeyValueMapConstraint<TKVMap, EventsObservableKeyValueMapGeneric>;
 
 
-
 export type PredefinedEventsObservables<A = TargetToEventMap> = A extends [infer TTarget, infer TKVMap]
   ? TTarget extends IEventsListener
     ? TKVMap extends object
@@ -36,6 +35,7 @@ export type CastTargetToEventsObservable<T extends Targets> = Extract<Predefined
 
 export interface IEventsObservableConstructor {
   new<TTarget extends Targets>(target: TTarget): CastTargetToEventsObservable<TTarget>;
+
   new<TKVMap extends EventKeyValueMapConstraint<TKVMap>, TTarget extends IEventsListener = IEventsListener>(target: TTarget, name?: KeyValueMapKeys<TKVMap> | null): IEventsObservable<TKVMap, TTarget>;
 }
 
