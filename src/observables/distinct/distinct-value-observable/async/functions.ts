@@ -5,6 +5,10 @@ import {
 } from './privates';
 import { AbortReason } from '../../../../misc/reason/defaults/abort-reason';
 import { AdvancedAbortController } from '../../../../misc/advanced-abort-controller/implementation';
+import { ICancellablePromiseTuple, IPromiseAndSignalTuple } from '../../../../promises/interfaces';
+import { IAdvancedAbortController } from '../../../../misc/advanced-abort-controller/interfaces';
+import { TAsyncDistinctValueObservableContextEmitFactory } from './context/types';
+import { PromiseTry } from '../../../../promises/helpers';
 
 /** FUNCTIONS **/
 
@@ -13,16 +17,21 @@ import { AdvancedAbortController } from '../../../../misc/advanced-abort-control
  * => Nope because previous promise may never resolve !
  *  => May use a "mode" to specify behaviour
  */
-export function AsyncDistinctValueObservableEmit<T>(instance: IAsyncDistinctValueObservable<T>, promise: Promise<T>, signal?: IAdvancedAbortSignal): Promise<void> {
+export function AsyncDistinctValueObservableEmit<T>(
+  instance: IAsyncDistinctValueObservable<T>,
+  factory: TAsyncDistinctValueObservableContextEmitFactory<T>
+): Promise<T> {
   const privates: IAsyncDistinctValueObservablePrivate<T> = (instance as IAsyncDistinctValueObservableInternal<T>)[DISTINCT_ASYNC_VALUE_OBSERVABLE_PRIVATE];
 
   if (privates.controller !== null) {
     privates.controller.abort(new AbortReason('Emit before last one finished'));
   }
-  privates.controller = AdvancedAbortController.fromAbortSignals(signal);
-  privates.promise = promise;
 
-  return privates.controller.signal.wrapPromise<T, 'never', never>(privates.promise)
+  const controller: IAdvancedAbortController =  new AdvancedAbortController();
+  privates.controller = controller;
+  privates.promise = PromiseTry<T>(() => factory.call(instance, controller.signal));
+
+  return controller.signal.wrapPromise<T, 'never', never>(privates.promise)
     .then((value: T) => {
       privates.context.emit(value);
     });

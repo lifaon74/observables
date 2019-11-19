@@ -1,2 +1,5 @@
 export * from './interfaces';
-export { AsyncFunctionObservable, IsAsyncFunctionObservable } from './implementation';
+export * from './types';
+export { AsyncFunctionObservable } from './implementation';
+export { IsAsyncFunctionObservable } from './constructor';
+

@@ -1,2 +1,4 @@
 export * from './interfaces';
-export { FunctionObservable, IsFunctionObservable } from './implementation';
+export * from './types';
+export { FunctionObservable } from './implementation';
+export { IsFunctionObservable } from './constructor';

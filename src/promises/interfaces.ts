@@ -1,5 +1,6 @@
 import { ICancellablePromise } from './cancellable-promise/interfaces';
 import { IAdvancedAbortController } from '../misc/advanced-abort-controller/interfaces';
+import { IAdvancedAbortSignal } from '../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 
 /**
  * BETTER DEFINITIONS AND HELPERS FOR PROMISE
@@ -184,6 +185,11 @@ export type TPromiseConstructorLike<P extends PromiseLike<any> = TPromiseLike<an
 export type ICancellablePromiseTuple<T> = {
   promise: TPromise<T>,
   controller: IAdvancedAbortController,
+};
+
+export type IPromiseAndSignalTuple<T> = {
+  promise: TPromise<T>,
+  signal: IAdvancedAbortSignal,
 };
 
 

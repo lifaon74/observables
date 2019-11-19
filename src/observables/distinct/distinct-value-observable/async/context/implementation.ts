@@ -5,8 +5,8 @@ import { ObservableContextBase } from '../../../../../core/observable/context/ba
 import {
   IObservableContextBaseInternal, OBSERVABLE_CONTEXT_BASE_PRIVATE
 } from '../../../../../core/observable/context/base/privates';
-import { IAdvancedAbortSignal } from '../../../../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 import { AsyncDistinctValueObservableEmit } from '../functions';
+import { TAsyncDistinctValueObservableContextEmitFactory } from './types';
 
 /** NEW **/
 
@@ -27,8 +27,8 @@ export function AsyncDistinctValueObservableGetObservable<T>(instance: IAsyncDis
 
 /* METHODS */
 
-export function AsyncDistinctValueObservableContextEmit<T>(context: IAsyncDistinctValueObservableContext<T>, promise: Promise<T>, signal?: IAdvancedAbortSignal): Promise<void> {
-  return AsyncDistinctValueObservableEmit<T>(context.observable, promise, signal);
+export function AsyncDistinctValueObservableContextEmit<T>(context: IAsyncDistinctValueObservableContext<T>, factory: TAsyncDistinctValueObservableContextEmitFactory<T>): Promise<T> {
+  return AsyncDistinctValueObservableEmit<T>(context.observable, factory);
 }
 
 /** CLASS **/
@@ -42,7 +42,7 @@ export class AsyncDistinctValueObservableContext<T> extends ObservableContextBas
     return AsyncDistinctValueObservableGetObservable<T>(this);
   }
 
-  emit(promise: Promise<T>, signal?: IAdvancedAbortSignal): Promise<void> {
-    return AsyncDistinctValueObservableContextEmit<T>(this, promise, signal);
+  emit(factory: TAsyncDistinctValueObservableContextEmitFactory<T>): Promise<T> {
+    return AsyncDistinctValueObservableContextEmit<T>(this, factory);
   }
 }

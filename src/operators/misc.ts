@@ -1,12 +1,12 @@
 import { FunctionObservable } from '../observables/distinct/function-observable/sync/implementation';
 import {
-  IFunctionObservable, TFunctionObservableFactory, TFunctionObservableFactoryParameters,
+  IFunctionObservable,
 } from '../observables/distinct/function-observable/sync/interfaces';
 import { IObservable } from '../core/observable/interfaces';
 import { Expression} from '../observables/distinct/expression/implementation';
 import { IExpression } from '../observables/distinct/expression/interfaces';
 import {
-  IAsyncFunctionObservable, TAsyncFunctionObservableFactory, TAsyncFunctionObservableFactoryParameters
+  IAsyncFunctionObservable
 } from '../observables/distinct/function-observable/async/interfaces';
 import { AsyncFunctionObservable } from '../observables/distinct/function-observable/async/implementation';
 import { IPromiseObservable, } from '../notifications/observables/finite-state/built-in/promise/promise-observable/interfaces';
@@ -33,6 +33,12 @@ import { ISource } from '../observables/distinct/source/sync/interfaces';
 import { IsSource } from '../observables/distinct/source/sync/constructor';
 import { Source } from '../observables/distinct/source/sync/implementation';
 import { IsExpression } from '../observables/distinct/expression/constructor';
+import {
+  TFunctionObservableFactory, TFunctionObservableFactoryParameters
+} from '../observables/distinct/function-observable/sync/types';
+import {
+  TAsyncFunctionObservableFactory, TAsyncFunctionObservableFactoryParameters
+} from '../observables/distinct/function-observable/async/types';
 
 
 export function $async<T>(observable: IPromiseObservable<T>): IObservable<T> {
