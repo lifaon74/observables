@@ -7,10 +7,10 @@ import {
   singleFiniteStateObservableToPromise
 } from '../operators/to/toPromise';
 import { IFunctionObservable } from '../observables/distinct/function-observable/interfaces';
-import { ISource } from '../observables/distinct/source/interfaces';
 import { IsObject } from '../helpers';
 import { IPipe } from '../core/observable-observer/pipe/interfaces';
 import { Pipe } from '../core/observable-observer/pipe/implementation';
+import { ISource } from '../observables/distinct/source/sync/interfaces';
 
 export function eq(a: any, b: any): boolean {
   return Object.is(a, b)

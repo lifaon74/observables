@@ -1,7 +1,7 @@
 
 import { IObservable } from '../../../core/observable/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
-import { DistinctValueObservable } from '../distinct-value-observable/implementation';
+import { DistinctValueObservable } from '../distinct-value-observable/sync/implementation';
 import {
   IFunctionObservable, TFunctionObservableFactory, TFunctionObservableFactoryParameters, TFunctionObservableParameters,
   TFunctionObservableParametersUnion, TFunctionObservableValue
@@ -14,8 +14,8 @@ import { IsObject } from '../../../helpers';
 import { HasFactoryWaterMark } from '../../../classes/class-helpers/factory';
 import { IObservableInternal } from '../../../core/observable/privates';
 import { ObservableIsFreshlyObserved, ObservableIsNotObserved } from '../../../core/observable/functions';
-import { DISTINCT_VALUE_OBSERVABLE_PRIVATE } from '../distinct-value-observable/privates';
-import { IDistinctValueObservableContext } from '../distinct-value-observable/context/interfaces';
+import { DISTINCT_VALUE_OBSERVABLE_PRIVATE } from '../distinct-value-observable/sync/privates';
+import { IDistinctValueObservableContext } from '../distinct-value-observable/sync/context/interfaces';
 
 
 export const FUNCTION_OBSERVABLE_PRIVATE = Symbol('function-observable-private');

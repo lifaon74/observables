@@ -1,15 +1,15 @@
-import { HasFactoryWaterMark } from '../../../classes/class-helpers/factory';
+import { HasFactoryWaterMark } from '../../../../classes/class-helpers/factory';
 import { IAsyncDistinctValueObservable } from './interfaces';
-import { IDistinctValueObservableContext } from '../distinct-value-observable/context/interfaces';
+import { IDistinctValueObservableContext } from '../sync/context/interfaces';
 import { IAsyncDistinctValueObservableContext } from './context/interfaces';
-import { IObservableHook } from '../../../core/observable/hook/interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
+import { IObservableHook } from '../../../../core/observable/hook/interfaces';
+import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
 import {
   DISTINCT_ASYNC_VALUE_OBSERVABLE_PRIVATE, IAsyncDistinctValueObservableInternal, IAsyncDistinctValueObservablePrivate
 } from './privates';
-import { InitObservableHook } from '../../../core/observable/hook/init';
+import { InitObservableHook } from '../../../../core/observable/hook/init';
 import { NewAsyncDistinctValueObservableContext } from './context/implementation';
-import { IsObject } from '../../../helpers';
+import { IsObject } from '../../../../helpers';
 
 /** CONSTRUCTOR **/
 

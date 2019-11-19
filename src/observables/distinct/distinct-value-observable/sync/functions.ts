@@ -2,7 +2,7 @@ import { IDistinctValueObservable } from './interfaces';
 import {
   DISTINCT_VALUE_OBSERVABLE_PRIVATE, IDistinctValueObservableInternal, IDistinctValueObservablePrivate
 } from './privates';
-import { ObservableEmitAll } from '../../../core/observable/functions';
+import { ObservableEmitAll } from '../../../../core/observable/functions';
 
 /** FUNCTIONS **/
 

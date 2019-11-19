@@ -1,7 +1,7 @@
-import { IObservablePrivatesInternal } from '../../../core/observable/privates';
-import { IObservableHookPrivate } from '../../../core/observable/hook/privates';
-import { IObservableContext } from '../../../core/observable/context/interfaces';
-import { IObserver } from '../../../core/observer/interfaces';
+import { IObservablePrivatesInternal } from '../../../../core/observable/privates';
+import { IObservableHookPrivate } from '../../../../core/observable/hook/privates';
+import { IObservableContext } from '../../../../core/observable/context/interfaces';
+import { IObserver } from '../../../../core/observer/interfaces';
 import { IDistinctValueObservable } from './interfaces';
 
 /** PRIVATES **/

@@ -1,24 +1,25 @@
-import { IObservableTypedConstructor } from '../../../core/observable/interfaces';
-import { IObserver } from '../../../core/observer/interfaces';
+import { IObservableTypedConstructor } from '../../../../core/observable/interfaces';
+import { IObserver } from '../../../../core/observer/interfaces';
 import {
   IAsyncDistinctValueObservable, IAsyncDistinctValueObservableConstructor,
-  IAsyncDistinctValueObservableTypedConstructor, TAsyncDistinctValueObservableConstructorArgs
+  IAsyncDistinctValueObservableTypedConstructor
 } from './interfaces';
-import { GetSetSuperArgsFunction, IsFactoryClass, MakeFactory } from '../../../classes/class-helpers/factory';
+import { GetSetSuperArgsFunction, IsFactoryClass, MakeFactory } from '../../../../classes/class-helpers/factory';
 import {
   IDistinctValueObservable, IDistinctValueObservableTypedConstructor
-} from '../distinct-value-observable/interfaces';
-import { DistinctValueObservableFactory, } from '../distinct-value-observable/implementation';
-import { Constructor } from '../../../classes/class-helpers/types';
-import { BaseClass, IBaseClassConstructor } from '../../../classes/class-helpers/base-class';
-import { IS_OBSERVABLE_LIKE_CONSTRUCTOR } from '../../../core/observable/constructor';
-import { ObservableFactory } from '../../../core/observable/implementation';
-import { IObservableHook } from '../../../core/observable/hook/interfaces';
-import { IDistinctValueObservableContext } from '../distinct-value-observable/context/interfaces';
-import { IsDistinctValueObservableConstructor } from '../distinct-value-observable/constructor';
+} from '../sync/interfaces';
+import { DistinctValueObservableFactory, } from '../sync/implementation';
+import { Constructor } from '../../../../classes/class-helpers/types';
+import { BaseClass, IBaseClassConstructor } from '../../../../classes/class-helpers/base-class';
+import { IS_OBSERVABLE_LIKE_CONSTRUCTOR } from '../../../../core/observable/constructor';
+import { ObservableFactory } from '../../../../core/observable/implementation';
+import { IObservableHook } from '../../../../core/observable/hook/interfaces';
+import { IDistinctValueObservableContext } from '../sync/context/interfaces';
+import { IsDistinctValueObservableConstructor } from '../sync/constructor';
 import { IAsyncDistinctValueObservableContext } from './context/interfaces';
 import { DISTINCT_ASYNC_VALUE_OBSERVABLE_PRIVATE, IAsyncDistinctValueObservableInternal } from './privates';
 import { ConstructAsyncDistinctValueObservable, IS_ASYNC_VALUE_OBSERVABLE_CONSTRUCTOR } from './constructor';
+import { TAsyncDistinctValueObservableConstructorArgs } from './types';
 
 
 /** CONSTRUCTOR FUNCTIONS **/

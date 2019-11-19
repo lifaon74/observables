@@ -1,15 +1,15 @@
-import { IObservable, IObservableTypedConstructor } from '../../../core/observable/interfaces';
-import { IObserver } from '../../../core/observer/interfaces';
+import { IObservable, IObservableTypedConstructor } from '../../../../core/observable/interfaces';
+import { IObserver } from '../../../../core/observer/interfaces';
 import {
   IDistinctValueObservable, IDistinctValueObservableConstructor, IDistinctValueObservableTypedConstructor
 } from './interfaces';
-import { GetSetSuperArgsFunction, IsFactoryClass, MakeFactory } from '../../../classes/class-helpers/factory';
-import { Constructor } from '../../../classes/class-helpers/types';
-import { BaseClass, IBaseClassConstructor } from '../../../classes/class-helpers/base-class';
-import { IS_OBSERVABLE_LIKE_CONSTRUCTOR, IsObservableLikeConstructor } from '../../../core/observable/constructor';
-import { ObservableFactory } from '../../../core/observable/implementation';
-import { IObservableHook } from '../../../core/observable/hook/interfaces';
-import { IObservableContext } from '../../../core/observable/context/interfaces';
+import { GetSetSuperArgsFunction, IsFactoryClass, MakeFactory } from '../../../../classes/class-helpers/factory';
+import { Constructor } from '../../../../classes/class-helpers/types';
+import { BaseClass, IBaseClassConstructor } from '../../../../classes/class-helpers/base-class';
+import { IS_OBSERVABLE_LIKE_CONSTRUCTOR, IsObservableLikeConstructor } from '../../../../core/observable/constructor';
+import { ObservableFactory } from '../../../../core/observable/implementation';
+import { IObservableHook } from '../../../../core/observable/hook/interfaces';
+import { IObservableContext } from '../../../../core/observable/context/interfaces';
 import {
   DISTINCT_VALUE_OBSERVABLE_PRIVATE, IDistinctValueObservableInternal, IDistinctValueObservablePrivate
 } from './privates';

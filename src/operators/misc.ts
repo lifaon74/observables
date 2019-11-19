@@ -1,12 +1,10 @@
 import { FunctionObservable } from '../observables/distinct/function-observable/implementation';
-import { IsSource, Source } from '../observables/distinct/source/implementation';
 import {
   IFunctionObservable, TFunctionObservableFactory, TFunctionObservableFactoryParameters,
 } from '../observables/distinct/function-observable/interfaces';
 import { IObservable } from '../core/observable/interfaces';
 import { Expression, IsExpression } from '../observables/distinct/expression/implementation';
 import { IExpression } from '../observables/distinct/expression/interfaces';
-import { ISource } from '../observables/distinct/source/interfaces';
 import {
   IAsyncFunctionObservable, TAsyncFunctionObservableFactory, TAsyncFunctionObservableFactoryParameters
 } from '../observables/distinct/async-function-observable/interfaces';
@@ -31,6 +29,9 @@ import { $equal } from './shortcuts/comparision/$equal';
 import { $function } from './shortcuts/primitives/$function';
 import { $expression } from './shortcuts/primitives/$expression';
 import { $and } from './shortcuts/logic/$and';
+import { ISource } from '../observables/distinct/source/sync/interfaces';
+import { IsSource } from '../observables/distinct/source/sync/constructor';
+import { Source } from '../observables/distinct/source/sync/implementation';
 
 
 export function $async<T>(observable: IPromiseObservable<T>): IObservable<T> {

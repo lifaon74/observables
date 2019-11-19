@@ -1,5 +1,5 @@
 import { IObservableConstructor } from '../../../core/observable/interfaces';
-import { IDistinctValueObservable } from '../distinct-value-observable/interfaces';
+import { IDistinctValueObservable } from '../distinct-value-observable/sync/interfaces';
 
 export interface IExpressionConstructor extends IObservableConstructor {
   new<T>(factory: () => T): IExpression<T>;

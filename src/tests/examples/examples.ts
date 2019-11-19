@@ -18,8 +18,6 @@ import {
 import { IObservableObserver} from '../../core/observable-observer/interfaces';
 import { IObservable} from '../../core/observable/interfaces';
 import { TimerObservable } from '../../observables/timer-observable/implementation';
-import { Source } from '../../observables/distinct/source/implementation';
-import { ISource } from '../../observables/distinct/source/interfaces';
 import { KeyValueMapKeys, KeyValueMapValues } from '../../notifications/core/interfaces';
 import { INotification } from '../../notifications/core/notification/interfaces';
 import { INotificationsObserver } from '../../notifications/core/notifications-observer/interfaces';
@@ -55,6 +53,8 @@ import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advan
 import { IAdvancedAbortController } from '../../misc/advanced-abort-controller/interfaces';
 import { AbortReason } from '../../misc/reason/defaults/abort-reason';
 import { AdvancedAbortController } from '../../misc/advanced-abort-controller/implementation';
+import { ISource } from '../../observables/distinct/source/sync/interfaces';
+import { Source } from '../../observables/distinct/source/sync/implementation';
 
 
 /**

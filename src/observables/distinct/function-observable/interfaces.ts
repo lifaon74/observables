@@ -1,4 +1,4 @@
-import { IDistinctValueObservable } from '../distinct-value-observable/interfaces';
+import { IDistinctValueObservable } from '../distinct-value-observable/sync/interfaces';
 import { IReadonlyTuple, TupleTypes } from '../../../misc/readonly-list/interfaces';
 import { IObservable } from '../../../core/observable/interfaces';
 import { TupleArray } from '../../../classes/types';

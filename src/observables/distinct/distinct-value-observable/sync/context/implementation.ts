@@ -1,10 +1,10 @@
-import { ObservableContextBase } from '../../../../core/observable/context/base/implementation';
+import { ObservableContextBase } from '../../../../../core/observable/context/base/implementation';
 import { IDistinctValueObservableContext, IDistinctValueObservableContextConstructor } from './interfaces';
 import { IDistinctValueObservable } from '../interfaces';
 import {
   IObservableContextBaseInternal, OBSERVABLE_CONTEXT_BASE_PRIVATE
-} from '../../../../core/observable/context/base/privates';
-import { AllowObservableContextBaseConstruct } from '../../../../core/observable/context/base/constructor';
+} from '../../../../../core/observable/context/base/privates';
+import { AllowObservableContextBaseConstruct } from '../../../../../core/observable/context/base/constructor';
 import { DistinctValueObservableEmit } from '../functions';
 
 /** NEW **/

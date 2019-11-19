@@ -1,10 +1,10 @@
 import { IAsyncDistinctValueObservable } from './interfaces';
-import { IAdvancedAbortSignal } from '../../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
+import { IAdvancedAbortSignal } from '../../../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 import {
   DISTINCT_ASYNC_VALUE_OBSERVABLE_PRIVATE, IAsyncDistinctValueObservableInternal, IAsyncDistinctValueObservablePrivate
 } from './privates';
-import { AbortReason } from '../../../misc/reason/defaults/abort-reason';
-import { AdvancedAbortController } from '../../../misc/advanced-abort-controller/implementation';
+import { AbortReason } from '../../../../misc/reason/defaults/abort-reason';
+import { AdvancedAbortController } from '../../../../misc/advanced-abort-controller/implementation';
 
 /** FUNCTIONS **/
 

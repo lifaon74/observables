@@ -1,8 +1,8 @@
-import { IDistinctValueObservablePrivatesInternal } from '../distinct-value-observable/privates';
+import { IDistinctValueObservablePrivatesInternal } from '../sync/privates';
 import { IAsyncDistinctValueObservable } from './interfaces';
-import { IObservableHookPrivate } from '../../../core/observable/hook/privates';
-import { IDistinctValueObservableContext } from '../distinct-value-observable/context/interfaces';
-import { IAdvancedAbortController } from '../../../misc/advanced-abort-controller/interfaces';
+import { IObservableHookPrivate } from '../../../../core/observable/hook/privates';
+import { IDistinctValueObservableContext } from '../sync/context/interfaces';
+import { IAdvancedAbortController } from '../../../../misc/advanced-abort-controller/interfaces';
 
 /** PRIVATES **/
 

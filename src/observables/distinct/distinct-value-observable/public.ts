@@ -1,5 +1,2 @@
-export * from './interfaces';
-export * from './types';
-export { DistinctValueObservable } from './implementation';
-export { IsDistinctValueObservable } from './constructor';
-export * from './context/public';
+export * from './sync/public';
+export * from './async/public';

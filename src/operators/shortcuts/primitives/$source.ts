@@ -1,7 +1,8 @@
 import { TSourceOrValue } from '../types';
-import { ISource } from '../../../observables/distinct/source/interfaces';
-import { IsSource, Source } from '../../../observables/distinct/source/implementation';
 import { IsObservable } from '../../../core/observable/constructor';
+import { ISource } from '../../../observables/distinct/source/sync/interfaces';
+import { IsSource } from '../../../observables/distinct/source/sync/constructor';
+import { Source } from '../../../observables/distinct/source/sync/implementation';
 
 /**
  * Converts a value or a Source as a Source

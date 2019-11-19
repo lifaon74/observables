@@ -1,6 +1,6 @@
 import { IObservable } from '../../core/observable/interfaces';
-import { ISource } from '../../observables/distinct/source/interfaces';
 import { IExpression } from '../../observables/distinct/expression/interfaces';
+import { ISource } from '../../observables/distinct/source/sync/interfaces';
 
 export type TObservableOrValue<T> = IObservable<T> | T;
 export type TObservableOrValueToValueType<T extends TObservableOrValue<any>> = T extends IObservable<infer R> ? R : T;

@@ -1,11 +1,7 @@
-import { IDistinctValueObservable, IDistinctValueObservableConstructor } from '../distinct-value-observable/interfaces';
-import { IObservableHook } from '../../../core/observable/hook/interfaces';
+import { IDistinctValueObservable, IDistinctValueObservableConstructor } from '../sync/interfaces';
+import { IObservableHook } from '../../../../core/observable/hook/interfaces';
 import { IAsyncDistinctValueObservableContext } from './context/interfaces';
 
-
-export type TAsyncDistinctValueObservableConstructorArgs<T> =
-  [(context: IAsyncDistinctValueObservableContext<T>) => (IObservableHook<T> | void)]
-  | [];
 
 /** INTERFACES **/
 

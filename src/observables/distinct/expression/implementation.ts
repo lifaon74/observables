@@ -1,9 +1,9 @@
 import { IExpression } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
-import { DistinctValueObservable } from '../distinct-value-observable/implementation';
+import { DistinctValueObservable } from '../distinct-value-observable/sync/implementation';
 import { IsObject } from '../../../helpers';
 import { IObservableContext } from '../../../core/observable/context/interfaces';
-import { IDistinctValueObservableInternal } from '../distinct-value-observable/privates';
+import { IDistinctValueObservableInternal } from '../distinct-value-observable/sync/privates';
 
 
 export const EXPRESSION_PRIVATE = Symbol('expression-private');

@@ -1,7 +1,7 @@
 import { IObservable } from '../../../core/observable/interfaces';
 import { IsObservable } from '../../../core/observable/constructor';
-import { Source } from '../../../observables/distinct/source/implementation';
 import { TObservableOrValue } from '../types';
+import { Source } from '../../../observables/distinct/source/sync/implementation';
 
 /**
  * Converts a value or an Observable to an Observable

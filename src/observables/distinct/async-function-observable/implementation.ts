@@ -10,7 +10,7 @@ import { IReadonlyTuple } from '../../../misc/readonly-list/interfaces';
 import { ReadonlyTuple } from '../../../misc/readonly-list/implementation';
 import { IObserver } from '../../../core/observer/interfaces';
 import { Observer } from '../../../core/observer/public';
-import { AsyncDistinctValueObservable } from '../distinct-async-value-observable/implementation';
+import { AsyncDistinctValueObservable } from '../distinct-value-observable/async/implementation';
 import { ICancelToken } from '../../../misc/cancel-token/interfaces';
 import {
   CancelReason, CancelToken
@@ -20,7 +20,7 @@ import { IsObject } from '../../../helpers';
 import { HasFactoryWaterMark } from '../../../classes/class-helpers/factory';
 import { IObservableInternal } from '../../../core/observable/privates';
 import { ObservableIsFreshlyObserved, ObservableIsNotObserved } from '../../../core/observable/functions';
-import { IAsyncDistinctValueObservableContext } from '../distinct-async-value-observable/context/interfaces';
+import { IAsyncDistinctValueObservableContext } from '../distinct-value-observable/async/context/interfaces';
 
 
 export const ASYNC_FUNCTION_OBSERVABLE_PRIVATE = Symbol('async-function-observable-private');

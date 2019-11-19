@@ -1,5 +1,5 @@
-import { IObservable, IObservableConstructor } from '../../../core/observable/interfaces';
-import { IObservableHook } from '../../../core/observable/hook/interfaces';
+import { IObservable, IObservableConstructor } from '../../../../core/observable/interfaces';
+import { IObservableHook } from '../../../../core/observable/hook/interfaces';
 import { IDistinctValueObservableContext } from './context/interfaces';
 
 /** INTERFACES **/
