@@ -397,7 +397,7 @@ function cancelTokenFetchExample1(): void {
  * Creates a simple GET http request which loads an url and returns result as [Promise<string>, CancelToken]
  */
 function createHttpRequest(url: string, signal?: IAdvancedAbortSignal): ICancellablePromiseTuple<string> {
-  const controller: IAdvancedAbortController = (signal === void 0) ? new AdvancedAbortController() : AdvancedAbortController.fromAbortSignals(signal);
+  const controller: IAdvancedAbortController = AdvancedAbortController.fromAbortSignals(signal);
   return {
     promise: new Promise<string>((resolve, reject) => {
       const request = new XMLHttpRequest(); // create an XMLHttpRequest

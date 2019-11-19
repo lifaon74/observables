@@ -10,6 +10,7 @@ import { EventsObservable } from '../../notifications/observables/events/events-
 import { AbortReason } from '../reason/defaults/abort-reason';
 import { $timeout } from './advanced-abort-signal/snipets';
 import { TimeoutReason } from '../reason/defaults/timeout-reason';
+import { TAbortSignalLike, TAbortSignalLikeOrUndefined } from './types';
 
 
 /** METHODS **/
@@ -28,26 +29,32 @@ export function AdvancedAbortControllerAbort(instance: IAdvancedAbortController,
 
 /* STATIC METHODS */
 
-export function AdvancedAbortControllerFromAbortSignals(_constructor: IAdvancedAbortControllerConstructor, signals: (AbortSignal | IAdvancedAbortSignal)[]): IAdvancedAbortController {
+export function AdvancedAbortControllerFromAbortSignals(_constructor: IAdvancedAbortControllerConstructor, signals: TAbortSignalLikeOrUndefined[]): IAdvancedAbortController {
   const instance: IAdvancedAbortController = new _constructor();
+
+  const _signals: TAbortSignalLike[] = signals.filter((signal: TAbortSignalLikeOrUndefined, index: number): signal is TAbortSignalLike => {
+    if (signal === void 0) {
+      return false;
+    } else if ((signal instanceof AbortSignal) || IsAdvancedAbortSignal(signal)) {
+      return true;
+    } else {
+      throw new TypeError(`Expected AbortSignal, AdvancedAbortSignal or undefined at arguments #${ index } of AdvancedAbortController.fromAbortSignals`);
+    }
+  });
 
   const abort = (signal: (AbortSignal | IAdvancedAbortSignal)): void => {
     instance.abort(
-      (signal instanceof AbortSignal)
-        ? new AbortReason(`AbortSignal aborted`)
-        : signal.reason
+      ('reason' in signal)
+        ? signal.reason
+        : new AbortReason(`AbortSignal aborted`)
     );
   };
 
-  for (let i = 0, l = signals.length; i < l; i++) {
-    const signal: (AbortSignal | IAdvancedAbortSignal) = signals[i];
-    if ((signal instanceof AbortSignal) || IsAdvancedAbortSignal(signal)) {
-      if (signal.aborted) {
-        abort(signal);
-        return instance;
-      }
-    } else {
-      throw new TypeError(`Expected AbortSignal or AdvancedAbortSignal at arguments #${ i } of AdvancedAbortController.fromAbortSignals`);
+  for (let i = 0, l = _signals.length; i < l; i++) {
+    const signal: TAbortSignalLikeOrUndefined = _signals[i];
+    if (signal.aborted) {
+      abort(signal);
+      return instance;
     }
   }
 
@@ -56,7 +63,7 @@ export function AdvancedAbortControllerFromAbortSignals(_constructor: IAdvancedA
   type TSignalObserver = INotificationsObserver<'abort', void>;
   type TSignalObservable = IBaseNotificationsObservable<'abort', void>;
 
-  const signalObservers: TSignalObserver[] = signals.map((signal: (AbortSignal | IAdvancedAbortSignal)) => {
+  const signalObservers: TSignalObserver[] = _signals.map((signal: TAbortSignalLike) => {
     const observable: TSignalObservable = (
       (signal instanceof AbortSignal)
         ? new EventsObservable<AbortSignalEventMap>(signal)
@@ -110,7 +117,7 @@ export function AdvancedAbortControllerTimeout(_constructor: IAdvancedAbortContr
 
 export class AdvancedAbortController implements IAdvancedAbortController {
 
-  static fromAbortSignals(...signals: (AbortSignal | IAdvancedAbortSignal)[]): IAdvancedAbortController {
+  static fromAbortSignals(...signals: TAbortSignalLikeOrUndefined[]): IAdvancedAbortController {
     return AdvancedAbortControllerFromAbortSignals(this, signals);
   }
 

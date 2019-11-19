@@ -1,4 +1,5 @@
 import { IAdvancedAbortSignal } from './advanced-abort-signal/interfaces';
+import { TAbortSignalLikeOrUndefined } from './types';
 
 /** INSTANCE **/
 
@@ -8,7 +9,7 @@ export interface IAdvancedAbortControllerConstructor {
   /**
    * Returns a new AdvancedAbortController, automatically aborted if one of the 'signals' is aborted
    */
-  fromAbortSignals(...signals: (AbortSignal | IAdvancedAbortSignal)[]): IAdvancedAbortController;
+  fromAbortSignals(...signals: TAbortSignalLikeOrUndefined[]): IAdvancedAbortController;
 
   timeout(timeout: number, signal?: IAdvancedAbortSignal): IAdvancedAbortController;
 
@@ -20,5 +21,6 @@ export interface IAdvancedAbortController {
 
   abort(reason?: any): void;
 }
+
 
 

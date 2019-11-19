@@ -13,12 +13,10 @@ import {
 import { AsyncFunctionObservable } from '../observables/distinct/async-function-observable/implementation';
 import { IPromiseObservable, } from '../notifications/observables/finite-state/built-in/promise/promise-observable/interfaces';
 import { toDistinctValueObservable } from './to/toDistinctValueObservable';
-import { ICancelToken } from '../misc/cancel-token/interfaces';
 import { IObserver } from '../core/observer/interfaces';
 import { IsObserver, Observer } from '../core/observer/public';
 import { assertFunctionObservableEmits, assertObservableEmits } from '../classes/asserts';
 import { IsObject } from '../helpers';
-import { LinkCancelTokenWithFetchArguments } from '../misc/cancel-token/implementation';
 import { IsObservable } from '../core/observable/constructor';
 import { TPipeBase, TPipeContextBase } from '../core/observable-observer/pipe/types';
 import { Pipe } from '../core/observable-observer/pipe/implementation';
@@ -70,18 +68,18 @@ export function $string(parts: TemplateStringsArray | string[], ...args: TObserv
 }
 
 
-type TFetchFunction<T> = (token: ICancelToken, requestInfo: RequestInfo, requestInit?: RequestInit) => Promise<T>;
-
-export function $fetch<T>(requestInfo: TObservableOrValue<RequestInfo>, requestInit?: TObservableOrValue<RequestInit | undefined>): IAsyncFunctionObservable<TFetchFunction<T>> {
-  return new AsyncFunctionObservable<TFetchFunction<T>>(_fetch, [$observable(requestInfo), $observable<RequestInit | undefined>(requestInit)]);
-}
-
-export function _fetch<T>(token: ICancelToken, requestInfo: RequestInfo, requestInit?: RequestInit): Promise<T> {
-  return token.wrapPromise<Response, 'never', never>(fetch(...token.wrapFetchArguments(requestInfo, requestInit)))
-    .then((response: Response): Promise<T> => {
-      return response.json();
-    });
-}
+// type TFetchFunction<T> = (token: ICancelToken, requestInfo: RequestInfo, requestInit?: RequestInit) => Promise<T>;
+//
+// export function $fetch<T>(requestInfo: TObservableOrValue<RequestInfo>, requestInit?: TObservableOrValue<RequestInit | undefined>): IAsyncFunctionObservable<TFetchFunction<T>> {
+//   return new AsyncFunctionObservable<TFetchFunction<T>>(_fetch, [$observable(requestInfo), $observable<RequestInit | undefined>(requestInit)]);
+// }
+//
+// export function _fetch<T>(token: ICancelToken, requestInfo: RequestInfo, requestInit?: RequestInit): Promise<T> {
+//   return token.wrapPromise<Response, 'never', never>(fetch(...token.wrapFetchArguments(requestInfo, requestInit)))
+//     .then((response: Response): Promise<T> => {
+//       return response.json();
+//     });
+// }
 
 
 

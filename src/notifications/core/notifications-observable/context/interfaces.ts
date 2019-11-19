@@ -2,10 +2,14 @@ import { KeyValueMapGenericConstraint, KeyValueMapKeys } from '../../interfaces'
 import { IObservableContextBase } from '../../../../core/observable/context/base/interfaces';
 import { INotificationsObservable } from '../interfaces';
 import { KeyValueMapToNotifications } from '../types';
+import { IObservableContextConstructor } from '../../../../core/observable/context/interfaces';
 
 /** INTERFACES **/
 
-export interface INotificationsObservableContextConstructor {
+export interface INotificationsObservableContextStatic extends Omit<IObservableContextConstructor, 'new'> {
+}
+
+export interface INotificationsObservableContextConstructor extends INotificationsObservableContextStatic {
   // creates a NotificationsObservableContext
   new<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(observable: INotificationsObservable<TKVMap>): INotificationsObservableContext<TKVMap>;
 }

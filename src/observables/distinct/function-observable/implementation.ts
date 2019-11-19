@@ -1,7 +1,7 @@
 
 import { IObservable } from '../../../core/observable/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
-import { VALUE_OBSERVABLE_PRIVATE, DistinctValueObservable } from '../distinct-value-observable/implementation';
+import { DistinctValueObservable } from '../distinct-value-observable/implementation';
 import {
   IFunctionObservable, TFunctionObservableFactory, TFunctionObservableFactoryParameters, TFunctionObservableParameters,
   TFunctionObservableParametersUnion, TFunctionObservableValue
@@ -10,11 +10,12 @@ import { IReadonlyTuple } from '../../../misc/readonly-list/interfaces';
 import { ReadonlyTuple } from '../../../misc/readonly-list/implementation';
 import { IObserver } from '../../../core/observer/interfaces';
 import { Observer } from '../../../core/observer/public';
-import { IDistinctValueObservableContext } from '../distinct-value-observable/interfaces';
 import { IsObject } from '../../../helpers';
 import { HasFactoryWaterMark } from '../../../classes/class-helpers/factory';
 import { IObservableInternal } from '../../../core/observable/privates';
 import { ObservableIsFreshlyObserved, ObservableIsNotObserved } from '../../../core/observable/functions';
+import { DISTINCT_VALUE_OBSERVABLE_PRIVATE } from '../distinct-value-observable/privates';
+import { IDistinctValueObservableContext } from '../distinct-value-observable/context/interfaces';
 
 
 export const FUNCTION_OBSERVABLE_PRIVATE = Symbol('function-observable-private');
@@ -70,7 +71,7 @@ export function ConstructFunctionObservable<T extends TFunctionObservableFactory
 
 export function IsFunctionObservable(value: any): value is IFunctionObservable<any> {
   return IsObject(value)
-    && value.hasOwnProperty(VALUE_OBSERVABLE_PRIVATE);
+    && value.hasOwnProperty(DISTINCT_VALUE_OBSERVABLE_PRIVATE);
 }
 
 const IS_FUNCTION_OBSERVABLE_CONSTRUCTOR = Symbol('is-function-observable-constructor');

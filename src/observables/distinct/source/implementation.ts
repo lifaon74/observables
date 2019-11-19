@@ -2,15 +2,21 @@ import { IAsyncSource, ISource } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { ICancelToken } from '../../../misc/cancel-token/interfaces';
 import {
-  IDistinctValueObservableInternal, VALUE_OBSERVABLE_PRIVATE, DistinctValueObservable
+  DistinctValueObservable
 } from '../distinct-value-observable/implementation';
-import { IDistinctValueObservableContext } from '../distinct-value-observable/interfaces';
-import { IAsyncDistinctValueObservableContext } from '../async-value-observable/interfaces';
 import {
-  ASYNC_VALUE_OBSERVABLE_PRIVATE, AsyncDistinctValueObservable, IAsyncDistinctValueObservableInternal
-} from '../async-value-observable/implementation';
+  AsyncDistinctValueObservable
+} from '../distinct-async-value-observable/implementation';
 import { IsObject } from '../../../helpers';
 import { IObservableContext } from '../../../core/observable/context/interfaces';
+import {
+  DISTINCT_VALUE_OBSERVABLE_PRIVATE, IDistinctValueObservableInternal
+} from '../distinct-value-observable/privates';
+import { IDistinctValueObservableContext } from '../distinct-value-observable/context/interfaces';
+import { IAsyncDistinctValueObservableContext } from '../distinct-async-value-observable/context/interfaces';
+import {
+  DISTINCT_ASYNC_VALUE_OBSERVABLE_PRIVATE, IAsyncDistinctValueObservableInternal
+} from '../distinct-async-value-observable/privates';
 
 
 export const SOURCE_PRIVATE = Symbol('source-private');
@@ -50,11 +56,11 @@ export class Source<T> extends DistinctValueObservable<T> implements ISource<T> 
   }
 
   get value(): T | undefined {
-    return ((this as unknown) as ISourceInternal<T>)[VALUE_OBSERVABLE_PRIVATE].value;
+    return ((this as unknown) as ISourceInternal<T>)[DISTINCT_VALUE_OBSERVABLE_PRIVATE].value;
   }
 
   valueOf(): T | undefined {
-    return ((this as unknown) as ISourceInternal<T>)[VALUE_OBSERVABLE_PRIVATE].value;
+    return ((this as unknown) as ISourceInternal<T>)[DISTINCT_VALUE_OBSERVABLE_PRIVATE].value;
   }
 
   emit(value: T): this {
@@ -100,11 +106,11 @@ export class AsyncSource<T> extends AsyncDistinctValueObservable<T> implements I
   }
 
   get promise(): Promise<T> | null {
-    return ((this as unknown) as IAsyncSourceInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].promise;
+    return ((this as unknown) as IAsyncSourceInternal<T>)[DISTINCT_ASYNC_VALUE_OBSERVABLE_PRIVATE].promise;
   }
 
   get token(): ICancelToken | null {
-    return ((this as unknown) as IAsyncSourceInternal<T>)[ASYNC_VALUE_OBSERVABLE_PRIVATE].token;
+    return ((this as unknown) as IAsyncSourceInternal<T>)[DISTINCT_ASYNC_VALUE_OBSERVABLE_PRIVATE].token;
   }
 
   emit(promise: Promise<T>, token?: ICancelToken): Promise<this> {

@@ -38,32 +38,31 @@ export function promisePipe<T, TResult1 = T, TResult2 = never>(
     let resolve: (value: TPromiseOrValue<TResult1 | TResult2>) => void;
     let reject: (reason: any) => void;
     let controller: IAdvancedAbortController;
-    let signal: IAdvancedAbortSignal;
     let value: T;
 
     return {
       observer: new Observer<TPromiseObservableNotifications<T>>((notification: TPromiseObservableNotifications<T>) => {
-        if (!signal.aborted) {
+        if (!controller.signal.aborted) {
           switch (notification.name) {
             case 'next':
               value = notification.value;
               break;
             case 'complete':
               try {
-                resolve(onFulfilled(value, signal));
+                resolve(onFulfilled(value, controller.signal));
               } catch (error) {
                 reject(error);
               }
               break;
             case 'error':
               try {
-                resolve(onRejected(notification.value, signal));
+                resolve(onRejected(notification.value, controller.signal));
               } catch (error) {
                 reject(error);
               }
               break;
             case 'abort':
-              token.cancel(notification.value);
+              controller.abort(notification.value);
               break;
           }
         }

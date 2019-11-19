@@ -3,9 +3,6 @@ import { toCancellablePromiseTuple } from './toPromise';
 import { ICancellablePromise } from '../../promises/cancellable-promise/interfaces';
 import { CancellablePromise } from '../../promises/cancellable-promise/implementation';
 import { ICancellablePromiseTuple } from '../../promises/interfaces';
-import {
-  ICancelToken, TCancelStrategy
-} from '../../misc/cancel-token/interfaces';
 import { TFiniteStateObservableGeneric } from '../../notifications/observables/finite-state/types';
 
 
