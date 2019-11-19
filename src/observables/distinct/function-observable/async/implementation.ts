@@ -1,26 +1,26 @@
 
-import { IObservable } from '../../../core/observable/interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
+import { IObservable } from '../../../../core/observable/interfaces';
+import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
 import {
   IAsyncFunctionObservable, TAsyncFunctionObservableFactory, TAsyncFunctionObservableFactoryParameters,
   TAsyncFunctionObservableFactoryReturnType, TAsyncFunctionObservableParameters,
   TAsyncFunctionObservableParametersUnion, TAsyncFunctionObservableValue
 } from './interfaces';
-import { IReadonlyTuple } from '../../../misc/readonly-list/interfaces';
-import { ReadonlyTuple } from '../../../misc/readonly-list/implementation';
-import { IObserver } from '../../../core/observer/interfaces';
-import { Observer } from '../../../core/observer/public';
-import { AsyncDistinctValueObservable } from '../distinct-value-observable/async/implementation';
+import { IReadonlyTuple } from '../../../../misc/readonly-list/interfaces';
+import { ReadonlyTuple } from '../../../../misc/readonly-list/implementation';
+import { IObserver } from '../../../../core/observer/interfaces';
+import { Observer } from '../../../../core/observer/public';
+import { AsyncDistinctValueObservable } from '../../distinct-value-observable/async/implementation';
 import { ICancelToken } from '../../../misc/cancel-token/interfaces';
 import {
   CancelReason, CancelToken
 } from '../../../misc/cancel-token/implementation';
-import { FUNCTION_OBSERVABLE_PRIVATE, IFunctionObservableInternal } from '../function-observable/implementation';
-import { IsObject } from '../../../helpers';
-import { HasFactoryWaterMark } from '../../../classes/class-helpers/factory';
-import { IObservableInternal } from '../../../core/observable/privates';
-import { ObservableIsFreshlyObserved, ObservableIsNotObserved } from '../../../core/observable/functions';
-import { IAsyncDistinctValueObservableContext } from '../distinct-value-observable/async/context/interfaces';
+import { FUNCTION_OBSERVABLE_PRIVATE, IFunctionObservableInternal } from '../sync/implementation';
+import { IsObject } from '../../../../helpers';
+import { HasFactoryWaterMark } from '../../../../classes/class-helpers/factory';
+import { IObservableInternal } from '../../../../core/observable/privates';
+import { ObservableIsFreshlyObserved, ObservableIsNotObserved } from '../../../../core/observable/functions';
+import { IAsyncDistinctValueObservableContext } from '../../distinct-value-observable/async/context/interfaces';
 
 
 export const ASYNC_FUNCTION_OBSERVABLE_PRIVATE = Symbol('async-function-observable-private');

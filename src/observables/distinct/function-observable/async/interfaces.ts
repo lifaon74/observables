@@ -1,6 +1,6 @@
-import { IReadonlyTuple, TupleTypes } from '../../../misc/readonly-list/interfaces';
-import { IAsyncDistinctValueObservable } from '../distinct-value-observable/async/interfaces';
-import { ObservableCastTupleArray } from '../function-observable/interfaces';
+import { IReadonlyTuple, TupleTypes } from '../../../../misc/readonly-list/interfaces';
+import { IAsyncDistinctValueObservable } from '../../distinct-value-observable/async/interfaces';
+import { ObservableCastTupleArray } from '../sync/interfaces';
 import { ICancelToken } from '../../../misc/cancel-token/interfaces';
 
 

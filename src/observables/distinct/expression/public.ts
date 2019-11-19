@@ -1,2 +1,4 @@
 export * from './interfaces';
-export { Expression, IsExpression } from './implementation';
+export * from './types';
+export { Expression} from './implementation';
+export { IsExpression } from './constructor';

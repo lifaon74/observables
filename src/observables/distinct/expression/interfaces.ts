@@ -1,8 +1,19 @@
 import { IObservableConstructor } from '../../../core/observable/interfaces';
 import { IDistinctValueObservable } from '../distinct-value-observable/sync/interfaces';
+import { TExpressionFactory } from './types';
 
-export interface IExpressionConstructor extends IObservableConstructor {
-  new<T>(factory: () => T): IExpression<T>;
+/** INTERFACES **/
+
+export interface IExpressionStatic extends Omit<IObservableConstructor, 'new'> {
+
+}
+
+export interface IExpressionConstructor extends IExpressionStatic {
+  new<T>(factory: TExpressionFactory<T>): IExpression<T>;
+}
+
+export interface IExpressionTypedConstructor<T> extends IExpressionStatic {
+  new(factory: TExpressionFactory<T>): IExpression<T>;
 }
 
 /**
@@ -16,5 +27,5 @@ export interface IExpressionConstructor extends IObservableConstructor {
  *  }).activate();
  */
 export interface IExpression<T> extends IDistinctValueObservable<T> {
-  readonly factory: () => T;
+  readonly factory: TExpressionFactory<T>;
 }

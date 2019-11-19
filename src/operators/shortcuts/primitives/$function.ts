@@ -1,9 +1,9 @@
 import {
   IFunctionObservable,
   TFunctionObservableFactory, TFunctionObservableFactoryParameters
-} from '../../../observables/distinct/function-observable/interfaces';
+} from '../../../observables/distinct/function-observable/sync/interfaces';
 import { TObservableOrValues } from '../types';
-import { FunctionObservable } from '../../../observables/distinct/function-observable/implementation';
+import { FunctionObservable } from '../../../observables/distinct/function-observable/sync/implementation';
 import { $observables } from './$observables';
 
 /**

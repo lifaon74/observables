@@ -1,65 +1,40 @@
 import { IExpression } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { DistinctValueObservable } from '../distinct-value-observable/sync/implementation';
-import { IsObject } from '../../../helpers';
 import { IObservableContext } from '../../../core/observable/context/interfaces';
-import { IDistinctValueObservableInternal } from '../distinct-value-observable/sync/privates';
+import { TExpressionFactory } from './types';
+import { EXPRESSION_PRIVATE, IExpressionInternal, IExpressionPrivate } from './privates';
+import { ConstructExpression } from './constructor';
+import { ExpressionUpdate } from './functions';
 
 
-export const EXPRESSION_PRIVATE = Symbol('expression-private');
+/** CONSTRUCTOR FUNCTIONS **/
 
-export interface IExpressionPrivate<T> {
-  context: IObservableContext<T>;
-
-  factory(): T;
-
-  requestIdleTimer: any;
-}
-
-export interface IExpressionInternal<T> extends IExpression<T>, IDistinctValueObservableInternal<T> {
-  [EXPRESSION_PRIVATE]: IExpressionPrivate<T>;
-}
-
-
-export function ConstructExpression<T>(expression: IExpression<T>, context: IObservableContext<T>, factory: () => T): void {
-  ConstructClassWithPrivateMembers(expression, EXPRESSION_PRIVATE);
-
-  (expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].context = context;
-  (expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].factory = factory;
-  (expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].requestIdleTimer = null;
-}
-
-
-export function IsExpression(value: any): value is IExpression<any> {
-  return IsObject(value)
-    && value.hasOwnProperty(EXPRESSION_PRIVATE);
-}
-
-
-export function ExpressionOnObserved<T>(expression: IExpression<T>): void {
-  if ((expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].requestIdleTimer === null) {
-    ExpressionUpdate<T>(expression);
+export function ExpressionOnObserved<T>(instance: IExpression<T>): void {
+  if ((instance as IExpressionInternal<T>)[EXPRESSION_PRIVATE].requestIdleTimer === null) {
+    ExpressionUpdate<T>(instance);
   }
 }
 
-export function ExpressionOnUnobserved<T>(expression: IExpression<T>): void {
-  if (!expression.observed) {
-    (window as any).cancelIdleCallback((expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].requestIdleTimer);
-    (expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].requestIdleTimer = null;
+export function ExpressionOnUnobserved<T>(instance: IExpression<T>): void {
+  if (!instance.observed) {
+    const privates: IExpressionPrivate<T> = (instance as IExpressionInternal<T>)[EXPRESSION_PRIVATE];
+    (window as any).cancelIdleCallback(privates.requestIdleTimer);
+    privates.requestIdleTimer = null;
   }
 }
 
+/** METHODS **/
 
-export function ExpressionUpdate<T>(expression: IExpression<T>): void {
-  (expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].context.emit((expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].factory());
-  (expression as IExpressionInternal<T>)[EXPRESSION_PRIVATE].requestIdleTimer = (window as any).requestIdleCallback(() => {
-    ExpressionUpdate<T>(expression);
-  });
+/* GETTERS/SETTERS */
+
+export function ExpressionGetFactory<T>(instance: IExpression<T>): TExpressionFactory<T> {
+  return (instance as IExpressionInternal<T>)[EXPRESSION_PRIVATE].factory;
 }
 
+/** CLASS **/
 
 export class Expression<T> extends DistinctValueObservable<T> implements IExpression<T> {
-  constructor(factory: () => T) {
+  constructor(factory: TExpressionFactory<T>) {
     let context: IObservableContext<T>;
     super((_context: IObservableContext<T>) => {
       context = _context;
@@ -76,8 +51,8 @@ export class Expression<T> extends DistinctValueObservable<T> implements IExpres
     ConstructExpression<T>(this, context, factory);
   }
 
-  get factory(): () => T {
-    return ((this as unknown) as IExpressionInternal<T>)[EXPRESSION_PRIVATE].factory;
+  get factory(): TExpressionFactory<T> {
+    return ExpressionGetFactory<T>(this);
   }
 
 }

@@ -1,9 +1,9 @@
 import {
   IAsyncFunctionObservable,
   TAsyncFunctionObservableFactory, TAsyncFunctionObservableFactoryParameters
-} from '../../../observables/distinct/async-function-observable/interfaces';
+} from '../../../observables/distinct/function-observable/async/interfaces';
 import { TObservableOrValue } from '../types';
-import { AsyncFunctionObservable } from '../../../observables/distinct/async-function-observable/implementation';
+import { AsyncFunctionObservable } from '../../../observables/distinct/function-observable/async/implementation';
 import { $observables } from './$observables';
 
 export function $asyncFunction<T extends TAsyncFunctionObservableFactory>(factory: T, args: TObservableOrValue<TAsyncFunctionObservableFactoryParameters<T>>): IAsyncFunctionObservable<T> {

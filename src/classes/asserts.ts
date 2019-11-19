@@ -6,7 +6,7 @@ import { IObservable } from '../core/observable/interfaces';
 import {
   singleFiniteStateObservableToPromise
 } from '../operators/to/toPromise';
-import { IFunctionObservable } from '../observables/distinct/function-observable/interfaces';
+import { IFunctionObservable } from '../observables/distinct/function-observable/sync/interfaces';
 import { IsObject } from '../helpers';
 import { IPipe } from '../core/observable-observer/pipe/interfaces';
 import { Pipe } from '../core/observable-observer/pipe/implementation';

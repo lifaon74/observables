@@ -21,7 +21,7 @@ import { TimerObservable } from '../../observables/timer-observable/implementati
 import { KeyValueMapKeys, KeyValueMapValues } from '../../notifications/core/interfaces';
 import { INotification } from '../../notifications/core/notification/interfaces';
 import { INotificationsObserver } from '../../notifications/core/notifications-observer/interfaces';
-import { FunctionObservable } from '../../observables/distinct/function-observable/implementation';
+import { FunctionObservable } from '../../observables/distinct/function-observable/sync/implementation';
 import { Expression } from '../../observables/distinct/expression/implementation';
 import { $equal, $expression } from '../../operators/shortcuts/public';
 import { $string } from '../../operators/misc';

@@ -1,14 +1,14 @@
-import { FunctionObservable } from '../observables/distinct/function-observable/implementation';
+import { FunctionObservable } from '../observables/distinct/function-observable/sync/implementation';
 import {
   IFunctionObservable, TFunctionObservableFactory, TFunctionObservableFactoryParameters,
-} from '../observables/distinct/function-observable/interfaces';
+} from '../observables/distinct/function-observable/sync/interfaces';
 import { IObservable } from '../core/observable/interfaces';
-import { Expression, IsExpression } from '../observables/distinct/expression/implementation';
+import { Expression} from '../observables/distinct/expression/implementation';
 import { IExpression } from '../observables/distinct/expression/interfaces';
 import {
   IAsyncFunctionObservable, TAsyncFunctionObservableFactory, TAsyncFunctionObservableFactoryParameters
-} from '../observables/distinct/async-function-observable/interfaces';
-import { AsyncFunctionObservable } from '../observables/distinct/async-function-observable/implementation';
+} from '../observables/distinct/function-observable/async/interfaces';
+import { AsyncFunctionObservable } from '../observables/distinct/function-observable/async/implementation';
 import { IPromiseObservable, } from '../notifications/observables/finite-state/built-in/promise/promise-observable/interfaces';
 import { toDistinctValueObservable } from './to/toDistinctValueObservable';
 import { IObserver } from '../core/observer/interfaces';
@@ -32,6 +32,7 @@ import { $and } from './shortcuts/logic/$and';
 import { ISource } from '../observables/distinct/source/sync/interfaces';
 import { IsSource } from '../observables/distinct/source/sync/constructor';
 import { Source } from '../observables/distinct/source/sync/implementation';
+import { IsExpression } from '../observables/distinct/expression/constructor';
 
 
 export function $async<T>(observable: IPromiseObservable<T>): IObservable<T> {
