@@ -1,5 +1,5 @@
 import { IAsyncSource } from './interfaces';
-import { ASYNC_SOURCE_PRIVATE, IAsyncSourceInternal, IAsyncSourcePrivate } from './privates';
+import { ASYNC_SOURCE_PRIVATE, IAsyncSourceInternal } from './privates';
 import { AsyncDistinctValueObservable } from '../../distinct-value-observable/async/implementation';
 import { IAsyncDistinctValueObservableContext } from '../../distinct-value-observable/async/context/interfaces';
 import { ConstructAsyncSource } from './constructor';
