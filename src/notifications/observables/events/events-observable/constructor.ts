@@ -1,4 +1,4 @@
-import { EventKeyValueMapConstraint, IEventsObservable } from './interfaces';
+import { IEventsObservable } from './interfaces';
 import { IEventsListener } from '../events-listener/interfaces';
 import { KeyValueMapKeys, KeyValueMapValues } from '../../../core/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
@@ -6,6 +6,7 @@ import { EVENTS_OBSERVABLE_PRIVATE, IEventsObservableInternal, IEventsObservable
 import { IObserver } from '../../../../core/observer/interfaces';
 import { KeyValueMapToNotifications } from '../../../core/notifications-observable/types';
 import { IsObject } from '../../../../helpers';
+import { EventKeyValueMapConstraint } from './types';
 
 /** CONSTRUCTOR **/
 

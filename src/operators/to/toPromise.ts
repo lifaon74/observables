@@ -1,18 +1,14 @@
 import { IObservable } from '../../core/observable/interfaces';
 import { Observer } from '../../core/observer/implementation';
 import { ICancellablePromiseTuple, TPromiseOrValue } from '../../promises/interfaces';
-import {
-  IFiniteStateObservable
-} from '../../notifications/observables/finite-state/interfaces';
+import { IFiniteStateObservable } from '../../notifications/observables/finite-state/interfaces';
 import { IObserver } from '../../core/observer/interfaces';
 import { IsObservable } from '../../core/observable/constructor';
 import { KeyValueMapToNotifications } from '../../notifications/core/notifications-observable/types';
 import {
-  TFinalStateConstraint,
-  TFiniteStateObservableModeConstraint,
-  TFiniteStateObservableKeyValueMapGeneric,
-  TFiniteStateKeyValueMapConstraint, TFiniteStateObservableFinalState, TFiniteStateObservableGeneric,
-  TFiniteStateObservableMode
+  TFinalStateConstraint, TFiniteStateKeyValueMapConstraint, TFiniteStateObservableFinalState,
+  TFiniteStateObservableGeneric, TFiniteStateObservableKeyValueMapGeneric, TFiniteStateObservableMode,
+  TFiniteStateObservableModeConstraint
 } from '../../notifications/observables/finite-state/types';
 import { IsFiniteStateObservable } from '../../notifications/observables/finite-state/constructor';
 import { TPromiseObservableNotifications } from '../../notifications/observables/finite-state/built-in/promise/promise-observable/types';
@@ -71,20 +67,17 @@ export function genericObservableToCancellablePromiseTuple<T, TStrategy extends 
 }
 
 
-
 /**
  * Returns a tuple composed of :
  *  - a 'promise' (Promise) which resolves when the 'observable' emits a 'complete' notification
  *    -> resolved value is an array composed of the values emitted through 'next'
  *  - a 'controller' (AdvancedAbortController), used to stop observing 'observable' when aborted
  */
-export function finiteStateObservableToCancellablePromiseTuple<
-  TValue,
+export function finiteStateObservableToCancellablePromiseTuple<TValue,
   TFinalState extends TFinalStateConstraint<TFinalState>,
   TMode extends TFiniteStateObservableModeConstraint<TMode>,
   TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>,
-  TStrategy extends TAbortStrategy
->(
+  TStrategy extends TAbortStrategy>(
   observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
   options?: IObservableToCancellablePromiseTupleOptions<TStrategy>,
 ): ICancellablePromiseTuple<TValue[] | TAbortStrategyReturn<TStrategy>> {
@@ -131,7 +124,7 @@ export function finiteStateObservableToCancellablePromiseTuple<
 
       observer.activate();
       tokenObserver.activate();
-    },options),
+    }, options),
     controller
   };
 }
@@ -143,13 +136,11 @@ export function finiteStateObservableToCancellablePromiseTuple<
  *    -> resolved value is the last value emitted through 'next'
  *  - a 'controller' (AdvancedAbortController), used to stop observing 'observable' when aborted
  */
-export function singleFiniteStateObservableToCancellablePromiseTuple<
-  TValue,
+export function singleFiniteStateObservableToCancellablePromiseTuple<TValue,
   TFinalState extends TFinalStateConstraint<TFinalState>,
   TMode extends TFiniteStateObservableModeConstraint<TMode>,
   TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>,
-  TStrategy extends TAbortStrategy
->(
+  TStrategy extends TAbortStrategy>(
   observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
   options?: IObservableToCancellablePromiseTupleOptions<TStrategy>,
 ): ICancellablePromiseTuple<TValue | TAbortStrategyReturn<TStrategy> | void> {
@@ -192,24 +183,22 @@ export function genericObservableToPromise<T, TStrategy extends TAbortStrategy>(
 }
 
 
-export function finiteStateObservableToPromise<
-  TValue, TFinalState extends TFinalStateConstraint<TFinalState>,
+export function finiteStateObservableToPromise<TValue,
+  TFinalState extends TFinalStateConstraint<TFinalState>,
   TMode extends TFiniteStateObservableModeConstraint<TMode>,
   TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>,
-  TStrategy extends TAbortStrategy
->(
+  TStrategy extends TAbortStrategy>(
   observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
   options?: IObservableToCancellablePromiseTupleOptions<TStrategy>,
 ): Promise<TValue[] | TAbortStrategyReturn<TStrategy>> {
   return finiteStateObservableToCancellablePromiseTuple<TValue, TFinalState, TMode, TKVMap, TStrategy>(observable, options).promise;
 }
 
-export function singleFiniteStateObservableToPromise<
-  TValue, TFinalState extends TFinalStateConstraint<TFinalState>,
+export function singleFiniteStateObservableToPromise<TValue,
+  TFinalState extends TFinalStateConstraint<TFinalState>,
   TMode extends TFiniteStateObservableModeConstraint<TMode>,
   TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>,
-  TStrategy extends TAbortStrategy
->(
+  TStrategy extends TAbortStrategy>(
   observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
   options?: IObservableToCancellablePromiseTupleOptions<TStrategy>,
 ): Promise<TValue | TAbortStrategyReturn<TStrategy> | void> {

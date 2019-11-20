@@ -330,17 +330,17 @@ interface SmartElectricOutlet {
       - [matches](#matches)
     + [NotificationsObserver](#notificationsobserver)
   * [EventsObservable](#eventsobservable)
+    + [EventsListener - abstract](#eventslistener---abstract)
+    + [EventLike - abstract](#eventlike---abstract)
   * [FiniteStateObservable](#finitestateobservable)
   * [PromiseObservable](#promiseobservable)
-    + [CancelToken](#canceltoken)
-      - [of (static)](#of-static)
-      - [cancel](#cancel)
-      - [linkWithToken](#linkwithtoken)
-      - [toAbortController / linkWithAbortController / linkWithAbortSignal](#toabortcontroller--linkwithabortcontroller--linkwithabortsignal)
+    + [AdvancedAbortController/AdvancedAbortSignal](#advancedabortcontrolleradvancedabortsignal)
+      - [abort](#abort)
+      - [fromAbortSignals (static)](#fromabortsignals-static)
+      - [toAbortController](#toabortcontroller)
       - [wrapPromise / wrapFunction / wrapFetchArguments](#wrappromise--wrapfunction--wrapfetcharguments)
     + [PromiseObservable](#promiseobservable-1)
     + [FetchObservable](#fetchobservable)
-
 
 
 
@@ -349,6 +349,9 @@ interface SmartElectricOutlet {
 Every methods and attributes are commented on the source files, in case you require more details.
 
 #### Observable
+
+[sources](./src/core/observable/interfaces.ts)
+
 ```ts
 interface IObservableConstructor {
   // creates an Observable
@@ -569,6 +572,9 @@ for (let i = 0; i < observers.length; i++) {
 
 
 #### Observer
+
+[sources](./src/core/observer/interfaces.ts)
+
 ```ts
 interface IObserverConstructor {
   // creates an Observer
@@ -718,6 +724,9 @@ assert(observable.observers.includes(observer));
 
 
 #### ObservableObserver
+
+[sources](./src/core/observable-observer/interfaces.ts)
+
 ```ts
 interface IObservableObserver<TObserver extends IObserver<any>, TObservable extends IObservable<any>>  {
   readonly observer: TObserver;
@@ -746,6 +755,9 @@ function map<Tin, Tout>(transform: (value: Tin) => Tout): IObservableObserver<IO
 **INFO**: Do not use this code as it doesnt self activate/deactivate ! For this, use Pipes.
 
 #### Pipe
+
+[sources](./src/core/observable-observer/pipe/interfaces.ts)
+
 ```ts
 interface IPipeConstructor {
   create<TValueObserver, TValueObservable = TValueObserver>(
@@ -885,6 +897,9 @@ emitter.observer.emit(void 0); // NaN
 Helpers are not part of the core implementation but provides extremely useful functionalities.
 
 #### Notifications
+
+[sources](./src/notifications/core/notification/interfaces.ts)
+
 Notifications (also called *events* sometimes) are one frequent and common usage of the streams:
 - RXJS with its *complete* and *error*.
 - EventTarget which dispatches Events
@@ -914,6 +929,8 @@ We may use Observables to emit Notifications and Observers to filter them by nam
 
 
 ##### NotificationsObservable
+
+[sources](./src/notifications/core/notifications-observable/interfaces.ts)
 
 ***KeyValueMap***
 
@@ -1074,6 +1091,9 @@ If `options.includeGlobalObservers` is true, includes the list of Observers with
 
 
 ##### NotificationsObserver
+
+[sources](./src/notifications/core/notifications-observer/interfaces.ts)
+
 ```ts
 interface INotificationsObserverLike<TName extends string, TValue> {
   name: TName;
@@ -1115,6 +1135,9 @@ new EventsObservable<WindowEventMap>(window)
 ---
 
 #### EventsObservable
+
+[sources](./src/notifications/observables/events/events-observable/interfaces.ts)
+
 ```ts
 type EventKeyValueMap<TKVMap> = KeyValueMap<TKVMap, any>;
 
@@ -1269,6 +1292,8 @@ const observable = new EventsObservable<ClientRequestEventMap>(new EventEmitterE
 
 #### FiniteStateObservable
 
+[sources](./src/notifications/observables/finite-state/interfaces.ts)
+
 A FiniteStateObservable is simply an Observable with a final state (at least *complete* or *error*), just like the RXJS's Observables.
 
 It extends `NotificationsObservable` with the minimum following 3 *'events'*:
@@ -1280,155 +1305,86 @@ Because FiniteStateObservable is pretty complex, I wont give more details here b
 
 #### PromiseObservable
 
-##### CancelToken
+##### AdvancedAbortController/AdvancedAbortSignal
+
+[sources](./src/misc/advanced-abort-controller/interfaces.ts)
 
 <details>
 <summary>show</summary>
 <p>
 
+An `AdvancedAbortController` is used to *"abort"* something (generally an async task like a promise).
+It may be useful to avoid unnecessary work in a promise chain or to abort async operations.
+As you may guess, it is similar to the native `AbortController` class, but the associated `AdvancedAbortSignal` provides some useful methods that are not present in a classic `AbortSignal`.
+
+
+*Example:* Use AdvancedAbortController to know than a promise has been cancelled
 ```ts
-type TCancelStrategy =
-  'resolve' // resolve the promise with void
-  | 'reject' // reject the promise with the Token's reason
-  | 'never' // (default) never resolve the promise, it stays in a pending state forever
-  ;
-
-type TCancelTokenWrapPromiseCallback<T> = (this: ICancelToken, resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void, token: ICancelToken) => void;
-
-type TOnCancelled = ((this: ICancelToken, reason: any) => TPromiseOrValue<void>) | undefined | null;
-
-interface ICancelTokenConstructor {
-  new(): ICancelToken;
-  of(...tokens: ICancelToken[]): ICancelToken;
-}
-
-interface ICancelTokenKeyValueMap {
-  cancel: any;
-}
-
-
-interface ICancelToken extends INotificationsObservable<ICancelTokenKeyValueMap> {
-  readonly cancelled: boolean;
-  readonly reason: any;
-
-  // cancels the Token and notify the Promise to stop its job.
-  cancel(reason?: any): void;
-
-  // links this Token with some others tokens
-  linkWithToken(...tokens: ICancelToken[]): () => void;
-
-
-  // creates an AbortController linked with this Token
-  toAbortController(): AbortController;
-
-  // links this Token with an AbortController
-  linkWithAbortController(controller: AbortController): () => void;
-
-  // links this Token with an AbortSignal
-  linkWithAbortSignal(signal: AbortSignal): () => void;
-
-
-  // wraps a promise with a this Token
-  wrapPromise<T>(
-    promiseOrCallback: Promise<T> | TCancelTokenWrapPromiseCallback<T>,
-    strategy?: TCancelStrategy,
-    onCancelled?: TOnCancelled,
-  ): Promise<T | void>;
-
-  // wraps a function with this Token
-  wrapFunction<CB extends (...args: any[]) => any>(
-    callback: CB,
-    strategy?: TCancelStrategy,
-    onCancelled?: TOnCancelled,
-  ): (...args: Parameters<CB>) => Promise<TPromiseType<ReturnType<CB>> | void>;
-
-  // wraps the fetch arguments with this Token
-  wrapFetchArguments(requestInfo: RequestInfo, requestInit?: RequestInit): [RequestInfo, RequestInit | undefined];
-
-}
-```
-
-A CancelToken is a Token used to *"cancel"* something (generally an async task like a promise).
-It is extremely useful to avoid unnecessary work in a promise chain or to abort async operations.
-
-*Example:* Use CancelToken to know than a promise has been cancelled
-```ts
-const token = new CancelToken();
+const controller = new AdvancedAbortController();
 fetch('some-url')
   .then((response: Response) => {
-    if (token.cancelled) { // if the token is cancelled, throw an error
-      throw token.reason;
+    if (controller.signal.aborted) { // if the signal is aborted, throw an error
+      throw controller.signal.reason;
     } else {
       return response.json();
     }
   });
 
-token.addListener('cancel', (error: any) => {
+controller.signal.addListener('abort', (error: any) => {
   console.log('Promise cancelled', error);
 }).activate();
 
-token.cancel(new Error('Promise cancelled'));
+controller.abort(new Error('Promise cancelled'));
 ```
 
 Promises don't have any 'cancelled' state or a way to dispatch/handle it natively.
-For this reason a CancelToken may be used and **MUST** be checked in every then/catch to avoid unnecessary work.
+For this reason an AdvancedAbortController/AdvancedAbortSignal may be used and **MUST** be checked in every then/catch to avoid unnecessary work.
 
-###### of (static)
+***AdvancedAbortController***
+
+###### abort
 ```ts
-of(...tokens: ICancelToken[]): ICancelToken;
+abort(reason?: any): void;
 ```
-Creates a new CancelToken from a list of CancelTokens:
-if one of the provided `tokens` is cancelled, cancel this Token with the cancelled token's reason.
+Call this function to notify the observer that the signal has been aborted:
+- emits a *Notification<'abort', any>*
+- enters in a *aborted* state
 
-###### cancel
+###### fromAbortSignals (static)
 ```ts
-cancel(reason?: any): void;
+fromAbortSignals(...signals: TAbortSignalLikeOrUndefined[]): IAdvancedAbortController
 ```
-Calls this function to notify the observer that the token has been cancelled:
-- emits a *Notification<'cancel', any>*
-- enters in a *canceled* state
+Creates an AdvancedAbortController aborted if/when one of the `signals` is aborted 
 
-###### linkWithToken
-```ts
-linkWithToken(...tokens: ICancelToken[]): () => void;
-```
-Links this CancelToken with a list of tokens. If one of the provided `tokens` is cancelled, cancel this Token with the cancelled token's reason.
+***AdvancedAbortSignal***
 
-**INFO:** linkWith[name] methods return an undo function: calling this function will undo the link.
-
-###### toAbortController / linkWithAbortController / linkWithAbortSignal
+###### toAbortController
 ```ts
 toAbortController(): AbortController;
-linkWithAbortController(controller: AbortController): () => void;
-linkWithAbortSignal(signal: AbortSignal): () => void;
 ```
+Creates an AbortController aborted if/when this signal is aborted.
 
-Links this CancelToken with an AbortController which may be used in `fetch` for example.
-
-
-*Example:* Abort a fetch promise with a CancelToken
+*Example:* Abort a fetch promise with an AdvancedAbortController
 ```ts
-const token = new CancelToken();
-fetch('some-url', { signal: token.toAbortController().signal });
-
-token.cancel(new Error('Promise cancelled')); // aborts the fetch
+function doFetch(url: string, signal: IAdvancedAbortSignal) {
+  return fetch(url, { signal: signal.toAbortController().signal });
+}
 ```
 
 ###### wrapPromise / wrapFunction / wrapFetchArguments
 
-Wraps a promise, function or fetch argument to properly handle the cancel state of the Token.
+Wraps a promise, function or fetch argument to properly handle the 'abort' state of the signal.
 
 *Example:*
 ```ts
-function cancelTokenExample(): Promise<void> {
-  const token: ICancelToken = new CancelToken();
-  // 1) wrapFetchArguments => ensures fetch will be aborted when token is cancelled
-  // 2) wrapPromise => ensures fetch won't resolve if token is cancelled
-  return token.wrapPromise(fetch(...token.wrapFetchArguments('http://domain.com/request1')))
-    .then(token.wrapFunction(function toJSON(response: Response) { // 3) ensures 'toJSON' is called only if token is not cancelled
+function advancedAbortSignalExample(signal: IAdvancedAbortSignal = new AdvancedAbortController().signal): Promise<void> {
+  // 1) wrapFetchArguments => ensures fetch will be aborted when signal is aborted
+  // 2) wrapPromise => ensures fetch won't resolve if signal is aborted
+  return signal.wrapPromise(fetch(...signal.wrapFetchArguments('http://domain.com/request1')))
+    .then(signal.wrapFunction(function toJSON(response: Response) { // 3) ensures 'toJSON' is called only if signal is not aborted
       return response.json(); // 'wrapPromise' not required because we immediately return a promise inside 'wrapFunction'
     }))
-    .then(token.wrapFunction(function next(json: any) { // 4) ensures 'next' is called only if token is not cancelled
+    .then(signal.wrapFunction(function next(json: any) { // 4) ensures 'next' is called only if signal is not aborted
       console.log(json);
       // continue...
     }));
@@ -1453,44 +1409,38 @@ function cancellablePromiseExample(): ICancellablePromise<void> {
 </details>
 
 ##### PromiseObservable
+
+[sources](./src/notifications/observables/finite-state/built-in/promise/promise-observable/interfaces.ts)
+
 ```ts
-type TPromiseObservableFinalState = TFiniteStateObservableFinalState | 'cancel';
-type TPromiseObservableMode = TFiniteStateObservableMode | 'every';
+type TPromiseObservableFactory<T> = (this: IPromiseObservable<T>, signal: IAdvancedAbortSignal) => TPromiseOrValue<T>;
 
-interface IPromiseObservableKeyValueMap<T> extends IFiniteStateObservableKeyValueMapGeneric<T, TPromiseObservableFinalState> {
-  cancel: any;
+interface IPromiseObservableStatic extends Omit<IFiniteStateObservableConstructor, 'new'> {
+  fromPromise<T>(promise: Promise<T>, options?: IPromiseObservableFromPromiseOptions): IPromiseObservable<T>;
 }
 
-interface IPromiseObservableOptions extends IFiniteStateObservableExposedOptions<TPromiseObservableMode> {
-}
-
-
-type TPromiseObservableFactory<T> = (this: IPromiseObservable<T>, token: ICancelToken) => TPromiseOrValue<T>;
-
-
-interface IPromiseObservableConstructor {
+interface IPromiseObservableConstructor extends IPromiseObservableStatic {
   new<T>(promiseFactory: TPromiseObservableFactory<T>, options?: IPromiseObservableOptions): IPromiseObservable<T>;
-  fromPromise<T>(promise: Promise<T>, token?: ICancelToken, options?: IPromiseObservableOptions): IPromiseObservable<T>;
 }
-
 
 interface IPromiseObservable<T> extends IFiniteStateObservable<T, TPromiseObservableFinalState, TPromiseObservableMode, IPromiseObservableKeyValueMap<T>> {
 }
+
 ```
 
 A PromiseObservable *"converts"* a Promise to an Observable.
 `promiseFactory` is a callback used to generate a Promise when an Observer observes this PromiseObservable.
-A CancelToken is provided and is used to notify the promise that it has been cancelled.
-This token may be cancelled by the Observable if it has no more observers,
+An AdvancedAbortSignal is provided and is used to notify the promise that it has been aborted.
+This signal may be aborted by the Observable if it has no more observers,
 or if the Observer which generated the promise stopped to observe it for example.
 
 
 *Example:* Use Observable to call an API
 ```ts
-function http(url) {
-  return new PromiseObservable<Response>((token: CancelToken) => {
-    return fetch(url, { signal: token.toAbortController().signal });
-  });
+function http(url: string) {
+  return new PromiseObservable<Response>((signal: IAdvancedAbortSignal) => {
+    return fetch(url, { signal: signal.toAbortController().signal });
+  }, { mode: 'cache' });
 }
 
 const newsRequest = http('https://domain/api/news')
@@ -1503,20 +1453,23 @@ newsRequest
   .on('error', (error: Error) => {
     console.error('error', error);
   })
-  .on('cancel', (reason: any) => {
-    console.warn('cancel', reason);
+  .on('abort', (reason: any) => {
+    console.warn('abort', reason);
   });
   
 ```
 **INFO:** A `FetchObservable` is provided to simplify fetch requests.
 
 By default, the first observer will call `promiseFactory` **once** (the returned promise may be cached with `options.mode = 'cache'` so following observers will receive the values),
-even if the promise is cancelled or rejected.
+even if the promise is aborted or rejected.
 
 When creating a new PromiseObservable you have access to a new `mode` in `options` => *every*: the `promiseFactory` will be called for each different Observers in this case.
 
 
 ##### FetchObservable
+
+[sources](./src/notifications/observables/finite-state/built-in/promise/fetch-observable/interfaces.ts)
+
 ```ts
 interface IFetchObservable extends IPromiseObservable<Response>  {
 }
@@ -1534,8 +1487,8 @@ new FetchObservable('https://domain/api/news')
   .on('error', (error: Error) => {
     console.error('error', error);
   })
-  .on('cancel', (reason: any) => {
-    console.warn('cancel', reason);
+  .on('abort', (reason: any) => {
+    console.warn('abort', reason);
   });
 ```
 

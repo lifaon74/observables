@@ -15,12 +15,11 @@ import { Observer } from '../core/observer/public';
 import { toRXJS } from '../operators/to/toRXJS';
 import {
   FiniteStateObservable, IFiniteStateObservable, TFiniteStateObservableKeyValueMapGeneric,
-  TFiniteStateObservableFinalState, TFiniteStateObservableMode
+  TFiniteStateObservableFinalState, TFiniteStateObservableMode, FromIterableObservable
 } from '../notifications/observables/finite-state/public';
 import { IFileReaderObservable } from '../notifications/observables/finite-state/built-in/file-reader/interfaces';
 import { FileReaderObservable } from '../notifications/observables/finite-state/built-in/file-reader/implementation';
 import { Progress } from '../misc/progress/implementation';
-import { FromIterableObservable } from '../notifications/observables/finite-state/built-in/from/iterable/sync/public';
 import { FromRXJSObservable } from '../notifications/observables/finite-state/built-in/from/rxjs/public';
 import { aggregateNotificationsPipe } from '../operators/pipes/aggregateNotificationsPipe';
 import { finiteStateObservableToPromise, toPromise } from '../operators/to/toPromise';
@@ -191,15 +190,15 @@ export function testSource() {
 }
 
 export async function testAsyncSource() {
-  const source = await new AsyncSource<number>().emit(Promise.resolve(0));
+  const source = await new AsyncSource<number>().emit(() => Promise.resolve(0));
 
   source.pipeTo((value: number) => {
     console.log(value);
   }).activate(); // print 0
 
-  await source.emit(Promise.resolve(1)); // print 1
-  await source.emit(Promise.resolve(1)); // nothing to print
-  await source.emit(Promise.resolve(2)); // print 2
+  await source.emit(() => Promise.resolve(1)); // print 1
+  await source.emit(() => Promise.resolve(1)); // nothing to print
+  await source.emit(() => Promise.resolve(2)); // print 2
 }
 
 
@@ -319,7 +318,7 @@ async function testFromIterableObservable() {
     new Notification('complete', void 0),
   ];
 
-  const values1 = new FromIterableObservable<number>([0, 1, 2, 3], { mode: 'uniq' });
+  const values1 = new FromIterableObservable([0, 1, 2, 3], { mode: 'uniq' });
 
   await assertObservableEmits(
     values1,
@@ -328,7 +327,7 @@ async function testFromIterableObservable() {
 
   await assertFails(() => values1.pipeTo(noop).activate());
 
-  const values2 = new FromIterableObservable<number>([0, 1, 2, 3][Symbol.iterator](), { mode: 'cache' });
+  const values2 = new FromIterableObservable([0, 1, 2, 3][Symbol.iterator](), { mode: 'cache' });
 
   await assertObservableEmits(
     values2,
@@ -343,7 +342,7 @@ async function testFromIterableObservable() {
 
 async function testReducePipe() {
   await assertObservableEmits(
-    new FromIterableObservable<number>([0, 1, 2, 3])
+    new FromIterableObservable([0, 1, 2, 3])
       .pipeThrough(aggregateNotificationsPipe<number>(['next']))
       .pipeThrough(reducePipe<number>((a, b) => (a + b), 0)),
     [0, 1, 3, 6]
@@ -434,8 +433,8 @@ async function testToRXJS() {
 }
 
 async function testToPromise() {
-  await assert(() => toPromise(new FromIterableObservable<number>([0, 1, 2, 3])).then(_ => (_ === 3)));
-  await assert(() => finiteStateObservableToPromise(new FromIterableObservable<number>([0, 1, 2, 3])).then(values => eq(values, [0, 1, 2, 3])));
+  await assert(() => toPromise(new FromIterableObservable([0, 1, 2, 3])).then(_ => (_ === 3)));
+  await assert(() => finiteStateObservableToPromise(new FromIterableObservable([0, 1, 2, 3])).then(values => eq(values, [0, 1, 2, 3])));
 }
 
 async function testToAsyncIterable() {

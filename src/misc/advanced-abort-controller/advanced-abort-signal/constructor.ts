@@ -2,7 +2,8 @@ import { INotificationsObservableContext } from '../../../notifications/core/not
 import { ConstructClassWithPrivateMembers } from '../../helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../../helpers';
 import { ADVANCED_ABORT_SIGNAL_PRIVATE, IAdvancedAbortSignalInternal, IAdvancedAbortSignalPrivate } from './privates';
-import { IAdvancedAbortSignal, IAdvancedAbortSignalKeyValueMap } from './interfaces';
+import { IAdvancedAbortSignal} from './interfaces';
+import { IAdvancedAbortSignalKeyValueMap } from './types';
 
 /** CONSTRUCTOR **/
 let ALLOW_ADVANCED_ABORT_SIGNAL_CONSTRUCT: boolean = false;

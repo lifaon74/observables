@@ -1,12 +1,13 @@
 import { NotificationsObservable } from '../../../notifications/core/notifications-observable/implementation';
 import { INotificationsObservableContext } from '../../../notifications/core/notifications-observable/context/interfaces';
-import { IAdvancedAbortSignal, IAdvancedAbortSignalConstructor, IAdvancedAbortSignalKeyValueMap } from './interfaces';
+import { IAdvancedAbortSignal, IAdvancedAbortSignalConstructor} from './interfaces';
 import { AllowAdvancedAbortSignalConstruct, ConstructAdvancedAbortSignal } from './constructor';
 import { ADVANCED_ABORT_SIGNAL_PRIVATE, IAdvancedAbortSignalInternal } from './privates';
 import { INotificationsObserver } from '../../../notifications/core/notifications-observer/interfaces';
 
 import { TPromise, TPromiseOrValue, TPromiseType } from '../../../promises/interfaces';
 import {
+  IAdvancedAbortSignalKeyValueMap,
   IAdvancedAbortSignalWrapPromiseOptions, TAbortStrategy, TAbortStrategyReturn, TAbortStrategyReturnedPromise,
   TAdvancedAbortSignalWrapPromiseCallback
 } from './types';

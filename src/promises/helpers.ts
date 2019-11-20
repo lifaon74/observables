@@ -3,7 +3,7 @@ import {
   AllSettledResult, ICancellablePromiseTuple, PromiseFulfilledObject, PromiseRejectedObject, TPromise,
   TPromiseCreateCallback, TPromiseOrValue
 } from './interfaces';
-import { ICancelToken, TCancelStrategyReturn } from '../misc/cancel-token/interfaces';
+import { IAdvancedAbortSignal } from '../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 
 
 export function IsPromiseLike(value: any): value is TPromise<any> {
@@ -78,6 +78,6 @@ export function AllSettled<T>(promises: Iterable<TPromise<T>>): TPromise<AllSett
   );
 }
 
-export function SpreadCancellablePromiseTuple<T>({ promise, token }: ICancellablePromiseTuple<T>): [TPromise<T>, ICancelToken] {
-  return [promise, token];
+export function SpreadCancellablePromiseTuple<T>({ promise, controller }: ICancellablePromiseTuple<T>): [TPromise<T>, IAdvancedAbortSignal] {
+  return [promise, controller.signal];
 }

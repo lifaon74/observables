@@ -1,22 +1,17 @@
 import { Observer } from '../../core/observer/implementation';
-import {
-  NotificationsObservable
-} from '../../notifications/core/notifications-observable/implementation';
+import { NotificationsObservable } from '../../notifications/core/notifications-observable/implementation';
 import { NotificationsObserver } from '../../notifications/core/notifications-observer/implementation';
 import { EventsObservable } from '../../notifications/observables/events/events-observable/implementation';
 import { FetchObservable } from '../../notifications/observables/finite-state/built-in/promise/fetch-observable/implementation';
 import {
-  finiteStateObservableToPromise, singleFiniteStateObservableToCancellablePromiseTuple,
-  singleFiniteStateObservableToPromise, genericObservableToCancellablePromiseTuple, genericObservableToPromise
+  singleFiniteStateObservableToCancellablePromiseTuple, singleFiniteStateObservableToPromise
 } from '../../operators/to/toPromise';
 import { Reason } from '../../misc/reason/implementation';
 import { PromiseObservable } from '../../notifications/observables/finite-state/built-in/promise/promise-observable/implementation';
 import { IObserver } from '../../core/observer/interfaces';
-import {
-  INotificationsObservable
-} from '../../notifications/core/notifications-observable/interfaces';
-import { IObservableObserver} from '../../core/observable-observer/interfaces';
-import { IObservable} from '../../core/observable/interfaces';
+import { INotificationsObservable } from '../../notifications/core/notifications-observable/interfaces';
+import { IObservableObserver } from '../../core/observable-observer/interfaces';
+import { IObservable } from '../../core/observable/interfaces';
 import { TimerObservable } from '../../observables/timer-observable/implementation';
 import { KeyValueMapKeys, KeyValueMapValues } from '../../notifications/core/interfaces';
 import { INotification } from '../../notifications/core/notification/interfaces';
@@ -25,13 +20,10 @@ import { FunctionObservable } from '../../observables/distinct/function-observab
 import { Expression } from '../../observables/distinct/expression/implementation';
 import { $equal, $expression } from '../../operators/shortcuts/public';
 import { $string } from '../../operators/misc';
-import { EventKeyValueMapConstraint } from '../../notifications/observables/events/events-observable/interfaces';
 import { ICancellablePromiseTuple } from '../../promises/interfaces';
 import { SpreadCancellablePromiseTuple } from '../../promises/helpers';
 import { FiniteStateObservable } from '../../notifications/observables/finite-state/implementation';
-import {
-  IFiniteStateObservable
-} from '../../notifications/observables/finite-state/interfaces';
+import { IFiniteStateObservable } from '../../notifications/observables/finite-state/interfaces';
 import { IFetchObservable } from '../../notifications/observables/finite-state/built-in/promise/fetch-observable/interfaces';
 import { XHRObservable } from '../../notifications/observables/finite-state/built-in/promise/xhr-observable/implementation';
 import { FromReadableStreamObservable } from '../../notifications/observables/finite-state/built-in/from/readable-stream/implementation';
@@ -46,7 +38,7 @@ import { Pipe } from '../../core/observable-observer/pipe/implementation';
 import { INotificationsObservableContext } from '../../notifications/core/notifications-observable/context/interfaces';
 import { NotificationsObservableContext } from '../../notifications/core/notifications-observable/context/implementation';
 import {
-  TFiniteStateObservableKeyValueMapGeneric, TFiniteStateObservableFinalState, TFiniteStateObservableMode
+  TFiniteStateObservableFinalState, TFiniteStateObservableKeyValueMapGeneric, TFiniteStateObservableMode
 } from '../../notifications/observables/finite-state/types';
 import { FromIterableObservable } from '../../notifications/observables/finite-state/built-in/from/iterable/public';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
@@ -55,6 +47,7 @@ import { AbortReason } from '../../misc/reason/defaults/abort-reason';
 import { AdvancedAbortController } from '../../misc/advanced-abort-controller/implementation';
 import { ISource } from '../../observables/distinct/source/sync/interfaces';
 import { Source } from '../../observables/distinct/source/sync/implementation';
+import { EventKeyValueMapConstraint } from '../../notifications/observables/events/events-observable/types';
 
 
 /**
@@ -368,7 +361,7 @@ function fromIterableObservableExample1(): void {
   observer.activate();
 }
 
-function cancelTokenFetchExample1(): void {
+function abortControllerFetchExample1(): void {
   function loadNews(page: number, signal: IAdvancedAbortSignal): Promise<void> {
     return signal.wrapPromise(fetch(`https://my-domain/api/news?page${ page }`, { signal: signal.toAbortController().signal }))
       .then(signal.wrapFunction((response: Response): Promise<any> => { // <(response: Response) => any, 'never', never>
@@ -391,73 +384,80 @@ function cancelTokenFetchExample1(): void {
       loadNews(page, controller.signal)
         .catch(AbortReason.discard);
     });
+
+  // function loadNewsUsingWrap(page: number, signal: IAdvancedAbortSignal): Promise<void> {
+  //   return signal.wrapPromise(fetch(`https://my-domain/api/news?page=${page}`, { signal: signal.toAbortController().signal }))
+  //     .then(signal.wrapFunction((response: Response) => {
+  //       return response.json();
+  //     }))
+  //     .then(signal.wrapFunction((news: any) => {
+  //       // render news in DOM for example
+  //     }));
+  // }
 }
 
 /**
- * Creates a simple GET http request which loads an url and returns result as [Promise<string>, CancelToken]
+ * Creates a simple GET http request which loads an url and may be cancelled
  */
-function createHttpRequest(url: string, signal?: IAdvancedAbortSignal): ICancellablePromiseTuple<string> {
+function createHttpRequest(url: string, signal?: IAdvancedAbortSignal): Promise<string> {
   const controller: IAdvancedAbortController = AdvancedAbortController.fromAbortSignals(signal);
-  return {
-    promise: new Promise<string>((resolve, reject) => {
-      const request = new XMLHttpRequest(); // create an XMLHttpRequest
-      new EventsObservable<XMLHttpRequestEventMap>(request) // creates an EventsObservable for this request
-        .on('load', () => { // when the request is finished, resolve the promise
-          resolve(request.responseText);
-        })
-        .on('error', () => {
-          reject(new Error(`Failed to fetch data: ${ request.statusText }`));
-        })
-        .on('abort', () => {
-          reject(controller.signal.reason || new AbortReason());
-        });
+  return new Promise<string>((resolve, reject) => {
+    const request = new XMLHttpRequest(); // create an XMLHttpRequest
+    new EventsObservable<XMLHttpRequestEventMap>(request) // creates an EventsObservable for this request
+      .on('load', () => { // when the request is finished, resolve the promise
+        resolve(request.responseText);
+      })
+      .on('error', () => {
+        reject(new Error(`Failed to fetch data: ${ request.statusText }`));
+      })
+      .on('abort', () => {
+        reject(controller.signal.reason || new AbortReason());
+      });
 
-      controller.signal.addListener('abort', () => { // if the token is cancelled, abort the request
-        request.abort();
-      }).activate();
+    controller.signal.addListener('abort', () => { // if the signal is aborted, abort the request
+      request.abort();
+    }).activate();
 
-      request.open('GET', url, true);
-      request.send();
-    }),
-    controller: controller
-  };
+    request.open('GET', url, true);
+    request.send();
+  });
 }
 
 /**
- * Demo how to use a CancelToken
+ * Demo how to use a AdvancedAbortController
  */
-function cancelTokenExample1(): void {
-  const { promise, token } = createHttpRequest('https://server.test-cors.org/server?id=643798&enable=true&status=200&credentials=false&response_headers=Access-Control-Allow-Origin%3A%20*');
-  promise
+function abortControllerExample1(): void {
+  const controller = new AdvancedAbortController();
+  createHttpRequest('https://server.test-cors.org/server?id=643798&enable=true&status=200&credentials=false&response_headers=Access-Control-Allow-Origin%3A%20*', controller.signal)
     .then((content: string) => {
-      if (!token.cancelled) {
+      if (!controller.signal.aborted) {
         return JSON.parse(content);
       }
     })
     .then((data: any) => {
-      if (!token.cancelled) { // token.cancelled MUST be check in every then/catch because it may change at any time
+      if (!controller.signal.aborted) { // signal.aborted MUST be check in every then/catch because it may change at any time
         console.log(data);
       }
     })
     .catch((error: any) => {
-      if (!token.cancelled) {
+      if (!controller.signal.aborted) {
         console.error(error);
       }
     });
 
-  token.addListener('cancel', (reason: Reason) => {
+  controller.signal.addListener('abort', (reason: Reason) => {
     console.warn('promise cancelled:', reason.message);
   }).activate();
 
-  // token.cancel(new Reason('Abort http request'));
+  controller.abort(new Reason('Abort http request'));
 }
 
 
 function promiseObservableExample1(): void {
   // creates an fetch observable from an url
   function http(url: string) {
-    return new PromiseObservable<Response>((token: CancelToken) => {
-      return fetch(url, { signal: token.toAbortController().signal });
+    return new PromiseObservable<Response>((signal: IAdvancedAbortSignal) => {
+      return fetch(url, { signal: signal.toAbortController().signal });
     }, { mode: 'cache' });
   }
 
@@ -675,17 +675,17 @@ async function xhrObservableExample1() {
  */
 async function observableToPromiseExample1(): Promise<void> {
 
-  function observePromise(name: string, promise: Promise<Response>, token?: CancelToken): Promise<void> {
+  function observePromise(name: string, promise: Promise<Response>, signal?: IAdvancedAbortSignal): Promise<void> {
     return promise
       .then((response: Response) => {
-        if (token && token.cancelled) {
-          console.warn(`cancel '${ name }'`, token.reason);
+        if (signal && signal.aborted) {
+          console.warn(`cancel '${ name }'`, signal.reason);
         } else {
           console.log(name, response);
         }
       }, (error: any) => {
-        if (token && token.cancelled) {
-          console.warn(`cancel '${ name }'`, token.reason);
+        if (signal && signal.aborted) {
+          console.warn(`cancel '${ name }'`, signal.reason);
         } else {
           console.error(`error '${ name }'`, error);
         }
@@ -699,11 +699,17 @@ async function observableToPromiseExample1(): Promise<void> {
   observePromise('fetch url 2', singleFiniteStateObservableToPromise(new FetchObservable(url2)) as Promise<Response>); // will error
 
   const abortController: AbortController = new AbortController();
-  observePromise('fetch url with abort controller without token', singleFiniteStateObservableToPromise(new FetchObservable(url1, { signal: abortController.signal }), 'reject') as Promise<Response>); // will cancel
+  observePromise(
+    'fetch url with abort controller',
+    singleFiniteStateObservableToPromise(new FetchObservable(url1, { signal: abortController.signal }), { strategy: 'reject' }) as Promise<Response>
+  ); // will cancel
   abortController.abort();
 
   // provides CancelToken too, to detect cancellation
-  observePromise('fetch url with abort controller with token', ...SpreadCancellablePromiseTuple(singleFiniteStateObservableToCancellablePromiseTuple(new FetchObservable(url1, { signal: abortController.signal }), 'reject') as ICancellablePromiseTuple<Response>)); // will cancel
+  observePromise(
+    'fetch url with abort controller with using AdvancedAbortController',
+    ...SpreadCancellablePromiseTuple(singleFiniteStateObservableToCancellablePromiseTuple(new FetchObservable(url1, { signal: abortController.signal }), { strategy: 'reject' }) as ICancellablePromiseTuple<Response>)
+  ); // will cancel
 }
 
 

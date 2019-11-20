@@ -3,8 +3,6 @@ import { TAbortSignalLikeOrUndefined } from './types';
 
 /** INSTANCE **/
 
-/* PRIVATE */
-
 export interface IAdvancedAbortControllerConstructor {
   /**
    * Returns a new AdvancedAbortController, automatically aborted if one of the 'signals' is aborted
@@ -19,6 +17,9 @@ export interface IAdvancedAbortControllerConstructor {
 export interface IAdvancedAbortController {
   readonly signal: IAdvancedAbortSignal;
 
+  /**
+   * Aborts the signal
+   */
   abort(reason?: any): void;
 }
 

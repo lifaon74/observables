@@ -39,6 +39,7 @@ import {
 import {
   TAsyncFunctionObservableFactory, TAsyncFunctionObservableFactoryParameters
 } from '../observables/distinct/function-observable/async/types';
+import { IAdvancedAbortSignal } from '../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 
 
 export function $async<T>(observable: IPromiseObservable<T>): IObservable<T> {
@@ -76,18 +77,18 @@ export function $string(parts: TemplateStringsArray | string[], ...args: TObserv
 }
 
 
-// type TFetchFunction<T> = (token: ICancelToken, requestInfo: RequestInfo, requestInit?: RequestInit) => Promise<T>;
-//
-// export function $fetch<T>(requestInfo: TObservableOrValue<RequestInfo>, requestInit?: TObservableOrValue<RequestInit | undefined>): IAsyncFunctionObservable<TFetchFunction<T>> {
-//   return new AsyncFunctionObservable<TFetchFunction<T>>(_fetch, [$observable(requestInfo), $observable<RequestInit | undefined>(requestInit)]);
-// }
-//
-// export function _fetch<T>(token: ICancelToken, requestInfo: RequestInfo, requestInit?: RequestInit): Promise<T> {
-//   return token.wrapPromise<Response, 'never', never>(fetch(...token.wrapFetchArguments(requestInfo, requestInit)))
-//     .then((response: Response): Promise<T> => {
-//       return response.json();
-//     });
-// }
+type TFetchFunction<T> = (signal: IAdvancedAbortSignal, requestInfo: RequestInfo, requestInit?: RequestInit) => Promise<T>;
+
+export function $fetch<T>(requestInfo: TObservableOrValue<RequestInfo>, requestInit?: TObservableOrValue<RequestInit | undefined>): IAsyncFunctionObservable<TFetchFunction<T>> {
+  return new AsyncFunctionObservable<TFetchFunction<T>>(_fetch, [$observable(requestInfo), $observable<RequestInit | undefined>(requestInit)]);
+}
+
+export function _fetch<T>(signal: IAdvancedAbortSignal, requestInfo: RequestInfo, requestInit?: RequestInit): Promise<T> {
+  return signal.wrapPromise<Response, 'never', never>(fetch(...signal.wrapFetchArguments(requestInfo, requestInit)))
+    .then((response: Response): Promise<T> => {
+      return response.json();
+    });
+}
 
 
 

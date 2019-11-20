@@ -1,5 +1,5 @@
 import { NotificationsObservable } from '../../../core/notifications-observable/implementation';
-import { EventKeyValueMapConstraint, IEventsObservable, IEventsObservableConstructor } from './interfaces';
+import { IEventsObservable, IEventsObservableConstructor } from './interfaces';
 import { Notification } from '../../../core/notification/implementation';
 import { KeyValueMapKeys, KeyValueMapValues } from '../../../core/interfaces';
 import { IObserver } from '../../../../core/observer/interfaces';
@@ -11,6 +11,7 @@ import {
 import { ExtractObserverNameAndCallback } from '../../../core/notifications-observer/functions';
 import { EVENTS_OBSERVABLE_PRIVATE, IEventsObservableInternal, IEventsObservablePrivate } from './privates';
 import { ConstructEventsObservable } from './constructor';
+import { EventKeyValueMapConstraint } from './types';
 
 
 /** CONSTRUCTOR FUNCTIONS **/

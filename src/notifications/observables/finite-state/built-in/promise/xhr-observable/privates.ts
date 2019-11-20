@@ -1,5 +1,6 @@
 import { IFiniteStateObservablePrivatesInternal } from '../../../privates';
-import { IXHRObservable, IXHRObservableKeyValueMap, TXHRObservableFinalState, TXHRObservableMode } from './interfaces';
+import { IXHRObservable} from './interfaces';
+import { IXHRObservableKeyValueMap, TXHRObservableFinalState, TXHRObservableMode } from './types';
 
 /** PRIVATES **/
 

@@ -1,10 +1,13 @@
 import {
-  IXHRObservable, IXHRObservableKeyValueMap, IXHRObservableOptions, TXHRObservableFinalState, TXHRObservableMode
+  IXHRObservable
 } from './interfaces';
 import { FiniteStateObservable } from '../../../implementation';
 import { GenerateFiniteStateObservableHookFromXHR } from './hook-generators';
 import { TFiniteStateObservableCreateCallback } from '../../../types';
 import { ConstructXHRObservable } from './constructor';
+import {
+  IXHRObservableKeyValueMap, IXHRObservableOptions, TXHRObservableFinalState, TXHRObservableMode
+} from './types';
 
 
 // export function XHRObservablePromiseTo<T>(instance: IXHRObservable, callback: (response: Response) => TPromiseOrValue<T>): INotificationsObservable<TXHRObservableCastKeyValueMap<T>> {

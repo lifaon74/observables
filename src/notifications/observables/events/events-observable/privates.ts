@@ -1,9 +1,10 @@
-import { EventKeyValueMapConstraint, IEventsObservable } from './interfaces';
+import { IEventsObservable } from './interfaces';
 import { IEventsListener } from '../events-listener/interfaces';
 import { KeyValueMapKeys, KeyValueMapValues } from '../../../core/interfaces';
 import { IObserver } from '../../../../core/observer/interfaces';
 import { KeyValueMapToNotifications } from '../../../core/notifications-observable/types';
 import { INotificationsObservablePrivatesInternal } from '../../../core/notifications-observable/privates';
+import { EventKeyValueMapConstraint } from './types';
 
 /** PRIVATES **/
 

@@ -2,17 +2,11 @@ import {
   INotificationsObservable, INotificationsObservableConstructor
 } from '../../../notifications/core/notifications-observable/interfaces';
 import {
-  IAdvancedAbortSignalWrapPromiseOptions, TAbortStrategy, TAbortStrategyReturnedPromise,
-  TAdvancedAbortSignalWrapPromiseCallback
+  IAdvancedAbortSignalKeyValueMap, IAdvancedAbortSignalWrapPromiseOptions, TAbortStrategy,
+  TAbortStrategyReturnedPromise, TAdvancedAbortSignalWrapPromiseCallback
 } from './types';
 import { TPromiseType } from '../../../promises/interfaces';
 
-
-/** TYPES **/
-
-export interface IAdvancedAbortSignalKeyValueMap {
-  abort: any;
-}
 
 /** INSTANCE **/
 

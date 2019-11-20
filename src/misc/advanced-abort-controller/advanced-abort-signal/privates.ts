@@ -1,6 +1,7 @@
 import { INotificationsObservablePrivatesInternal } from '../../../notifications/core/notifications-observable/privates';
-import { IAdvancedAbortSignal, IAdvancedAbortSignalKeyValueMap } from './interfaces';
+import { IAdvancedAbortSignal} from './interfaces';
 import { INotificationsObservableContext } from '../../../notifications/core/notifications-observable/context/interfaces';
+import { IAdvancedAbortSignalKeyValueMap } from './types';
 
 /** PRIVATES **/
 

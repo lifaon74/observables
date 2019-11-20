@@ -114,7 +114,7 @@ Its `mode` defines some useful behaviours:
 - `cache-all`: caches all notifications (including ones with a different name than `next` and `TFinalState`). Every observer will receive the whole list of all emitted notifications
 
 `finalStates?: Iterable<TFinalState>` represents the list of the final states of this FiniteStateObservable.
-For example, the PromiseObservable has a `cancel` state too as its final state.
+For example, the PromiseObservable has an `abort` state too as its final state.
 
 `modes?: Iterable<TMode>;` represents the list of the available modes of this FiniteStateObservable.
 For example, the PromiseObservable has an extra `every` mode.

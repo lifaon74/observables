@@ -7,6 +7,7 @@ import {
   DISTINCT_ASYNC_VALUE_OBSERVABLE_PRIVATE, IAsyncDistinctValueObservablePrivate
 } from '../../distinct-value-observable/async/privates';
 import { IAdvancedAbortSignal } from '../../../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
+import { TAsyncDistinctValueObservableContextEmitFactory } from '../../distinct-value-observable/async/context/types';
 
 /** METHODS **/
 
@@ -25,8 +26,8 @@ export function AsyncSourceGetSignal<T>(instance: IAsyncSource<T>): IAdvancedAbo
 
 /* METHODS */
 
-export function AsyncSourceEmit<T>(instance: IAsyncSource<T>, promise: Promise<T>, signal?: IAdvancedAbortSignal): Promise<void> {
-  return (instance as IAsyncSourceInternal<T>)[ASYNC_SOURCE_PRIVATE].context.emit(promise, signal);
+export function AsyncSourceEmit<T>(instance: IAsyncSource<T>, factory: TAsyncDistinctValueObservableContextEmitFactory<T>): Promise<T> {
+  return (instance as IAsyncSourceInternal<T>)[ASYNC_SOURCE_PRIVATE].context.emit(factory);
 }
 
 /** CLASS **/
@@ -49,8 +50,8 @@ export class AsyncSource<T> extends AsyncDistinctValueObservable<T> implements I
     return AsyncSourceGetSignal<T>(this);
   }
 
-  emit(promise: Promise<T>, signal?: IAdvancedAbortSignal): Promise<this> {
-    return AsyncSourceEmit<T>(this, promise, signal)
+  emit(factory: TAsyncDistinctValueObservableContextEmitFactory<T>): Promise<this> {
+    return AsyncSourceEmit<T>(this, factory)
       .then(() => this);
   }
 }

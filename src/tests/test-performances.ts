@@ -2,8 +2,8 @@ import { from, merge, Observable as RXObservable, Subscriber as RXSubscriber } f
 import { IObserver, Observer } from '../core/observer/public';
 import { IObservable } from '../core/observable/interfaces';
 import { NotificationsObservable } from '../notifications/core/notifications-observable/public';
-import { FromIterableObservable } from '../notifications/observables/finite-state/built-in/from/iterable/sync/public';
 import { Observable, ObservableClearObservers } from '../core/observable/implementation';
+import { FromIterableObservable } from '../notifications/observables/finite-state/built-in/from/iterable/public';
 
 /**
  * Test the performances of many observables emitting values from an iterable

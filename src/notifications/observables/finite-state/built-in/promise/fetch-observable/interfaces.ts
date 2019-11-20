@@ -1,13 +1,8 @@
 import { IPromiseObservable } from '../promise-observable/interfaces';
 import { INotificationsObservable } from '../../../../../core/notifications-observable/interfaces';
-import { IPromiseObservableKeyValueMap, IPromiseObservableOptions } from '../promise-observable/types';
+import { IFetchObservableOptions, TFetchObservableCastKeyValueMap } from './types';
 
-export type IFetchObservableKeyValueMap = IPromiseObservableKeyValueMap<Response>;
-export type TFetchObservableCastKeyValueMap<T> = IPromiseObservableKeyValueMap<T>;
-
-export interface IFetchObservableOptions extends IPromiseObservableOptions {
-  // fetch?: typeof fetch;
-}
+/** INTERFACES **/
 
 export interface IFetchObservableConstructor {
   new(requestInfo: RequestInfo, requestInit?: RequestInit, options?: IFetchObservableOptions): IFetchObservable;

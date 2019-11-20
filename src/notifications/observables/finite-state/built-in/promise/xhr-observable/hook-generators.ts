@@ -1,6 +1,5 @@
 import { IFiniteStateObservable } from '../../../interfaces';
 import { Notification } from '../../../../../core/notification/implementation';
-import { IXHRObservableKeyValueMap, TXHRObservableFinalState } from './interfaces';
 import { EventsObservable } from '../../../../events/events-observable/implementation';
 import { IEventsObservable } from '../../../../events/events-observable/interfaces';
 import { IProgress } from '../../../../../../misc/progress/interfaces';
@@ -15,6 +14,7 @@ import { IAdvancedAbortController } from '../../../../../../misc/advanced-abort-
 import { AbortReason } from '../../../../../../misc/reason/defaults/abort-reason';
 import { TFiniteStateObservableCreateCallback, TFiniteStateObservableMode } from '../../../types';
 import { IFiniteStateObservableContext } from '../../../context/interfaces';
+import { IXHRObservableKeyValueMap, TXHRObservableFinalState } from './types';
 
 
 export interface IGenerateFiniteStateObservableHookFromXHROptions {

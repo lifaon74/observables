@@ -38,3 +38,7 @@ export interface IAdvancedAbortSignalWrapPromiseOptions<TStrategy extends TAbort
   onAborted?: TCatchAborted<TAborted, TStrategy>; // callback to call when the signal is aborted => we may change the promise state from 'aborted' to something else
   onAbortedController?: IAdvancedAbortController; // controller provided to the 'onAborted' function
 }
+
+export interface IAdvancedAbortSignalKeyValueMap {
+  abort: any;
+}

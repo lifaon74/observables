@@ -1,6 +1,7 @@
 import { IObservableConstructor } from '../../../../core/observable/interfaces';
 import { IAsyncDistinctValueObservable } from '../../distinct-value-observable/async/interfaces';
 import { IAdvancedAbortSignal } from '../../../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
+import { TAsyncDistinctValueObservableContextEmitFactory } from '../../distinct-value-observable/async/context/types';
 
 /** INTERFACES **/
 
@@ -24,5 +25,5 @@ export interface IAsyncSource<T> extends IAsyncDistinctValueObservable<T> {
   readonly promise: Promise<T> | null;
   readonly signal: IAdvancedAbortSignal | null;
 
-  emit(promise: Promise<T>, signal?: IAdvancedAbortSignal): Promise<this>;
+  emit(factory: TAsyncDistinctValueObservableContextEmitFactory<T>): Promise<this>;
 }

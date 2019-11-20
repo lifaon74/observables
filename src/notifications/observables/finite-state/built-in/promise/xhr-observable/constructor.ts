@@ -1,7 +1,8 @@
-import { IXHRObservable, IXHRObservableOptions } from './interfaces';
+import { IXHRObservable} from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../../../../misc/helpers/ClassWithPrivateMembers';
 import { IXHRObservableInternal, IXHRObservablePrivate, XHR_OBSERVABLE_PRIVATE } from './privates';
 import { IsObject } from '../../../../../../helpers';
+import { IXHRObservableOptions } from './types';
 
 /** CONSTRUCTOR **/
 
