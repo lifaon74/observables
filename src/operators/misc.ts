@@ -1,5 +1,3 @@
-import { FunctionObservable } from '../observables/distinct/function-observable/sync/implementation';
-import { IFunctionObservable, } from '../observables/distinct/function-observable/sync/interfaces';
 import { IObservable } from '../core/observable/interfaces';
 import { Expression } from '../observables/distinct/expression/implementation';
 import { IAsyncFunctionObservable } from '../observables/distinct/function-observable/async/interfaces';
@@ -14,7 +12,6 @@ import { IsObservable } from '../core/observable/constructor';
 import { TPipeBase, TPipeContextBase } from '../core/observable-observer/pipe/types';
 import { Pipe } from '../core/observable-observer/pipe/implementation';
 import { TObservableOrValue } from './shortcuts/types';
-import { $observables } from './shortcuts/primitives/$observables';
 import { $observable } from './shortcuts/primitives/$observable';
 import { $add } from './shortcuts/arithmetic/$add';
 import { $source } from './shortcuts/primitives/$source';
@@ -25,6 +22,7 @@ import { $and } from './shortcuts/logic/$and';
 import { ISource } from '../observables/distinct/source/sync/interfaces';
 import { Source } from '../observables/distinct/source/sync/implementation';
 import { IAdvancedAbortSignal } from '../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
+import { $string } from './shortcuts/others/$string';
 
 
 export function $async<T>(observable: IPromiseObservable<T>): IObservable<T> {
@@ -41,24 +39,6 @@ export function $async<T>(observable: IPromiseObservable<T>): IObservable<T> {
 
 
 /**** OTHERS ****/
-
-/**
- * Creates a FunctionObservable from a string template.
- * @Example:
- *  - $string`a${source1}b${source2}c`
- * @param parts - TemplateStringsArray
- * @param args
- */
-export function $string(parts: TemplateStringsArray | string[], ...args: TObservableOrValue<any>[]): IFunctionObservable<(...values: any[]) => string> {
-  const lengthMinusOne: number = parts.length - 1;
-  return new FunctionObservable((...values: any[]) => {
-    let str: string = '';
-    for (let i = 0; i < lengthMinusOne; i++) {
-      str += parts[i] + values[i];
-    }
-    return str + parts[lengthMinusOne];
-  }, $observables(...args));
-}
 
 
 type TFetchFunction<T> = (signal: IAdvancedAbortSignal, requestInfo: RequestInfo, requestInit?: RequestInit) => Promise<T>;

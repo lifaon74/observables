@@ -8,7 +8,6 @@ import { Pipe } from '../../core/observable-observer/pipe/implementation';
 /**
  * ObservableObserver: aggregates many notifications by filtering their name - emits the received values
  *  - when a notification is received, the pipe emits the notifications's value if the notification's name is in 'names'
- * @param names
  */
 export function aggregateNotificationsPipe<TValue>(names: Iterable<string> | null = null): IPipe<IObserver<INotification<string, any>>, IObservable<TValue>> {
   type TNotification = INotification<string, any>;

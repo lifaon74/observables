@@ -1,11 +1,11 @@
 const uglify = require('uglify-es');
 const $fs = require('fs');
 const $path = require('path');
-// const { compact } = require('../compact/compact-all');
+const { compact } = require('../compact/compact-all');
 
 module.exports = function makeUglify(sourcePath, _options = {}) {
-  const source = $fs.readFileSync(sourcePath, 'utf8');
-  // const source = compact(sourcePath);
+  const source = compact(sourcePath);
+  // const source = $fs.readFileSync(sourcePath, 'utf8');
 
   const dest = sourcePath.replace(/\.js$/, '.min.js');
   const sourceMapDest = dest + '.map';

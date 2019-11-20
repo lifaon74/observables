@@ -19,7 +19,6 @@ import { INotificationsObserver } from '../../notifications/core/notifications-o
 import { FunctionObservable } from '../../observables/distinct/function-observable/sync/implementation';
 import { Expression } from '../../observables/distinct/expression/implementation';
 import { $equal, $expression } from '../../operators/shortcuts/public';
-import { $string } from '../../operators/misc';
 import { ICancellablePromiseTuple } from '../../promises/interfaces';
 import { SpreadCancellablePromiseTuple } from '../../promises/helpers';
 import { FiniteStateObservable } from '../../notifications/observables/finite-state/implementation';
@@ -48,6 +47,7 @@ import { AdvancedAbortController } from '../../misc/advanced-abort-controller/im
 import { ISource } from '../../observables/distinct/source/sync/interfaces';
 import { Source } from '../../observables/distinct/source/sync/implementation';
 import { EventKeyValueMapConstraint } from '../../notifications/observables/events/events-observable/types';
+import { $string } from '../../operators/shortcuts/others/$string';
 
 
 /**
