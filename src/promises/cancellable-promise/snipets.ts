@@ -1,5 +1,5 @@
-import { ICancellablePromise} from './interfaces';
-import { setImmediate, clearImmediate } from '../../classes/set-immediate';
+import { ICancellablePromise } from './interfaces';
+import { clearImmediate, setImmediate } from '../../classes/set-immediate';
 import { CancellablePromise } from './implementation';
 import { TPromiseOrValue } from '../interfaces';
 import { ICancellablePromiseOptions } from './types';

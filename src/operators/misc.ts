@@ -1,26 +1,19 @@
 import { FunctionObservable } from '../observables/distinct/function-observable/sync/implementation';
-import {
-  IFunctionObservable,
-} from '../observables/distinct/function-observable/sync/interfaces';
+import { IFunctionObservable, } from '../observables/distinct/function-observable/sync/interfaces';
 import { IObservable } from '../core/observable/interfaces';
-import { Expression} from '../observables/distinct/expression/implementation';
-import { IExpression } from '../observables/distinct/expression/interfaces';
-import {
-  IAsyncFunctionObservable
-} from '../observables/distinct/function-observable/async/interfaces';
+import { Expression } from '../observables/distinct/expression/implementation';
+import { IAsyncFunctionObservable } from '../observables/distinct/function-observable/async/interfaces';
 import { AsyncFunctionObservable } from '../observables/distinct/function-observable/async/implementation';
 import { IPromiseObservable, } from '../notifications/observables/finite-state/built-in/promise/promise-observable/interfaces';
 import { toDistinctValueObservable } from './to/toDistinctValueObservable';
 import { IObserver } from '../core/observer/interfaces';
-import { IsObserver, Observer } from '../core/observer/public';
+import { Observer } from '../core/observer/public';
 import { assertFunctionObservableEmits, assertObservableEmits } from '../classes/asserts';
 import { IsObject } from '../helpers';
 import { IsObservable } from '../core/observable/constructor';
 import { TPipeBase, TPipeContextBase } from '../core/observable-observer/pipe/types';
 import { Pipe } from '../core/observable-observer/pipe/implementation';
-import {
-  TObservableOrValueTupleToObservables, TExpressionOrFunction, TObservableOrValue, TObservableOrValues, TSourceOrValue
-} from './shortcuts/types';
+import { TObservableOrValue } from './shortcuts/types';
 import { $observables } from './shortcuts/primitives/$observables';
 import { $observable } from './shortcuts/primitives/$observable';
 import { $add } from './shortcuts/arithmetic/$add';
@@ -30,22 +23,13 @@ import { $function } from './shortcuts/primitives/$function';
 import { $expression } from './shortcuts/primitives/$expression';
 import { $and } from './shortcuts/logic/$and';
 import { ISource } from '../observables/distinct/source/sync/interfaces';
-import { IsSource } from '../observables/distinct/source/sync/constructor';
 import { Source } from '../observables/distinct/source/sync/implementation';
-import { IsExpression } from '../observables/distinct/expression/constructor';
-import {
-  TFunctionObservableFactory, TFunctionObservableFactoryParameters
-} from '../observables/distinct/function-observable/sync/types';
-import {
-  TAsyncFunctionObservableFactory, TAsyncFunctionObservableFactoryParameters
-} from '../observables/distinct/function-observable/async/types';
 import { IAdvancedAbortSignal } from '../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 
 
 export function $async<T>(observable: IPromiseObservable<T>): IObservable<T> {
   return toDistinctValueObservable<T>(observable);
 }
-
 
 
 // // const myVar = $observables([1, true])[0];
@@ -89,8 +73,6 @@ export function _fetch<T>(signal: IAdvancedAbortSignal, requestInfo: RequestInfo
       return response.json();
     });
 }
-
-
 
 
 /*** EXPERIMENTAL ***/
@@ -150,13 +132,11 @@ export function $property<TOutput>(input: TObservableOrValue<any>, ...propertyNa
 export type TValueToDeepSource<T> =
   T extends IObservable<any>
     ? T
-    : ISource<
-        T extends object
-          ? {
-            [K in keyof T]: TValueToDeepSource<T[K]>;
-          }
-          : T
-      >;
+    : ISource<T extends object
+    ? {
+      [K in keyof T]: TValueToDeepSource<T[K]>;
+    }
+    : T>;
 
 export function ValueToDeepSource<T>(input: TObservableOrValue<T>): TValueToDeepSource<T> {
   if (IsObservable(input)) {
@@ -221,7 +201,6 @@ async function test$property(): Promise<void> {
   // observableObject.emit(ValueToDeepSource({ a1: { b1: 'a1-b1-v3' } }).value);
   // console.log(observableObject.value.a1.value.b1.value);
 }
-
 
 
 export async function testMisc(): Promise<void> {

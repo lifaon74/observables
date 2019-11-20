@@ -156,11 +156,9 @@ export type TPromiseOrValueFactoryType<F extends TPromiseOrValueFactory<any>> = 
 
 
 export type TPromiseOrValueTupleToCancellablePromiseTuple<TTuple extends TPromiseOrValue<any>[]> = {
-  [K in keyof TTuple]: ICancellablePromise<
-    TTuple[K] extends TPromiseOrValueFactory<infer P>
+  [K in keyof TTuple]: ICancellablePromise<TTuple[K] extends TPromiseOrValueFactory<infer P>
     ? TPromiseType<P>
-    : TTuple[K]
-  >;
+    : TTuple[K]>;
 };
 
 export type TPromiseOrValueTupleToValueTuple<TTuple extends TPromiseOrValue<any>[]> = {

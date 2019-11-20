@@ -34,10 +34,10 @@ export function IsReadonlyMap(value: any): value is IReadonlyMap<any, any> {
 
 export class ReadonlyMap<TKey, TValue> implements IReadonlyMap<TKey, TValue> {
 
-  constructor (entries: Iterable<[TKey, TValue]>) {
+  constructor(entries: Iterable<[TKey, TValue]>) {
     ConstructReadonlyMap<TKey, TValue>(this, entries);
   }
-  
+
   get size(): number {
     return ((this as unknown) as IReadonlyMapInternal<TKey, TValue>)[READONLY_MAP_PRIVATE].map.size;
   }

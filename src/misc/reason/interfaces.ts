@@ -6,6 +6,7 @@ export interface IReasonOptions<T> {
 
 export interface IReasonConstructor {
   new<T = undefined>(options: IReasonOptions<T>): IReason<T>;
+
   new<T = undefined>(message: string, code?: T, stack?: string): IReason<T>;
 }
 

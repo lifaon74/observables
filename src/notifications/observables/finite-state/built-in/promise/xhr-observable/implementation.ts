@@ -1,6 +1,4 @@
-import {
-  IXHRObservable
-} from './interfaces';
+import { IXHRObservable } from './interfaces';
 import { FiniteStateObservable } from '../../../implementation';
 import { GenerateFiniteStateObservableHookFromXHR } from './hook-generators';
 import { TFiniteStateObservableCreateCallback } from '../../../types';

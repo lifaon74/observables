@@ -1,6 +1,4 @@
-import {
-  HasFactoryWaterMark, MakeFactory
-} from '../../../classes/class-helpers/factory';
+import { HasFactoryWaterMark, MakeFactory } from '../../../classes/class-helpers/factory';
 import {
   IAsyncIterator, IAsyncIteratorConstructor, TAsyncIteratorConstructorArgs, TAsyncIteratorNextCallback
 } from './interfaces';

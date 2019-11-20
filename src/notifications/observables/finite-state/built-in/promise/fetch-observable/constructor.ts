@@ -1,4 +1,4 @@
-import { IFetchObservable} from './interfaces';
+import { IFetchObservable } from './interfaces';
 import { IsObject } from '../../../../../../helpers';
 import { FETCH_OBSERVABLE_PRIVATE, IFetchObservableInternal, IFetchObservablePrivate } from './privates';
 import { ConstructClassWithPrivateMembers } from '../../../../../../misc/helpers/ClassWithPrivateMembers';

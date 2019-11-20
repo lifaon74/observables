@@ -2,9 +2,7 @@ import {
   KeyValueMapGenericConstraint, KeyValueMapKeys, KeyValueMapValues, KVRecord
 } from '../../notifications/core/interfaces';
 import { IObserver } from '../../core/observer/interfaces';
-import {
-  IBaseNotificationsObservable
-} from '../../notifications/core/notifications-observable/interfaces';
+import { IBaseNotificationsObservable } from '../../notifications/core/notifications-observable/interfaces';
 import { Observer } from '../../core/observer/public';
 import {
   KeyValueMapToNotifications, NotificationsObservable

@@ -3,7 +3,6 @@ import { ConstructClassWithPrivateMembers } from '../helpers/ClassWithPrivateMem
 import { IsObject } from '../../helpers';
 
 
-
 export const REASON_PRIVATE = Symbol('reason-private');
 
 export interface IReasonPrivate<T> {

@@ -1,5 +1,5 @@
 import { IPromiseObservable } from '../../notifications/observables/finite-state/built-in/promise/promise-observable/interfaces';
-import { IObservable} from '../../core/observable/interfaces';
+import { IObservable } from '../../core/observable/interfaces';
 import { NotificationsObserver } from '../../notifications/core/notifications-observer/implementation';
 import { INotificationsObserver } from '../../notifications/core/notifications-observer/interfaces';
 import { Observable } from '../../core/observable/public';
@@ -15,10 +15,8 @@ export function toDistinctValueObservable<T>(observable: IPromiseObservable<T>):
       console.warn('abort', reason);
     })
     .pipeThrough(
-      new Pipe<
-        INotificationsObserver<'complete', T>,
-        IObservable<T>
-      >(() => {
+      new Pipe<INotificationsObserver<'complete', T>,
+        IObservable<T>>(() => {
         let context: IObservableContext<T>;
         return {
           observer: new NotificationsObserver<'complete', T>('complete', (value: T) => {

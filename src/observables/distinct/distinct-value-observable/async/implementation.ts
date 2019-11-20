@@ -1,13 +1,10 @@
 import { IObservableTypedConstructor } from '../../../../core/observable/interfaces';
 import { IObserver } from '../../../../core/observer/interfaces';
 import {
-  IAsyncDistinctValueObservable, IAsyncDistinctValueObservableConstructor,
-  IAsyncDistinctValueObservableTypedConstructor
+  IAsyncDistinctValueObservable, IAsyncDistinctValueObservableConstructor, IAsyncDistinctValueObservableTypedConstructor
 } from './interfaces';
 import { GetSetSuperArgsFunction, IsFactoryClass, MakeFactory } from '../../../../classes/class-helpers/factory';
-import {
-  IDistinctValueObservable, IDistinctValueObservableTypedConstructor
-} from '../sync/interfaces';
+import { IDistinctValueObservable, IDistinctValueObservableTypedConstructor } from '../sync/interfaces';
 import { DistinctValueObservableFactory, } from '../sync/implementation';
 import { Constructor } from '../../../../classes/class-helpers/types';
 import { BaseClass, IBaseClassConstructor } from '../../../../classes/class-helpers/base-class';

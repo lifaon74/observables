@@ -7,7 +7,7 @@ import { IObservableContextBaseInternal, OBSERVABLE_CONTEXT_BASE_PRIVATE } from 
 
 /* GETTERS/SETTERS */
 
-export function ObservableContextBaseGetObservable<T>(instance:  IObservableContextBase<T>): IObservable<T> {
+export function ObservableContextBaseGetObservable<T>(instance: IObservableContextBase<T>): IObservable<T> {
   return (instance as IObservableContextBaseInternal<T>)[OBSERVABLE_CONTEXT_BASE_PRIVATE].observable;
 }
 

@@ -1,6 +1,4 @@
-import {
-  IFunctionObservable
-} from '../../../observables/distinct/function-observable/sync/interfaces';
+import { IFunctionObservable } from '../../../observables/distinct/function-observable/sync/interfaces';
 import { TObservableOrValues } from '../types';
 import { FunctionObservable } from '../../../observables/distinct/function-observable/sync/implementation';
 import { $observables } from './$observables';

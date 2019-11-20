@@ -1,11 +1,10 @@
-import { TPromise, TPromiseOrValue } from '../interfaces';
+import { TPromise } from '../interfaces';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 import { TAbortStrategy, TAbortStrategyReturn } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 import {
-  ICancellablePromiseOptions,
-  TCancellablePromiseCancelledReturn, TCancellablePromiseCatchReturn, TCancellablePromiseCreateCallback,
-  TCancellablePromiseOnCancelledArgument, TCancellablePromiseOnFinallyArgument, TCancellablePromiseOnFulfilledArgument,
-  TCancellablePromiseOnRejectedArgument, TCancellablePromiseThenReturn
+  ICancellablePromiseOptions, TCancellablePromiseCancelledReturn, TCancellablePromiseCatchReturn,
+  TCancellablePromiseCreateCallback, TCancellablePromiseOnCancelledArgument, TCancellablePromiseOnFinallyArgument,
+  TCancellablePromiseOnFulfilledArgument, TCancellablePromiseOnRejectedArgument, TCancellablePromiseThenReturn
 } from './types';
 
 

@@ -27,7 +27,7 @@ export function ConstructCancellablePromise<T, TStrategy extends TAbortStrategy>
       throw new TypeError(`Expected AdvancedAbortSignal as CancellablePromise second argument.`);
     }
 
-    if (IsObject(options))  {
+    if (IsObject(options)) {
       if (options.strategy === void 0) {
         privates.strategy = 'never' as TStrategy;
       } else if (['resolve', 'reject', 'never'].includes(options.strategy)) {
@@ -55,7 +55,6 @@ export function ConstructCancellablePromise<T, TStrategy extends TAbortStrategy>
     } else {
       throw new TypeError(`Expected Promise or function as CancellablePromise first argument.`);
     }
-
 
 
   } else {

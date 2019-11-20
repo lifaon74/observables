@@ -1,9 +1,6 @@
 import { TAbortStrategy, TAbortStrategyReturn } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
-import {
-  PromiseFulfilledObject, PromiseRejectedObject, TPromiseOrValue, TPromiseOrValueTupleToValueTuple,
-  TPromiseOrValueTupleToValueUnion
-} from '../interfaces';
+import { PromiseFulfilledObject, PromiseRejectedObject, TPromiseOrValue } from '../interfaces';
 import { ICancellablePromise } from './interfaces';
 import { IAdvancedAbortController } from '../../misc/advanced-abort-controller/interfaces';
 
@@ -20,8 +17,6 @@ export type TCancellablePromiseCreateCallback<T, TStrategy extends TAbortStrateg
 export interface ICancellablePromiseOptions<T, TStrategy extends TAbortStrategy> {
   strategy?: TStrategy;
 }
-
-
 
 
 export type TCancellablePromiseTryCallback<T, TStrategy extends TAbortStrategy> = (

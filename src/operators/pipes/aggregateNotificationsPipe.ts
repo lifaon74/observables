@@ -25,7 +25,6 @@ export function aggregateNotificationsPipe<TValue>(names: Iterable<string> | nul
 }
 
 
-
 // export function aggregateNotificationsPipe<TKeysIn extends string, TValue>(names: Iterable<TKeysIn> | null = null): IPipe<IObserver<INotification<TKeysIn, TValue>>, IObservable<TValue>> {
 //   type TNotification = INotification<TKeysIn, TValue>;
 //   return Pipe.create<TNotification, TValue>((context: TPipeContextBase<TNotification, TValue>) => {

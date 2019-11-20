@@ -1,22 +1,21 @@
 import { NotificationsObservable } from '../../../notifications/core/notifications-observable/implementation';
 import { INotificationsObservableContext } from '../../../notifications/core/notifications-observable/context/interfaces';
-import { IAdvancedAbortSignal, IAdvancedAbortSignalConstructor} from './interfaces';
+import { IAdvancedAbortSignal, IAdvancedAbortSignalConstructor } from './interfaces';
 import { AllowAdvancedAbortSignalConstruct, ConstructAdvancedAbortSignal } from './constructor';
 import { ADVANCED_ABORT_SIGNAL_PRIVATE, IAdvancedAbortSignalInternal } from './privates';
 import { INotificationsObserver } from '../../../notifications/core/notifications-observer/interfaces';
 
 import { TPromise, TPromiseOrValue, TPromiseType } from '../../../promises/interfaces';
 import {
-  IAdvancedAbortSignalKeyValueMap,
-  IAdvancedAbortSignalWrapPromiseOptions, TAbortStrategy, TAbortStrategyReturn, TAbortStrategyReturnedPromise,
-  TAdvancedAbortSignalWrapPromiseCallback
+  IAdvancedAbortSignalKeyValueMap, IAdvancedAbortSignalWrapPromiseOptions, TAbortStrategy, TAbortStrategyReturn,
+  TAbortStrategyReturnedPromise, TAdvancedAbortSignalWrapPromiseCallback
 } from './types';
 import {
   AdvancedAbortSignalNormalizeWrapPromiseOptions, ApplyOnAbortCallback, IAdvancedAbortSignalWrapPromiseOptionsStrict,
   LinkAdvancedAbortSignalWithFetchArgumentsSpread, RaceAborted
 } from './functions';
 import { IsPromiseLikeBase, PromiseTry } from '../../../promises/helpers';
-import { setImmediate, clearImmediate } from '../../../classes/set-immediate';
+import { clearImmediate, setImmediate } from '../../../classes/set-immediate';
 
 
 /** NEW **/

@@ -1,6 +1,6 @@
 import { TExpressionOrFunction } from '../types';
 import { IExpression } from '../../../observables/distinct/expression/interfaces';
-import { Expression} from '../../../observables/distinct/expression/implementation';
+import { Expression } from '../../../observables/distinct/expression/implementation';
 import { IsExpression } from '../../../observables/distinct/expression/constructor';
 
 /**

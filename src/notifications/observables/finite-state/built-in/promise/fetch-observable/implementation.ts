@@ -1,4 +1,4 @@
-import { IFetchObservable} from './interfaces';
+import { IFetchObservable } from './interfaces';
 import { PromiseObservable } from '../promise-observable/implementation';
 import { INotificationsObservable } from '../../../../../core/notifications-observable/interfaces';
 import { promisePipe } from '../../../../../../operators/pipes/promisePipe';

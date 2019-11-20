@@ -10,13 +10,13 @@ export function IsPromiseLike(value: any): value is TPromise<any> {
   return IsPromiseLikeBase(value)
     && (typeof (value as any).catch === 'function')
     && (typeof (value as any).finally === 'function')
-  ;
+    ;
 }
 
 export function IsPromiseLikeBase(value: any): value is PromiseLike<any> {
   return IsObject(value)
     && (typeof (value as any).then === 'function')
-  ;
+    ;
 }
 
 export const NEVER_PROMISE = new Promise<never>(noop);
@@ -24,7 +24,8 @@ export const VOID_PROMISE = Promise.resolve();
 
 
 export function PromiseCreateCallbackNoop(): TPromiseCreateCallback<never> {
-  return () => {};
+  return () => {
+  };
 }
 
 export function PromiseCreateCallbackResolve<T>(value: T): TPromiseCreateCallback<T> {
@@ -71,8 +72,8 @@ export function AllSettled<T>(promises: Iterable<TPromise<T>>): TPromise<AllSett
     Array.from<TPromise<T>, TPromise<AllSettledResult<T>>>(promises, (promise: TPromise<T>) => {
       return promise
         .then(
-          (value: T): PromiseFulfilledObject<T> => ( { status: 'fulfilled', value: value } ),
-          (reason: any): PromiseRejectedObject => ( { status: 'rejected', reason: reason } ),
+          (value: T): PromiseFulfilledObject<T> => ({ status: 'fulfilled', value: value }),
+          (reason: any): PromiseRejectedObject => ({ status: 'rejected', reason: reason }),
         );
     })
   );

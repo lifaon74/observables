@@ -1,5 +1,6 @@
 import {
-  IDeferredPromise, IDeferredPromiseCodes, TDeferredPromiseAllReturn, TDeferredPromiseRaceReturn} from './interfaces';
+  IDeferredPromise, IDeferredPromiseCodes, TDeferredPromiseAllReturn, TDeferredPromiseRaceReturn
+} from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject, noop } from '../../helpers';
 import {
@@ -123,7 +124,7 @@ export function DeferredPromiseThen<T, TResult1 = T, TResult2 = never>(
         if (typeof onFulfilled === 'function') {
           DeferredPromiseTry<TResult1 | TResult2>(deferred, () => onFulfilled(result));
           // deferred.try(() => onFulfilled(result));
-        } else{
+        } else {
           DeferredPromiseResolve<TResult1 | TResult2>(deferred, result as unknown as (TResult1 | TResult2));
           // deferred.resolve(result);
         }

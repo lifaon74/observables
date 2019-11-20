@@ -64,7 +64,8 @@ export function ActivableActivate(instance: IActivable): Promise<void> {
   const privates: IActivablePrivate = (instance as IActivableInternal)[ACTIVABLE_PRIVATE];
   if (!privates.activated) {
     privates.promise = privates.promise
-      .catch(() => {}) // discard previous errors
+      .catch(() => {
+      }) // discard previous errors
       .then(() => {
         return privates.activate()
           .then(() => {
@@ -82,7 +83,8 @@ export function ActivableDeactivate(instance: IActivable): Promise<void> {
   const privates: IActivablePrivate = (instance as IActivableInternal)[ACTIVABLE_PRIVATE];
   if (privates.activated) {
     privates.promise = privates.promise
-      .catch(() => {}) // discard previous errors
+      .catch(() => {
+      }) // discard previous errors
       .then(() => {
         return privates.deactivate()
           .then(() => {

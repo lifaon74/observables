@@ -1,19 +1,15 @@
 import { ICancellablePromise, ICancellablePromiseConstructor } from './interfaces';
 import {
-  PromiseFulfilledObject, PromiseRejectedObject,
-  TPromise,
-  TPromiseOrValue, TPromiseOrValueFactoryTupleToValueTuple, TPromiseOrValueFactoryTupleToValueUnion,
-  TPromiseOrValueTupleToCancellablePromiseTuple,
+  PromiseFulfilledObject, PromiseRejectedObject, TPromise, TPromiseOrValue, TPromiseOrValueFactoryTupleToValueTuple,
+  TPromiseOrValueFactoryTupleToValueUnion, TPromiseOrValueTupleToCancellablePromiseTuple,
   TPromiseOrValueTupleToValueUnion, TPromiseType
 } from '../interfaces';
 import { Reason } from '../../misc/reason/implementation';
 import {
   ICancellablePromiseOptions, PromiseCancelledObject, TCancellablePromiseCancelledReturn,
-  TCancellablePromiseCatchReturn,
-  TCancellablePromiseCreateCallback, TCancellablePromiseFactory, TCancellablePromiseOnCancelledArgument,
-  TCancellablePromiseOnFinallyArgument, TCancellablePromiseOnFulfilled, TCancellablePromiseOnFulfilledArgument,
-  TCancellablePromiseOnRejected,
-  TCancellablePromiseOnRejectedArgument,
+  TCancellablePromiseCatchReturn, TCancellablePromiseCreateCallback, TCancellablePromiseFactory,
+  TCancellablePromiseOnCancelledArgument, TCancellablePromiseOnFinallyArgument, TCancellablePromiseOnFulfilled,
+  TCancellablePromiseOnFulfilledArgument, TCancellablePromiseOnRejected, TCancellablePromiseOnRejectedArgument,
   TCancellablePromiseThenReturn, TCancellablePromiseTryCallback
 } from './types';
 import { CANCELLABLE_PROMISE_PRIVATE, ICancellablePromiseInternal, ICancellablePromisePrivate } from './privates';
