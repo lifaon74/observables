@@ -34,10 +34,10 @@ export function IsReadonlySet(value: any): value is IReadonlySet<any> {
 
 export class ReadonlySet<TValue> implements IReadonlySet<TValue> {
 
-  constructor (values: Iterable<TValue>) {
+  constructor(values: Iterable<TValue>) {
     ConstructReadonlySet<TValue>(this, values);
   }
-  
+
   get size(): number {
     return ((this as unknown) as IReadonlySetInternal<TValue>)[READONLY_SET_PRIVATE].set.size;
   }

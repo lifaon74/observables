@@ -1,3 +1,5 @@
+import { Writeable } from '../../classes/types';
+
 export interface IProgressOptions {
   loaded?: number; // (default => 0)
   total?: number; // (default => Number.POSITIVE_INFINITE)
@@ -6,14 +8,16 @@ export interface IProgressOptions {
 
 
 export interface IProgressConstructor {
-  fromEvent(event: ProgressEvent): IProgress;
+  fromEvent(event: ProgressEvent, name?: string): IProgress;
+
   fromJSON(json: IProgressJSON): IProgress;
 
   new(loaded?: number, total?: number, name?: string): IProgress;
+
   new(options?: IProgressOptions): IProgress;
 }
 
-export interface IProgressJSON extends Pick<IProgress, 'loaded' | 'total' | 'lengthComputable' | 'name'> {
+export interface IProgressJSON extends Writeable<Pick<IProgress, 'loaded' | 'total' | 'lengthComputable' | 'name'>> {
 }
 
 /**

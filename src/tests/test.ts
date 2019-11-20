@@ -1,10 +1,8 @@
 import { ReadonlyList } from '../misc/readonly-list/implementation';
-import { Observable } from '../core/observable/implementation';
 import { NotificationsObservable } from '../notifications/core/notifications-observable/implementation';
 import { EventsObservable } from '../notifications/observables/events/events-observable/implementation';
 import { mapPipe } from '../operators/pipes/mapPipe';
 import { TimerObservable } from '../observables/timer-observable/implementation';
-import { AsyncSource, Source } from '../observables/distinct/source/implementation';
 import { Notification } from '../notifications/core/notification/implementation';
 import { WebSocketIO } from '../observables/io/websocket-observable/implementation';
 import { UnionToIntersection } from '../classes/types';
@@ -16,22 +14,23 @@ import { noop } from '../helpers';
 import { Observer } from '../core/observer/public';
 import { toRXJS } from '../operators/to/toRXJS';
 import {
-  FiniteStateObservable, IFiniteStateObservable, IFiniteStateObservableKeyValueMapGeneric,
-  TFiniteStateObservableFinalState, TFiniteStateObservableMode
+  FiniteStateObservable, IFiniteStateObservable, TFiniteStateObservableKeyValueMapGeneric,
+  TFiniteStateObservableFinalState, TFiniteStateObservableMode, FromIterableObservable
 } from '../notifications/observables/finite-state/public';
-import { IFileReaderObservable } from '../notifications/observables/finite-state/file-reader/interfaces';
-import { FileReaderObservable } from '../notifications/observables/finite-state/file-reader/implementation';
+import { IFileReaderObservable } from '../notifications/observables/finite-state/built-in/file-reader/interfaces';
+import { FileReaderObservable } from '../notifications/observables/finite-state/built-in/file-reader/implementation';
 import { Progress } from '../misc/progress/implementation';
-import { FromIterableObservable } from '../notifications/observables/finite-state/from/iterable/sync/public';
-import { FromRXJSObservable } from '../notifications/observables/finite-state/from/rxjs/public';
+import { FromRXJSObservable } from '../notifications/observables/finite-state/built-in/from/rxjs/public';
 import { aggregateNotificationsPipe } from '../operators/pipes/aggregateNotificationsPipe';
 import { finiteStateObservableToPromise, toPromise } from '../operators/to/toPromise';
 import { testExamples } from './examples/examples';
 import { testPromises } from './test-promises';
 import { testTask } from './test-task';
 import { IProgress } from '../misc/progress/interfaces';
-
-
+import { Observable } from '../core/observable/implementation';
+import { testAbortController } from './test-abort-controller';
+import { Source } from '../observables/distinct/source/sync/implementation';
+import { AsyncSource } from '../observables/distinct/source/async/implementation';
 
 
 
@@ -191,28 +190,28 @@ export function testSource() {
 }
 
 export async function testAsyncSource() {
-  const source = await new AsyncSource<number>().emit(Promise.resolve(0));
+  const source = await new AsyncSource<number>().emit(() => Promise.resolve(0));
 
   source.pipeTo((value: number) => {
     console.log(value);
   }).activate(); // print 0
 
-  await source.emit(Promise.resolve(1)); // print 1
-  await source.emit(Promise.resolve(1)); // nothing to print
-  await source.emit(Promise.resolve(2)); // print 2
+  await source.emit(() => Promise.resolve(1)); // print 1
+  await source.emit(() => Promise.resolve(1)); // nothing to print
+  await source.emit(() => Promise.resolve(2)); // print 2
 }
 
 
 
 async function testFiniteStateObservable() {
 
-  function assertFiniteStateObservableEmits<TValue>(observable: IFiniteStateObservable<any, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<any, TFiniteStateObservableFinalState>>, notifications: [string, any][]): Promise<void> {
+  function assertFiniteStateObservableEmits<TValue>(observable: IFiniteStateObservable<any, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<any, TFiniteStateObservableFinalState>>, notifications: [string, any][]): Promise<void> {
     return assertObservableEmits(observable, notifications, 100, notificationsEquals);
   }
 
   function testCannotEmitAfterFiniteState() {
     return new Promise<void>((resolve: any, reject: any) => {
-      new FiniteStateObservable<number, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<number, TFiniteStateObservableFinalState>>((context) => {
+      new FiniteStateObservable<number, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<number, TFiniteStateObservableFinalState>>((context) => {
         context.next(1);
         context.next(2);
         context.complete();
@@ -228,7 +227,7 @@ async function testFiniteStateObservable() {
   }
 
   async function testOnce() {
-    const observable = new FiniteStateObservable<number, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<number, TFiniteStateObservableFinalState>>((context) => {
+    const observable = new FiniteStateObservable<number, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<number, TFiniteStateObservableFinalState>>((context) => {
       return {
         onObserved(): void {
           if (context.observable.state === 'next') {
@@ -250,7 +249,7 @@ async function testFiniteStateObservable() {
   }
 
   async function testCache() {
-    const observable = new FiniteStateObservable<number, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<number, TFiniteStateObservableFinalState>>((context) => {
+    const observable = new FiniteStateObservable<number, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<number, TFiniteStateObservableFinalState>>((context) => {
       context.next(1);
       context.next(2);
       context.complete();
@@ -272,7 +271,7 @@ async function testFiniteStateObservable() {
   }
 
   async function testCacheFinalState() {
-    const observable = new FiniteStateObservable<number, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<number, TFiniteStateObservableFinalState>>((context) => {
+    const observable = new FiniteStateObservable<number, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<number, TFiniteStateObservableFinalState>>((context) => {
       context.next(1);
       context.next(2);
       context.error('my-error');
@@ -290,7 +289,7 @@ async function testFiniteStateObservable() {
   }
 
   async function testThrowAfterComplete() {
-    const observable = new FiniteStateObservable<number, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<number, TFiniteStateObservableFinalState>>((context) => {
+    const observable = new FiniteStateObservable<number, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<number, TFiniteStateObservableFinalState>>((context) => {
       context.next(1);
       context.next(2);
       context.complete();
@@ -319,7 +318,7 @@ async function testFromIterableObservable() {
     new Notification('complete', void 0),
   ];
 
-  const values1 = new FromIterableObservable<number>([0, 1, 2, 3], { mode: 'uniq' });
+  const values1 = new FromIterableObservable([0, 1, 2, 3], { mode: 'uniq' });
 
   await assertObservableEmits(
     values1,
@@ -328,7 +327,7 @@ async function testFromIterableObservable() {
 
   await assertFails(() => values1.pipeTo(noop).activate());
 
-  const values2 = new FromIterableObservable<number>([0, 1, 2, 3][Symbol.iterator](), { mode: 'cache' });
+  const values2 = new FromIterableObservable([0, 1, 2, 3][Symbol.iterator](), { mode: 'cache' });
 
   await assertObservableEmits(
     values2,
@@ -343,7 +342,7 @@ async function testFromIterableObservable() {
 
 async function testReducePipe() {
   await assertObservableEmits(
-    new FromIterableObservable<number>([0, 1, 2, 3])
+    new FromIterableObservable([0, 1, 2, 3])
       .pipeThrough(aggregateNotificationsPipe<number>(['next']))
       .pipeThrough(reducePipe<number>((a, b) => (a + b), 0)),
     [0, 1, 3, 6]
@@ -434,8 +433,8 @@ async function testToRXJS() {
 }
 
 async function testToPromise() {
-  await assert(() => toPromise(new FromIterableObservable<number>([0, 1, 2, 3])).then(_ => (_ === 3)));
-  await assert(() => finiteStateObservableToPromise(new FromIterableObservable<number>([0, 1, 2, 3])).then(values => eq(values, [0, 1, 2, 3])));
+  await assert(() => toPromise(new FromIterableObservable([0, 1, 2, 3])).then(_ => (_ === 3)));
+  await assert(() => finiteStateObservableToPromise(new FromIterableObservable([0, 1, 2, 3])).then(values => eq(values, [0, 1, 2, 3])));
 }
 
 async function testToAsyncIterable() {
@@ -566,7 +565,7 @@ export async function testFileReaderObservable() {
 
 export async function test() {
   console.log('1');
-  await testExamples();
+  // await testExamples();
   // testMicroObservables();
 
   // testReadOnlyList();
@@ -585,7 +584,7 @@ export async function test() {
   // await testToAsyncIterable();
 
 
-  // await testFileReaderObservable();
+  await testFileReaderObservable();
 
   // testWebSocket();
   // testWEBRTC1();
@@ -600,6 +599,10 @@ export async function test() {
   // testClasses();
   // testProgram();
   // await testTask();
+  // await testFactory();
+  // await testUnit();
+
+  // await testAbortController();
 
   console.log('tests done');
 }

@@ -1,14 +1,15 @@
 import { Task } from '../notifications/observables/task/implementation';
 import { ITask, ITaskContext } from '../notifications/observables/task/interfaces';
-import { ICancelToken } from '../misc/cancel-token/interfaces';
-import { CancelReason, CancelToken } from '../misc/cancel-token/implementation';
-import { IFromReadableStreamObservable } from '../notifications/observables/finite-state/from/readable-stream/interfaces';
-import { FromReadableStreamObservable } from '../notifications/observables/finite-state/from/readable-stream/implementation';
+import { IFromReadableStreamObservable } from '../notifications/observables/finite-state/built-in/from/readable-stream/interfaces';
+import { FromReadableStreamObservable } from '../notifications/observables/finite-state/built-in/from/readable-stream/implementation';
 import { IProgress } from '../misc/progress/interfaces';
 import { ITaskAsyncIteratorValue, taskFromAsyncIterator } from '../notifications/observables/task/from/async-iterable';
 import { Progress } from '../misc/progress/implementation';
 import { taskFromPromise } from '../notifications/observables/task/from/promise';
 import { taskFromTasksInParallel } from '../notifications/observables/task/from/tasks';
+import { AbortReason } from '../misc/reason/defaults/abort-reason';
+import { AdvancedAbortController } from '../misc/advanced-abort-controller/implementation';
+import { IAdvancedAbortController } from '../misc/advanced-abort-controller/interfaces';
 
 
 function noCORS(url: string): string {
@@ -66,7 +67,7 @@ function generateTaskControlButton<T extends ITask<any>>(task: T): T {
       || (task.state === 'run')
       || (task.state === 'pause')
     ) {
-      task.cancel(new CancelReason('Manual cancel'));
+      task.cancel(new AbortReason('Manual cancel'));
     }
   });
 
@@ -93,7 +94,7 @@ function generateTaskControlButton<T extends ITask<any>>(task: T): T {
 function $fetch(input: RequestInfo, init?: RequestInit): ITask<Blob> {
   return new Task<Blob>((context: ITaskContext<Blob>) => {
     // creates a cancel token used for fetching and promises
-    const token: ICancelToken = new CancelToken();
+    const controller: IAdvancedAbortController = new AdvancedAbortController();
     let chunksObservable: IFromReadableStreamObservable<Uint8Array>;
 
     // clear resources
@@ -109,7 +110,7 @@ function $fetch(input: RequestInfo, init?: RequestInit): ITask<Blob> {
     // when the task is cancelled, abort the http request
     const cancelListener = context.task.addListener('cancel', () => {
       clear();
-      token.cancel();
+      controller.abort();
     });
 
     // forbid pause, because fetching cannot be paused
@@ -120,8 +121,8 @@ function $fetch(input: RequestInfo, init?: RequestInit): ITask<Blob> {
 
     // on start
     const startListener = context.task.addListener('start', () => {
-      fetch(...token.wrapFetchArguments(input, init)) // do the http request
-        .then(token.wrapFunction((response: Response) => {
+      fetch(...controller.signal.wrapFetchArguments(input, init)) // do the http request
+        .then(controller.signal.wrapFunction((response: Response) => {
           if (response.ok) {
             let bytesRead: number = 0; // total number of bytes read
             const chunks: Uint8Array[] = []; // list of data chunks received
@@ -156,7 +157,7 @@ function $fetch(input: RequestInfo, init?: RequestInit): ITask<Blob> {
             context.error(new Error(`Failed to fetch resource: ${ response.status } - ${ response.statusText }`));
             clear();
           }
-        }), token.wrapFunction((error: any) => {
+        }), controller.signal.wrapFunction((error: any) => {
           context.error(error);
           clear();
         }));

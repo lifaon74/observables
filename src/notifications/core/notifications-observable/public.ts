@@ -1,3 +1,6 @@
 export * from './interfaces';
-export { NotificationsObservable, IsNotificationsObservable } from './implementation';
+export * from './types';
+export { NotificationsObservable, NotificationsObservableFactory } from './implementation';
+export { IsNotificationsObservable } from './constructor';
+export * from './context/public';
 

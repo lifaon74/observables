@@ -1,10 +1,11 @@
-import {
-  FinalStateConstraint, FiniteStateKeyValueMapConstraint, FiniteStateObservableModeConstraint, IFiniteStateObservable,
-  IFiniteStateObservableContext
-} from './interfaces';
+import { IFiniteStateObservable } from './interfaces';
 import { noop } from '../../../helpers';
+import {
+  TFinalStateConstraint, TFiniteStateKeyValueMapConstraint, TFiniteStateObservableModeConstraint
+} from './types';
+import { IFiniteStateObservableContext } from './context/interfaces';
 
-export function FiniteStateObservableHookDefaultOnUnobserved<TValue, TFinalState extends FinalStateConstraint<TFinalState>, TMode extends FiniteStateObservableModeConstraint<TMode>, TKVMap extends FiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>>(
+export function FiniteStateObservableHookDefaultOnUnobserved<TValue, TFinalState extends TFinalStateConstraint<TFinalState>, TMode extends TFiniteStateObservableModeConstraint<TMode>, TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>>(
   instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
   context: IFiniteStateObservableContext<TValue, TFinalState, TMode, TKVMap>,
   clear: (instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>) => void = noop,

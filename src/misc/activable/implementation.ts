@@ -1,9 +1,11 @@
 import { ConstructClassWithPrivateMembers } from '../helpers/ClassWithPrivateMembers';
-import { BaseClass, Constructor, HasFactoryWaterMark, IBaseClassConstructor, MakeFactory } from '../../classes/factory';
+import { HasFactoryWaterMark, MakeFactory } from '../../classes/class-helpers/factory';
 import {
   IActivable, IActivableConstructor, IActivableHook, TActivableConstructorArgs, TActivableSateListener
 } from './interfaces';
 import { IsObject } from '../../helpers';
+import { Constructor } from '../../classes/class-helpers/types';
+import { BaseClass, IBaseClassConstructor } from '../../classes/class-helpers/base-class';
 
 
 export const ACTIVABLE_PRIVATE = Symbol('activable-private');
@@ -62,7 +64,8 @@ export function ActivableActivate(instance: IActivable): Promise<void> {
   const privates: IActivablePrivate = (instance as IActivableInternal)[ACTIVABLE_PRIVATE];
   if (!privates.activated) {
     privates.promise = privates.promise
-      .catch(() => {}) // discard previous errors
+      .catch(() => {
+      }) // discard previous errors
       .then(() => {
         return privates.activate()
           .then(() => {
@@ -80,7 +83,8 @@ export function ActivableDeactivate(instance: IActivable): Promise<void> {
   const privates: IActivablePrivate = (instance as IActivableInternal)[ACTIVABLE_PRIVATE];
   if (privates.activated) {
     privates.promise = privates.promise
-      .catch(() => {}) // discard previous errors
+      .catch(() => {
+      }) // discard previous errors
       .then(() => {
         return privates.deactivate()
           .then(() => {

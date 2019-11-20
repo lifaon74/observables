@@ -51,6 +51,12 @@ export function IsIterable(value: any): value is Iterable<any> {
     && (Symbol.iterator in value);
 }
 
+export function IsAsyncIterable(value: any): value is AsyncIterable<any> {
+  return IsObject(value)
+    && (Symbol.asyncIterator in value);
+}
+
+
 export function IsIterator(value: any): value is Iterable<any> {
   return IsObject(value)
     && (typeof (value as any).next === 'function');

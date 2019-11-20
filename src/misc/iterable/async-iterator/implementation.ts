@@ -1,12 +1,12 @@
-import {
-  BaseClass, Constructor, HasFactoryWaterMark, IBaseClassConstructor, MakeFactory
-} from '../../../classes/factory';
+import { HasFactoryWaterMark, MakeFactory } from '../../../classes/class-helpers/factory';
 import {
   IAsyncIterator, IAsyncIteratorConstructor, TAsyncIteratorConstructorArgs, TAsyncIteratorNextCallback
 } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../../helpers';
 import { IteratorResult } from '../interfaces';
+import { Constructor } from '../../../classes/class-helpers/types';
+import { BaseClass, IBaseClassConstructor } from '../../../classes/class-helpers/base-class';
 
 export const ASYNC_ITERATOR_PRIVATE = Symbol('async-iterator-private');
 

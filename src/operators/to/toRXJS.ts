@@ -6,7 +6,7 @@ import { IObserver } from '../../core/observer/interfaces';
 import { TValueOrNotificationType } from './toPromise';
 import {
   TFiniteStateObservableFinalState, TFiniteStateObservableLikeNotifications
-} from '../../notifications/observables/finite-state/interfaces';
+} from '../../notifications/observables/finite-state/types';
 
 
 export function toRXJS<T>(observable: IObservable<TFiniteStateObservableLikeNotifications<T, TFiniteStateObservableFinalState>> | IObservable<T>): RXObservable<T> {

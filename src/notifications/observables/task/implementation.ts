@@ -1,16 +1,14 @@
 import {
   ITask, ITaskContext, ITaskContextConstructor, ITaskKeyValueMap, TTaskCreateCallback, TTaskState
 } from './interfaces';
-import { INotificationsObservableContext } from '../../core/notifications-observable/interfaces';
-import {
-  INotificationsObservableInternal, NotificationsObservable
-} from '../../core/notifications-observable/implementation';
+import { NotificationsObservable } from '../../core/notifications-observable/implementation';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../../helpers';
 import { IProgress, IProgressOptions } from '../../../misc/progress/interfaces';
 import { IsProgress, Progress } from '../../../misc/progress/implementation';
-import { TCancelStrategy } from '../../../misc/cancel-token/interfaces';
-
+import { INotificationsObservableInternal } from '../../core/notifications-observable/privates';
+import { INotificationsObservableContext } from '../../core/notifications-observable/context/interfaces';
+import { TAbortStrategy } from '../../../misc/advanced-abort-controller/advanced-abort-signal/types';
 
 
 export const TASK_PRIVATE = Symbol('task-private');
@@ -111,7 +109,7 @@ export function TaskCancel<TValue>(instance: ITask<TValue>, reason?: any): void 
   }
 }
 
-export function TaskToPromise<TValue>(instance: ITask<TValue>, strategy?: TCancelStrategy): Promise<TValue> {
+export function TaskToPromise<TValue>(instance: ITask<TValue>, strategy?: TAbortStrategy): Promise<TValue> {
   return new Promise<TValue>((resolve: any, reject: any) => {
     const privates: ITaskPrivate<TValue> = (instance as ITaskInternal<TValue>)[TASK_PRIVATE];
 
@@ -220,7 +218,6 @@ export function TaskProgress<TValue>(instance: ITask<TValue>, progress?: IProgre
 }
 
 
-
 /** CLASS **/
 
 export class Task<TValue> extends NotificationsObservable<ITaskKeyValueMap<TValue>> implements ITask<TValue> {
@@ -266,11 +263,10 @@ export class Task<TValue> extends NotificationsObservable<ITaskKeyValueMap<TValu
     return this;
   }
 
-  toPromise(strategy?: TCancelStrategy): Promise<TValue> {
+  toPromise(strategy?: TAbortStrategy): Promise<TValue> {
     return TaskToPromise<TValue>(this, strategy);
   }
 }
-
 
 
 /** ------------ CONTEXT ------------ **/

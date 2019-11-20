@@ -79,7 +79,7 @@ interface IFiniteStateObservableContext<TValue, TFinalState extends FinalStateCo
 A FiniteStateObservable is simply an Observable with a final state (at least *complete* or *error*), just like the RXJS's Observables. 
 It is an helper to build Observables having a final state and should be used with care.
 
-It extends `NotificationsObservable` with the minimum following 3 *'events'*:
+It extends `NotificationsObservable` with the minimum 3 following *'events'*:
 - `next: TValue`: the emitted values
 - `complete: void`: when the Observable has no more data to emit
 - `error: any`: when the Observable errored
@@ -114,7 +114,7 @@ Its `mode` defines some useful behaviours:
 - `cache-all`: caches all notifications (including ones with a different name than `next` and `TFinalState`). Every observer will receive the whole list of all emitted notifications
 
 `finalStates?: Iterable<TFinalState>` represents the list of the final states of this FiniteStateObservable.
-For example, the PromiseObservable has a `cancel` state too as its final state.
+For example, the PromiseObservable has an `abort` state too as its final state.
 
 `modes?: Iterable<TMode>;` represents the list of the available modes of this FiniteStateObservable.
 For example, the PromiseObservable has an extra `every` mode.

@@ -3,20 +3,20 @@ import {
   AllSettledResult, ICancellablePromiseTuple, PromiseFulfilledObject, PromiseRejectedObject, TPromise,
   TPromiseCreateCallback, TPromiseOrValue
 } from './interfaces';
-import { ICancelToken, TCancelStrategyReturn } from '../misc/cancel-token/interfaces';
+import { IAdvancedAbortSignal } from '../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 
 
 export function IsPromiseLike(value: any): value is TPromise<any> {
   return IsPromiseLikeBase(value)
     && (typeof (value as any).catch === 'function')
     && (typeof (value as any).finally === 'function')
-  ;
+    ;
 }
 
 export function IsPromiseLikeBase(value: any): value is PromiseLike<any> {
   return IsObject(value)
     && (typeof (value as any).then === 'function')
-  ;
+    ;
 }
 
 export const NEVER_PROMISE = new Promise<never>(noop);
@@ -24,7 +24,8 @@ export const VOID_PROMISE = Promise.resolve();
 
 
 export function PromiseCreateCallbackNoop(): TPromiseCreateCallback<never> {
-  return () => {};
+  return () => {
+  };
 }
 
 export function PromiseCreateCallbackResolve<T>(value: T): TPromiseCreateCallback<T> {
@@ -71,13 +72,13 @@ export function AllSettled<T>(promises: Iterable<TPromise<T>>): TPromise<AllSett
     Array.from<TPromise<T>, TPromise<AllSettledResult<T>>>(promises, (promise: TPromise<T>) => {
       return promise
         .then(
-          (value: T): PromiseFulfilledObject<T> => ( { status: 'fulfilled', value: value } ),
-          (reason: any): PromiseRejectedObject => ( { status: 'rejected', reason: reason } ),
+          (value: T): PromiseFulfilledObject<T> => ({ status: 'fulfilled', value: value }),
+          (reason: any): PromiseRejectedObject => ({ status: 'rejected', reason: reason }),
         );
     })
   );
 }
 
-export function SpreadCancellablePromiseTuple<T>({ promise, token }: ICancellablePromiseTuple<T>): [TPromise<T>, ICancelToken] {
-  return [promise, token];
+export function SpreadCancellablePromiseTuple<T>({ promise, controller }: ICancellablePromiseTuple<T>): [TPromise<T>, IAdvancedAbortSignal] {
+  return [promise, controller.signal];
 }

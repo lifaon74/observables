@@ -30,10 +30,11 @@ export interface IDeferredPromiseCodes {
   readonly RESOLVING: 'resolving';
 }
 
-export interface IDeferredPromiseConstructor extends IDeferredPromiseCodes{
+export interface IDeferredPromiseConstructor extends IDeferredPromiseCodes {
 
   // Equivalent of Promise.resolve
   resolve(): IDeferredPromise<void>;
+
   resolve<T>(value: TPromiseOrValue<T>,): IDeferredPromise<T>;
 
   // Equivalent of Promise.reject
@@ -149,7 +150,6 @@ export async function deferredPromiseExample(): Promise<void> {
   }
 }
 */
-
 
 
 // const v: unknown = null;

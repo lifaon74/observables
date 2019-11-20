@@ -1,4 +1,6 @@
-import { ICancelToken } from '../misc/cancel-token/interfaces';
+import { ICancellablePromise } from './cancellable-promise/interfaces';
+import { IAdvancedAbortController } from '../misc/advanced-abort-controller/interfaces';
+import { IAdvancedAbortSignal } from '../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 
 /**
  * BETTER DEFINITIONS AND HELPERS FOR PROMISE
@@ -153,6 +155,12 @@ export type TPromiseOrValueFactoryType<F extends TPromiseOrValueFactory<any>> = 
   : never;
 
 
+export type TPromiseOrValueTupleToCancellablePromiseTuple<TTuple extends TPromiseOrValue<any>[]> = {
+  [K in keyof TTuple]: ICancellablePromise<TTuple[K] extends TPromiseOrValueFactory<infer P>
+    ? TPromiseType<P>
+    : TTuple[K]>;
+};
+
 export type TPromiseOrValueTupleToValueTuple<TTuple extends TPromiseOrValue<any>[]> = {
   [K in keyof TTuple]: TPromiseType<TTuple[K]>;
 };
@@ -174,7 +182,12 @@ export type TPromiseConstructorLike<P extends PromiseLike<any> = TPromiseLike<an
 // export type TCancellablePromiseTuple<T> = [Promise<T>, ICancelToken];
 export type ICancellablePromiseTuple<T> = {
   promise: TPromise<T>,
-  token: ICancelToken,
+  controller: IAdvancedAbortController,
+};
+
+export type IPromiseAndSignalTuple<T> = {
+  promise: TPromise<T>,
+  signal: IAdvancedAbortSignal,
 };
 
 

@@ -1,6 +1,6 @@
 {
   "name": "@lifaon/observables",
-  "version": "1.6.0",
+  "version": "2.0.1",
   "description": "Better observables for everyone",
   "main": "index.js",
   "scripts": {
@@ -47,7 +47,6 @@
     "copy_sources": "mkdirp dist && shx cp -r ./src/ ./dist/src",
     "generate_packages": "node tools/make-packages.js",
     "publish_package": "yarn publish ./dist/package --access public",
-
     "dev_browser": "npm-run-all clean_dev_browser watch_dev_browser",
     "watch_dev_browser": "npm-run-all -p tsc_watch_dev_browser serve_dev_browser",
     "tsc_watch_dev_browser": "tsc-watch -p ./tsconfig/tsconfig.dev.browser.json --onSuccess \"npm run build_dev_browser\"",
@@ -56,7 +55,6 @@
     "copy_index_dev_browser": "shx cp src/index.html dist/browser/index.html",
     "serve_dev_browser": " browser-sync start --config bs-config.js",
     "clean_dev_browser": "shx rm -rf ./dist/browser",
-
     "toc": "markdown-toc README.md"
   },
   "repository": {
@@ -79,11 +77,14 @@
     "google-closure-compiler-js": "20170218.0.0"
   },
   "peerDependencies": {
-    "rxjs": "^6.5.3"
+    "rxjs": "6.5.3"
   },
   "devDependencies": {
     "@types/node": "latest",
     "browser-sync": "^2.26.7",
+    "escodegen": "^1.12.0",
+    "esprima": "^4.0.1",
+    "estraverse": "^4.3.0",
     "http-server": "^0.11.1",
     "markdown-toc": "^1.2.0",
     "mkdirp": "^0.5.1",

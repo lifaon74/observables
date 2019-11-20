@@ -1,7 +1,8 @@
 /**
- * ABSTRACT CLASS
+ * INTERFACES
  */
 
+/* ABSTRACT */
 export interface IEventLikeConstructor {
   new(type: string): IEventLike;
 }

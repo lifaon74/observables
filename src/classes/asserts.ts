@@ -1,16 +1,16 @@
-import { IPipe } from '../core/observable-observer/interfaces';
 import { IObserver } from '../core/observer/interfaces';
-import { IPromiseObservable } from '../notifications/observables/finite-state/promise/promise-observable/interfaces';
-import { Pipe } from '../core/observable-observer/implementation';
+import { IPromiseObservable } from '../notifications/observables/finite-state/built-in/promise/promise-observable/interfaces';
 import { Observer } from '../core/observer/implementation';
-import { PromiseObservable } from '../notifications/observables/finite-state/promise/promise-observable/implementation';
+import { PromiseObservable } from '../notifications/observables/finite-state/built-in/promise/promise-observable/implementation';
 import { IObservable } from '../core/observable/interfaces';
 import {
   singleFiniteStateObservableToPromise
 } from '../operators/to/toPromise';
-import { IFunctionObservable } from '../observables/distinct/function-observable/interfaces';
-import { ISource } from '../observables/distinct/source/interfaces';
+import { IFunctionObservable } from '../observables/distinct/function-observable/sync/interfaces';
 import { IsObject } from '../helpers';
+import { IPipe } from '../core/observable-observer/pipe/interfaces';
+import { Pipe } from '../core/observable-observer/pipe/implementation';
+import { ISource } from '../observables/distinct/source/sync/interfaces';
 
 export function eq(a: any, b: any): boolean {
   return Object.is(a, b)

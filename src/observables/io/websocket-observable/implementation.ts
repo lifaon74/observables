@@ -4,15 +4,15 @@ import { IWebSocketIO, IWebSocketIOKeyValueMap, IWebSocketIOOptions, TWebSocketD
 import { ReadonlyList } from '../../../misc/readonly-list/implementation';
 import { EventsObservable } from '../../../notifications/observables/events/events-observable/implementation';
 import { IEventsObservable } from '../../../notifications/observables/events/events-observable/interfaces';
-import {
-  INotificationsObservableContext, KeyValueMapToNotifications, KeyValueMapToNotificationsObservers
-} from '../../../notifications/core/notifications-observable/interfaces';
-import { Observable, ObservableClearObservers } from '../../../core/observable/implementation';
-import { IObservable, IObservableContext } from '../../../core/observable/interfaces';
+import { IObservable } from '../../../core/observable/interfaces';
 import { IObserver, Observer } from '../../../core/observer/public';
 import { InputOutput } from '../io-observable/implementation';
 import { IsIterable, IsObject } from '../../../helpers';
 import { WebSocketError } from './WebSocketCloseEvent';
+import { Observable, ObservableClearObservers } from '../../../core/observable/implementation';
+import { IObservableContext } from '../../../core/observable/context/interfaces';
+import { INotificationsObservableContext } from '../../../notifications/core/notifications-observable/context/interfaces';
+import { KeyValueMapToNotifications } from '../../../notifications/core/notifications-observable/types';
 
 
 export const WEBSOCKET_IO_PRIVATE = Symbol('websocket-io-private');

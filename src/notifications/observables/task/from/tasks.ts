@@ -77,7 +77,7 @@ function PassthroughsTask(context: ITaskContext<any>, task: ITask<any>) {
 export function taskFromTasksInSequence<T>(tasks: ITask<any>[]): ITask<void> {
   return new Task<void>((context: ITaskContext<void>) => {
     let promise: Promise<void> = Promise.resolve();
-    for (let i = 0, l = tasks.length;i < l; i++) {
+    for (let i = 0, l = tasks.length; i < l; i++) {
       const task: ITask<any> = tasks[i];
       promise = promise
         .then(() => {
@@ -106,8 +106,9 @@ export type TProgressMode =
  * Takes N 'progresses' in input and returns (if possible) the aggregated progress
  */
 export type TAggregatedProgress = Required<Omit<IProgressOptions, 'name'>>;
+
 function AggregateProgresses(progresses: (TAggregatedProgress | null)[]): TAggregatedProgress | null {
-  return progresses.reduce<TAggregatedProgress | null>((previousValue:  TAggregatedProgress | null, currentValue: TAggregatedProgress | null) => {
+  return progresses.reduce<TAggregatedProgress | null>((previousValue: TAggregatedProgress | null, currentValue: TAggregatedProgress | null) => {
     if ((previousValue === null) || (currentValue === null)) {
       return null;
     } else {

@@ -1,13 +1,13 @@
-import { IPipe, TPipeContextBase } from '../../core/observable-observer/interfaces';
 import { IObserver } from '../../core/observer/interfaces';
-import { Pipe } from '../../core/observable-observer/implementation';
 import { INotification } from '../../notifications/core/notification/interfaces';
 import { IObservable } from '../../core/observable/interfaces';
+import { IPipe } from '../../core/observable-observer/pipe/interfaces';
+import { TPipeContextBase } from '../../core/observable-observer/pipe/types';
+import { Pipe } from '../../core/observable-observer/pipe/implementation';
 
 /**
  * ObservableObserver: aggregates many notifications by filtering their name - emits the received values
  *  - when a notification is received, the pipe emits the notifications's value if the notification's name is in 'names'
- * @param names
  */
 export function aggregateNotificationsPipe<TValue>(names: Iterable<string> | null = null): IPipe<IObserver<INotification<string, any>>, IObservable<TValue>> {
   type TNotification = INotification<string, any>;
@@ -22,7 +22,6 @@ export function aggregateNotificationsPipe<TValue>(names: Iterable<string> | nul
     };
   });
 }
-
 
 
 // export function aggregateNotificationsPipe<TKeysIn extends string, TValue>(names: Iterable<TKeysIn> | null = null): IPipe<IObserver<INotification<TKeysIn, TValue>>, IObservable<TValue>> {

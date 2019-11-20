@@ -1,27 +1,18 @@
-import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
-import { IBasicPreventable, IPreventable } from './interfaces';
-import { IsObject } from '../../../helpers';
+import { IPreventable } from './interfaces';
+import { IPreventableInternal, PREVENTABLE_PRIVATE } from './privates';
+import { ConstructPreventable } from './constructor';
 
-export const PREVENTABLE_PRIVATE = Symbol('preventable-private');
+/** METHODS **/
 
-export interface IPreventablePrivate<N extends string> {
-  prevented: Set<N>;
+export function PreventableIsPrevented<N extends string>(instance: IPreventable<N>, name: N): boolean {
+  return (instance as IPreventableInternal<N>)[PREVENTABLE_PRIVATE].prevented.has(name);
 }
 
-export interface IPreventableInternal<N extends string> extends IPreventable<N> {
-  [PREVENTABLE_PRIVATE]: IPreventablePrivate<N>;
+export function PreventablePrevent<N extends string>(instance: IPreventable<N>, name: N): void {
+  (instance as IPreventableInternal<N>)[PREVENTABLE_PRIVATE].prevented.add(name);
 }
 
-export function ConstructPreventable<N extends string>(instance: IPreventable<N>): void {
-  ConstructClassWithPrivateMembers(instance, PREVENTABLE_PRIVATE);
-  (instance as IPreventableInternal<N>)[PREVENTABLE_PRIVATE].prevented = new Set<N>();
-}
-
-export function IsPreventable(value: any): value is IPreventable<string> {
-  return IsObject(value)
-    && value.hasOwnProperty(PREVENTABLE_PRIVATE as symbol);
-}
-
+/** CLASS **/
 
 export class Preventable<N extends string> implements IPreventable<N> {
 
@@ -30,28 +21,11 @@ export class Preventable<N extends string> implements IPreventable<N> {
   }
 
   isPrevented(name: N): boolean {
-    return ((this as unknown) as IPreventableInternal<N>)[PREVENTABLE_PRIVATE].prevented.has(name);
+    return PreventableIsPrevented<N>(this, name);
   }
 
   prevent(name: N): this {
-    ((this as unknown) as IPreventableInternal<N>)[PREVENTABLE_PRIVATE].prevented.add(name);
+    PreventablePrevent<N>(this, name);
     return this;
-  }
-}
-
-/*------------------------*/
-
-export class BasicPreventable extends Preventable<'default'> implements IBasicPreventable {
-
-  constructor() {
-    super();
-  }
-
-  isPrevented(): boolean {
-    return super.isPrevented('default');
-  }
-
-  prevent(): this {
-    return super.prevent('default');
   }
 }
