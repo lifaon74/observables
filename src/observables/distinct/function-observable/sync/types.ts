@@ -1,7 +1,7 @@
 import { TupleArray } from '../../../../classes/types';
 import { IObservable } from '../../../../core/observable/interfaces';
-import { TupleTypes } from '../../../../misc/readonly-list/interfaces';
 import { IFunctionObservable } from './interfaces';
+import { TupleTypes } from '../../../../misc/readonly-tuple/types';
 
 /** TYPES **/
 

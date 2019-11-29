@@ -1,10 +1,10 @@
 import {
   IDistinctValueObservable, IDistinctValueObservableConstructor
 } from '../../distinct-value-observable/sync/interfaces';
-import { IReadonlyTuple } from '../../../../misc/readonly-list/interfaces';
 import {
   TFunctionObservableFactory, TFunctionObservableParameters, TFunctionObservableRunCallback, TFunctionObservableValue
 } from './types';
+import { IReadonlyTuple } from '../../../../misc/readonly-tuple/interfaces';
 
 /** INTERFACES **/
 

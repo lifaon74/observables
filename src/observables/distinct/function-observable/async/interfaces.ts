@@ -1,4 +1,3 @@
-import { IReadonlyTuple } from '../../../../misc/readonly-list/interfaces';
 import {
   IAsyncDistinctValueObservable, IAsyncDistinctValueObservableConstructor
 } from '../../distinct-value-observable/async/interfaces';
@@ -6,6 +5,7 @@ import {
   TAsyncFunctionObservableFactory, TAsyncFunctionObservableParameters, TAsyncFunctionObservableRunCallback,
   TAsyncFunctionObservableValue
 } from './types';
+import { IReadonlyTuple } from '../../../../misc/readonly-tuple/interfaces';
 
 /** INTERFACES **/
 

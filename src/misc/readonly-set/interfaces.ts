@@ -1,3 +1,6 @@
+
+/** INTERFACES **/
+
 export interface IReadonlySetConstructor {
   new<TValue>(values: Iterable<TValue>): IReadonlySet<TValue>;
 }

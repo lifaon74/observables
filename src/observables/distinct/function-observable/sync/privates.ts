@@ -3,10 +3,10 @@ import {
   TFunctionObservableParametersUnion, TFunctionObservableValue
 } from './types';
 import { IDistinctValueObservableContext } from '../../distinct-value-observable/sync/context/interfaces';
-import { IReadonlyTuple } from '../../../../misc/readonly-list/interfaces';
 import { IObserver } from '../../../../core/observer/interfaces';
 import { IFunctionObservable } from './interfaces';
 import { IDistinctValueObservablePrivatesInternal } from '../../distinct-value-observable/sync/privates';
+import { IReadonlyTuple } from '../../../../misc/readonly-tuple/interfaces';
 
 /** PRIVATES **/
 
