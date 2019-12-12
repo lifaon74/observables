@@ -9,13 +9,13 @@ import { DISTINCT_VALUE_OBSERVABLE_PRIVATE } from '../../distinct-value-observab
 
 /* GETTERS/SETTERS */
 
-export function SourceGetValue<T>(instance: ISource<T>): T | undefined {
+export function SourceGetValue<T>(instance: ISource<T>): T {
   return (instance as ISourceInternal<T>)[DISTINCT_VALUE_OBSERVABLE_PRIVATE].value;
 }
 
 /* METHODS */
 
-export function SourceValueOf<T>(instance: ISource<T>): T | undefined {
+export function SourceValueOf<T>(instance: ISource<T>): T {
   return instance.value;
 }
 
@@ -35,11 +35,11 @@ export class Source<T> extends DistinctValueObservable<T> implements ISource<T> 
     ConstructSource<T>(this, context);
   }
 
-  get value(): T | undefined {
+  get value(): T {
     return SourceGetValue<T>(this);
   }
 
-  valueOf(): T | undefined {
+  valueOf(): T {
     return SourceValueOf<T>(this);
   }
 
