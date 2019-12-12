@@ -19,8 +19,8 @@ export function IsPromiseLikeBase(value: any): value is PromiseLike<any> {
     ;
 }
 
-export const NEVER_PROMISE = new Promise<never>(noop);
-export const VOID_PROMISE = Promise.resolve();
+export const NEVER_PROMISE: TPromise<never> = new Promise<never>(noop);
+export const VOID_PROMISE: TPromise<void> = Promise.resolve();
 
 
 export function PromiseCreateCallbackNoop(): TPromiseCreateCallback<never> {

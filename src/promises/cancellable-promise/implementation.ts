@@ -56,7 +56,7 @@ function CancellablePromiseInternalThen<T, TStrategy extends TAbortStrategy, TFu
     );
   } else {
     newSignal = privates.signal;
-    onCancelPromise = privates.promise;
+    onCancelPromise = privates.promise as TAbortStrategyReturnedPromise<T, TStrategy, TCancelled>;
   }
 
   const onFulfilledDefined: boolean = (typeof onFulfilled === 'function');
@@ -129,6 +129,7 @@ function CancellablePromiseInternalFinally<T, TStrategy extends TAbortStrategy>(
             } as PromiseCancelledObject, privates.signal);
           }).then(() => {
             newController.abort(reason);
+            throw new Error(`Cancelled`);
           });
         }
         : void 0

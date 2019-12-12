@@ -85,17 +85,21 @@ export function ApplyAbortStrategy<TStrategy extends TAbortStrategy>(strategy?: 
   switch (strategy) {
     case void 0:
     case 'never':
-      return NEVER_PROMISE;
+      return NEVER_PROMISE as TPromise<TAbortStrategyReturn<TStrategy>>;
     case 'resolve':
-      return VOID_PROMISE as Promise<TAbortStrategyReturn<TStrategy>>;
+      return VOID_PROMISE as unknown as TPromise<TAbortStrategyReturn<TStrategy>>;
     case 'reject':
-      return Promise.reject(reason);
+      return Promise.reject(reason) as TPromise<TAbortStrategyReturn<TStrategy>>;
     default:
       throw new TypeError(`Unexpected strategy: ${ strategy }`);
   }
 }
 
-export function ApplyAbortStrategyUsingAdvancedAbortSignalReason<TStrategy extends TAbortStrategy>(instance: IAdvancedAbortSignal, strategy?: TStrategy, reason: string = instance.reason): TPromise<TAbortStrategyReturn<TStrategy>> {
+export function ApplyAbortStrategyUsingAdvancedAbortSignalReason<TStrategy extends TAbortStrategy>(
+  instance: IAdvancedAbortSignal,
+  strategy?: TStrategy,
+  reason: string = instance.reason
+): TPromise<TAbortStrategyReturn<TStrategy>> {
   return ApplyAbortStrategy<TStrategy>(strategy, reason);
 }
 
@@ -118,7 +122,7 @@ export function ApplyOnAbortCallback<TStrategy extends TAbortStrategy, TAborted>
       }
     );
   } else {
-    return ApplyAbortStrategyUsingAdvancedAbortSignalReason<TStrategy>(instance, options.strategy);
+    return ApplyAbortStrategyUsingAdvancedAbortSignalReason<TStrategy>(instance, options.strategy) as TPromise<TAborted | TAbortStrategyReturn<TStrategy>>;
   }
 }
 

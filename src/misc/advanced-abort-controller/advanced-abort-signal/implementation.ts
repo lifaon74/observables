@@ -73,11 +73,11 @@ export function AdvancedAbortSignalWrapPromiseOrCreate<T, TStrategy extends TAbo
 ): TAbortStrategyReturnedPromise<T, TStrategy, TAborted> {
   if (typeof promiseOrCallback === 'function') {
     // ensures promiseOrCallback is called only if signal is not aborted
-    return AdvancedAbortSignalWrapFunction<() => TPromise<T>, TStrategy, TAborted>(instance, () => {
+    return AdvancedAbortSignalWrapFunction<() => TPromise<T>, TStrategy, TAborted>(instance, (): TPromise<T> => {
       return new Promise<T>((resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void) => {
         promiseOrCallback.call(instance, resolve, reject, instance);
       });
-    }, options)();
+    }, options)() as TAbortStrategyReturnedPromise<T, TStrategy, TAborted>;
   } else if (IsPromiseLikeBase(promiseOrCallback)) {
     return AdvancedAbortSignalWrapPromise<T, TStrategy, TAborted>(instance, promiseOrCallback, options);
   } else {

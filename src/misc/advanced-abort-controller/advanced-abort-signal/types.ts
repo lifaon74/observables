@@ -16,6 +16,7 @@ export type TAbortStrategyReturn<TStrategy extends TAbortStrategy> =
     : TStrategy extends 'reject'
     ? never
     : never;
+
 export type TAbortStrategyReturnedPromise<T, TStrategy extends TAbortStrategy, TAborted> = TPromise<T | TAbortStrategyReturn<TStrategy> | TAborted>;
 
 
