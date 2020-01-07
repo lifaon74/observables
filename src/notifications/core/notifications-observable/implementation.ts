@@ -81,18 +81,18 @@ export function NotificationsObservableOnUnobserved<TKVMap extends KeyValueMapGe
 /**
  *  Creates a NotificationsObserver with 'name' and 'callback' which observes this Observable
  */
-export function NotificationsObservableAddListener<TKVMap extends KeyValueMapGenericConstraint<TKVMap>, K extends KeyValueMapKeys<TKVMap>>(
+export function NotificationsObservableAddListener<TKVMap extends KeyValueMapGenericConstraint<TKVMap>, TKey extends KeyValueMapKeys<TKVMap>>(
   instance: INotificationsObservable<TKVMap>,
-  name: K,
-  callback: (value: TKVMap[K]) => void
-): INotificationsObserver<K, TKVMap[K]> {
-  return new NotificationsObserver<K, TKVMap[K]>(name, callback).observe(instance);
+  name: TKey,
+  callback: (value: TKVMap[TKey]) => void
+): INotificationsObserver<TKey, TKVMap[TKey]> {
+  return new NotificationsObserver<TKey, TKVMap[TKey]>(name, callback).observe(instance);
 }
 
 /**
  * Removes the NotificationsObservers matching 'name' and 'callback' observing 'instance'
  */
-export function NotificationsObservableRemoveListener<TKVMap extends KeyValueMapGenericConstraint<TKVMap>, K extends KeyValueMapKeys<TKVMap>>(instance: INotificationsObservable<TKVMap>, name: K, callback?: (value: TKVMap[K]) => void): void {
+export function NotificationsObservableRemoveListener<TKVMap extends KeyValueMapGenericConstraint<TKVMap>, TKey extends KeyValueMapKeys<TKVMap>>(instance: INotificationsObservable<TKVMap>, name: TKey, callback?: (value: TKVMap[TKey]) => void): void {
   const observers: IObserver<KeyValueMapToNotifications<TKVMap>>[] = Array.from(NotificationsObservableMatches<TKVMap>(instance, name, callback)); // clone the list before removing
   for (let i = 0, l = observers.length; i < l; i++) {
     ObserverUnobserveOne<KeyValueMapToNotifications<TKVMap>>((observers[i] as unknown) as any, instance);
@@ -196,20 +196,20 @@ function PureNotificationsObservableFactory<TBase extends Constructor<IObservabl
       ConstructNotificationsObservable<TKVMap>(this, context, create);
     }
 
-    addListener<K extends KeyValueMapKeys<TKVMap>>(name: K, callback: (value: TKVMap[K]) => void): INotificationsObserver<K, TKVMap[K]> {
-      return NotificationsObservableAddListener<TKVMap, K>(this, name, callback);
+    addListener<TKey extends KeyValueMapKeys<TKVMap>>(name: TKey, callback: (value: TKVMap[TKey]) => void): INotificationsObserver<TKey, TKVMap[TKey]> {
+      return NotificationsObservableAddListener<TKVMap, TKey>(this, name, callback);
     }
 
-    removeListener<K extends KeyValueMapKeys<TKVMap>>(name: K, callback?: (value: TKVMap[K]) => void): void {
-      NotificationsObservableRemoveListener<TKVMap, K>(this, name, callback);
+    removeListener<TKey extends KeyValueMapKeys<TKVMap>>(name: TKey, callback?: (value: TKVMap[TKey]) => void): void {
+      NotificationsObservableRemoveListener<TKVMap, TKey>(this, name, callback);
     }
 
-    on<K extends KeyValueMapKeys<TKVMap>>(name: K, callback: (value: TKVMap[K]) => void): this {
+    on<TKey extends KeyValueMapKeys<TKVMap>>(name: TKey, callback: (value: TKVMap[TKey]) => void): this {
       this.addListener(name, callback).activate();
       return this;
     }
 
-    off<K extends KeyValueMapKeys<TKVMap>>(name: K, callback?: (value: TKVMap[K]) => void): this {
+    off<TKey extends KeyValueMapKeys<TKVMap>>(name: TKey, callback?: (value: TKVMap[TKey]) => void): this {
       this.removeListener(name, callback);
       return this;
     }
