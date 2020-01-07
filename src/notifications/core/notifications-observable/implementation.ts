@@ -5,7 +5,7 @@ import { IObservable, IObservableTypedConstructor } from '../../../core/observab
 import { INotificationsObserver } from '../notifications-observer/interfaces';
 import { NotificationsObserver } from '../notifications-observer/implementation';
 import { ObserverUnobserveOne } from '../../../core/observer/implementation';
-import { KeyValueMapGeneric, KeyValueMapGenericConstraint, KeyValueMapKeys } from '../interfaces';
+import { KeyValueMapGeneric, KeyValueMapGenericConstraint, KeyValueMapKeys, KeyValueMapValues } from '../interfaces';
 import { GetSetSuperArgsFunction, IsFactoryClass, MakeFactory } from '../../../classes/class-helpers/factory';
 import { IObserver } from '../../../core/observer/interfaces';
 import { Constructor } from '../../../classes/class-helpers/types';
@@ -23,6 +23,7 @@ import {
   TNotificationsObservableConstructorArgs, TNotificationsObservableHook
 } from './types';
 import { INotificationsObservableMatchOptionStrict, NormalizeNotificationsObservableMatchOptions } from './functions';
+import { IsNotificationsObserver } from '../notifications-observer/constructor';
 
 
 /** CONSTRUCTOR FUNCTIONS **/
@@ -37,7 +38,7 @@ export function NotificationsObservableOnObserved<TKVMap extends KeyValueMapGene
 ): void {
   const privates: INotificationsObservablePrivate<TKVMap> = (instance as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE];
 
-  if (observer instanceof NotificationsObserver) {
+  if (IsNotificationsObserver<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>(observer)) {
     const name: KeyValueMapKeys<TKVMap> = observer.name;
     if (!privates.observersMap.has(name)) {
       privates.observersMap.set(name, []);
@@ -59,7 +60,7 @@ export function NotificationsObservableOnUnobserved<TKVMap extends KeyValueMapGe
 ): void {
   const privates: INotificationsObservablePrivate<TKVMap> = (instance as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE];
 
-  if (observer instanceof NotificationsObserver) {
+  if (IsNotificationsObserver<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>(observer)) {
     const name: KeyValueMapKeys<TKVMap> = observer.name;
     const observers: KeyValueMapToNotificationsObservers<TKVMap>[] = privates.observersMap.get(name) as KeyValueMapToNotificationsObservers<TKVMap>[];
     observers.splice(observers.indexOf((observer as unknown) as KeyValueMapToNotificationsObservers<TKVMap>), 1);

@@ -18,7 +18,7 @@ export function ConstructNotificationsObserver<TName extends string, TValue>(ins
 /**
  * Returns true if 'value' is a NotificationsObserver
  */
-export function IsNotificationsObserver(value: any): value is INotificationsObserver<string, any> {
+export function IsNotificationsObserver<TName extends string = string, TValue = any>(value: any): value is INotificationsObserver<TName, TValue> {
   return IsObject(value)
     && value.hasOwnProperty(NOTIFICATIONS_OBSERVER_PRIVATE as symbol);
 }
