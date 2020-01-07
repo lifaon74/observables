@@ -185,10 +185,10 @@ function PureNotificationsObservableFactory<TBase extends Constructor<IObservabl
           context = _context;
           return {
             onObserved: (observer: IObserver<KeyValueMapToNotifications<TKVMap>>): void => {
-              NotificationsObservableOnObserved(this, observer);
+              NotificationsObservableOnObserved<TKVMap>(this, observer);
             },
             onUnobserved: (observer: IObserver<KeyValueMapToNotifications<TKVMap>>): void => {
-              NotificationsObservableOnUnobserved(this, observer);
+              NotificationsObservableOnUnobserved<TKVMap>(this, observer);
             }
           };
         }
