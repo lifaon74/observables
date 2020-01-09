@@ -1,5 +1,5 @@
 import { Task } from '../notifications/observables/task/implementation';
-import { ITask, ITaskContext } from '../notifications/observables/task/interfaces';
+import { ITask} from '../notifications/observables/task/interfaces';
 import { IFromReadableStreamObservable } from '../notifications/observables/finite-state/built-in/from/readable-stream/interfaces';
 import { FromReadableStreamObservable } from '../notifications/observables/finite-state/built-in/from/readable-stream/implementation';
 import { IProgress } from '../misc/progress/interfaces';
@@ -10,6 +10,7 @@ import { taskFromTasksInParallel } from '../notifications/observables/task/from/
 import { AbortReason } from '../misc/reason/defaults/abort-reason';
 import { AdvancedAbortController } from '../misc/advanced-abort-controller/implementation';
 import { IAdvancedAbortController } from '../misc/advanced-abort-controller/interfaces';
+import { ITaskContext } from '../notifications/observables/task/context/interfaces';
 
 
 function noCORS(url: string): string {
@@ -27,8 +28,8 @@ function logTask<T extends ITask<any>>(task: T): T {
     .on('error', (error: any) => {
       console.log('error', error);
     })
-    .on('cancel', (error: any) => {
-      console.log('cancel', error);
+    .on('abort', (error: any) => {
+      console.log('abort', error);
     })
     .on('next', (value: Blob) => {
       console.log('next', value);
@@ -67,7 +68,7 @@ function generateTaskControlButton<T extends ITask<any>>(task: T): T {
       || (task.state === 'run')
       || (task.state === 'pause')
     ) {
-      task.cancel(new AbortReason('Manual cancel'));
+      task.abort(new AbortReason('Manual cancel'));
     }
   });
 
@@ -85,15 +86,15 @@ function generateTaskControlButton<T extends ITask<any>>(task: T): T {
       clear();
       document.body.appendChild(new Text('[DONE]'));
     })
-    .on('cancel', (reason?: any) => {
+    .on('abort', (reason?: any) => {
       clear();
-      document.body.appendChild(new Text('[CANCELLED]: ' + (reason ? reason.message: '')));
+      document.body.appendChild(new Text('[ABORTED]: ' + (reason ? reason.message: '')));
     });
 }
 
 function $fetch(input: RequestInfo, init?: RequestInit): ITask<Blob> {
   return new Task<Blob>((context: ITaskContext<Blob>) => {
-    // creates a cancel token used for fetching and promises
+    // creates an abort controller used for fetching and promises
     const controller: IAdvancedAbortController = new AdvancedAbortController();
     let chunksObservable: IFromReadableStreamObservable<Uint8Array>;
 
@@ -107,8 +108,8 @@ function $fetch(input: RequestInfo, init?: RequestInit): ITask<Blob> {
       }
     };
 
-    // when the task is cancelled, abort the http request
-    const cancelListener = context.task.addListener('cancel', () => {
+    // when the task is aborted, abort the http request
+    const cancelListener = context.task.addListener('abort', () => {
       clear();
       controller.abort();
     });
@@ -141,7 +142,7 @@ function $fetch(input: RequestInfo, init?: RequestInit): ITask<Blob> {
             chunksObservable = new FromReadableStreamObservable((response.body as ReadableStream<Uint8Array>).getReader())
               .on('next', (chunk: Uint8Array) => {
                 bytesRead += chunk.length;
-                context.progress(bytesRead, total);
+                context.progress(new Progress(bytesRead, total));
                 chunks.push(chunk);
               })
               .on('error', (error: any) => {

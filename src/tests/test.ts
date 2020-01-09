@@ -584,7 +584,7 @@ export async function test() {
   // await testToAsyncIterable();
 
 
-  await testFileReaderObservable();
+  // await testFileReaderObservable();
 
   // testWebSocket();
   // testWEBRTC1();
@@ -598,7 +598,7 @@ export async function test() {
   // testPromises();
   // testClasses();
   // testProgram();
-  // await testTask();
+  await testTask();
   // await testFactory();
   // await testUnit();
 

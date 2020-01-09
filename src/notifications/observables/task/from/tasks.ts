@@ -1,25 +1,27 @@
-import { ITask, ITaskContext } from '../interfaces';
+import { ITask} from '../interfaces';
 import { Task } from '../implementation';
 import { IProgress, IProgressOptions } from '../../../../misc/progress/interfaces';
+import { ITaskContext } from '../context/interfaces';
+import { Progress } from '../../../../misc/progress/implementation';
 
 /**
  * Links a task with another:
- *  - transfers the 'start', 'cancel', 'resume' and 'pause' from the parent to the child task
- *    -> until the child child is done ('errored', 'complete', or cancelled by parent class)
+ *  - transfers the 'start', 'abort', 'resume' and 'pause' from the parent to the child task
+ *    -> until the child task is done ('errored', 'complete', or aborted by parent class)
  */
 function PassthroughsTask(context: ITaskContext<any>, task: ITask<any>) {
 
-  const onChildTaskCancel = () => {
+  const onChildTaskAbort = () => {
     if (!context.task.done) {
-      context.errorUntilRun(new Error(`Child task has been cancelled`));
+      context.errorUntilRun(new Error(`Child task has been aborted`));
     }
   };
 
-  if (task.state === 'cancel') {
-    onChildTaskCancel();
+  if (task.state === 'abort') {
+    onChildTaskAbort();
   } else {
-    const onParentTaskCancel = (reason: any) => {
-      task.cancel(reason);
+    const onParentTaskAbort = (reason: any) => {
+      task.abort(reason);
     };
 
     const onParentTaskPause = () => {
@@ -30,8 +32,8 @@ function PassthroughsTask(context: ITaskContext<any>, task: ITask<any>) {
       task.start();
     };
 
-    if (context.task.state === 'cancel') {
-      onParentTaskCancel(context.task.result);
+    if (context.task.state === 'abort') {
+      onParentTaskAbort(context.task.result);
     } else if (context.task.state === 'pause') {
       onParentTaskPause();
     } else if (context.task.state === 'run') {
@@ -39,7 +41,7 @@ function PassthroughsTask(context: ITaskContext<any>, task: ITask<any>) {
     } else {
       const clear = () => {
         parentTaskStartListener.deactivate();
-        parentTaskCancelListener.deactivate();
+        parentTaskAbortListener.deactivate();
         parentTaskPauseListener.deactivate();
         parentTaskResumeListener.deactivate();
         childTaskCompleteListener.deactivate();
@@ -48,19 +50,19 @@ function PassthroughsTask(context: ITaskContext<any>, task: ITask<any>) {
       };
 
       const parentTaskStartListener = context.task.addListener('start', onParentTaskRun);
-      const parentTaskCancelListener = context.task.addListener('cancel', onParentTaskCancel);
+      const parentTaskAbortListener = context.task.addListener('abort', onParentTaskAbort);
       const parentTaskPauseListener = context.task.addListener('pause', onParentTaskPause);
       const parentTaskResumeListener = context.task.addListener('resume', onParentTaskRun);
 
       const childTaskCompleteListener = task.addListener('complete', clear);
       const childTaskErrorListener = task.addListener('error', clear);
-      const childTaskCancelListener = task.addListener('cancel', () => {
+      const childTaskCancelListener = task.addListener('abort', () => {
         clear();
-        onChildTaskCancel();
+        onChildTaskAbort();
       });
 
       parentTaskStartListener.activate();
-      parentTaskCancelListener.activate();
+      parentTaskAbortListener.activate();
       parentTaskPauseListener.activate();
       parentTaskResumeListener.activate();
       childTaskCompleteListener.activate();
@@ -73,6 +75,8 @@ function PassthroughsTask(context: ITaskContext<any>, task: ITask<any>) {
 /**
  * Runs the 'tasks' in sequence.
  *  - progress is 'number of tasks done' / 'total number of tasks'
+ *  TODO: should support abort
+ *  TODO: should dispatch child tasks progress
  */
 export function taskFromTasksInSequence<T>(tasks: ITask<any>[]): ITask<void> {
   return new Task<void>((context: ITaskContext<void>) => {
@@ -81,7 +85,7 @@ export function taskFromTasksInSequence<T>(tasks: ITask<any>[]): ITask<void> {
       const task: ITask<any> = tasks[i];
       promise = promise
         .then(() => {
-          context.progressUntilRun(i + 1, l);
+          context.progressUntilRun(new Progress({ loaded: i + 1, total: l, name: 'count' }));
           PassthroughsTask(context, task);
           return task.toPromise('never');
         });
@@ -142,7 +146,7 @@ export function taskFromTasksInParallel<T>(tasks: ITask<any>[], mode: TProgressM
         PassthroughsTask(context, task);
 
         const errorListener = context.task.addListener('error', (error?: any) => {
-          task.cancel(error);
+          task.abort(error);
         });
         errorListener.activate();
 
@@ -156,7 +160,7 @@ export function taskFromTasksInParallel<T>(tasks: ITask<any>[], mode: TProgressM
             progresses[index] = progress;
             const aggregatedProgress: null | TAggregatedProgress = AggregateProgresses(progresses);
             if (aggregatedProgress !== null) {
-              context.progressUntilRun(aggregatedProgress);
+              context.progressUntilRun(new Progress(aggregatedProgress));
             }
           });
           progressListener.activate();
@@ -169,7 +173,7 @@ export function taskFromTasksInParallel<T>(tasks: ITask<any>[], mode: TProgressM
           promise = promise
             .then(() => {
               count++;
-              context.progressUntilRun(count, tasks.length);
+              context.progressUntilRun(new Progress(count, tasks.length));
             });
         }
 

@@ -1,3 +1,7 @@
 export * from './interfaces';
-export { Task, IsTask } from './implementation';
+export * from './types';
+export { Task} from './implementation';
+export { IsTask } from './constructor';
+export * from './context/public';
 export * from './from/public';
+
