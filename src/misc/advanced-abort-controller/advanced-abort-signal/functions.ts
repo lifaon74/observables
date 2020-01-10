@@ -131,7 +131,7 @@ export function ApplyOnAbortCallback<TStrategy extends TAbortStrategy, TAborted>
  */
 export function RaceAborted<T>(
   instance: IAdvancedAbortSignal,
-  promise: TPromise<T>,
+  promise: PromiseLike<T>,
 ): TPromise<T | void> {
   let observer: INotificationsObserver<'abort', void>;
 

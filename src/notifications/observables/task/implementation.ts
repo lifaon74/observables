@@ -193,6 +193,7 @@ export class Task<TValue> extends NotificationsObservable<ITaskKeyValueMap<TValu
     return this;
   }
 
+  // INFO: could return a CancellablePromise instead
   toPromise(abortStrategy?: TAbortStrategy): Promise<TValue> {
     return TaskToPromise<TValue>(this, abortStrategy);
   }

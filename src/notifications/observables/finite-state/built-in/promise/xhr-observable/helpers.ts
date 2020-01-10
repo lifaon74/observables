@@ -4,7 +4,7 @@ import { StringMaxLength, ToIterable } from '../../../../../../helpers';
 import { PartialProperties } from '../../../../../../classes/types';
 import { INotificationsObserver } from '../../../../../core/notifications-observer/interfaces';
 import { IAdvancedAbortSignal } from '../../../../../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
-import { AbortReason } from '../../../../../../misc/reason/defaults/abort-reason';
+import { AbortReason } from '../../../../../../misc/reason/built-in/abort-reason';
 
 export type XMLHttpRequestExtendedResponseType = XMLHttpRequestResponseType | 'binary-string';
 
@@ -60,9 +60,15 @@ export function GetXHRWithCredentialsValueFromRequest(request: Request): boolean
 
 
 /**
- * Inits an XMLHttpRequest from a Request
+ * Inits an XMLHttpRequest from a Request:
+ *  - sets proper responseType, withCredentials, headers, etc...
+ *  - aborts xhr if request.signal is aborted
  */
-export function InitXHRFromRequest(request: Request, xhr: XMLHttpRequest, responseType: XMLHttpRequestExtendedResponseType): void {
+export function InitXHRFromRequest(
+  request: Request,
+  xhr: XMLHttpRequest,
+  responseType: XMLHttpRequestExtendedResponseType
+): void {
   const clear = () => {
     xhr.removeEventListener('load', clear);
     xhr.removeEventListener('error', clear);
@@ -97,16 +103,27 @@ export function InitXHRFromRequest(request: Request, xhr: XMLHttpRequest, respon
 }
 
 /**
+ * Inits an XMLHttpRequest from a Request, and sends the body
+ */
+export function DoXHRFromRequestAndBody(
+  request: Request,
+  body: BodyInit | null,
+  xhr: XMLHttpRequest,
+  responseType: XMLHttpRequestExtendedResponseType
+): void {
+  InitXHRFromRequest(request, xhr, responseType);
+  xhr.send(body);
+}
+
+/**
  * Do an XMLHttpRequest from a Request. ReadableStream must be supported.
  */
 export function DoXHRFromRequestUsingReadableStream(
   request: Request,
-  xhr: XMLHttpRequest = new XMLHttpRequest(),
+  xhr: XMLHttpRequest,
   responseType: XMLHttpRequestExtendedResponseType
-): XMLHttpRequest {
-  InitXHRFromRequest(request, xhr, responseType);
-  xhr.send(request.body);
-  return xhr;
+): void {
+  return DoXHRFromRequestAndBody(request, request.body, xhr, responseType);
 }
 
 /**
@@ -114,32 +131,28 @@ export function DoXHRFromRequestUsingReadableStream(
  */
 export function DoXHRFromRequestUsingBlob(
   request: Request,
-  xhr: XMLHttpRequest = new XMLHttpRequest(),
+  xhr: XMLHttpRequest,
   responseType: XMLHttpRequestExtendedResponseType,
   signal: IAdvancedAbortSignal
-): ICancellablePromise<XMLHttpRequest, 'never'> {
-  // return CancellablePromise.of<ArrayBuffer>(request.arrayBuffer(), signal)
-  //   .then((buffer: ArrayBuffer) => {
-  //     InitXHRFromRequest(request, xhr, responseType);
-  //     xhr.send(buffer);
-  //     return xhr;
-  //   });
+): ICancellablePromise<void, 'never'> {
   return CancellablePromise.of<Blob>(request.blob(), signal)
     .then((blob: Blob) => {
-      InitXHRFromRequest(request, xhr, responseType);
-      xhr.send(blob);
-      return xhr;
+      return DoXHRFromRequestAndBody(request, blob, xhr, responseType);
     });
 }
 
-// TODO
+/**
+ * Do an XMLHttpRequest from a Request. Takes best solution depending if ReadableStream are supported or not
+ */
 export function DoXHRFromRequest(
   request: Request,
-  xhr: XMLHttpRequest = new XMLHttpRequest(),
+  xhr: XMLHttpRequest,
   responseType: XMLHttpRequestExtendedResponseType,
   signal: IAdvancedAbortSignal
-): ICancellablePromise<XMLHttpRequest, 'never'> {
-  return DoXHRFromRequestUsingBlob(request, xhr, responseType, signal);
+): ICancellablePromise<void, 'never'> {
+  return (AreReadableStreamSupported() && (request.body instanceof ReadableStream))
+    ? CancellablePromise.try<void>(() => DoXHRFromRequestUsingReadableStream(request, xhr, responseType), signal)
+    : DoXHRFromRequestUsingBlob(request, xhr, responseType, signal);
 }
 
 
@@ -158,7 +171,9 @@ export function ParseRawHeaders(headers: string): [string, string][] {
     .filter(([key]) => (key !== ''));
 }
 
-
+/**
+ * Converts a binary string to an Uint8Array
+ */
 export function BinaryStringToUint8Array(input: string): Uint8Array {
   const length: number = input.length;
   const array: Uint8Array = new Uint8Array(length);
@@ -176,7 +191,7 @@ export function BinaryStringToUint8Array(input: string): Uint8Array {
 
 
 /**
- * Assumes xhr.readyState is DONE and response is not null
+ * INFO: Assumes xhr.readyState is DONE and response is not null
  */
 export function XHRResponseToUint8Array(xhr: XMLHttpRequest, responseType: XMLHttpRequestExtendedResponseType = xhr.responseType): Uint8Array {
   switch (responseType) {
@@ -336,7 +351,7 @@ export function XHRResponseToResponse(xhr: XMLHttpRequest, responseType: XMLHttp
     case 'document':
     case 'json':
     case 'binary-string':
-      return new Response(XHRResponseToBlob(xhr), init);
+      return new Response(XHRResponseToBlob(xhr, responseType), init);
     default:
       throw new TypeError(`Unsupported response type '${ responseType }'`);
   }
@@ -420,7 +435,7 @@ export function CloneRequest(request: RequestInfo, init: PartialProperties<Reque
 /**
  * Creates a simple Request with an url, method and body.
  * Body is automatically casted to the best fitting type.
- *
+ * WARN: this function is not really precise. It's just a fast and lazy shortcut to cast an object as a 'body' of a Request
  * @example:
  *  CreateSimpleRequest('https://chart.googleapis.com/chart', 'GET', {
       cht: 'qr',
@@ -428,9 +443,15 @@ export function CloneRequest(request: RequestInfo, init: PartialProperties<Reque
       chl: data,
     });
  */
-export function CreateSimpleRequest(url: string, method: string, body: any = null, init: RequestInit = {}): Request {
+export function CreateSimpleRequest(
+  url: string,
+  method: string,
+  body: object | null = null,
+  init: RequestInit = {}
+): Request {
 
   const _init = {
+    ...init,
     headers: new Headers(init.headers),
     method: method,
     body: null as (BodyInit | null),
@@ -438,7 +459,13 @@ export function CreateSimpleRequest(url: string, method: string, body: any = nul
 
 
   if (body !== null) {
-    const iterableBody: Iterable<[string, any]> = ToIterable(body);
+    let iterableBody: Iterable<[string, any]>;
+
+    if (typeof body === 'object') {
+      iterableBody = Object.entries(body) as unknown as Iterable<[string, any]>;
+    } else {
+      throw new TypeError(`Expected object or null as body`);
+    }
 
     switch (method) {
       case 'GET':
@@ -447,17 +474,17 @@ export function CreateSimpleRequest(url: string, method: string, body: any = nul
       case 'POST':
       case 'PUT':
       case 'DELETE':
-        if (Array.from(iterableBody).some((value: any) => (value instanceof Blob))) {
+        if (Array.from(iterableBody).some(([key, value]) => (value instanceof Blob))) {
           _init.body = IterableToFormData(iterableBody);
         } else {
           _init.headers.append('Content-Type', 'application/json');
-          _init.body = IterableToJSON(body);
+          _init.body = JSON.stringify(body);
         }
         break;
     }
   }
 
-  return new Request(url, Object.assign(_init, init));
+  return new Request(url, _init);
 }
 
 

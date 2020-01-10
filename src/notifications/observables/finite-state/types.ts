@@ -1,10 +1,12 @@
 import { IsSuperSet } from '../../../classes/types';
 import {
+  KeyValueMapToNotifications,
   KeyValueMapToNotificationsSoft, TNotificationsObservableHook
 } from '../../core/notifications-observable/types';
 import { KeyValueMapConstraint } from '../../core/interfaces';
 import { IFiniteStateObservable } from './interfaces';
 import { IFiniteStateObservableContext } from './context/interfaces';
+import { IObserver } from '../../../core/observer/interfaces';
 
 /** TYPES **/
 
@@ -86,6 +88,8 @@ export type TFiniteStateObservableConstructorArgs<TValue, TFinalState extends TF
 
 // alias for a generic FiniteStateObservable
 export type TFiniteStateObservableGeneric<T = any> = IFiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>>;
+
+export type TFiniteStateObserverGeneric<T = any> = IObserver<KeyValueMapToNotifications<TFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>>>;
 
 
 

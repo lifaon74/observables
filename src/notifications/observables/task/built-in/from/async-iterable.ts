@@ -1,8 +1,8 @@
-import { IProgress } from '../../../../misc/progress/interfaces';
-import { ITask} from '../interfaces';
-import { Task } from '../implementation';
-import { Progress } from '../../../../misc/progress/implementation';
-import { ITaskContext } from '../context/interfaces';
+import { IProgress } from '../../../../../misc/progress/interfaces';
+import { ITask} from '../../interfaces';
+import { Task } from '../../implementation';
+import { Progress } from '../../../../../misc/progress/implementation';
+import { ITaskContext } from '../../context/interfaces';
 
 
 export interface ITaskAsyncIteratorValue<T> {

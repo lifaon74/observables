@@ -49,7 +49,7 @@ export function AdvancedAbortSignalGetReason(instance: IAdvancedAbortSignal): an
  */
 export function AdvancedAbortSignalWrapPromise<T, TStrategy extends TAbortStrategy, TAborted>(
   instance: IAdvancedAbortSignal,
-  promise: TPromise<T>,
+  promise: PromiseLike<T>,
   options: IAdvancedAbortSignalWrapPromiseOptionsStrict<TStrategy, TAborted>,
 ): TAbortStrategyReturnedPromise<T, TStrategy, TAborted> {
   return RaceAborted<T>(instance, promise)
@@ -68,7 +68,7 @@ export function AdvancedAbortSignalWrapPromise<T, TStrategy extends TAbortStrate
 
 export function AdvancedAbortSignalWrapPromiseOrCreate<T, TStrategy extends TAbortStrategy, TAborted>(
   instance: IAdvancedAbortSignal,
-  promiseOrCallback: TPromise<T> | TAdvancedAbortSignalWrapPromiseCallback<T>,
+  promiseOrCallback: PromiseLike<T> | TAdvancedAbortSignalWrapPromiseCallback<T>,
   options: IAdvancedAbortSignalWrapPromiseOptionsStrict<TStrategy, TAborted>,
 ): TAbortStrategyReturnedPromise<T, TStrategy, TAborted> {
   if (typeof promiseOrCallback === 'function') {
@@ -183,7 +183,7 @@ export class AdvancedAbortSignal extends NotificationsObservable<IAdvancedAbortS
   }
 
   wrapPromise<T, TStrategy extends TAbortStrategy, TAborted>(
-    promiseOrCallback: Promise<T> | TAdvancedAbortSignalWrapPromiseCallback<T>,
+    promiseOrCallback: PromiseLike<T> | TAdvancedAbortSignalWrapPromiseCallback<T>,
     options?: IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted>,
   ): TAbortStrategyReturnedPromise<T, TStrategy, TAborted> {
     return AdvancedAbortSignalWrapPromiseOrCreate<T, TStrategy, TAborted>(this, promiseOrCallback, AdvancedAbortSignalNormalizeWrapPromiseOptions(options));

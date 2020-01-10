@@ -12,7 +12,7 @@ import { IAsyncDistinctValueObservableContext } from '../../distinct-value-obser
 import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
 import { Observer } from '../../../../core/observer/implementation';
 import { IObservable } from '../../../../core/observable/interfaces';
-import { AbortReason } from '../../../../misc/reason/defaults/abort-reason';
+import { AbortReason } from '../../../../misc/reason/built-in/abort-reason';
 import { AsyncFunctionObservableCallFactory, AsyncFunctionObservableSetObservableValue } from './functions';
 import { ReadonlyTuple } from '../../../../misc/readonly-tuple/implementation';
 

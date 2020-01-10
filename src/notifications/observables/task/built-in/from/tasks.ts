@@ -1,8 +1,8 @@
-import { ITask} from '../interfaces';
-import { Task } from '../implementation';
-import { IProgress, IProgressOptions } from '../../../../misc/progress/interfaces';
-import { ITaskContext } from '../context/interfaces';
-import { Progress } from '../../../../misc/progress/implementation';
+import { ITask} from '../../interfaces';
+import { Task } from '../../implementation';
+import { IProgress, IProgressOptions } from '../../../../../misc/progress/interfaces';
+import { ITaskContext } from '../../context/interfaces';
+import { Progress } from '../../../../../misc/progress/implementation';
 
 /**
  * Links a task with another:

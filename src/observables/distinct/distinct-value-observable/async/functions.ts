@@ -2,7 +2,7 @@ import { IAsyncDistinctValueObservable } from './interfaces';
 import {
   DISTINCT_ASYNC_VALUE_OBSERVABLE_PRIVATE, IAsyncDistinctValueObservableInternal, IAsyncDistinctValueObservablePrivate
 } from './privates';
-import { AbortReason } from '../../../../misc/reason/defaults/abort-reason';
+import { AbortReason } from '../../../../misc/reason/built-in/abort-reason';
 import { AdvancedAbortController } from '../../../../misc/advanced-abort-controller/implementation';
 import { IAdvancedAbortController } from '../../../../misc/advanced-abort-controller/interfaces';
 import { TAsyncDistinctValueObservableContextEmitFactory } from './context/types';

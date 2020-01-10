@@ -4,6 +4,9 @@ import { ITaskKeyValueMap, TTaskCreateCallback, TTaskState } from './types';
 
 /** INTERFACES **/
 
+// INFO: Task should extends FiniteStateObservable ?
+// INFO: is Task really useful ? => may it be replaced by other kind of FiniteStateObservable ?
+
 export interface ITaskConstructor {
   new<TValue>(create: TTaskCreateCallback<TValue>): ITask<TValue>;
 }
