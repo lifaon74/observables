@@ -2,6 +2,7 @@ import { TPromise } from '../interfaces';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 import { TAbortStrategy, TAbortStrategyReturn } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 import {
+  ICancellablePromiseFinallyOptions,
   ICancellablePromiseOptions, TCancellablePromiseCancelledReturn, TCancellablePromiseCatchReturn,
   TCancellablePromiseCreateCallback, TCancellablePromiseOnCancelledArgument, TCancellablePromiseOnFinallyArgument,
   TCancellablePromiseOnFulfilledArgument, TCancellablePromiseOnRejectedArgument, TCancellablePromiseThenReturn
@@ -138,7 +139,7 @@ export interface ICancellablePromiseConstructor {
   /**
    * Creates a new CancellablePromise from an exiting promise or the same function you may provide to a Promise.
    */
-  new<T, TStrategy extends TAbortStrategy>(promiseOrCallback: TPromise<T> | TCancellablePromiseCreateCallback<T, TStrategy>, signal: IAdvancedAbortSignal, options?: ICancellablePromiseOptions<T, TStrategy>): ICancellablePromise<T, TStrategy>;
+  new<T, TStrategy extends TAbortStrategy>(promiseOrCallback: TPromise<T> | TCancellablePromiseCreateCallback<T, TStrategy>, options?: ICancellablePromiseOptions<T, TStrategy>): ICancellablePromise<T, TStrategy>;
 }
 
 
@@ -196,7 +197,7 @@ export interface ICancellablePromise<T, TStrategy extends TAbortStrategy = 'neve
    * Equivalent of the 'finally' of a Promise:
    *   - same behaviour as previously mentioned (may never be called)
    */
-  finally(onFinally?: TCancellablePromiseOnFinallyArgument<T, TStrategy>, includeCancelled?: boolean): ICancellablePromise<T, TStrategy>;
+  finally(onFinally?: TCancellablePromiseOnFinallyArgument<T, TStrategy>, options?: ICancellablePromiseFinallyOptions): ICancellablePromise<T, TStrategy>;
 
 }
 

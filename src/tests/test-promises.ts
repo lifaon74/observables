@@ -10,7 +10,7 @@ import { IAdvancedAbortController } from '../misc/advanced-abort-controller/inte
 export function testCancellablePromise() {
   const controller = new AdvancedAbortController();
 
-  const a = CancellablePromise.resolve(1, controller.signal);
+  const a = CancellablePromise.resolve(1, { signal: controller.signal });
 
   const b =  a
     .then((value: number) => {
@@ -26,11 +26,11 @@ export function testCancellablePromise() {
     .finally((state: OnFinallyResult<void>) => {
       console.log('finally', state);
       return $delay(1000);
-    }, true)
+    }, { includeCancelled: true })
     .cancelled((reason: any, newController: IAdvancedAbortController) => {
       console.log('cancelled', reason);
       // newController.abort('another cancel');
-      return $delay(1000, newController.signal)
+      return $delay(1000, { signal: newController.signal })
         .then(() => {
           return 4;
         });

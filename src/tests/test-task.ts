@@ -20,68 +20,68 @@ import {
 import { TPromiseOrValue } from '../promises/interfaces';
 import { IActivable } from '../misc/activable/interfaces';
 
-
-// export interface IReversible {
-//   apply(): Promise<void>;
-//   reverse(): Promise<void>;
+//
+// // export interface IReversible {
+// //   apply(): Promise<void>;
+// //   reverse(): Promise<void>;
+// // }
+// //
+// // export interface IReversibleContext {
+// //   register(key: any[] | string, callback: () => IReversible): void;
+// // }
+//
+// // INFO: just some ideas
+//
+// export type TRegisterMode = // if key is already present:
+//   'skip' // doesn't call the promise factory
+//   | 'warn' // doesn't call the promise factory and displays a warn message for the developer
+//   | 'throw' // doesn't call the promise factory and throws an error for the developer
+//   | 'replace' // cancels the previous promise, then calls the promise factory
+//   | 'queue' // waits for previous promise to resolve or reject, then calls the promise factory
+//   ;
+//
+// export interface ITasksContext {
+//   register(key: any[] | string, task: ITask<any>, mode?: TRegisterMode): ITask<void>;
+//
+//   // get(key: string | any[]): ICancellablePromise<any> | undefined;
+//   //
+//   // clear(key: string | any[]): ICancellablePromise<any> | undefined;
+//   //
+//   // clearAll(): Promise<void>;
+//
 // }
 //
-// export interface IReversibleContext {
-//   register(key: any[] | string, callback: () => IReversible): void;
+// // OR
+//
+// export interface IFiniteStateObservablesContext {
+//   register(key: any[] | string, observable: TFiniteStateObservableGeneric<any>, observer: TFiniteStateObserverGeneric<any>, mode?: TRegisterMode): void;
+//   // or
+//   register2(key: any[] | string, callback: () => TFiniteStateObserverGeneric<any>, mode?: TRegisterMode): void;
 // }
-
-// INFO: just some ideas
-
-export type TRegisterMode = // if key is already present:
-  'skip' // doesn't call the promise factory
-  | 'warn' // doesn't call the promise factory and displays a warn message for the developer
-  | 'throw' // doesn't call the promise factory and throws an error for the developer
-  | 'replace' // cancels the previous promise, then calls the promise factory
-  | 'queue' // waits for previous promise to resolve or reject, then calls the promise factory
-  ;
-
-export interface ITasksContext {
-  register(key: any[] | string, task: ITask<any>, mode?: TRegisterMode): ITask<void>;
-
-  // get(key: string | any[]): ICancellablePromise<any> | undefined;
-  //
-  // clear(key: string | any[]): ICancellablePromise<any> | undefined;
-  //
-  // clearAll(): Promise<void>;
-
-}
-
-// OR
-
-export interface IFiniteStateObservablesContext {
-  register(key: any[] | string, observable: TFiniteStateObservableGeneric<any>, observer: TFiniteStateObserverGeneric<any>, mode?: TRegisterMode): void;
-  // or
-  register2(key: any[] | string, callback: () => TFiniteStateObserverGeneric<any>, mode?: TRegisterMode): void;
-}
-
-// OR
-
-/**
- * PROBLEM: 'queue' cannot work because Activable has not a final state
- */
-export interface IActivableContext {
-  register(key: any[] | string, activable: IActivable, mode?: TRegisterMode): void;
-}
-
-
-// OR
-
-/**
- * INFO: supports all kind => very generic
- * PROBLEM: doesnt really make sense for Activable like class list, event listener, timers, etc...
- * Merging IReversible with ITask is a complex task:
- *  - reversible has no end, and may be reversed
- *  - task has a final stated, and may be aborted
- */
-export interface ICancellableContext2 {
-  registerTask(key: any[] | string, callback: (signal: IAdvancedAbortSignal) => TPromiseOrValue<any>, mode?: TRegisterMode): void;
-  registerActivable(key: any[] | string, callback: () => IActivable, mode?: Omit<TRegisterMode, 'queue'>): void;
-}
+//
+// // OR
+//
+// /**
+//  * PROBLEM: 'queue' cannot work because Activable has not a final state
+//  */
+// export interface IActivableContext {
+//   register(key: any[] | string, activable: IActivable, mode?: TRegisterMode): void;
+// }
+//
+//
+// // OR
+//
+// /**
+//  * INFO: supports all kind => very generic
+//  * PROBLEM: doesnt really make sense for Activable like class list, event listener, timers, etc...
+//  * Merging IReversible with ITask is a complex task:
+//  *  - reversible has no end, and may be reversed
+//  *  - task has a final stated, and may be aborted
+//  */
+// export interface ICancellableContext2 {
+//   registerTask(key: any[] | string, callback: (signal: IAdvancedAbortSignal) => TPromiseOrValue<any>, mode?: TRegisterMode): void;
+//   registerActivable(key: any[] | string, callback: () => IActivable, mode?: Omit<TRegisterMode, 'queue'>): void;
+// }
 
 /*---------------------------------------------------*/
 
@@ -247,7 +247,7 @@ function $fetch_old(input: RequestInfo, init?: RequestInit): ITask<Blob> {
 
 function $fetch(input: RequestInfo, init?: RequestInit): ITask<Blob> {
   return taskFromPromiseFactory((signal: IAdvancedAbortSignal, progress: (progress: IProgress) => void) => {
-    return CancellablePromise.fetch(input, init, signal)
+    return CancellablePromise.fetch(input, init, { signal })
       .then((response: Response) => {
         return new Promise<Blob>((resolve, reject) => {
           if (response.ok) {

@@ -31,6 +31,7 @@ import { Observable } from '../core/observable/implementation';
 import { testAbortController } from './test-abort-controller';
 import { Source } from '../observables/distinct/source/sync/implementation';
 import { AsyncSource } from '../observables/distinct/source/async/implementation';
+import { debugCancellableContext } from './debug/debug-cancellable-context';
 
 
 
@@ -598,11 +599,12 @@ export async function test() {
   // testPromises();
   // testClasses();
   // testProgram();
-  await testTask();
+  // await testTask();
   // await testFactory();
   // await testUnit();
 
   // await testAbortController();
+  await debugCancellableContext();
 
   console.log('tests done');
 }

@@ -16,8 +16,18 @@ export type TCancellablePromiseCreateCallback<T, TStrategy extends TAbortStrateg
 
 export interface ICancellablePromiseOptions<T, TStrategy extends TAbortStrategy> {
   strategy?: TStrategy;
+  signal?: IAdvancedAbortSignal;
 }
 
+export interface ICancellablePromiseOptionsWithStrategy<T, TStrategy extends TAbortStrategy> {
+  strategy: TStrategy;
+  signal?: IAdvancedAbortSignal;
+}
+
+export interface ICancellablePromiseNormalizedOptions<T, TStrategy extends TAbortStrategy> {
+  strategy: TStrategy;
+  signal: IAdvancedAbortSignal;
+}
 
 export type TCancellablePromiseTryCallback<T, TStrategy extends TAbortStrategy> = (
   this: ICancellablePromise<T, TStrategy>,
@@ -26,6 +36,13 @@ export type TCancellablePromiseTryCallback<T, TStrategy extends TAbortStrategy> 
 
 export type TCancellablePromiseFactory<T> = (signal: IAdvancedAbortSignal) => TPromiseOrValue<T>;
 
+export interface ICancellablePromiseFinallyOptions {
+  includeCancelled?: boolean; // (default: true)
+}
+
+export interface ICancellablePromiseNormalizedFinallyOptions {
+  includeCancelled: boolean;
+}
 
 /*---*/
 

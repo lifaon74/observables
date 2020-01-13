@@ -29,12 +29,12 @@ export function AdvancedAbortSignalAbort(instance: IAdvancedAbortSignal, reason:
 /**
  * Normalizes options provided to AdvancedAbortSignal.wrapPromise
  */
-export interface IAdvancedAbortSignalWrapPromiseOptionsStrict<TStrategy extends TAbortStrategy, TAborted> extends IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted> {
+export interface IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy extends TAbortStrategy, TAborted> extends IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted> {
   strategy: TStrategy;
 }
 
-export function AdvancedAbortSignalNormalizeWrapPromiseOptions<TStrategy extends TAbortStrategy, TAborted>(options?: IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted>): IAdvancedAbortSignalWrapPromiseOptionsStrict<TStrategy, TAborted> {
-  const _options: IAdvancedAbortSignalWrapPromiseOptionsStrict<TStrategy, TAborted> = {} as IAdvancedAbortSignalWrapPromiseOptionsStrict<TStrategy, TAborted>;
+export function AdvancedAbortSignalNormalizeWrapPromiseOptions<TStrategy extends TAbortStrategy, TAborted>(options?: IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted>): IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted> {
+  const _options: IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted> = {} as IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted>;
   if (options === void 0) {
     options = {};
   } else if (!IsObject(options)) {
@@ -111,7 +111,7 @@ export function ApplyAbortStrategyUsingAdvancedAbortSignalReason<TStrategy exten
  */
 export function ApplyOnAbortCallback<TStrategy extends TAbortStrategy, TAborted>(
   instance: IAdvancedAbortSignal,
-  options: IAdvancedAbortSignalWrapPromiseOptionsStrict<TStrategy, TAborted>,
+  options: IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted>,
 ): TPromise<TAborted | TAbortStrategyReturn<TStrategy>> {
   if (typeof options.onAborted === 'function') {
     const newController: IAdvancedAbortController = options.onAbortedController as IAdvancedAbortController;

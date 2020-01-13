@@ -135,7 +135,7 @@ export function DoXHRFromRequestUsingBlob(
   responseType: XMLHttpRequestExtendedResponseType,
   signal: IAdvancedAbortSignal
 ): ICancellablePromise<void, 'never'> {
-  return CancellablePromise.of<Blob>(request.blob(), signal)
+  return CancellablePromise.of<Blob>(request.blob(), { signal })
     .then((blob: Blob) => {
       return DoXHRFromRequestAndBody(request, blob, xhr, responseType);
     });
@@ -151,7 +151,7 @@ export function DoXHRFromRequest(
   signal: IAdvancedAbortSignal
 ): ICancellablePromise<void, 'never'> {
   return (AreReadableStreamSupported() && (request.body instanceof ReadableStream))
-    ? CancellablePromise.try<void>(() => DoXHRFromRequestUsingReadableStream(request, xhr, responseType), signal)
+    ? CancellablePromise.try<void>(() => DoXHRFromRequestUsingReadableStream(request, xhr, responseType), { signal })
     : DoXHRFromRequestUsingBlob(request, xhr, responseType, signal);
 }
 

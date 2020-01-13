@@ -11,7 +11,7 @@ import {
   TAbortStrategyReturnedPromise, TAdvancedAbortSignalWrapPromiseCallback
 } from './types';
 import {
-  AdvancedAbortSignalNormalizeWrapPromiseOptions, ApplyOnAbortCallback, IAdvancedAbortSignalWrapPromiseOptionsStrict,
+  AdvancedAbortSignalNormalizeWrapPromiseOptions, ApplyOnAbortCallback, IAdvancedAbortSignalWrapPromiseNormalizedOptions,
   LinkAdvancedAbortSignalWithFetchArgumentsSpread, RaceAborted
 } from './functions';
 import { IsPromiseLikeBase, PromiseTry } from '../../../promises/helpers';
@@ -50,7 +50,7 @@ export function AdvancedAbortSignalGetReason(instance: IAdvancedAbortSignal): an
 export function AdvancedAbortSignalWrapPromise<T, TStrategy extends TAbortStrategy, TAborted>(
   instance: IAdvancedAbortSignal,
   promise: PromiseLike<T>,
-  options: IAdvancedAbortSignalWrapPromiseOptionsStrict<TStrategy, TAborted>,
+  options: IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted>,
 ): TAbortStrategyReturnedPromise<T, TStrategy, TAborted> {
   return RaceAborted<T>(instance, promise)
     .then((value: T | void): TPromiseOrValue<T | TAbortStrategyReturn<TStrategy> | TAborted> => {
@@ -69,7 +69,7 @@ export function AdvancedAbortSignalWrapPromise<T, TStrategy extends TAbortStrate
 export function AdvancedAbortSignalWrapPromiseOrCreate<T, TStrategy extends TAbortStrategy, TAborted>(
   instance: IAdvancedAbortSignal,
   promiseOrCallback: PromiseLike<T> | TAdvancedAbortSignalWrapPromiseCallback<T>,
-  options: IAdvancedAbortSignalWrapPromiseOptionsStrict<TStrategy, TAborted>,
+  options: IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted>,
 ): TAbortStrategyReturnedPromise<T, TStrategy, TAborted> {
   if (typeof promiseOrCallback === 'function') {
     // ensures promiseOrCallback is called only if signal is not aborted
@@ -89,7 +89,7 @@ export function AdvancedAbortSignalWrapPromiseOrCreate<T, TStrategy extends TAbo
 export function AdvancedAbortSignalWrapFunction<CB extends (...args: any[]) => any, TStrategy extends TAbortStrategy, TAborted>(
   instance: IAdvancedAbortSignal,
   callback: CB,
-  options: IAdvancedAbortSignalWrapPromiseOptionsStrict<TStrategy, TAborted>,
+  options: IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted>,
 ): (...args: Parameters<CB>) => TAbortStrategyReturnedPromise<TPromiseType<ReturnType<CB>>, TStrategy, TAborted> {
   type T = TPromiseType<ReturnType<CB>>;
   return function (...args: Parameters<CB>): TAbortStrategyReturnedPromise<T, TStrategy, TAborted> {

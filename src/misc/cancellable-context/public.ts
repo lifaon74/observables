@@ -1,2 +1,4 @@
 export * from './interfaces';
-export { CancellableContext, IsCancellableContext } from './implementation';
+export * from './types';
+export { CancellableContext} from './implementation';
+export { IsCancellableContext } from './constructor';

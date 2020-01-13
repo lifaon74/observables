@@ -1,5 +1,6 @@
 export * from './activable/public';
 export * from './advanced-abort-controller/public';
+export * from './cancellable-context/public';
 export * from './iterable/public';
 export * from './progress/public';
 export * from './readonly-tuple/public';
