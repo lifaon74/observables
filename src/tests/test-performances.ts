@@ -493,6 +493,52 @@ export function testPerformances9() {
 }
 
 
+/**
+ *  Test the performances of one observable emitting one value each time it is observed, and activating/deactivated an observer
+ *
+ *  Results: around 50% faster
+ */
+export function testPerformances10() {
+  const count: number = 1e7;
+  let sum = 0;
+
+  const rxObservable = new RXObservable<number>((subscriber: RXSubscriber<number>) => {
+    subscriber.next(Math.random());
+  });
+
+  const observable = new Observable((context) => {
+    return {
+      onObserved(): void {
+        context.emit(Math.random());
+      }
+    };
+  });
+
+  const observer =  observable.pipeTo((v) => (sum += v));
+
+  const { time: time1, result: result1 } = timeExecution(() => {
+    let sum = 0;
+    for (let i = 0; i < count; i++) {
+      rxObservable
+        .subscribe((v) => (sum += v))
+        .unsubscribe();
+    }
+    return sum;
+  });
+
+  const { time: time2, result: result2 } = timeExecution(() => {
+    let sum = 0;
+    for (let i = 0; i < count; i++) {
+      observer.activate().deactivate();
+    }
+    return sum;
+  });
+
+  console.log(result1, result2);
+  logPerf(time1, time2);
+}
+
+
 export function testPerformances() {
   // testPerformances1();
   // testPerformances2();
@@ -502,5 +548,6 @@ export function testPerformances() {
   // testPerformances6();
   // testPerformances7();
   // testPerformances8();
-  testPerformances9();
+  // testPerformances9();
+  testPerformances10();
 }
