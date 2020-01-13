@@ -4,39 +4,57 @@ import { IObservable } from '../core/observable/interfaces';
 import { NotificationsObservable } from '../notifications/core/notifications-observable/public';
 import { Observable, ObservableClearObservers } from '../core/observable/implementation';
 import { FromIterableObservable } from '../notifications/observables/finite-state/built-in/from/iterable/public';
+import { map } from 'rxjs/operators';
+import { map as purePipeMap } from '../classes/pure-pipes';
+import { mapPipe } from '../operators/pipes/mapPipe';
+
+function timeExecution<T>(callback: () => T): { time: number; result: T } {
+  const start: number = performance.now();
+  const result: T = callback();
+  const end: number = performance.now();
+  return {
+    time: end - start,
+    result
+  };
+}
+
+function logPerf(...times: number[]): void {
+  const minTime: number = times.reduce((min: number, value: number) => Math.min(min, value), Number.POSITIVE_INFINITY);
+  times.forEach((time: number, index: number) => {
+    console.log(`time #${ index }`, Math.round(time), `(${Math.round((time / minTime) * 100) / 100})`);
+  });
+}
 
 /**
  * Test the performances of many observables emitting values from an iterable
  *
- * Results: around 4 times slower to create the instance
+ * Results: around 10 times slower to create the instance
  */
 export function testPerformances1() {
   const count: number = 1e5;
-  let sum: number;
 
-  console.time('test1');
+  const { time: time1, result: result1 } = timeExecution(() => {
+    let sum = 0;
+    for (let i = 0; i < count; i++) {
+      from([Math.random()][Symbol.iterator]())
+        .subscribe((v) => (sum += v));
+    }
+    return sum;
+  });
 
-  sum = 0;
-  for (let i = 0; i < count; i++) {
-    from([Math.random()][Symbol.iterator]())
-      .subscribe((v) => (sum += v));
-  }
+  const { time: time2, result: result2 } = timeExecution(() => {
+    let sum = 0;
+    for (let i = 0; i < count; i++) {
+      new FromIterableObservable([Math.random()][Symbol.iterator]())
+        .addListener('next', (v) => (sum += v))
+        .activate();
+    }
+    return sum;
+  });
 
-  console.timeEnd('test1');
-  console.log(sum);
+  console.log(result1, result2);
+  logPerf(time1, time2);
 
-
-  console.time('test2');
-
-  sum = 0;
-  for (let i = 0; i < count; i++) {
-    new FromIterableObservable([Math.random()][Symbol.iterator]())
-      .addListener('next', (v) => (sum += v))
-      .activate();
-  }
-
-  console.timeEnd('test2');
-  console.log(sum);
 }
 
 /**
@@ -46,38 +64,35 @@ export function testPerformances1() {
  */
 export function testPerformances2() {
   const count: number = 1e6;
-  let sum: number;
 
-  console.time('test1');
+  const { time: time1, result: result1 } = timeExecution(() => {
+    let sum = 0;
+    for (let i = 0; i < count; i++) {
+      new RXObservable<number>((subscriber: RXSubscriber<number>) => {
+        subscriber.next(Math.random());
+      }).subscribe((v) => (sum += v));
+    }
+    return sum;
+  });
 
-  sum = 0;
-  for (let i = 0; i < count; i++) {
-    new RXObservable<number>((subscriber: RXSubscriber<number>) => {
-      subscriber.next(Math.random());
-    }).subscribe((v) => (sum += v));
-  }
+  const { time: time2, result: result2 } = timeExecution(() => {
+    let sum = 0;
+    for (let i = 0; i < count; i++) {
+      new Observable((context) => {
+        return {
+          onObserved(): void {
+            context.emit(Math.random());
+          }
+        };
+      })
+        .pipeTo((v) => (sum += v))
+        .activate();
+    }
+    return sum;
+  });
 
-  console.timeEnd('test1');
-  console.log(sum);
-
-
-  console.time('test2');
-
-  sum = 0;
-  for (let i = 0; i < count; i++) {
-    new Observable((context) => {
-      return {
-        onObserved(): void {
-          context.emit(Math.random());
-        }
-      };
-    })
-      .pipeTo((v) => (sum += v))
-      .activate();
-  }
-
-  console.timeEnd('test2');
-  console.log(sum);
+  console.log(result1, result2);
+  logPerf(time1, time2);
 }
 
 /**
@@ -87,53 +102,51 @@ export function testPerformances2() {
  */
 export function testPerformances3() {
   const count: number = 1e6;
-  let sum: number;
 
-  console.time('test1');
-
-  sum = 0;
-  for (let i = 0; i < count; i++) {
-    new RXObservable<number>((subscriber: RXSubscriber<number>) => {
-      subscriber.next(Math.random());
-      return () => {
-        sum -= Math.random();
-      };
-    })
-      .subscribe((v) => (sum += v))
-      .unsubscribe();
-  }
-
-  console.timeEnd('test1');
-  console.log(sum);
-
-
-  console.time('test2');
-
-  sum = 0;
-  for (let i = 0; i < count; i++) {
-    new Observable((context) => {
-      return {
-        onObserved(): void {
-          context.emit(Math.random());
-        },
-        onUnobserved(): void {
+  const { time: time1, result: result1 } = timeExecution(() => {
+    let sum = 0;
+    for (let i = 0; i < count; i++) {
+      new RXObservable<number>((subscriber: RXSubscriber<number>) => {
+        subscriber.next(Math.random());
+        return () => {
           sum -= Math.random();
-        }
-      };
-    })
-      .pipeTo((v) => (sum += v))
-      .activate()
-      .deactivate();
-  }
+        };
+      })
+        .subscribe((v) => (sum += v))
+        .unsubscribe();
+    }
+    return sum;
+  });
 
-  console.timeEnd('test2');
-  console.log(sum);
+
+  const { time: time2, result: result2 } = timeExecution(() => {
+    let sum = 0;
+    for (let i = 0; i < count; i++) {
+      new Observable((context) => {
+        return {
+          onObserved(): void {
+            context.emit(Math.random());
+          },
+          onUnobserved(): void {
+            sum -= Math.random();
+          }
+        };
+      })
+        .pipeTo((v) => (sum += v))
+        .activate()
+        .deactivate();
+    }
+    return sum;
+  });
+
+  console.log(result1, result2);
+  logPerf(time1, time2);
 }
 
 /**é
  *  Test the performances of many observable emitting one value, and pre-create the the constructors
  *
- *  Results: around 3 times faster in the case of 'next', 50% more time in the case of pure function
+ *  Results: around 4 times faster in the case of 'next', 50% more time in the case of pure function
  */
 export function testPerformances4() {
   const count: number = 1e6;
@@ -170,31 +183,29 @@ export function testPerformances4() {
     return new Observer<number>((v) => (sum += v));
   });
 
-  console.time('test1');
+  const { time: time1, result: result1 } = timeExecution(() => {
+    sum = 0;
+    for (let i = 0; i < count; i++) {
+      rxObservables[i]
+        .subscribe(rxObservers[i])
+        .unsubscribe();
+    }
+    return sum;
+  });
 
-  sum = 0;
-  for (let i = 0; i < count; i++) {
-    rxObservables[i]
-      .subscribe(rxObservers[i])
-      .unsubscribe();
-  }
+  const { time: time2, result: result2 } = timeExecution(() => {
+    sum = 0;
+    for (let i = 0; i < count; i++) {
+      observables[i]
+        .pipeTo(observers[i])
+        .activate()
+        .deactivate();
+    }
+    return sum;
+  });
 
-  console.timeEnd('test1');
-  console.log(sum);
-
-
-  console.time('test2');
-
-  sum = 0;
-  for (let i = 0; i < count; i++) {
-    observables[i]
-      .pipeTo(observers[i])
-      .activate()
-      .deactivate();
-  }
-
-  console.timeEnd('test2');
-  console.log(sum);
+  console.log(result1, result2);
+  logPerf(time1, time2);
 }
 
 
@@ -233,34 +244,32 @@ export function testPerformances5() {
     };
   });
 
-  console.time('test1');
+  const { time: time1, result: result1 } = timeExecution(() => {
+    sum = 0;
+    rxObservable
+      .subscribe((v) => (sum += v))
+      .unsubscribe();
+    return sum;
+  });
 
-  sum = 0;
-  rxObservable
-    .subscribe((v) => (sum += v))
-    .unsubscribe();
+  const { time: time2, result: result2 } = timeExecution(() => {
+    sum = 0;
+    observable
+      .pipeTo((v) => (sum += v))
+      .activate()
+      .deactivate();
+    return sum;
+  });
 
-  console.timeEnd('test1');
-  console.log(sum);
-
-
-  console.time('test2');
-
-  sum = 0;
-  observable
-    .pipeTo((v) => (sum += v))
-    .activate()
-    .deactivate();
-
-  console.timeEnd('test2');
-  console.log(sum);
+  console.log(result1, result2);
+  logPerf(time1, time2);
 }
 
 
 /**
  *  Test the performances of an observable emitting multiple values based on a Notification structure
  *
- *  Results: same time
+ *  Results: 0~25% more time
  */
 export function testPerformances6() {
   const count: number = 5e6;
@@ -300,28 +309,27 @@ export function testPerformances6() {
     };
   });
 
-  console.time('test1');
-
-  sum = 0;
-  rxObservable
-    .subscribe({
-      next: (v) => (sum += v),
-      complete: () => (sum += Math.random())
-    });
-
-  console.timeEnd('test1');
-  console.log(sum);
+  const { time: time1, result: result1 } = timeExecution(() => {
+    sum = 0;
+    rxObservable
+      .subscribe({
+        next: (v) => (sum += v),
+        complete: () => (sum += Math.random())
+      });
+    return sum;
+  });
 
 
-  console.time('test2');
+  const { time: time2, result: result2 } = timeExecution(() => {
+    sum = 0;
+    observable
+      .on('next', (v) => (sum += v))
+      .on('complete', () => (sum += Math.random()));
+    return sum;
+  });
 
-  sum = 0;
-  observable
-    .on('next', (v) => (sum += v))
-    .on('complete', () => (sum += Math.random()));
-
-  console.timeEnd('test2');
-  console.log(sum);
+  console.log(result1, result2);
+  logPerf(time1, time2);
 }
 
 
@@ -353,36 +361,35 @@ export function testPerformances7() {
     };
   });
 
-  console.time('test1');
+  const { time: time1, result: result1 } = timeExecution(() => {
+    sum = 0;
+    for (let i = 0; i < count2; i++) {
+      rxObservable
+        .subscribe((v) => (sum += v));
+    }
+    return sum;
+  });
 
-  sum = 0;
-  for (let i = 0; i < count2; i++) {
-    rxObservable
-      .subscribe((v) => (sum += v));
-  }
+  const { time: time2, result: result2 } = timeExecution(() => {
+    sum = 0;
+    for (let i = 0; i < count2; i++) {
+      observable
+        .pipeTo((v) => (sum += v))
+        .activate();
+    }
 
-  console.timeEnd('test1');
-  console.log(sum);
+    return sum;
+  });
 
-
-  console.time('test2');
-
-  sum = 0;
-  for (let i = 0; i < count2; i++) {
-    observable
-      .pipeTo((v) => (sum += v))
-      .activate();
-  }
-
-  console.timeEnd('test2');
-  console.log(sum);
+  console.log(result1, result2);
+  logPerf(time1, time2);
 }
 
 
 /**
  *  Test the performances of many observable emitting multiple values, observed by one observer
  *
- *  Results: around 40% less time
+ *  Results: around 20% less time
  */
 export function testPerformances8() {
   const count1: number = 1e4;
@@ -413,25 +420,77 @@ export function testPerformances8() {
 
   const observer = new Observer<number>((v) => (sum += v));
 
-  console.time('test1');
+  const { time: time1, result: result1 } = timeExecution(() => {
+    sum = 0;
+    rxObservable
+      .subscribe((v) => (sum += v));
+    return sum;
+  });
 
-  sum = 0;
-  rxObservable
-    .subscribe((v) => (sum += v));
+  const { time: time2, result: result2 } = timeExecution(() => {
+    sum = 0;
+    observer.observe(...observables).activate();
+    return sum;
+  });
 
-  console.timeEnd('test1');
-  console.log(sum);
-
-
-  console.time('test2');
-
-  sum = 0;
-  observer.observe(...observables).activate();
-
-  console.timeEnd('test2');
-  console.log(sum);
+  console.log(result1, result2);
+  logPerf(time1, time2);
 }
 
+/**
+ *  Test the performances of one observable emitting multiple MAPPED values, observed by one observer
+ *
+ *  Results: around 2 times more time, but pure-pies are 50% faster
+ */
+export function testPerformances9() {
+  const count: number = 1e7;
+  let sum: number;
+
+  const rxObservable = new RXObservable<number>((subscriber: RXSubscriber<number>) => {
+    for (let i = 0; i < count; i++) {
+      subscriber.next(Math.random());
+    }
+  }).pipe(
+    map(a => a * 2)
+  );
+
+  const observable1: IObservable<number> = new Observable<number>((context) => {
+    return {
+      onObserved(): void {
+        for (let i = 0; i < count; i++) {
+          context.emit(Math.random());
+        }
+      },
+    };
+  });
+
+  const observable2: IObservable<number> = observable1.pipeThrough(mapPipe<number, number>(a => a * 2));
+
+  const observer1 = new Observer<number>(purePipeMap<number, number>((v) => (sum += v * 2), a => a * 2));
+  const observer2 = new Observer<number>((v) => (sum += v));
+
+  const { time: time1, result: result1 } = timeExecution(() => {
+    sum = 0;
+    rxObservable
+      .subscribe((v) => (sum += v));
+    return sum;
+  });
+
+  const { time: time2, result: result2 } = timeExecution(() => {
+    sum = 0;
+    observer1.observe(observable1).activate();
+    return sum;
+  });
+
+  const { time: time3, result: result3 } = timeExecution(() => {
+    sum = 0;
+    observer2.observe(observable2).activate();
+    return sum;
+  });
+
+  console.log(result1, result2, result3);
+  logPerf(time1, time2, time3);
+}
 
 
 export function testPerformances() {
@@ -443,4 +502,5 @@ export function testPerformances() {
   // testPerformances6();
   // testPerformances7();
   // testPerformances8();
+  testPerformances9();
 }

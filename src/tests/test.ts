@@ -32,6 +32,7 @@ import { testAbortController } from './test-abort-controller';
 import { Source } from '../observables/distinct/source/sync/implementation';
 import { AsyncSource } from '../observables/distinct/source/async/implementation';
 import { debugCancellableContext } from './debug/debug-cancellable-context';
+import { testPerformances } from './test-performances';
 
 
 
@@ -594,7 +595,7 @@ export async function test() {
   // testMisc();
   // testFactoryV2();
   // testInstanceof();
-  // testPerformances();
+  testPerformances();
   // testSignalingServer();
   // testPromises();
   // testClasses();
@@ -604,7 +605,7 @@ export async function test() {
   // await testUnit();
 
   // await testAbortController();
-  await debugCancellableContext();
+  // await debugCancellableContext();
 
   console.log('tests done');
 }
