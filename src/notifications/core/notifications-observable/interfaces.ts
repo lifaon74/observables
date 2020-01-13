@@ -43,16 +43,16 @@ export interface INotificationsObservable<TKVMap extends KeyValueMapGenericConst
 
 
   // creates a NotificationsObserver with "name" and "callback" which observes this Observable
-  addListener<K extends KeyValueMapKeys<TKVMap>>(name: K, callback: (value: TKVMap[K]) => void): INotificationsObserver<K, TKVMap[K]>;
+  addListener<TKey extends KeyValueMapKeys<TKVMap>>(name: TKey, callback: (value: TKVMap[TKey]) => void): INotificationsObserver<TKey, TKVMap[TKey]>;
 
   // removes the Observable's NotificationsObservers matching "name" and "callback"
-  removeListener<K extends KeyValueMapKeys<TKVMap>>(name: K, callback?: (value: TKVMap[K]) => void): void;
+  removeListener<TKey extends KeyValueMapKeys<TKVMap>>(name: TKey, callback?: (value: TKVMap[TKey]) => void): void;
 
   // like "addListener" but returns "this"
-  on<K extends KeyValueMapKeys<TKVMap>>(name: K, callback: (value: TKVMap[K]) => void): this;
+  on<TKey extends KeyValueMapKeys<TKVMap>>(name: TKey, callback: (value: TKVMap[TKey]) => void): this;
 
   // like "removeListener" but returns "this"
-  off<K extends KeyValueMapKeys<TKVMap>>(name: K, callback?: (value: TKVMap[K]) => void): this;
+  off<TKey extends KeyValueMapKeys<TKVMap>>(name: TKey, callback?: (value: TKVMap[TKey]) => void): this;
 
 
   /**

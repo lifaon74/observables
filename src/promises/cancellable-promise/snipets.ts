@@ -10,10 +10,10 @@ import { TAbortStrategy } from '../../misc/advanced-abort-controller/advanced-ab
  * Returns a Promise or a CancellablePromise resolved after 'timeout' milliseconds
  */
 export function $delay(timeout: number): Promise<void>;
-export function $delay(timeout: number, signal: IAdvancedAbortSignal): ICancellablePromise<void, 'never'>;
-export function $delay<TStrategy extends TAbortStrategy>(timeout: number, signal: IAdvancedAbortSignal, options: ICancellablePromiseOptions<void, TStrategy> | undefined): ICancellablePromise<void, TStrategy>;
-export function $delay<TStrategy extends TAbortStrategy>(timeout: number, signal?: IAdvancedAbortSignal, options?: ICancellablePromiseOptions<void, TStrategy>): Promise<void> | ICancellablePromise<void, TStrategy> {
-  if (signal === void 0) {
+export function $delay(timeout: number, options: ICancellablePromiseOptions<void, 'never'>): ICancellablePromise<void, 'never'>;
+export function $delay<TStrategy extends TAbortStrategy>(timeout: number, options: ICancellablePromiseOptions<void, TStrategy>): ICancellablePromise<void, TStrategy>;
+export function $delay<TStrategy extends TAbortStrategy>(timeout: number, options?: ICancellablePromiseOptions<void, TStrategy>): Promise<void> | ICancellablePromise<void, TStrategy> {
+  if (options === void 0) {
     return new Promise<void>((resolve: (value?: TPromiseOrValue<void>) => void) => {
       setTimeout(resolve, timeout);
     });
@@ -31,7 +31,7 @@ export function $delay<TStrategy extends TAbortStrategy>(timeout: number, signal
       }, timeout);
 
       abortSignalObserver.activate();
-    }, signal, options);
+    }, options);
   }
 }
 
@@ -43,10 +43,10 @@ export function $delay<TStrategy extends TAbortStrategy>(timeout: number, signal
  * Returns a Promise or a CancellablePromise resolved immediately after the environment has completed other operations such as events or display updates.
  */
 export function $yield(): Promise<void>;
-export function $yield(signal: IAdvancedAbortSignal): ICancellablePromise<void, 'never'>;
-export function $yield<TStrategy extends TAbortStrategy>(signal: IAdvancedAbortSignal, options: ICancellablePromiseOptions<void, TStrategy> | undefined): ICancellablePromise<void, TStrategy>;
-export function $yield<TStrategy extends TAbortStrategy>(signal?: IAdvancedAbortSignal, options?: ICancellablePromiseOptions<void, TStrategy>): Promise<void> | ICancellablePromise<void, TStrategy> {
-  if (signal === void 0) {
+export function $yield(options: ICancellablePromiseOptions<void, 'never'> | undefined): ICancellablePromise<void, 'never'>;
+export function $yield<TStrategy extends TAbortStrategy>(options: ICancellablePromiseOptions<void, TStrategy>): ICancellablePromise<void, TStrategy>;
+export function $yield<TStrategy extends TAbortStrategy>(options?: ICancellablePromiseOptions<void, TStrategy>): Promise<void> | ICancellablePromise<void, TStrategy> {
+  if (options === void 0) {
     return new Promise<void>((resolve: (value?: TPromiseOrValue<void>) => void) => {
       setImmediate(resolve);
     });
@@ -64,6 +64,6 @@ export function $yield<TStrategy extends TAbortStrategy>(signal?: IAdvancedAbort
       });
 
       abortSignalObserver.activate();
-    }, signal, options);
+    }, options);
   }
 }

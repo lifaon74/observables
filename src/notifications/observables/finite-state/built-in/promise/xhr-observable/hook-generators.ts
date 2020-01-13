@@ -11,7 +11,7 @@ import {
 import { FiniteStateObservableHookDefaultOnUnobserved } from '../../../helpers';
 import { AdvancedAbortController } from '../../../../../../misc/advanced-abort-controller/implementation';
 import { IAdvancedAbortController } from '../../../../../../misc/advanced-abort-controller/interfaces';
-import { AbortReason } from '../../../../../../misc/reason/defaults/abort-reason';
+import { AbortReason } from '../../../../../../misc/reason/built-in/abort-reason';
 import { TFiniteStateObservableCreateCallback, TFiniteStateObservableMode } from '../../../types';
 import { IFiniteStateObservableContext } from '../../../context/interfaces';
 import { IXHRObservableKeyValueMap, TXHRObservableFinalState } from './types';
@@ -145,7 +145,6 @@ export function GenerateFiniteStateObservableHookFromXHR(
             })
           ;
 
-          // DoXHRFromRequestUsingReadableStream(request, xhr, responseType); // INFO should replace following in the future when supported
           DoXHRFromRequest(request, xhr, responseType, abortController.signal);
         }
       },

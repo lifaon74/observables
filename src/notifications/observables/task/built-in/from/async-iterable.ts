@@ -1,7 +1,8 @@
-import { IProgress } from '../../../../misc/progress/interfaces';
-import { ITask, ITaskContext } from '../interfaces';
-import { Task } from '../implementation';
-import { Progress } from '../../../../misc/progress/implementation';
+import { IProgress } from '../../../../../misc/progress/interfaces';
+import { ITask} from '../../interfaces';
+import { Task } from '../../implementation';
+import { Progress } from '../../../../../misc/progress/implementation';
+import { ITaskContext } from '../../context/interfaces';
 
 
 export interface ITaskAsyncIteratorValue<T> {
@@ -62,7 +63,7 @@ export function taskFromAsyncIterator<T>(iterator: AsyncIterator<TTaskAsyncItera
 
     const startListener = context.task.addListener('start', run);
     const resumeListener = context.task.addListener('resume', run);
-    const cancelListener = context.task.addListener('cancel', clear);
+    const cancelListener = context.task.addListener('abort', clear);
 
     startListener.activate();
     cancelListener.activate();
@@ -76,7 +77,7 @@ export function taskFromAsyncIteratorWithCountProgress<T>(iterator: AsyncIterato
     let result: IteratorResult<T>;
     while (!(result = await iterator.next()).done) {
       count++;
-      yield { progress: new Progress(count) };
+      yield { progress: new Progress({ loaded: count, name: 'count' }) };
     }
   })());
 }

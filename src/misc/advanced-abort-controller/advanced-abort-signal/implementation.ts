@@ -11,7 +11,7 @@ import {
   TAbortStrategyReturnedPromise, TAdvancedAbortSignalWrapPromiseCallback
 } from './types';
 import {
-  AdvancedAbortSignalNormalizeWrapPromiseOptions, ApplyOnAbortCallback, IAdvancedAbortSignalWrapPromiseOptionsStrict,
+  AdvancedAbortSignalNormalizeWrapPromiseOptions, ApplyOnAbortCallback, IAdvancedAbortSignalWrapPromiseNormalizedOptions,
   LinkAdvancedAbortSignalWithFetchArgumentsSpread, RaceAborted
 } from './functions';
 import { IsPromiseLikeBase, PromiseTry } from '../../../promises/helpers';
@@ -49,8 +49,8 @@ export function AdvancedAbortSignalGetReason(instance: IAdvancedAbortSignal): an
  */
 export function AdvancedAbortSignalWrapPromise<T, TStrategy extends TAbortStrategy, TAborted>(
   instance: IAdvancedAbortSignal,
-  promise: TPromise<T>,
-  options: IAdvancedAbortSignalWrapPromiseOptionsStrict<TStrategy, TAborted>,
+  promise: PromiseLike<T>,
+  options: IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted>,
 ): TAbortStrategyReturnedPromise<T, TStrategy, TAborted> {
   return RaceAborted<T>(instance, promise)
     .then((value: T | void): TPromiseOrValue<T | TAbortStrategyReturn<TStrategy> | TAborted> => {
@@ -68,16 +68,16 @@ export function AdvancedAbortSignalWrapPromise<T, TStrategy extends TAbortStrate
 
 export function AdvancedAbortSignalWrapPromiseOrCreate<T, TStrategy extends TAbortStrategy, TAborted>(
   instance: IAdvancedAbortSignal,
-  promiseOrCallback: TPromise<T> | TAdvancedAbortSignalWrapPromiseCallback<T>,
-  options: IAdvancedAbortSignalWrapPromiseOptionsStrict<TStrategy, TAborted>,
+  promiseOrCallback: PromiseLike<T> | TAdvancedAbortSignalWrapPromiseCallback<T>,
+  options: IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted>,
 ): TAbortStrategyReturnedPromise<T, TStrategy, TAborted> {
   if (typeof promiseOrCallback === 'function') {
     // ensures promiseOrCallback is called only if signal is not aborted
-    return AdvancedAbortSignalWrapFunction<() => TPromise<T>, TStrategy, TAborted>(instance, () => {
+    return AdvancedAbortSignalWrapFunction<() => TPromise<T>, TStrategy, TAborted>(instance, (): TPromise<T> => {
       return new Promise<T>((resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void) => {
         promiseOrCallback.call(instance, resolve, reject, instance);
       });
-    }, options)();
+    }, options)() as TAbortStrategyReturnedPromise<T, TStrategy, TAborted>;
   } else if (IsPromiseLikeBase(promiseOrCallback)) {
     return AdvancedAbortSignalWrapPromise<T, TStrategy, TAborted>(instance, promiseOrCallback, options);
   } else {
@@ -89,7 +89,7 @@ export function AdvancedAbortSignalWrapPromiseOrCreate<T, TStrategy extends TAbo
 export function AdvancedAbortSignalWrapFunction<CB extends (...args: any[]) => any, TStrategy extends TAbortStrategy, TAborted>(
   instance: IAdvancedAbortSignal,
   callback: CB,
-  options: IAdvancedAbortSignalWrapPromiseOptionsStrict<TStrategy, TAborted>,
+  options: IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted>,
 ): (...args: Parameters<CB>) => TAbortStrategyReturnedPromise<TPromiseType<ReturnType<CB>>, TStrategy, TAborted> {
   type T = TPromiseType<ReturnType<CB>>;
   return function (...args: Parameters<CB>): TAbortStrategyReturnedPromise<T, TStrategy, TAborted> {
@@ -183,7 +183,7 @@ export class AdvancedAbortSignal extends NotificationsObservable<IAdvancedAbortS
   }
 
   wrapPromise<T, TStrategy extends TAbortStrategy, TAborted>(
-    promiseOrCallback: Promise<T> | TAdvancedAbortSignalWrapPromiseCallback<T>,
+    promiseOrCallback: PromiseLike<T> | TAdvancedAbortSignalWrapPromiseCallback<T>,
     options?: IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted>,
   ): TAbortStrategyReturnedPromise<T, TStrategy, TAborted> {
     return AdvancedAbortSignalWrapPromiseOrCreate<T, TStrategy, TAborted>(this, promiseOrCallback, AdvancedAbortSignalNormalizeWrapPromiseOptions(options));

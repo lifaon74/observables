@@ -2,6 +2,7 @@ import { IProgress, IProgressConstructor, IProgressJSON, IProgressOptions } from
 import { ConstructClassWithPrivateMembers } from '../helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../helpers';
 
+/** PRIVATES **/
 
 export const PROGRESS_PRIVATE = Symbol('progress-private');
 
@@ -14,6 +15,8 @@ export interface IProgressPrivate {
 export interface IProgressInternal extends IProgress {
   [PROGRESS_PRIVATE]: IProgressPrivate;
 }
+
+/** CONSTRUCTOR **/
 
 export function ConstructProgress(
   instance: IProgress,

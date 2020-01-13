@@ -7,12 +7,12 @@ import { IFunctionObservable } from './interfaces';
 import { IDistinctValueObservableContext } from '../../distinct-value-observable/sync/context/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
 import { FUNCTION_OBSERVABLE_PRIVATE, IFunctionObservableInternal, IFunctionObservablePrivate } from './privates';
-import { ReadonlyTuple } from '../../../../misc/readonly-list/implementation';
 import { Observer } from '../../../../core/observer/implementation';
 import { IObservable } from '../../../../core/observable/interfaces';
 import { IsObject } from '../../../../helpers';
 import { DISTINCT_VALUE_OBSERVABLE_PRIVATE } from '../../distinct-value-observable/sync/privates';
 import { FunctionObservableCallFactory, FunctionObservableSetObservableValue } from './functions';
+import { ReadonlyTuple } from '../../../../misc/readonly-tuple/implementation';
 
 /** CONSTRUCTOR **/
 

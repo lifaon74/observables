@@ -31,8 +31,8 @@ export interface ISourceTypedConstructor<T> extends ISourceStatic {
  *
  */
 export interface ISource<T> extends IDistinctValueObservable<T> {
-  readonly value: T | undefined; // last emitted value
-  valueOf(): T | undefined;
+  readonly value: T; // last emitted value
+  valueOf(): T;
 
   emit(value: T): this;
 }

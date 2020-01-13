@@ -1,100 +1,23 @@
-import { ConstructClassWithPrivateMembers } from '../helpers/ClassWithPrivateMembers';
-import { IReadonlyList, IReadonlyTuple, TupleTypes } from './interfaces';
+import { IReadonlyList } from './interfaces';
 import { IsObject } from '../../helpers';
-
-export const READONLY_TUPLE_PRIVATE = Symbol('readonly-tuple-private');
-
-export interface IReadonlyTuplePrivate<T extends any[]> {
-  items: T;
-}
-
-export interface IReadonlyTupleInternal<T extends any[]> extends IReadonlyTuple<T> {
-  [READONLY_TUPLE_PRIVATE]: IReadonlyTuplePrivate<T>;
-}
+import { ReadonlyTuple } from '../readonly-tuple/implementation';
+import { IReadonlyTupleInternal, READONLY_TUPLE_PRIVATE } from '../readonly-tuple/privates';
 
 
-export function ConstructReadonlyTuple<T extends any[]>(instance: IReadonlyTuple<T>, tuple: T): void {
-  ConstructClassWithPrivateMembers(instance, READONLY_TUPLE_PRIVATE);
-  if (Array.isArray(tuple)) {
-    (instance as IReadonlyTupleInternal<T>)[READONLY_TUPLE_PRIVATE].items = tuple;
-  } else {
-    throw new TypeError(`Expected array as tuple`);
-  }
-}
-
-export function IsReadonlyTuple(value: any): value is IReadonlyTuple<any> {
-  return IsObject(value)
-    && value.hasOwnProperty(READONLY_TUPLE_PRIVATE as symbol);
-}
-
-
-export function ReadonlyTupleItem<T extends any[], K extends number>(instance: IReadonlyTuple<T>, index: K): T[K] {
-  const privates: IReadonlyTuplePrivate<T> = (instance as IReadonlyTupleInternal<T>)[READONLY_TUPLE_PRIVATE];
-  if ((0 <= index) && (index < privates.items.length)) {
-    return privates.items[index];
-  } else {
-    throw new RangeError(`Index out of range.`);
-  }
-}
-
-export class ReadonlyTuple<T extends any[]> implements IReadonlyTuple<T> {
-
-  constructor(tuple: T) {
-    ConstructReadonlyTuple<T>(this, tuple);
-  }
-
-  get length(): number {
-    return ((this as unknown) as IReadonlyTupleInternal<T>)[READONLY_TUPLE_PRIVATE].items.length;
-  }
-
-  item<K extends number>(index: K): T[K] {
-    return ReadonlyTupleItem<T, K>(this, index);
-  }
-
-  [Symbol.iterator](): IterableIterator<TupleTypes<T>> {
-    return ((this as unknown) as IReadonlyTupleInternal<T>)[READONLY_TUPLE_PRIVATE].items[Symbol.iterator]();
-  }
-
-  // *[Symbol.iterator](): IterableIterator<T> {
-  //   for (let i = 0, l = ((this as unknown) as IReadonlyListInternal<T>)[READONLY_LIST_PRIVATE].items.length; i < l; i++) {
-  //     yield ((this as unknown) as IReadonlyListInternal<T>)[READONLY_LIST_PRIVATE].items[i];
-  //   }
-  // }
-
-  toString(): string {
-    return ((this as unknown) as IReadonlyTupleInternal<T>)[READONLY_TUPLE_PRIVATE].items.toString();
-  }
-
-
-  join(separator?: string): string {
-    return ((this as unknown) as IReadonlyTupleInternal<T>)[READONLY_TUPLE_PRIVATE].items.join(separator);
-  }
-
-  indexOf(searchElement: TupleTypes<T>, fromIndex?: number): number {
-    return ((this as unknown) as IReadonlyTupleInternal<T>)[READONLY_TUPLE_PRIVATE].items.indexOf(searchElement, fromIndex);
-  }
-
-  lastIndexOf(searchElement: TupleTypes<T>, fromIndex?: number): number {
-    return ((this as unknown) as IReadonlyTupleInternal<T>)[READONLY_TUPLE_PRIVATE].items.lastIndexOf(searchElement, fromIndex);
-  }
-
-  includes(searchElement: TupleTypes<T>, fromIndex?: number): boolean {
-    return ((this as unknown) as IReadonlyTupleInternal<T>)[READONLY_TUPLE_PRIVATE].items.includes(searchElement as any, fromIndex);
-  }
-}
-
-
-/*----------------------------------*/
-
+/** PRIVATES **/
 
 export interface IReadonlyListInternal<T> extends IReadonlyTupleInternal<T[]> {
 }
+
+/** CONSTRUCTOR **/
 
 export function IsReadonlyList(value: any): value is IReadonlyList<any> {
   return IsObject(value)
     // && value.hasOwnProperty(READONLY_LIST_PRIVATE);
     && (value instanceof ReadonlyList);
 }
+
+/** CLASS **/
 
 export class ReadonlyList<T> extends ReadonlyTuple<T[]> implements IReadonlyList<T> {
 

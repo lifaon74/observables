@@ -8,19 +8,26 @@ export interface IReadonlySetPrivate<TValue> {
   set: Set<TValue>;
 }
 
-export interface IReadonlySetInternal<TValue> extends IReadonlySet<TValue> {
+export interface IReadonlySetPrivatesInternal<TValue> {
   [READONLY_SET_PRIVATE]: IReadonlySetPrivate<TValue>;
 }
 
+export interface IReadonlySetInternal<TValue> extends IReadonlySetPrivatesInternal<TValue>, IReadonlySet<TValue> {
+}
+
+
+/** CONSTRUCTOR **/
 
 export function ConstructReadonlySet<TValue>(
   instance: IReadonlySet<TValue>,
-  values: Iterable<TValue>
+  iterable: Iterable<TValue>
 ): void {
   ConstructClassWithPrivateMembers(instance, READONLY_SET_PRIVATE);
   const privates: IReadonlySetPrivate<TValue> = (instance as IReadonlySetInternal<TValue>)[READONLY_SET_PRIVATE];
-  if (Symbol.iterator in values) {
-    privates.set = new Set<TValue>(values);
+  if (iterable instanceof Set) {
+    privates.set = iterable;
+  } else if (Symbol.iterator in iterable) {
+    privates.set = new Set<TValue>(iterable);
   } else {
     throw new TypeError(`Expected Iterable<[TValue]> as entries`);
   }
@@ -32,10 +39,12 @@ export function IsReadonlySet(value: any): value is IReadonlySet<any> {
 }
 
 
+/** CLASS **/
+
 export class ReadonlySet<TValue> implements IReadonlySet<TValue> {
 
-  constructor(values: Iterable<TValue>) {
-    ConstructReadonlySet<TValue>(this, values);
+  constructor(iterable: Iterable<TValue>) {
+    ConstructReadonlySet<TValue>(this, iterable);
   }
 
   get size(): number {

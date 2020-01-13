@@ -37,12 +37,12 @@ export interface IAdvancedAbortSignal extends INotificationsObservable<IAdvanced
    *
    */
   wrapPromise<T>(
-    promiseOrCallback: Promise<T> | TAdvancedAbortSignalWrapPromiseCallback<T>,
+    promiseOrCallback: PromiseLike<T> | TAdvancedAbortSignalWrapPromiseCallback<T>,
     options?: IAdvancedAbortSignalWrapPromiseOptions<'never', never>,
   ): TAbortStrategyReturnedPromise<T, 'never', never>;
 
   wrapPromise<T, TStrategy extends TAbortStrategy, TAborted>(
-    promiseOrCallback: Promise<T> | TAdvancedAbortSignalWrapPromiseCallback<T>,
+    promiseOrCallback: PromiseLike<T> | TAdvancedAbortSignalWrapPromiseCallback<T>,
     options?: IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted>,
   ): TAbortStrategyReturnedPromise<T, TStrategy, TAborted>;
 

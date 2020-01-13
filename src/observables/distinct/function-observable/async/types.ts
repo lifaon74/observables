@@ -1,7 +1,7 @@
 import { IAdvancedAbortSignal } from '../../../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
-import { TupleTypes } from '../../../../misc/readonly-list/interfaces';
 import { TValueTupleToObservableArray } from '../sync/types';
 import { IAsyncFunctionObservable } from './interfaces';
+import { TupleTypes } from '../../../../misc/readonly-tuple/types';
 
 /** TYPES **/
 

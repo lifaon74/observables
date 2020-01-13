@@ -1,6 +1,5 @@
 import { DistinctValueObservable } from '../../distinct-value-observable/sync/implementation';
 import { IFunctionObservable, IFunctionObservableConstructor } from './interfaces';
-import { IReadonlyTuple } from '../../../../misc/readonly-list/interfaces';
 import { ObservableIsFreshlyObserved, ObservableIsNotObserved } from '../../../../core/observable/functions';
 import { IDistinctValueObservableContext } from '../../distinct-value-observable/sync/context/interfaces';
 import {
@@ -9,6 +8,7 @@ import {
 import { FUNCTION_OBSERVABLE_PRIVATE, IFunctionObservableInternal, IFunctionObservablePrivate } from './privates';
 import { ConstructFunctionObservable } from './constructor';
 import { FunctionObservableCallFactory } from './functions';
+import { IReadonlyTuple } from '../../../../misc/readonly-tuple/interfaces';
 
 /** CONSTRUCTOR FUNCTIONS **/
 

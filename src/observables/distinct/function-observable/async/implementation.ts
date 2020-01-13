@@ -1,5 +1,4 @@
 import { IAsyncFunctionObservable } from './interfaces';
-import { IReadonlyTuple } from '../../../../misc/readonly-list/interfaces';
 import { AsyncDistinctValueObservable } from '../../distinct-value-observable/async/implementation';
 import { ObservableIsFreshlyObserved, ObservableIsNotObserved } from '../../../../core/observable/functions';
 import { IAsyncDistinctValueObservableContext } from '../../distinct-value-observable/async/context/interfaces';
@@ -12,6 +11,7 @@ import {
 } from './privates';
 import { ConstructAsyncFunctionObservable } from './constructor';
 import { AsyncFunctionObservableCallFactory } from './functions';
+import { IReadonlyTuple } from '../../../../misc/readonly-tuple/interfaces';
 
 /** CONSTRUCTOR FUNCTIONS **/
 

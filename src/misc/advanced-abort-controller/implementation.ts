@@ -7,9 +7,9 @@ import { IsAdvancedAbortSignal } from './advanced-abort-signal/constructor';
 import { INotificationsObserver } from '../../notifications/core/notifications-observer/interfaces';
 import { IBaseNotificationsObservable } from '../../notifications/core/notifications-observable/interfaces';
 import { EventsObservable } from '../../notifications/observables/events/events-observable/public';
-import { AbortReason } from '../reason/defaults/abort-reason';
+import { AbortReason } from '../reason/built-in/abort-reason';
 import { $timeout } from './advanced-abort-signal/snipets';
-import { TimeoutReason } from '../reason/defaults/timeout-reason';
+import { TimeoutReason } from '../reason/built-in/timeout-reason';
 import { TAbortSignalLike, TAbortSignalLikeOrUndefined } from './types';
 
 

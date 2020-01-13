@@ -77,7 +77,7 @@ function loadNews(page: number, signal: IAdvancedAbortSignal): Promise<void> {
 Or if you prefer to use the provided CancellablePromise:
 ```ts
 function loadNews(page: number, signal: IAdvancedAbortSignal): Promise<void> {
-  return new CancellablePromise(fetch(`https://my-domain/api/news?page=${page}`, { signal: signal.toAbortController().signal }), signal)
+  return new CancellablePromise(fetch(`https://my-domain/api/news?page=${page}`, { signal: signal.toAbortController().signal }), { signal })
     .then((response: Response) => {
       return response.json();
     })

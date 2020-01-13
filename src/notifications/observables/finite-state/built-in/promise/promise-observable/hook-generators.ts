@@ -11,7 +11,7 @@ import {
 import { IFiniteStateObservableContext } from '../../../context/interfaces';
 import { IPromiseObservableKeyValueMap, TPromiseObservableFactory, TPromiseObservableFinalState } from './types';
 import { IAdvancedAbortController } from '../../../../../../misc/advanced-abort-controller/interfaces';
-import { AbortReason } from '../../../../../../misc/reason/defaults/abort-reason';
+import { AbortReason } from '../../../../../../misc/reason/built-in/abort-reason';
 import { AdvancedAbortController } from '../../../../../../misc/advanced-abort-controller/implementation';
 import { IAdvancedAbortSignal } from '../../../../../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 

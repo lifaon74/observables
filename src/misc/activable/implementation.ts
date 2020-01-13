@@ -7,6 +7,7 @@ import { IsObject } from '../../helpers';
 import { Constructor } from '../../classes/class-helpers/types';
 import { BaseClass, IBaseClassConstructor } from '../../classes/class-helpers/base-class';
 
+/** PRIVATES **/
 
 export const ACTIVABLE_PRIVATE = Symbol('activable-private');
 
@@ -23,6 +24,8 @@ export interface IActivablePrivate {
 export interface IActivableInternal extends IActivable {
   [ACTIVABLE_PRIVATE]: IActivablePrivate;
 }
+
+/** CONSTRUCTOR **/
 
 export function ConstructActivable(instance: IActivable, hook: IActivableHook): void {
   ConstructClassWithPrivateMembers(instance, ACTIVABLE_PRIVATE);
@@ -59,6 +62,8 @@ export function IsActivableConstructor(value: any, direct?: boolean): boolean {
     && HasFactoryWaterMark(value, IS_ACTIVABLE_CONSTRUCTOR, direct);
 }
 
+
+/** METHODS **/
 
 export function ActivableActivate(instance: IActivable): Promise<void> {
   const privates: IActivablePrivate = (instance as IActivableInternal)[ACTIVABLE_PRIVATE];
@@ -130,6 +135,8 @@ export function ActivableAddStateListener(instance: IActivable, listener: TActiv
   }
 }
 
+
+/** CLASS AND FACTORY **/
 
 function PureActivableFactory<TBase extends Constructor>(superClass: TBase) {
   return class Activable extends superClass implements IActivable {

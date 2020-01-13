@@ -10,11 +10,11 @@ import {
 } from './types';
 import { IAsyncDistinctValueObservableContext } from '../../distinct-value-observable/async/context/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
-import { ReadonlyTuple } from '../../../../misc/readonly-list/implementation';
 import { Observer } from '../../../../core/observer/implementation';
 import { IObservable } from '../../../../core/observable/interfaces';
-import { AbortReason } from '../../../../misc/reason/defaults/abort-reason';
+import { AbortReason } from '../../../../misc/reason/built-in/abort-reason';
 import { AsyncFunctionObservableCallFactory, AsyncFunctionObservableSetObservableValue } from './functions';
+import { ReadonlyTuple } from '../../../../misc/readonly-tuple/implementation';
 
 /** CONSTRUCTOR **/
 

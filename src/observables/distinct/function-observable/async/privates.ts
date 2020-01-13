@@ -4,9 +4,9 @@ import {
 } from './types';
 import { IAsyncDistinctValueObservablePrivatesInternal } from '../../distinct-value-observable/async/privates';
 import { IAsyncDistinctValueObservableContext } from '../../distinct-value-observable/async/context/interfaces';
-import { IReadonlyTuple } from '../../../../misc/readonly-list/interfaces';
 import { IObserver } from '../../../../core/observer/interfaces';
 import { IAsyncFunctionObservable } from './interfaces';
+import { IReadonlyTuple } from '../../../../misc/readonly-tuple/interfaces';
 
 /** PRIVATES **/
 

@@ -68,6 +68,22 @@ export function EventsObservableOnUnobserved<TKVMap extends EventKeyValueMapCons
   }
 }
 
+/** METHODS **/
+
+/* GETTERS/SETTERS */
+
+export function EventsObservableGetTarget<TKVMap extends EventKeyValueMapConstraint<TKVMap>, TTarget extends IEventsListener>(
+  instance: IEventsObservable<TKVMap, TTarget>
+): TTarget {
+  return (instance as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].target;
+}
+
+export function EventsObservableGetName<TKVMap extends EventKeyValueMapConstraint<TKVMap>, TTarget extends IEventsListener>(
+  instance: IEventsObservable<TKVMap, TTarget>
+): KeyValueMapKeys<TKVMap> | null {
+  return (instance as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].name;
+}
+
 /** CLASS **/
 
 /**
@@ -96,11 +112,11 @@ export const EventsObservable: IEventsObservableConstructor = class EventsObserv
   }
 
   get target(): TTarget {
-    return ((this as unknown) as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].target;
+    return EventsObservableGetTarget<TKVMap, TTarget>(this);
   }
 
   get name(): KeyValueMapKeys<TKVMap> | null {
-    return ((this as unknown) as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].name;
+    return EventsObservableGetName<TKVMap, TTarget>(this);
   }
 } as IEventsObservableConstructor;
 
