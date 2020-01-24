@@ -488,6 +488,7 @@ export interface ZPrototype {
 // - supers
 // - instanceof
 
+// INFO : IDEA - every function receive { $this(), $private(), args }
 
 export async function testClasses() {
   const _classA = new ClassBuilder(({ $this }) => {

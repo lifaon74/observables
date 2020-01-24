@@ -68,4 +68,14 @@ export class ReadonlyTuple<TTuple extends any[]> implements IReadonlyTuple<TTupl
   includes(searchElement: TupleTypes<TTuple>, fromIndex?: number): boolean {
     return ((this as unknown) as IReadonlyTupleInternal<TTuple>)[READONLY_TUPLE_PRIVATE].items.includes(searchElement as any, fromIndex);
   }
+
+  find<TValue extends TupleTypes<TTuple>>(predicate: (this: void, value: TupleTypes<TTuple>, index: number, obj: TupleTypes<TTuple>[]) => value is TValue, thisArg?: any): TValue | undefined;
+  find(predicate: (this: void, value: TupleTypes<TTuple>, index: number, obj: TupleTypes<TTuple>[]) => unknown, thisArg?: any): TupleTypes<TTuple> | undefined;
+  find<TValue extends TupleTypes<TTuple>>(predicate: (this: void, value: TupleTypes<TTuple>, index: number, obj: TupleTypes<TTuple>[]) => boolean, thisArg: any = this): TValue | undefined {
+    return ((this as unknown) as IReadonlyTupleInternal<TTuple>)[READONLY_TUPLE_PRIVATE].items.find(predicate, thisArg);
+  }
+
+  findIndex(predicate: (value: TupleTypes<TTuple>, index: number, obj: TupleTypes<TTuple>[]) => unknown, thisArg: any = this): number {
+    return ((this as unknown) as IReadonlyTupleInternal<TTuple>)[READONLY_TUPLE_PRIVATE].items.findIndex(predicate, thisArg);
+  }
 }
