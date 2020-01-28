@@ -130,7 +130,7 @@ export type TCancellablePromiseCancelledReturnedValue<T, TStrategy extends TAbor
     : never;
 
 export type TCancellablePromiseThenReturn<T, TStrategy extends TAbortStrategy, TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, TStrategy, any>, TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>, TCancelled extends TCancellablePromiseOnCancelledArgument<T, TStrategy, any>> =
-  ICancellablePromise<TCancellablePromiseThenReturnedValue<T, TStrategy, TFulfilled, TRejected, TCancelled> | TAbortStrategyReturn<TStrategy>, TStrategy>;
+  ICancellablePromise<TCancellablePromiseThenReturnedValue<T, TStrategy, TFulfilled, TRejected, TCancelled>/* | TAbortStrategyReturn<TStrategy>*/, TStrategy>;
 
 export type TCancellablePromiseCatchReturn<T, TStrategy extends TAbortStrategy, TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>> =
   TCancellablePromiseThenReturn<T, TStrategy, undefined, TRejected, undefined>;
