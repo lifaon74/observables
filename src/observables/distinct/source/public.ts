@@ -1,2 +1,3 @@
-export * from './interfaces';
-export { Source, IsSource, AsyncSource } from './implementation';
+export * from './sync/public';
+export * from './async/public';
+

@@ -9,6 +9,9 @@ export interface IObservableContextBasePrivate<T> {
   observable: IObservable<T>;
 }
 
-export interface IObservableContextBaseInternal<T> extends IObservableContextBase<T> {
+export interface IObservableContextBasePrivatesInternal<T> {
   [OBSERVABLE_CONTEXT_BASE_PRIVATE]: IObservableContextBasePrivate<T>;
+}
+
+export interface IObservableContextBaseInternal<T> extends IObservableContextBasePrivatesInternal<T>, IObservableContextBase<T> {
 }

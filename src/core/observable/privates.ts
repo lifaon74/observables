@@ -12,6 +12,9 @@ export interface IObservablePrivate<T> extends IObservableHookPrivate<T> {
   readOnlyObservers: IReadonlyList<IObserver<T>>;
 }
 
-export interface IObservableInternal<T> extends IObservable<T> {
+export interface IObservablePrivatesInternal<T> {
   [OBSERVABLE_PRIVATE]: IObservablePrivate<T>;
+}
+
+export interface IObservableInternal<T> extends IObservablePrivatesInternal<T>, IObservable<T> {
 }

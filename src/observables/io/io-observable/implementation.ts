@@ -1,30 +1,25 @@
 import {
-  IInputOutput, IInputOutputBaseConstructor, IInputOutputBaseOptions, IInputOutputKeyValueMap,
-  IInputOutputConstructorSimple,
-  IInputOutputSuperClass, IOKeyValueMapGenericConstraint, TInputOutputBaseOptionsForSuperResult,
-  TInputOutputBaseOptionsForSuperResultSimple, TInputOutputConstructorArgs
+  IInputOutput, IInputOutputBaseConstructor, IInputOutputBaseOptions, IInputOutputConstructorSimple,
+  IInputOutputKeyValueMap, IInputOutputSuperClass, IOKeyValueMapGenericConstraint,
+  TInputOutputBaseOptionsForSuperResult, TInputOutputBaseOptionsForSuperResultSimple, TInputOutputConstructorArgs
 } from './interfaces';
 import { IObservable, IObservableConstructor } from '../../../core/observable/interfaces';
 import { IObserver } from '../../../core/observer/interfaces';
-import {
-  HasFactoryWaterMark, MakeFactory
-} from '../../../classes/class-helpers/factory';
-import {
-  INotificationsObservableTypedConstructor, KeyValueMapToNotifications
-} from '../../../notifications/core/notifications-observable/interfaces';
+import { HasFactoryWaterMark, MakeFactory } from '../../../classes/class-helpers/factory';
+import { INotificationsObservableTypedConstructor } from '../../../notifications/core/notifications-observable/interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import {
   ACTIVABLE_PRIVATE, ActivableFactory, IActivablePrivate, IsActivableConstructor
 } from '../../../misc/activable/implementation';
 import { IsObject } from '../../../helpers';
-import {
-  IsNotificationsObservableConstructor, NotificationsObservableFactory
-} from '../../../notifications/core/notifications-observable/implementation';
+import { NotificationsObservableFactory } from '../../../notifications/core/notifications-observable/implementation';
 import { IActivableConstructor } from '../../../misc/activable/interfaces';
 import { Constructor } from '../../../classes/class-helpers/types';
 import { BaseClass, IBaseClassConstructor } from '../../../classes/class-helpers/base-class';
 import { IObservablePrivate, OBSERVABLE_PRIVATE } from '../../../core/observable/privates';
 import { ObservableFactory } from '../../../core/observable/implementation';
+import { IsNotificationsObservableConstructor } from '../../../notifications/core/notifications-observable/constructor';
+import { KeyValueMapToNotifications } from '../../../notifications/core/notifications-observable/types';
 
 
 export const INPUT_OUTPUT_PRIVATE = Symbol('input-output-private');

@@ -1,26 +1,6 @@
-export type TupleTypes<T> = { [P in keyof T]: T[P] } extends { [key: number]: infer V } ? V : never;
+import { IReadonlyTuple } from '../readonly-tuple/interfaces';
 
-export interface IReadonlyTupleConstructor {
-  new<T extends any[]>(tuple: T): IReadonlyTuple<T>;
-}
-
-export interface IReadonlyTuple<T extends any[]> extends Iterable<TupleTypes<T>> {
-  readonly length: number;
-
-  // returns value at 'index', or throws if out of range
-  item<K extends number>(index: K): T[K];
-
-  toString(): string;
-
-  join(separator?: string): string;
-
-  indexOf(searchElement: TupleTypes<T>, fromIndex?: number): number;
-
-  lastIndexOf(searchElement: TupleTypes<T>, fromIndex?: number): number;
-
-  includes(searchElement: TupleTypes<T>, fromIndex?: number): boolean;
-}
-
+/** INTERFACES **/
 
 export interface IReadonlyListConstructor {
   new<T>(iterable: Iterable<T>): IReadonlyList<T>;

@@ -88,15 +88,16 @@ function compactAST(ast, url, strings) {
 
   compactSymbols(ast);
 
-  const compactedErrorsAST = compactErrors(JSON.parse(JSON.stringify(ast)), strings);
-  const compactedErrorsCode = generate(compactedErrorsAST);
-  // const compactedCode = generate(ast);
-  return generateAsyncText(url, compactedErrorsCode);
-  // if (compactedCode.length <= (compactedErrorsCode.length + 363 + url.length)) {
-  //   return compactedCode;
-  // } else {
-  //   return generateAsyncText(url) + compactedErrorsCode;
-  // }
+  return generate(ast);
+  // const compactedErrorsAST = compactErrors(JSON.parse(JSON.stringify(ast)), strings);
+  // const compactedErrorsCode = generate(compactedErrorsAST);
+  // // const compactedCode = generate(ast);
+  // return generateAsyncText(url, compactedErrorsCode);
+  // // if (compactedCode.length <= (compactedErrorsCode.length + 363 + url.length)) {
+  // //   return compactedCode;
+  // // } else {
+  // //   return generateAsyncText(url) + compactedErrorsCode;
+  // // }
 }
 
 function compactCode(code, url, strings) {

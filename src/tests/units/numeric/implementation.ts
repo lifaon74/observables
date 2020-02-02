@@ -132,7 +132,7 @@ export class NumericUnit extends Unit<number> implements INumericUnit {
   /** MATH **/
 
   min(...values: TNumericUnitOrValue[]): INumericUnit {
-    return NumericUnitMin(this, values);;
+    return NumericUnitMin(this, values);
   }
 
   max(...values: TNumericUnitOrValue[]): INumericUnit {

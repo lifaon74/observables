@@ -2,13 +2,14 @@ import {
   KeyValueMapGenericConstraint, KeyValueMapKeys, KeyValueMapValues, KVRecord
 } from '../../notifications/core/interfaces';
 import { IObserver } from '../../core/observer/interfaces';
-import {
-  IBaseNotificationsObservable, INotificationsObservableContext, KeyValueMapToNotifications
-} from '../../notifications/core/notifications-observable/interfaces';
+import { IBaseNotificationsObservable } from '../../notifications/core/notifications-observable/interfaces';
 import { Observer } from '../../core/observer/public';
-import { NotificationsObservable } from '../../notifications/core/notifications-observable/public';
+import {
+  KeyValueMapToNotifications, NotificationsObservable
+} from '../../notifications/core/notifications-observable/public';
 import { IPipe } from '../../core/observable-observer/pipe/interfaces';
 import { Pipe } from '../../core/observable-observer/pipe/implementation';
+import { INotificationsObservableContext } from '../../notifications/core/notifications-observable/context/interfaces';
 
 /**
  * ObservableObserver: aggregates many notifications by filtering their name - returns a new NotificationsObservable build from 'outName'

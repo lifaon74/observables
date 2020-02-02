@@ -1,6 +1,6 @@
 # How to create an Observable which does http request (for REST API for example) ?
 
-### Understanding the CancelToken
+### Understanding the AdvancedAbortController/AdvancedAbortSignal
 
 One recurrent issue with the promise is the **cancellation**: when initialized, a promise and all its *then/catch* will be called
 even if at some point we don't require anymore the final result.
@@ -32,51 +32,43 @@ This has some problems if the user clicks many times on the button:
   3) (at time 300ms) second request finishes and is rendered into the DOM (page 1)
   4) (at time 1000ms) first request finishes and is rendered into the DOM (page 0) => UNWANTED BEHAVIOUR !
 
-CancelToken helps to solve this problem: it's simply an object with a possible *cancelled* state, and a `cancel` function.
+AdvancedAbortController/AdvancedAbortSignal helps to solve this problem: it's simply an object with a possible *aborted* state, and an `abort` function.
 
 It may be used like this:
 
 ```ts
-function loadNews(page: number, token: ICancelToken = new CancelToken()): Promise<void> {
-  return fetch(`https://my-domain/api/news?page=${page}`, { signal: token.toAbortController().signal })
-    .then((response: Response) => {
-      if (token.cancelled) {
-        throw token.reason;
-      } else {
-        return response.json();
-      }
-    })
-    .then((news: INews) => {
-      if (token.cancelled) {
-        throw token.reason;
-      } else {
-        // render news in DOM for example
-      }
-    });
+function loadNews(page: number, signal: IAdvancedAbortSignal): Promise<void> {
+  return signal.wrapPromise(fetch(`https://my-domain/api/news?page${ page }`, { signal: signal.toAbortController().signal }))
+    .then(signal.wrapFunction((response: Response): Promise<any> => { // <(response: Response) => any, 'never', never>
+      return response.json() as any;
+    }))
+    .then(signal.wrapFunction((news: any) => {
+      // render news in DOM for example
+    }));
 }
 
 let page: number = 0;
-let token: ICancelToken;
-document.querySelector('button')
+let controller: IAdvancedAbortController;
+(document.querySelector('button') as HTMLElement)
   .addEventListener(`click`, () => {
-    if (token !== void 0) {
-      token.cancel(new PromiseCancelReason('Manual cancel'));
+    if (controller !== void 0) {
+      controller.abort(new AbortReason('Manual abort'));
     }
-    token = new CancelToken();
+    controller = new AdvancedAbortController();
     page++;
-    loadNews(page, token)
-      .catch(PromiseCancelReason.discard);
+    loadNews(page, controller.signal)
+      .catch(AbortReason.discard);
   });
 ```
 
 Or even better, using the *wrap* methods:
 ```ts
-function loadNews(page: number, token: ICancelToken = new CancelToken()): Promise<void> {
-  return token.wrapPromise(fetch(`https://my-domain/api/news?page=${page}`, { signal: token.toAbortController().signal }))
-    .then(token.wrapFunction((response: Response) => {
+function loadNews(page: number, signal: IAdvancedAbortSignal): Promise<void> {
+  return signal.wrapPromise(fetch(`https://my-domain/api/news?page=${page}`, { signal: signal.toAbortController().signal }))
+    .then(signal.wrapFunction((response: Response) => {
       return response.json();
     }))
-    .then(token.wrapFunction((news: INews) => {
+    .then(signal.wrapFunction((news: any) => {
       // render news in DOM for example
     }));
 }
@@ -84,19 +76,19 @@ function loadNews(page: number, token: ICancelToken = new CancelToken()): Promis
 
 Or if you prefer to use the provided CancellablePromise:
 ```ts
-function loadNews(page: number, token: ICancelToken = new CancelToken()): Promise<void> {
-  return new CancellablePromise(fetch(`https://my-domain/api/news?page=${page}`, { signal: token.toAbortController().signal }), token)
+function loadNews(page: number, signal: IAdvancedAbortSignal): Promise<void> {
+  return new CancellablePromise(fetch(`https://my-domain/api/news?page=${page}`, { signal: signal.toAbortController().signal }), { signal })
     .then((response: Response) => {
       return response.json();
     })
-    .then((news: INews) => {
+    .then((news: any) => {
       // render news in DOM for example
     })
         .promise; // optional
 }
 ```
 
-**The CancelToken is useful to avoid unnecessary work into the promise chain, and should be used in most of your workflow.**
+**The AdvancedAbortController/AdvancedAbortSignal is useful to avoid unnecessary work into the promise chain, and should be used in most of your workflow.**
 
 *Another example - assuming a payment mobile app:*
 
@@ -111,50 +103,46 @@ function loadNews(page: number, token: ICancelToken = new CancelToken()): Promis
     4) the server detects that the session is no more valid for the first request, and returns a 401 error.
 
 This king of pattern occurs extremely frequently: a call to the server after a click on a button, followed by a success/error popup.
-Sadly, by laziness or time constraint, developers tend to forgot the *cancel* part (and the error part too ;) ), where CancelToken simplifies the work.
+Sadly, by laziness or time constraint, developers tend to forgot the *cancel* part (and the error part too ;) ), where AdvancedAbortController/AdvancedAbortSignal simplifies the work.
 
 ### Simple cancellable http request example
 
 ```ts
 /**
- * Creates a simple GET http request which loads an url and returns result as [Promise<string>, CancelToken]
- * @param url
- * @param token - optional CancelToken, will be returned in the tuple
+ * Creates a simple GET http request which loads an url and may be cancelled
  */
-function createHttpRequest(url: string, token: ICancelToken = new CancelToken()): TCancellablePromiseTuple<string> {
-  return {
-    promise: new Promise<string>((resolve, reject) => {
-      const request = new XMLHttpRequest(); // create an XMLHttpRequest
-      new EventsObservable<XMLHttpRequestEventMap>(request) // creates an EventsObservable for this request
-        .on('load', () => { // when the request is finished, resolve the promise
-          resolve(request.responseText);
-        })
-        .on('error', () => {
-          reject(new Error(`Failed to fetch data: ${request.statusText}`));
-        })
-        .on('abort', () => {
-          reject(token.reason || new PromiseCancelReason());
-        });
+function createHttpRequest(url: string, signal?: IAdvancedAbortSignal): Promise<string> {
+  const controller: IAdvancedAbortController = AdvancedAbortController.fromAbortSignals(signal);
+  return new Promise<string>((resolve, reject) => {
+    const request = new XMLHttpRequest(); // create an XMLHttpRequest
+    new EventsObservable<XMLHttpRequestEventMap>(request) // creates an EventsObservable for this request
+      .on('load', () => { // when the request is finished, resolve the promise
+        resolve(request.responseText);
+      })
+      .on('error', () => {
+        reject(new Error(`Failed to fetch data: ${ request.statusText }`));
+      })
+      .on('abort', () => {
+        reject(controller.signal.reason || new AbortReason());
+      });
 
-      token.addListener('cancel', () => { // if the token is cancelled, abort the request, saves bandwidth and execution time
-        request.abort();
-      }).activate();
+    controller.signal.addListener('abort', () => { // if the signal is aborted, abort the request
+      request.abort();
+    }).activate();
 
-      request.open('GET', url, true);
-      request.send();
-    }),
-    token
-  };
+    request.open('GET', url, true);
+    request.send();
+  });
 }
 
 async function doRequest() {
-  let { promise, token } = createHttpRequest(`https://my-domain`);
-  promise.catch(PromiseCancelReason.discard); // hide 'cancel' error
+  const controller = new AdvancedAbortController();
+  createHttpRequest(`https://my-domain`, controller.signal)
+    .catch(AbortReason.discard); // hide 'abort' error
+
+  controller.abort(new AbortReason('Manual abort')); // abort the request
   
-  token.cancel(); // abort the request
-  
-  { promise, token } = createHttpRequest(`https://other-domain`);
-  await promise;
+  await createHttpRequest(`https://other-domain`);
 }
 
 doRequest();
@@ -163,19 +151,19 @@ doRequest();
 
 ### Understanding the PromiseObservable
 
-Unlike Promises, Observables are cancellable due to their onObserve/onUnobserve mechanism (a core functionality), that's why we introduced the CancelToken.
+Unlike Promises, Observables are cancellable due to their onObserve/onUnobserve mechanism (a core functionality), that's why we introduced the AdvancedAbortController/AdvancedAbortSignal.
 
-We may consider that Promises have 3 final states: *completed*, *errored*, and *canceled*.
+We may consider that Promises have 3 final states: *completed*, *errored*, and *aborted*.
 
 The PromiseObservable is constructed like this:
 ```ts
-new<T>(promiseFactory: (token: ICancelToken) => Promise<T>, options?: IPromiseObservableOptions): IPromiseObservable<T>;
+new<T>(promiseFactory: (signal: IAdvancedAbortSignal) => Promise<T>, options?: IPromiseObservableOptions): IPromiseObservable<T>;
 ```
 
 The `promiseFactory` is a function returning a Promise. It is called once if mode is different than `every`, else it is called for each Observers.
-The CancelToken provided in this function must be used to abort/cancel unnecessary work as seen previously (used in `then` for example).
+The AdvancedAbortSignal provided in this function must be used to abort/cancel unnecessary work as seen previously (used in `then` for example).
 
-This token is cancelled by the PromiseObservable in certain circumstances: for example, if it has no more observers,
+This signal is aborted by the PromiseObservable in certain circumstances: for example, if it has no more observers,
 or if the Observer which generated the promise stopped to observe.
 
 ---
@@ -187,21 +175,21 @@ interface IPromiseNotificationKeyValueMap<T> {
   next: T;
   complete: void;
   error: any;
-  cancel: any;
+  abort: any;
 }
 ```
 
 When the Promise fulfils, a `next` Notification followed by a `complete` Notification are emitted.
-If it rejects, a `error` Notification is send. Adn finally if it is cancelled, a `cancel` Notification is triggered.
+If it rejects, a `error` Notification is send. And finally if it is aborted, a `abort` Notification is triggered.
 
 ---
 
-Using PromiseObservable, we can now create a simple cancellable fetch function:
+Using PromiseObservable, we can now create a simple abortable fetch function:
 
 ```ts
 function http(url: string) {
-  return new PromiseObservable((token: CancelToken) => {
-    return fetch(url, { signal: token.toAbortController().signal });
+  return new PromiseObservable<Response>((signal: IAdvancedAbortSignal) => {
+    return fetch(url, { signal: signal.toAbortController().signal });
   }, { mode: 'cache' });
 }
 
@@ -212,8 +200,8 @@ const observable = http(url)
   .on('error', (reason: any) => {
     console.error('error', reason);
   })
-  .on('cancel', (reason: any) => {
-    console.warn('cancel', reason);
+  .on('abort', (reason: any) => {
+    console.warn('abort', reason);
   });
 ```
 
@@ -232,8 +220,8 @@ new FetchObservable(url)
   .on('error', (error: any) => {
     console.error('error', error);
   })
-  .on('cancel', (reason: any) => {
-    console.warn('cancelled', reason);
+  .on('abort', (reason: any) => {
+    console.warn('abort', reason);
   });
 ```
 
@@ -249,8 +237,8 @@ new FetchObservable(url)
   .on('error', (error: any) => {
     console.error('error', error);
   })
-  .on('cancel', (reason: any) => {
-    console.warn('cancelled', reason);
+  .on('abort', (reason: any) => {
+    console.warn('abort', reason);
   });
 ```
 

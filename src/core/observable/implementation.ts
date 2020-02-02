@@ -119,8 +119,8 @@ export function ObservableFactory<TBase extends Constructor, T = unknown>(superC
   });
 }
 
-Observable = class Observable extends ObservableFactory<IBaseClassConstructor>(BaseClass) {
-  constructor(create?: (context: IObservableContext<any>) => (IObservableHook<any> | void)) {
+Observable = class Observable extends ObservableFactory<IBaseClassConstructor, unknown>(BaseClass) {
+  constructor(create?: (context: IObservableContext<unknown>) => (IObservableHook<unknown> | void)) {
     super([create]);
   }
 } as IObservableConstructor;

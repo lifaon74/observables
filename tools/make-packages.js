@@ -118,10 +118,10 @@ function makePackageJSON() {
     ...require($path.join(ROOT, 'package.json')),
     main: './index.js',
     typings: './index.d.ts',
-    module: './esm5/index.js',
-    es2015: './esm2015/index.js',
-    esnext: './esnext/index.js',
-    'jsnext:main': './esnext/index.js',
+    module: './esm5/public.js',
+    es2015: './esm2015/public.js',
+    esnext: './esnext/public.js',
+    'jsnext:main': './esnext/public.js',
     unpkg: './bundles/observables.umd.min.js',
   };
 

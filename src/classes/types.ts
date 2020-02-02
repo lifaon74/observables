@@ -1,6 +1,8 @@
 // kind of any, but different => sometimes better for inference
 export type Any = boolean | string | number | object | symbol | null | undefined | any[];
 
+
+
 // converts a tuple type (ex: [number, string]) to an union of types => 'number' | 'string'
 export type TupleTypes<T> = { [P in keyof T]: T[P] } extends { [key: number]: infer V } ? V : never; // type A = TupleTypes<[1, "hello", true]>; // === 1 | "hello" | true
 
@@ -15,6 +17,7 @@ export type TupleArray<TTuple extends any[], TArray> = Array<TArray> & TTuple;
 
 // removes from T (object) the properties K (union)
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+export type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 
 // removes from T (object) the properties K (tuple)
 export type ExcludeProperties<T, K extends (keyof T)[]> = Pick<T, Exclude<keyof T, TupleTypes<K>>>;

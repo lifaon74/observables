@@ -14,6 +14,9 @@ export interface IObserverPrivate<T> {
   onEmit(value: T, observable?: IObservable<T>): void;
 }
 
-export interface IObserverInternal<T> extends IObserver<T> {
+export interface IObserverPrivatesInternal<T> {
   [OBSERVER_PRIVATE]: IObserverPrivate<T>;
+}
+
+export interface IObserverInternal<T> extends IObserverPrivatesInternal<T>, IObserver<T> {
 }

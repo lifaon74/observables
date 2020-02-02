@@ -1,41 +1,14 @@
 import { INotificationsObservable } from '../../../core/notifications-observable/interfaces';
-import { KeyValueMapConstraint, KeyValueMapKeys } from '../../../core/interfaces';
-import { Targets, TargetToEventMap } from '../events-listener/browser/target-to-event-map';
+import { KeyValueMapKeys } from '../../../core/interfaces';
+import { Targets } from '../events-listener/from/event-target/target-to-event-map';
 import { IEventsListener } from '../events-listener/interfaces';
-import { IEventLike } from '../events-listener/event-like/interfaces';
+import { CastTargetToEventsObservable, EventKeyValueMapConstraint } from './types';
 
-
-export type EventsObservableKeyValueMapGeneric = {
-  [key: string]: IEventLike;
-};
-
-export type EventKeyValueMapConstraint<TKVMap extends object> = KeyValueMapConstraint<TKVMap, EventsObservableKeyValueMapGeneric>;
-
-
-
-export type PredefinedEventsObservables<A = TargetToEventMap> = A extends [infer TTarget, infer TKVMap]
-  ? TTarget extends IEventsListener
-    ? TKVMap extends object
-      ? TKVMap extends EventKeyValueMapConstraint<TKVMap>
-        ? IEventsObservable<TKVMap, TTarget>
-        : never
-      : never
-    : never
-  : never;
-
-export type CastTargetToEventsObservable<T extends Targets> = Extract<PredefinedEventsObservables, IEventsObservable<any, T>>;
-
-// interface A {
-//   // new<T extends EventTarget>(target: T): Cast;
-//   new<T extends EventTarget>(target: T): CastTargetToEventsObservable<T>;
-// }
-//
-// const _a: A = null;
-// const __a = new _a(window);
-
+/** INTERFACES **/
 
 export interface IEventsObservableConstructor {
   new<TTarget extends Targets>(target: TTarget): CastTargetToEventsObservable<TTarget>;
+
   new<TKVMap extends EventKeyValueMapConstraint<TKVMap>, TTarget extends IEventsListener = IEventsListener>(target: TTarget, name?: KeyValueMapKeys<TKVMap> | null): IEventsObservable<TKVMap, TTarget>;
 }
 
@@ -52,6 +25,8 @@ export interface IEventsObservable<TKVMap extends EventKeyValueMapConstraint<TKV
   // optional name of the event to listen to
   readonly name: KeyValueMapKeys<TKVMap> | null;
 }
+
+/*-------------*/
 
 // const a: IEventsObservableConstructor = null;
 // const b = new a(window);

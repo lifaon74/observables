@@ -8,9 +8,9 @@ import { IPipeHook } from './hook/interfaces';
 /** INTERFACES **/
 
 export interface IPipeConstructor {
-  create<TValueObserver, TValueObservable = TValueObserver>(
-    create?: (context: IPipeContext<IObserver<TValueObserver>, IObservable<TValueObservable>>) => (IPipeHook<IObserver<TValueObserver>, IObservable<TValueObservable>> | void)
-  ): IPipe<IObserver<TValueObserver>, IObservable<TValueObservable>>;
+  create<TValueObserver, TDistinctValueObservable = TValueObserver>(
+    create?: (context: IPipeContext<IObserver<TValueObserver>, IObservable<TDistinctValueObservable>>) => (IPipeHook<IObserver<TValueObserver>, IObservable<TDistinctValueObservable>> | void)
+  ): IPipe<IObserver<TValueObserver>, IObservable<TDistinctValueObservable>>;
 
   // creates a Pipe
   new<TObserver extends IObserver<any>, TObservable extends IObservable<any>>(create: () => IObservableObserver<TObserver, TObservable>): IPipe<TObserver, TObservable>;

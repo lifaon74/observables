@@ -1,49 +1,20 @@
-import {
-  INotificationsObservableInternal, NotificationsObservable
-} from '../../../core/notifications-observable/implementation';
-import { EventKeyValueMapConstraint, IEventsObservable } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
+import { NotificationsObservable } from '../../../core/notifications-observable/implementation';
+import { IEventsObservable, IEventsObservableConstructor } from './interfaces';
 import { Notification } from '../../../core/notification/implementation';
-import { ExtractObserverNameAndCallback } from '../../../core/notifications-observer/implementation';
 import { KeyValueMapKeys, KeyValueMapValues } from '../../../core/interfaces';
-import {
-  KeyValueMapToNotifications, KeyValueMapToNotificationsObserversLikeGeneric, TNotificationsObservableHook,
-} from '../../../core/notifications-observable/interfaces';
 import { IObserver } from '../../../../core/observer/interfaces';
-import { IsObject } from '../../../../helpers';
 import { IEventsListener } from '../events-listener/interfaces';
 import { IEventLike } from '../events-listener/event-like/interfaces';
+import {
+  KeyValueMapToNotifications, KeyValueMapToNotificationsObserversLikeGeneric, TNotificationsObservableHook
+} from '../../../core/notifications-observable/types';
+import { ExtractObserverNameAndCallback } from '../../../core/notifications-observer/functions';
+import { EVENTS_OBSERVABLE_PRIVATE, IEventsObservableInternal, IEventsObservablePrivate } from './privates';
+import { ConstructEventsObservable } from './constructor';
+import { EventKeyValueMapConstraint } from './types';
 
 
-export const EVENTS_OBSERVABLE_PRIVATE = Symbol('events-observable-private');
-
-export interface IEventsObservablePrivate<TKVMap extends EventKeyValueMapConstraint<TKVMap>, TTarget extends IEventsListener> {
-  target: TTarget;
-  name: KeyValueMapKeys<TKVMap> | null;
-  observerListenerMap: WeakMap<IObserver<KeyValueMapToNotifications<TKVMap>>, (event: KeyValueMapValues<TKVMap>) => void>;
-}
-
-export interface IEventsObservableInternal<TKVMap extends EventKeyValueMapConstraint<TKVMap>, TTarget extends IEventsListener> extends IEventsObservable<TKVMap, TTarget>, INotificationsObservableInternal<TKVMap> {
-  [EVENTS_OBSERVABLE_PRIVATE]: IEventsObservablePrivate<TKVMap, TTarget>;
-}
-
-export function ConstructEventsObservable<TKVMap extends EventKeyValueMapConstraint<TKVMap>, TTarget extends IEventsListener>(
-  instance: IEventsObservable<TKVMap, TTarget>,
-  target: TTarget,
-  name: KeyValueMapKeys<TKVMap> | null
-): void {
-  ConstructClassWithPrivateMembers(instance, EVENTS_OBSERVABLE_PRIVATE);
-  const privates: IEventsObservablePrivate<TKVMap, TTarget> = (instance as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE];
-  privates.target = target;
-  privates.name = name;
-  privates.observerListenerMap = new WeakMap<IObserver<KeyValueMapToNotifications<TKVMap>>, (event: KeyValueMapValues<TKVMap>) => void>();
-}
-
-export function IsEventsObservable(value: any): value is IEventsObservable<any> {
-  return IsObject(value)
-    && value.hasOwnProperty(EVENTS_OBSERVABLE_PRIVATE as symbol);
-}
-
+/** CONSTRUCTOR FUNCTIONS **/
 
 export function EventsObservableOnObserved<TKVMap extends EventKeyValueMapConstraint<TKVMap>, TTarget extends IEventsListener>(instance: IEventsObservable<TKVMap, TTarget>, observer: IObserver<KeyValueMapToNotifications<TKVMap>>): void {
   const privates: IEventsObservablePrivate<TKVMap, TTarget> = (instance as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE];
@@ -97,9 +68,26 @@ export function EventsObservableOnUnobserved<TKVMap extends EventKeyValueMapCons
   }
 }
 
+/** METHODS **/
+
+/* GETTERS/SETTERS */
+
+export function EventsObservableGetTarget<TKVMap extends EventKeyValueMapConstraint<TKVMap>, TTarget extends IEventsListener>(
+  instance: IEventsObservable<TKVMap, TTarget>
+): TTarget {
+  return (instance as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].target;
+}
+
+export function EventsObservableGetName<TKVMap extends EventKeyValueMapConstraint<TKVMap>, TTarget extends IEventsListener>(
+  instance: IEventsObservable<TKVMap, TTarget>
+): KeyValueMapKeys<TKVMap> | null {
+  return (instance as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].name;
+}
+
+/** CLASS **/
 
 /**
- * An EventsObservable links an EventTarget with a NotificationsObservable.
+ * An EventsObservable links an EventsListener with a NotificationsObservable.
  *  When a listened event occurs (ex: though "addListener"), a Notification is dispatched.
  * @Example:
  *  const mouseMoveListener = new EventsObservable(window)
@@ -107,7 +95,7 @@ export function EventsObservableOnUnobserved<TKVMap extends EventKeyValueMapCons
  *      console.log(event.clientX);
  *    }).activate();
  */
-export class EventsObservable<TKVMap extends EventKeyValueMapConstraint<TKVMap>, TTarget extends IEventsListener = IEventsListener> extends NotificationsObservable<TKVMap> implements IEventsObservable<TKVMap, TTarget> {
+export const EventsObservable: IEventsObservableConstructor = class EventsObservable<TKVMap extends EventKeyValueMapConstraint<TKVMap>, TTarget extends IEventsListener = IEventsListener> extends NotificationsObservable<TKVMap> implements IEventsObservable<TKVMap, TTarget> {
 
   constructor(target: TTarget, name: KeyValueMapKeys<TKVMap> | null = null) {
     super((): TNotificationsObservableHook<TKVMap> => {
@@ -124,11 +112,11 @@ export class EventsObservable<TKVMap extends EventKeyValueMapConstraint<TKVMap>,
   }
 
   get target(): TTarget {
-    return ((this as unknown) as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].target;
+    return EventsObservableGetTarget<TKVMap, TTarget>(this);
   }
 
   get name(): KeyValueMapKeys<TKVMap> | null {
-    return ((this as unknown) as IEventsObservableInternal<TKVMap, TTarget>)[EVENTS_OBSERVABLE_PRIVATE].name;
+    return EventsObservableGetName<TKVMap, TTarget>(this);
   }
-}
+} as IEventsObservableConstructor;
 

@@ -160,6 +160,7 @@ export async function testWEBRTC1() {
     }
 
     start(): Promise<void> {
+
       return Promise.all([
         this.id(),
         this._connection.createOffer()
@@ -172,6 +173,7 @@ export async function testWEBRTC1() {
             new TextEncoder().encode(JSON.stringify(this._connection.localDescription))
           ))
       ])
+        // @ts-ignore
         .then(([id, signature]: [Readonly<Uint8Array>, Uint8Array]) => {
           peers.set(String.fromCodePoint(...Array.from(id)), {
             offer: this._connection.localDescription as RTCSessionDescription,

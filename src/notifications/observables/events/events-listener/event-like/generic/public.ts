@@ -1,2 +1,3 @@
 export * from './interfaces';
-export { GenericEvent, IsGenericEvent } from './implementation';
+export { GenericEvent } from './implementation';
+export { IsGenericEvent } from './constructor';

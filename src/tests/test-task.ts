@@ -1,14 +1,90 @@
 import { Task } from '../notifications/observables/task/implementation';
-import { ITask, ITaskContext } from '../notifications/observables/task/interfaces';
-import { ICancelToken } from '../misc/cancel-token/interfaces';
-import { CancelReason, CancelToken } from '../misc/cancel-token/implementation';
-import { IFromReadableStreamObservable } from '../notifications/observables/finite-state/from/readable-stream/interfaces';
-import { FromReadableStreamObservable } from '../notifications/observables/finite-state/from/readable-stream/implementation';
+import { ITask} from '../notifications/observables/task/interfaces';
+import { IFromReadableStreamObservable } from '../notifications/observables/finite-state/built-in/from/readable-stream/interfaces';
+import { FromReadableStreamObservable } from '../notifications/observables/finite-state/built-in/from/readable-stream/implementation';
 import { IProgress } from '../misc/progress/interfaces';
-import { ITaskAsyncIteratorValue, taskFromAsyncIterator } from '../notifications/observables/task/from/async-iterable';
+import { ITaskAsyncIteratorValue, taskFromAsyncIterator } from '../notifications/observables/task/built-in/from/async-iterable';
 import { Progress } from '../misc/progress/implementation';
-import { taskFromPromise } from '../notifications/observables/task/from/promise';
-import { taskFromTasksInParallel } from '../notifications/observables/task/from/tasks';
+import { taskFromPromise, taskFromPromiseFactory } from '../notifications/observables/task/built-in/from/promise';
+import { taskFromTasksInParallel } from '../notifications/observables/task/built-in/from/tasks';
+import { AbortReason } from '../misc/reason/built-in/abort-reason';
+import { AdvancedAbortController } from '../misc/advanced-abort-controller/implementation';
+import { IAdvancedAbortController } from '../misc/advanced-abort-controller/interfaces';
+import { ITaskContext } from '../notifications/observables/task/context/interfaces';
+import { IAdvancedAbortSignal } from '../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
+import { CancellablePromise } from '../promises/cancellable-promise/implementation';
+import { IFiniteStateObservable } from '../notifications/observables/finite-state/interfaces';
+import {
+  TFiniteStateObservableGeneric, TFiniteStateObserverGeneric
+} from '../notifications/observables/finite-state/types';
+import { TPromiseOrValue } from '../promises/interfaces';
+import { IActivable } from '../misc/activable/interfaces';
+
+//
+// // export interface IReversible {
+// //   apply(): Promise<void>;
+// //   reverse(): Promise<void>;
+// // }
+// //
+// // export interface IReversibleContext {
+// //   register(key: any[] | string, callback: () => IReversible): void;
+// // }
+//
+// // INFO: just some ideas
+//
+// export type TRegisterMode = // if key is already present:
+//   'skip' // doesn't call the promise factory
+//   | 'warn' // doesn't call the promise factory and displays a warn message for the developer
+//   | 'throw' // doesn't call the promise factory and throws an error for the developer
+//   | 'replace' // cancels the previous promise, then calls the promise factory
+//   | 'queue' // waits for previous promise to resolve or reject, then calls the promise factory
+//   ;
+//
+// export interface ITasksContext {
+//   register(key: any[] | string, task: ITask<any>, mode?: TRegisterMode): ITask<void>;
+//
+//   // get(key: string | any[]): ICancellablePromise<any> | undefined;
+//   //
+//   // clear(key: string | any[]): ICancellablePromise<any> | undefined;
+//   //
+//   // clearAll(): Promise<void>;
+//
+// }
+//
+// // OR
+//
+// export interface IFiniteStateObservablesContext {
+//   register(key: any[] | string, observable: TFiniteStateObservableGeneric<any>, observer: TFiniteStateObserverGeneric<any>, mode?: TRegisterMode): void;
+//   // or
+//   register2(key: any[] | string, callback: () => TFiniteStateObserverGeneric<any>, mode?: TRegisterMode): void;
+// }
+//
+// // OR
+//
+// /**
+//  * PROBLEM: 'queue' cannot work because Activable has not a final state
+//  */
+// export interface IActivableContext {
+//   register(key: any[] | string, activable: IActivable, mode?: TRegisterMode): void;
+// }
+//
+//
+// // OR
+//
+// /**
+//  * INFO: supports all kind => very generic
+//  * PROBLEM: doesnt really make sense for Activable like class list, event listener, timers, etc...
+//  * Merging IReversible with ITask is a complex task:
+//  *  - reversible has no end, and may be reversed
+//  *  - task has a final stated, and may be aborted
+//  */
+// export interface ICancellableContext2 {
+//   registerTask(key: any[] | string, callback: (signal: IAdvancedAbortSignal) => TPromiseOrValue<any>, mode?: TRegisterMode): void;
+//   registerActivable(key: any[] | string, callback: () => IActivable, mode?: Omit<TRegisterMode, 'queue'>): void;
+// }
+
+/*---------------------------------------------------*/
+
 
 
 function noCORS(url: string): string {
@@ -26,8 +102,8 @@ function logTask<T extends ITask<any>>(task: T): T {
     .on('error', (error: any) => {
       console.log('error', error);
     })
-    .on('cancel', (error: any) => {
-      console.log('cancel', error);
+    .on('abort', (error: any) => {
+      console.log('abort', error);
     })
     .on('next', (value: Blob) => {
       console.log('next', value);
@@ -66,7 +142,7 @@ function generateTaskControlButton<T extends ITask<any>>(task: T): T {
       || (task.state === 'run')
       || (task.state === 'pause')
     ) {
-      task.cancel(new CancelReason('Manual cancel'));
+      task.abort(new AbortReason('Manual cancel'));
     }
   });
 
@@ -84,21 +160,22 @@ function generateTaskControlButton<T extends ITask<any>>(task: T): T {
       clear();
       document.body.appendChild(new Text('[DONE]'));
     })
-    .on('cancel', (reason?: any) => {
+    .on('abort', (reason?: any) => {
       clear();
-      document.body.appendChild(new Text('[CANCELLED]: ' + (reason ? reason.message: '')));
+      document.body.appendChild(new Text('[ABORTED]: ' + (reason ? reason.message: '')));
     });
 }
 
-function $fetch(input: RequestInfo, init?: RequestInit): ITask<Blob> {
+function $fetch_old(input: RequestInfo, init?: RequestInit): ITask<Blob> {
   return new Task<Blob>((context: ITaskContext<Blob>) => {
-    // creates a cancel token used for fetching and promises
-    const token: ICancelToken = new CancelToken();
+    // creates an abort controller used for fetching and promises
+    const controller: IAdvancedAbortController = new AdvancedAbortController();
     let chunksObservable: IFromReadableStreamObservable<Uint8Array>;
 
     // clear resources
     const clear = () => {
       cancelListener.deactivate();
+      pauseListener.deactivate();
       startListener.deactivate();
 
       if (chunksObservable !== void 0) {
@@ -106,10 +183,10 @@ function $fetch(input: RequestInfo, init?: RequestInit): ITask<Blob> {
       }
     };
 
-    // when the task is cancelled, abort the http request
-    const cancelListener = context.task.addListener('cancel', () => {
+    // when the task is aborted, abort the http request
+    const cancelListener = context.task.addListener('abort', () => {
       clear();
-      token.cancel();
+      controller.abort();
     });
 
     // forbid pause, because fetching cannot be paused
@@ -120,8 +197,8 @@ function $fetch(input: RequestInfo, init?: RequestInit): ITask<Blob> {
 
     // on start
     const startListener = context.task.addListener('start', () => {
-      fetch(...token.wrapFetchArguments(input, init)) // do the http request
-        .then(token.wrapFunction((response: Response) => {
+      fetch(...controller.signal.wrapFetchArguments(input, init)) // do the http request
+        .then(controller.signal.wrapFunction((response: Response) => {
           if (response.ok) {
             let bytesRead: number = 0; // total number of bytes read
             const chunks: Uint8Array[] = []; // list of data chunks received
@@ -140,7 +217,7 @@ function $fetch(input: RequestInfo, init?: RequestInit): ITask<Blob> {
             chunksObservable = new FromReadableStreamObservable((response.body as ReadableStream<Uint8Array>).getReader())
               .on('next', (chunk: Uint8Array) => {
                 bytesRead += chunk.length;
-                context.progress(bytesRead, total);
+                context.progress(new Progress(bytesRead, total));
                 chunks.push(chunk);
               })
               .on('error', (error: any) => {
@@ -156,7 +233,7 @@ function $fetch(input: RequestInfo, init?: RequestInit): ITask<Blob> {
             context.error(new Error(`Failed to fetch resource: ${ response.status } - ${ response.statusText }`));
             clear();
           }
-        }), token.wrapFunction((error: any) => {
+        }), controller.signal.wrapFunction((error: any) => {
           context.error(error);
           clear();
         }));
@@ -165,6 +242,52 @@ function $fetch(input: RequestInfo, init?: RequestInit): ITask<Blob> {
     cancelListener.activate();
     pauseListener.activate();
     startListener.activate();
+  });
+}
+
+function $fetch(input: RequestInfo, init?: RequestInit): ITask<Blob> {
+  return taskFromPromiseFactory((signal: IAdvancedAbortSignal, progress: (progress: IProgress) => void) => {
+    return CancellablePromise.fetch(input, init, { signal })
+      .then((response: Response) => {
+        return new Promise<Blob>((resolve, reject) => {
+          if (response.ok) {
+            let loaded: number = 0; // total number of bytes read
+            const chunks: Uint8Array[] = []; // list of data chunks received
+
+            // get the type of data
+            const type: string = response.headers.has('content-type')
+              ? response.headers.get('content-type') as string
+              : 'application/octet-stream';
+
+            // get the total number of bytes to fetch
+            const total: number = response.headers.has('content-Length')
+              ? parseInt(response.headers.get('content-Length') as string, 10)
+              : Number.POSITIVE_INFINITY;
+
+            const clear = () => {
+              chunksObservable.clearObservers();
+            };
+
+            // observe the data stream of downloaded bytes
+            const chunksObservable = new FromReadableStreamObservable((response.body as ReadableStream<Uint8Array>).getReader())
+              .on('next', (chunk: Uint8Array) => {
+                loaded += chunk.length;
+                chunks.push(chunk);
+                progress(new Progress({ loaded, total, name: 'download' }));
+              })
+              .on('error', (error: any) => {
+                clear();
+                reject(error);
+              })
+              .on('complete', () => {
+                clear();
+                resolve(new Blob(chunks, { type: type }));
+              });
+          } else {
+            reject(new Error(`Failed to fetch resource: ${ response.status } - ${ response.statusText }`));
+          }
+        });
+      });
   });
 }
 
@@ -257,8 +380,8 @@ export async function testMultiTasks() {
 // }
 
 export async function testTask() {
-  // await testTaskFetch();
+  await testTaskFetch();
   // await testTaskAsyncIterable();
   // await testTaskFromPromise();
-  await testMultiTasks();
+  // await testMultiTasks();
 }

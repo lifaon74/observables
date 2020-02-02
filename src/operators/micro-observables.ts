@@ -247,7 +247,8 @@ export function testMicroObservables() {
   function $const<T>(value: T): MObservable<T> {
     return (observer: MObserver<T>) => {
       observer(value);
-      return () => {};
+      return () => {
+      };
     };
   }
 
@@ -294,8 +295,10 @@ export function testMicroObservables() {
 
   function $create<T>(
     pipe: MObservable<T>,
-    init: () => void = () => {},
-    clear: () => void = () => {},
+    init: () => void = () => {
+    },
+    clear: () => void = () => {
+    },
   ): MObservable<T> {
     let count: number = 0;
     return (observer: MObserver<T>) => {
@@ -389,11 +392,11 @@ export function testMicroObservables() {
       pipe,
       () => {
         unobserveArgs = args.map((arg: MObservable<any>, index: number) => {
-            return arg((argValue: any) => {
-              values[index] = argValue;
-              emit(fnc.apply(null, values));
-            });
+          return arg((argValue: any) => {
+            values[index] = argValue;
+            emit(fnc.apply(null, values));
           });
+        });
       },
       () => {
         for (let i = 0, l = unobserveArgs.length; i < l; i++) {

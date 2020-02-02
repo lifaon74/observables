@@ -1,14 +1,18 @@
 import { IEventLike } from './event-like/interfaces';
 
 /**
- * ABSTRACT CLASS
+ * INTERFACES
  */
 
+/* ABSTRACT */
 
 export interface IIEventsListenerConstructor {
   new(): IEventsListener;
 }
 
+/**
+ * An EventsListener is an abstract view over an EventTarget or an EventEmitter
+ */
 export interface IEventsListener {
   addEventListener(type: string, listener: (event: IEventLike) => void): void;
 
@@ -18,15 +22,3 @@ export interface IEventsListener {
 }
 
 
-// /** FROM EVENT EMITTER **/
-// export interface IEventEmitterEventsListenerConstructor extends Omit<IIEventsListenerConstructor, 'new'> {
-//   new(target: EventEmitter): IEventEmitterEventsListener;
-// }
-//
-// export interface IEventEmitterEventsListener extends IEventsListener {
-// }
-
-// const a: EventTarget = null as any;
-// function test(a: IEventsListener) {
-// }
-// test(a);

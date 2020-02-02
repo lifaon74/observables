@@ -1,24 +1,16 @@
-import { IObserver } from '../../../core/observer/interfaces';
+import { IObserver, IObserverConstructor, IObserverTypedConstructor } from '../../../core/observer/interfaces';
 import { INotification } from '../notification/interfaces';
-
-/** TYPES **/
-
-export type TNotificationsObserverCallback<TValue> = (value: TValue) => void;
-
-export interface INotificationsObserverLike<TName extends string, TValue> {
-  name: TName;
-  callback: TNotificationsObserverCallback<TValue>;
-}
+import { INotificationsObserverLike, TNotificationsObserverCallback } from './types';
 
 /** INTERFACES **/
 
-export interface INotificationsObserverConstructor {
+export interface INotificationsObserverConstructor extends Omit<IObserverConstructor, 'new'> {
   new<TName extends string, TValue>(name: TName, callback: TNotificationsObserverCallback<TValue>): INotificationsObserver<TName, TValue>;
 }
 
-// export interface INotificationsObserverTypedConstructor<N extends string, T> {
-//   new(name: N, callback: (value: T) => void): INotificationsObserver<N, T>;
-// }
+export interface INotificationsObserverTypedConstructor<TName extends string, TValue> extends Omit<IObserverTypedConstructor<INotification<TName, TValue>>, 'new'> {
+  new(name: TName, callback: TNotificationsObserverCallback<TValue>): INotificationsObserver<TName, TValue>;
+}
 
 /**
  * A NotificationsObserver is an Observer filtering its incoming Notifications.

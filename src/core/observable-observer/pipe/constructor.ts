@@ -8,7 +8,7 @@ import { OBSERVER_PRIVATE } from '../../observer/privates';
 import { IObservableInternal, IObservablePrivate, OBSERVABLE_PRIVATE } from '../../observable/privates';
 import { ObservableType } from '../../observable/types';
 import { IPipe } from './interfaces';
-import { PipeUpdateAutoActivate, PipeUpdateAutoDeactivate } from './implementation';
+import { PipeUpdateAutoActivate, PipeUpdateAutoDeactivate } from './functions';
 
 /** CONSTRUCTOR **/
 
@@ -34,17 +34,17 @@ export function ConstructPipe<TObserver extends IObserver<any>, TObservable exte
 
       if (result.observable.hasOwnProperty(OBSERVABLE_PRIVATE)) {
         privates.observable = result.observable;
-        type TValueObservable = ObservableType<TObservable>;
-        const observablePrivates: IObservablePrivate<TValueObservable> = ((privates.observable as IObservable<TValueObservable>) as IObservableInternal<TValueObservable>)[OBSERVABLE_PRIVATE];
+        type TDistinctValueObservable = ObservableType<TObservable>;
+        const observablePrivates: IObservablePrivate<TDistinctValueObservable> = ((privates.observable as IObservable<TDistinctValueObservable>) as IObservableInternal<TDistinctValueObservable>)[OBSERVABLE_PRIVATE];
 
         const _onObserveHook = observablePrivates.onObserveHook;
-        observablePrivates.onObserveHook = function onObserveHook(observer: IObserver<TValueObservable>) {
+        observablePrivates.onObserveHook = function onObserveHook(observer: IObserver<TDistinctValueObservable>) {
           PipeUpdateAutoActivate<TObserver, TObservable>(instance);
           _onObserveHook.call(this, observer);
         };
 
         const _onUnobserveHook = observablePrivates.onUnobserveHook;
-        observablePrivates.onUnobserveHook = function onUnobserveHook(observer: IObserver<TValueObservable>) {
+        observablePrivates.onUnobserveHook = function onUnobserveHook(observer: IObserver<TDistinctValueObservable>) {
           PipeUpdateAutoDeactivate<TObserver, TObservable>(instance);
           _onUnobserveHook.call(this, observer);
         };
