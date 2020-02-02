@@ -57,7 +57,7 @@ const someObserver = someObservable
 someObserver.activate();
 ```
 
-**INFO:** As you may see, there is a downside in this example: the *onObserved* and *onUnobserved* are handled by `observable`,
+**INFO:** As you may see, there is a downside in this example: the *onObserved* and *onUnobserved* are **NOT** handled by `observable`,
 which means that `observer` will remains activated forever and `someObservable` will never receive a *onObserved* and *onUnobserved*.
 
 A better code would be:
