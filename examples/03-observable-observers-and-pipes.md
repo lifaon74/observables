@@ -29,7 +29,7 @@ It is mainly used into the `pipeThough` or the `pipe` function of the Observable
 
 As an example, we may create a basic "filter" ObservableObserver like this:
 
-```ts
+```typescript
 function filter<T>(filter: (value: T) => boolean): IObservableObserver<IObserver<T>, IObservable<T>> {
   let context: IObservableContext<T>;
   const observer = new Observer<T>((value: T) => {
@@ -38,6 +38,8 @@ function filter<T>(filter: (value: T) => boolean): IObservableObserver<IObserver
     }
   }).activate(); // notice the activate
   
+  // problem => observer is always activated
+
   const observable = new Observable<T>((_context: IObservableContext<T>) => {
     context = _context;
   });
@@ -48,16 +50,51 @@ function filter<T>(filter: (value: T) => boolean): IObservableObserver<IObserver
   };
 }
 
-const observer = observable
+const someObserver = someObservable
   .pipeThough(filter(_ => ((_ % 2) === 0)))
   .pipeTo(_ => console.log(_));
 // note than 'observable'.onObserved was trigerred even if 'observer' is not activated
-observer.activate();
+someObserver.activate();
 ```
 
-**INFO:** As you may see, there is a downside of this function: the *onObserved* and *onUnobserved* are not transferred to `observable`.
-That's why Pipes exist.
+**INFO:** As you may see, there is a downside in this example: the *onObserved* and *onUnobserved* are handled by `observable`,
+which means that `observer` will remains activated forever and `someObservable` will never receive a *onObserved* and *onUnobserved*.
 
+A better code would be:
+
+```typescript
+function filter<T>(filter: (value: T) => boolean): IObservableObserver<IObserver<T>, IObservable<T>> {
+  let context: IObservableContext<T>;
+  const observer = new Observer<T>((value: T) => {
+    if (filter(value)) {
+      context.emit(value);
+    }
+  });
+
+  const observable = new Observable<T>((_context: IObservableContext<T>) => {
+    context = _context;
+    return {
+      onObserved() {
+        if (context.observable.observers.length >= 1) {
+          observer.activate();
+        }
+      },
+      onUnobserved() {
+        if (!context.observable.observed) {
+          observer.deactivate();
+        }
+      }
+    };
+  });
+
+  return {
+    observer: observer,
+    observable: observable,
+  };
+}
+```
+
+This previous code is "long" and error prone if we manually deactivate the observer. Hopefully, a simple alternative exists: the *Pipes*
 
 # Pipe ?
 
@@ -80,12 +117,6 @@ function filter<T>(filter: (value: T) => boolean): IPipe<IObserver<T>, IObservab
     };
   });
 }
-
-const observer = observable
-  .pipeThough(filter(_ => ((_ % 2) === 0)))
-  .pipeTo(_ => console.log(_));
-// note than 'observable'.onObserved was not trigerred because 'observer' is not activated yet
-observer.activate(); // 'observable'.onObserved is trigerred
 ```
 
 This time `observable` will receive the `onObserved` 'event' as soon as the *pipe*'s (Pipe) observable is observed,
