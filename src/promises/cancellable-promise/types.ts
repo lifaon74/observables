@@ -1,4 +1,4 @@
-import { TAbortStrategy, TAbortStrategyReturn } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
+import { TAbortStrategy } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 import { PromiseFulfilledObject, PromiseRejectedObject, TPromiseOrValue } from '../interfaces';
 import { ICancellablePromise } from './interfaces';
@@ -13,18 +13,19 @@ export type TCancellablePromiseCreateCallback<T, TStrategy extends TAbortStrateg
   signal: IAdvancedAbortSignal
 ) => void;
 
+export type TCancellablePromisePromiseOrCallback<T, TStrategy extends TAbortStrategy> = PromiseLike<T> | TCancellablePromiseCreateCallback<T, TStrategy>;
 
-export interface ICancellablePromiseOptions<T, TStrategy extends TAbortStrategy> {
+export interface ICancellablePromiseOptions<TStrategy extends TAbortStrategy> {
   strategy?: TStrategy;
   signal?: IAdvancedAbortSignal;
 }
 
-export interface ICancellablePromiseOptionsWithStrategy<T, TStrategy extends TAbortStrategy> {
+export interface ICancellablePromiseOptionsWithStrategy<TStrategy extends TAbortStrategy> {
   strategy: TStrategy;
   signal?: IAdvancedAbortSignal;
 }
 
-export interface ICancellablePromiseNormalizedOptions<T, TStrategy extends TAbortStrategy> {
+export interface ICancellablePromiseNormalizedOptions<TStrategy extends TAbortStrategy> {
   strategy: TStrategy;
   signal: IAdvancedAbortSignal;
 }
@@ -43,6 +44,16 @@ export interface ICancellablePromiseFinallyOptions {
 export interface ICancellablePromiseNormalizedFinallyOptions {
   includeCancelled: boolean;
 }
+
+/*---*/
+
+export type InferStrategyOfCancellablePromiseOptions<T extends Pick<ICancellablePromiseOptions<TAbortStrategy>, 'strategy'>> = T extends Pick<ICancellablePromiseOptions<infer TStrategy>, 'strategy'>
+  ? (
+    TStrategy extends undefined
+      ? 'never'
+      : TStrategy
+    )
+  : never;
 
 /*---*/
 
@@ -130,7 +141,7 @@ export type TCancellablePromiseCancelledReturnedValue<T, TStrategy extends TAbor
     : never;
 
 export type TCancellablePromiseThenReturn<T, TStrategy extends TAbortStrategy, TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, TStrategy, any>, TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>, TCancelled extends TCancellablePromiseOnCancelledArgument<T, TStrategy, any>> =
-  ICancellablePromise<TCancellablePromiseThenReturnedValue<T, TStrategy, TFulfilled, TRejected, TCancelled> | TAbortStrategyReturn<TStrategy>, TStrategy>;
+  ICancellablePromise<TCancellablePromiseThenReturnedValue<T, TStrategy, TFulfilled, TRejected, TCancelled>/* | TAbortStrategyReturn<TStrategy>*/, TStrategy>;
 
 export type TCancellablePromiseCatchReturn<T, TStrategy extends TAbortStrategy, TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>> =
   TCancellablePromiseThenReturn<T, TStrategy, undefined, TRejected, undefined>;

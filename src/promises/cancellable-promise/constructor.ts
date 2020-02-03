@@ -3,7 +3,8 @@ import { IsObject } from '../../helpers';
 import { CANCELLABLE_PROMISE_PRIVATE, ICancellablePromiseInternal, ICancellablePromisePrivate } from './privates';
 import { TPromise, TPromiseOrValue } from '../interfaces';
 import {
-  ICancellablePromiseNormalizedOptions, ICancellablePromiseOptions, TCancellablePromiseCreateCallback
+  ICancellablePromiseNormalizedOptions, ICancellablePromiseOptions, TCancellablePromiseCreateCallback,
+  TCancellablePromisePromiseOrCallback
 } from './types';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IsPromiseLikeBase } from '../helpers';
@@ -14,15 +15,15 @@ import { NormalizeICancellablePromiseOptions } from './functions';
 
 export function ConstructCancellablePromise<T, TStrategy extends TAbortStrategy>(
   instance: ICancellablePromise<T, TStrategy>,
-  promiseOrCallback: TPromise<T> | TCancellablePromiseCreateCallback<T, TStrategy>,
-  options?: ICancellablePromiseOptions<T, TStrategy>
+  promiseOrCallback: TCancellablePromisePromiseOrCallback<T, TStrategy>,
+  options?: ICancellablePromiseOptions<TStrategy>
 ): void {
   ConstructClassWithPrivateMembers(instance, CANCELLABLE_PROMISE_PRIVATE);
   const privates: ICancellablePromisePrivate<T, TStrategy> = (instance as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE];
 
 
   if (CHECK_CANCELLABLE_PROMISE_CONSTRUCT) {
-    const _options: ICancellablePromiseNormalizedOptions<T, TStrategy> = NormalizeICancellablePromiseOptions<T, TStrategy>(options);
+    const _options: ICancellablePromiseNormalizedOptions<TStrategy> = NormalizeICancellablePromiseOptions<TStrategy>(options);
     privates.signal = _options.signal;
     privates.strategy = _options.strategy as TStrategy;
 
@@ -47,7 +48,7 @@ export function ConstructCancellablePromise<T, TStrategy extends TAbortStrategy>
 
 
   } else {
-    const _options: ICancellablePromiseNormalizedOptions<T, TStrategy> = options as ICancellablePromiseNormalizedOptions<T, TStrategy>;
+    const _options: ICancellablePromiseNormalizedOptions<TStrategy> = options as ICancellablePromiseNormalizedOptions<TStrategy>;
     privates.signal = _options.signal;
     privates.strategy = _options.strategy as TStrategy;
     privates.isCancellablePromiseWithSameSignal = IsCancellablePromiseWithSameSignal<T, TStrategy>(promiseOrCallback, instance);
@@ -72,7 +73,7 @@ let CHECK_CANCELLABLE_PROMISE_CONSTRUCT: boolean = true;
 export function NewCancellablePromise<T, TStrategy extends TAbortStrategy>(
   _constructor: ICancellablePromiseConstructor,
   promise: TPromise<T>,
-  options: ICancellablePromiseNormalizedOptions<T, TStrategy>
+  options: ICancellablePromiseNormalizedOptions<TStrategy>
 ): ICancellablePromise<T, TStrategy> {
   CHECK_CANCELLABLE_PROMISE_CONSTRUCT = false;
   const instance: ICancellablePromise<T, TStrategy> = new _constructor(promise, options);
@@ -83,11 +84,11 @@ export function NewCancellablePromise<T, TStrategy extends TAbortStrategy>(
 export function NewCancellablePromiseFromInstance<T, TStrategy extends TAbortStrategy, TPromiseValue>(
   instance: ICancellablePromise<T, TStrategy>,
   promise: TPromise<TPromiseValue>,
-  options?: ICancellablePromiseOptions<T, TStrategy>,
+  options?: ICancellablePromiseOptions<TStrategy>,
 ): ICancellablePromise<TPromiseValue, TStrategy> {
   return NewCancellablePromise<TPromiseValue, TStrategy>(
     instance.constructor as ICancellablePromiseConstructor,
     promise,
-    NormalizeICancellablePromiseOptions<TPromiseValue, TStrategy>(options, (instance as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE])
+    NormalizeICancellablePromiseOptions<TStrategy>(options, (instance as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE])
   );
 }

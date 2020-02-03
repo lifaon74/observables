@@ -21,4 +21,10 @@ export interface IReadonlyTuple<TTuple extends any[]> extends Iterable<TupleType
   lastIndexOf(searchElement: TupleTypes<TTuple>, fromIndex?: number): number;
 
   includes(searchElement: TupleTypes<TTuple>, fromIndex?: number): boolean;
+
+  find<TValue extends TupleTypes<TTuple>>(predicate: (this: void, value: TupleTypes<TTuple>, index: number, obj: TupleTypes<TTuple>[]) => value is TValue, thisArg?: any): TValue | undefined;
+
+  find(predicate: (this: void, value: TupleTypes<TTuple>, index: number, obj: TupleTypes<TTuple>[]) => unknown, thisArg?: any): TupleTypes<TTuple> | undefined;
+
+  findIndex(predicate: (value: TupleTypes<TTuple>, index: number, obj: TupleTypes<TTuple>[]) => unknown, thisArg?: any): number;
 }

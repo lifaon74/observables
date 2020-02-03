@@ -5,7 +5,8 @@ import {
   ICancellablePromiseFinallyOptions,
   ICancellablePromiseOptions, TCancellablePromiseCancelledReturn, TCancellablePromiseCatchReturn,
   TCancellablePromiseCreateCallback, TCancellablePromiseOnCancelledArgument, TCancellablePromiseOnFinallyArgument,
-  TCancellablePromiseOnFulfilledArgument, TCancellablePromiseOnRejectedArgument, TCancellablePromiseThenReturn
+  TCancellablePromiseOnFulfilledArgument, TCancellablePromiseOnRejectedArgument, TCancellablePromisePromiseOrCallback,
+  TCancellablePromiseThenReturn
 } from './types';
 
 
@@ -139,7 +140,7 @@ export interface ICancellablePromiseConstructor {
   /**
    * Creates a new CancellablePromise from an exiting promise or the same function you may provide to a Promise.
    */
-  new<T, TStrategy extends TAbortStrategy>(promiseOrCallback: TPromise<T> | TCancellablePromiseCreateCallback<T, TStrategy>, options?: ICancellablePromiseOptions<T, TStrategy>): ICancellablePromise<T, TStrategy>;
+  new<T, TStrategy extends TAbortStrategy>(promiseOrCallback: TCancellablePromisePromiseOrCallback<T, TStrategy>, options?: ICancellablePromiseOptions<TStrategy>): ICancellablePromise<T, TStrategy>;
 }
 
 

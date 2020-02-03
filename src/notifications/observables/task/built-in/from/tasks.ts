@@ -9,7 +9,7 @@ import { Progress } from '../../../../../misc/progress/implementation';
  *  - transfers the 'start', 'abort', 'resume' and 'pause' from the parent to the child task
  *    -> until the child task is done ('errored', 'complete', or aborted by parent class)
  */
-function PassthroughsTask(context: ITaskContext<any>, task: ITask<any>) {
+function PassthroughsTask(context: ITaskContext<any>, task: ITask<any>): void {
 
   const onChildTaskAbort = () => {
     if (!context.task.done) {
