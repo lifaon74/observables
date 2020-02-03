@@ -47,6 +47,16 @@ export interface ICancellablePromiseNormalizedFinallyOptions {
 
 /*---*/
 
+export type InferStrategyOfCancellablePromiseOptions<T extends Pick<ICancellablePromiseOptions<TAbortStrategy>, 'strategy'>> = T extends Pick<ICancellablePromiseOptions<infer TStrategy>, 'strategy'>
+  ? (
+    TStrategy extends undefined
+      ? 'never'
+      : TStrategy
+    )
+  : never;
+
+/*---*/
+
 export type TCancellablePromiseOnFulfilled<T, TStrategy extends TAbortStrategy, TFulfilled> = (
   this: ICancellablePromise<T, TStrategy>,
   value: T,
