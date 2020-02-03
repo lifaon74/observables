@@ -1,4 +1,4 @@
-import { TAbortStrategy, TAbortStrategyReturn } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
+import { TAbortStrategy } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 import { PromiseFulfilledObject, PromiseRejectedObject, TPromiseOrValue } from '../interfaces';
 import { ICancellablePromise } from './interfaces';
@@ -13,18 +13,19 @@ export type TCancellablePromiseCreateCallback<T, TStrategy extends TAbortStrateg
   signal: IAdvancedAbortSignal
 ) => void;
 
+export type TCancellablePromisePromiseOrCallback<T, TStrategy extends TAbortStrategy> = PromiseLike<T> | TCancellablePromiseCreateCallback<T, TStrategy>;
 
-export interface ICancellablePromiseOptions<T, TStrategy extends TAbortStrategy> {
+export interface ICancellablePromiseOptions<TStrategy extends TAbortStrategy> {
   strategy?: TStrategy;
   signal?: IAdvancedAbortSignal;
 }
 
-export interface ICancellablePromiseOptionsWithStrategy<T, TStrategy extends TAbortStrategy> {
+export interface ICancellablePromiseOptionsWithStrategy<TStrategy extends TAbortStrategy> {
   strategy: TStrategy;
   signal?: IAdvancedAbortSignal;
 }
 
-export interface ICancellablePromiseNormalizedOptions<T, TStrategy extends TAbortStrategy> {
+export interface ICancellablePromiseNormalizedOptions<TStrategy extends TAbortStrategy> {
   strategy: TStrategy;
   signal: IAdvancedAbortSignal;
 }

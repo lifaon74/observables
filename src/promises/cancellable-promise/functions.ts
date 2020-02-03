@@ -41,10 +41,10 @@ export function NormalizeICancellablePromiseOptionsSignal(
   }
 }
 
-export function NormalizeICancellablePromiseOptions<T, TStrategy extends TAbortStrategy>(
-  options: ICancellablePromiseOptions<T, TStrategy> = {},
-  defaultValue?: ICancellablePromiseNormalizedOptions<T, TStrategy>
-): ICancellablePromiseNormalizedOptions<T, TStrategy> {
+export function NormalizeICancellablePromiseOptions<TStrategy extends TAbortStrategy>(
+  options: ICancellablePromiseOptions<TStrategy> = {},
+  defaultValue?: ICancellablePromiseNormalizedOptions<TStrategy>
+): ICancellablePromiseNormalizedOptions<TStrategy> {
   if (IsObject(options)) {
     return {
       strategy: NormalizeICancellablePromiseOptionsStrategy<TStrategy>(options.strategy, (defaultValue === void 0) ? void 0 : defaultValue.strategy),
