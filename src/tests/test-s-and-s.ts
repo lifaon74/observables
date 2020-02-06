@@ -206,7 +206,7 @@ function optimize(): void {
           // if (partsLvl[currentValue] === initialPartsLvl[currentValue] + 1) {
           //   lines.push('\n-------------------------------------------------------------------------------');
           // }
-          lines.push(`part #${ currentValue } up to lvl ${ partsLvl[currentValue] } => ${ count } times`);
+          // lines.push(`part #${ currentValue } up to lvl ${ partsLvl[currentValue] } => ${ count } times`);
         }
         currentValue = value;
         count = 1;
@@ -418,8 +418,8 @@ const toilets: RevenuePart = {
   cost: 5e12,
   income: 153600,
   duration: 6 * 60 * 60,
-  durationRatio: 1,
-  incomeRation: 1,
+  durationRatio: 0.5,
+  incomeRation: 2,
 };
 
 const parts = [
@@ -436,20 +436,21 @@ const parts = [
 ];
 
 
-const BONUS_RUNES: number = 1.08e18;
-const LIMIT: number = 400;
+const BONUS_RUNES: number = 2.041e18;
+const LIMIT: number = 24000;
+
 
 const initialPartsLvl: number[] = [ // lifaon
-  1730,
-  1663,
-  1567,
-  1486,
-  1421,
-  1313,
-  1216,
-  1119,
-  1044,
-  1009,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
 ];
 
 
@@ -539,6 +540,47 @@ function powerSupply() {
 }
 
 
+export function colorAdjust() {
+
+  function toRGB(color: [number, number, number]): string {
+    return `rgb(${ Math.round(color[0] * 255) }, ${ Math.round(color[1] * 255) }, ${ Math.round(color[2] * 255) })`;
+  }
+
+  function colorRange(color: [number, number, number], n: number = 100) {
+    const containerElement = document.createElement('div');
+    containerElement.style.fontSize = '0';
+    containerElement.style.height = '150px';
+
+    const percent: number = 100 / n;
+
+    for (let i = 0; i < n; i++) {
+      const f: number = i / (n - 1);
+      const colorElement = document.createElement('div');
+      colorElement.style.display = 'inline-block';
+      colorElement.style.width = `${ percent }%`;
+      colorElement.style.height = `75%`;
+      colorElement.style.backgroundColor = toRGB(color.map(_ => _ * f) as [number, number, number]);
+
+      containerElement.appendChild(colorElement);
+    }
+
+    const referenceElement = document.createElement('div');
+    referenceElement.style.height = `25%`;
+    referenceElement.style.backgroundColor = toRGB(color);
+    containerElement.appendChild(referenceElement);
+
+    return containerElement;
+  }
+
+  const n: number = 20;
+  document.body.appendChild(colorRange([1, 1, 1], n));
+  document.body.appendChild(colorRange([1, 0, 0], n));
+  document.body.appendChild(colorRange([0, 1, 0], n));
+  document.body.appendChild(colorRange([0, 0, 1], n));
+  document.body.appendChild(colorRange([1, 1, 0], n));
+  document.body.appendChild(colorRange([0, 1, 1], n));
+  document.body.appendChild(colorRange([1, 0, 1], n));
+}
 
 
 
@@ -556,6 +598,8 @@ export function testSAndF() {
 
   console.log('totalCost', computeTotalCost(initialPartsLvl));
   console.log('totalIncome', computeTotalIncome(initialPartsLvl));
+
+  // colorAdjust();
 
   // powerSupply();
   //
