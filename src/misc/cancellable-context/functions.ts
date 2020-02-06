@@ -39,6 +39,7 @@ export function NormalizeICancellableContextRegisterActivableOptions(
 ): ICancellableContextRegisterActivableNormalizedOptions {
   if (IsObject(options)) {
     return {
+      ...options,
       mode: NormalizeICancellableContextRegisterActivableOptionsMode(options.mode, (defaultValue === void 0) ? void 0 : defaultValue.mode),
     };
   } else {
@@ -67,6 +68,7 @@ export function NormalizeICancellableContextRegisterCancellablePromiseOptions(
 ): ICancellableContextRegisterCancellablePromiseNormalizedOptions {
   if (IsObject(options)) {
     return {
+      ...options,
       mode: NormalizeICancellableContextRegisterCancellablePromiseOptionsMode(options.mode, (defaultValue === void 0) ? void 0 : defaultValue.mode),
     };
   } else {

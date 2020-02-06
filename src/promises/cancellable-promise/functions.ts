@@ -47,6 +47,7 @@ export function NormalizeICancellablePromiseOptions<TStrategy extends TAbortStra
 ): ICancellablePromiseNormalizedOptions<TStrategy> {
   if (IsObject(options)) {
     return {
+      ...options,
       strategy: NormalizeICancellablePromiseOptionsStrategy<TStrategy>(options.strategy, (defaultValue === void 0) ? void 0 : defaultValue.strategy),
       signal: NormalizeICancellablePromiseOptionsSignal(options.signal, (defaultValue === void 0) ? void 0 : defaultValue.signal),
     };
@@ -77,6 +78,7 @@ export function NormalizeICancellablePromiseFinallyOptions(
 ): ICancellablePromiseNormalizedFinallyOptions {
   if (IsObject(options)) {
     return {
+      ...options,
       includeCancelled: NormalizeICancellablePromiseFinallyOptionsIncludeCancelled(options.includeCancelled, (defaultValue === void 0) ? void 0 : defaultValue.includeCancelled),
     };
   } else {
