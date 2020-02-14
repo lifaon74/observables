@@ -1,6 +1,6 @@
 {
   "name": "@lifaon/observables",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "Better observables for everyone",
   "main": "index.js",
   "scripts": {
