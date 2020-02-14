@@ -34,7 +34,7 @@ export function ConstructDOMChangeObservable(
   ConstructClassWithPrivateMembers(instance, DOM_CHANGE_OBSERVABLE_PRIVATE);
   const privates: IDOMChangeObservablePrivate = (instance as IDOMChangeObservableInternal)[DOM_CHANGE_OBSERVABLE_PRIVATE];
 
-  if (options === void 0) {
+  if (node === void 0) {
     privates.node = document;
   } else if (node instanceof Node) {
     privates.node = node;
@@ -114,6 +114,6 @@ export class DOMChangeObservable extends Observable<void> implements IDOMChangeO
       };
     });
     // @ts-ignore
-    ConstructDOMChangeObservable(this, context, options);
+    ConstructDOMChangeObservable(this, context, node, options);
   }
 }
