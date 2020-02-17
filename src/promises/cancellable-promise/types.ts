@@ -10,7 +10,7 @@ export type TCancellablePromiseCreateCallback<T, TStrategy extends TAbortStrateg
   this: ICancellablePromise<T, TStrategy>,
   resolve: (value?: TPromiseOrValue<T>) => void,
   reject: (reason?: any) => void,
-  options: ICancellablePromiseNormalizedOptions<TStrategy>
+  instance: ICancellablePromise<T, TStrategy>
 ) => void;
 
 export type TCancellablePromisePromiseOrCallback<T, TStrategy extends TAbortStrategy> =
@@ -34,10 +34,10 @@ export interface ICancellablePromiseNormalizedOptions<TStrategy extends TAbortSt
 
 export type TCancellablePromiseTryCallback<T, TStrategy extends TAbortStrategy> = (
   this: ICancellablePromise<T, TStrategy>,
-  options: ICancellablePromiseNormalizedOptions<TStrategy>
+  instance: ICancellablePromise<T, TStrategy>
 ) => TPromiseOrValue<T>;
 
-export type TCancellablePromiseFactory<T, TStrategy extends TAbortStrategy> = (options: ICancellablePromiseNormalizedOptions<TStrategy>) => TPromiseOrValue<T>;
+export type TCancellablePromiseFactory<T, TStrategy extends TAbortStrategy> = (instance: ICancellablePromise<T, TStrategy>) => TPromiseOrValue<T>;
 
 export interface ICancellablePromiseFinallyOptions {
   includeCancelled?: boolean; // (default: true)
@@ -62,7 +62,7 @@ export type InferStrategyOfCancellablePromiseOptions<T extends Pick<ICancellable
 export type TCancellablePromiseOnFulfilled<T, TStrategy extends TAbortStrategy, TFulfilled> = (
   this: ICancellablePromise<T, TStrategy>,
   value: T,
-  options: ICancellablePromiseNormalizedOptions<TStrategy>
+  instance: ICancellablePromise<T, TStrategy>
 ) => TPromiseOrValue<TFulfilled>;
 
 export type TCancellablePromiseOnFulfilledArgument<T, TStrategy extends TAbortStrategy, TFulfilled> =
@@ -74,7 +74,7 @@ export type TCancellablePromiseOnFulfilledArgument<T, TStrategy extends TAbortSt
 export type TCancellablePromiseOnRejected<T, TStrategy extends TAbortStrategy, TRejected> = (
   this: ICancellablePromise<T, TStrategy>,
   reason: any,
-  signal: IAdvancedAbortSignal
+  instance: ICancellablePromise<T, TStrategy>
 ) => TPromiseOrValue<TRejected>;
 
 export type TCancellablePromiseOnRejectedArgument<T, TStrategy extends TAbortStrategy, TRejected> =
@@ -87,7 +87,7 @@ export type TCancellablePromiseOnCancelled<T, TStrategy extends TAbortStrategy, 
   this: ICancellablePromise<T, TStrategy>,
   reason: any,
   newController: IAdvancedAbortController,
-  signal: IAdvancedAbortSignal
+  instance: ICancellablePromise<T, TStrategy>
 ) => TPromiseOrValue<TCancelled>;
 
 export type TCancellablePromiseOnCancelledArgument<T, TStrategy extends TAbortStrategy, TCancelled> =
@@ -99,7 +99,7 @@ export type TCancellablePromiseOnCancelledArgument<T, TStrategy extends TAbortSt
 export type TCancellablePromiseOnFinally<T, TStrategy extends TAbortStrategy> = (
   this: ICancellablePromise<T, TStrategy>,
   state: OnFinallyResult<T>,
-  signal: IAdvancedAbortSignal
+  instance: ICancellablePromise<T, TStrategy>
 ) => TPromiseOrValue<void>;
 
 export type TCancellablePromiseOnFinallyArgument<T, TStrategy extends TAbortStrategy> =
@@ -128,17 +128,17 @@ export type TCancellablePromiseThenReturnedValue<T, TStrategy extends TAbortStra
   ;
 
 export type TCancellablePromiseFulfilledReturnedValue<T, TStrategy extends TAbortStrategy, TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, TStrategy, any>> =
-  TFulfilled extends (value: T, signal: IAdvancedAbortSignal) => TPromiseOrValue<infer TFulfilledValue>
+  TFulfilled extends (value: T, instance: ICancellablePromise<T, TStrategy>) => TPromiseOrValue<infer TFulfilledValue>
     ? TFulfilledValue
     : T;
 
 export type TCancellablePromiseRejectedReturnedValue<T, TStrategy extends TAbortStrategy, TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>> =
-  TRejected extends (reason: any, signal: IAdvancedAbortSignal) => TPromiseOrValue<infer TRejectedValue>
+  TRejected extends (reason: any, instance: ICancellablePromise<T, TStrategy>) => TPromiseOrValue<infer TRejectedValue>
     ? TRejectedValue
     : never;
 
 export type TCancellablePromiseCancelledReturnedValue<T, TStrategy extends TAbortStrategy, TCancelled extends TCancellablePromiseOnCancelledArgument<T, TStrategy, any>> =
-  TCancelled extends (reason: any, newController: IAdvancedAbortController, signal: IAdvancedAbortSignal) => TPromiseOrValue<infer TCancelledValue>
+  TCancelled extends (reason: any, newController: IAdvancedAbortController, instance: ICancellablePromise<T, TStrategy>) => TPromiseOrValue<infer TCancelledValue>
     ? TCancelledValue
     : never;
 

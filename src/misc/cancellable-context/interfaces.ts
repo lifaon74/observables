@@ -1,10 +1,8 @@
 import { ICancellablePromise } from '../../promises/cancellable-promise/interfaces';
 import { IActivableLike } from '../activable/interfaces';
 import {
-  ICancellableContextRegisterActivableOptions,
-  ICancellableContextRegisterCancellablePromiseOptions,
-  TCancellableContextRegisterActivableFactory,
-  TCancellableContextRegisterCancellablePromiseFactory
+  ICancellableContextRegisterActivableOptions, ICancellableContextRegisterCancellablePromiseOptions,
+  TCancellableContextRegisterActivableFactory, TCancellableContextRegisterCancellablePromiseFactory
 } from './types';
 
 /** INTERFACES **/

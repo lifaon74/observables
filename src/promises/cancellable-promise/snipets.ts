@@ -2,7 +2,7 @@ import { ICancellablePromise } from './interfaces';
 import { clearImmediate, setImmediate } from '../../classes/set-immediate';
 import { CancellablePromise } from './implementation';
 import { TPromiseOrValue } from '../interfaces';
-import { ICancellablePromiseNormalizedOptions, ICancellablePromiseOptions } from './types';
+import { ICancellablePromiseOptions } from './types';
 import { TAbortStrategy } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 
 /**
@@ -20,12 +20,12 @@ export function $delay<TStrategy extends TAbortStrategy>(timeout: number, option
     return new CancellablePromise<void, TStrategy>((
       resolve: (value?: TPromiseOrValue<void>) => void,
       reject: (reason?: any) => void,
-      options: ICancellablePromiseNormalizedOptions<TStrategy>
+      cancellablePromise: ICancellablePromise<void, TStrategy>
     ) => {
-      const abortSignalObserver = options.signal.addListener('abort', () => {
+      const abortSignalObserver = cancellablePromise.signal.addListener('abort', () => {
         clearTimeout(timer);
         abortSignalObserver.deactivate();
-        reject(options.signal.reason);
+        reject(cancellablePromise.signal.reason);
       });
 
       const timer = setTimeout(() => {
@@ -57,12 +57,12 @@ export function $yield<TStrategy extends TAbortStrategy>(options?: ICancellableP
     return new CancellablePromise<void, TStrategy>((
       resolve: (value?: TPromiseOrValue<void>) => void,
       reject: (reason?: any) => void,
-      options: ICancellablePromiseNormalizedOptions<TStrategy>
+      cancellablePromise: ICancellablePromise<void, TStrategy>
     ) => {
-      const abortSignalObserver = options.signal.addListener('abort', () => {
+      const abortSignalObserver = cancellablePromise.signal.addListener('abort', () => {
         clearImmediate(timer);
         abortSignalObserver.deactivate();
-        reject(options.signal.reason);
+        reject(cancellablePromise.signal.reason);
       });
 
       const timer = setImmediate(() => {

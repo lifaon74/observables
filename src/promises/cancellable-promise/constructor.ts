@@ -24,17 +24,14 @@ export function ConstructCancellablePromise<T, TStrategy extends TAbortStrategy>
   if (CHECK_CANCELLABLE_PROMISE_CONSTRUCT) {
     const _options: ICancellablePromiseNormalizedOptions<TStrategy> = NormalizeICancellablePromiseOptions<TStrategy>(options);
     privates.signal = _options.signal;
-    privates.strategy = _options.strategy as TStrategy;
+    privates.strategy = _options.strategy;
 
     if (typeof promiseOrCallback === 'function') {
       privates.isCancellablePromiseWithSameSignal = false;
       // ensures promiseOrCallback is called only if signal is not cancelled
       privates.promise = privates.signal.wrapFunction<() => TPromise<T>, TStrategy, never>((): TPromise<T> => {
         return new Promise<T>((resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void) => {
-          promiseOrCallback.call(instance, resolve, reject, {
-            signal: privates.signal,
-            strategy: privates.strategy,
-          } as ICancellablePromiseNormalizedOptions<TStrategy>);
+          promiseOrCallback.call(instance, resolve, reject, instance);
         });
       }, privates)() as TPromise<T | TAbortStrategyReturn<TStrategy>>;
     } else if (IsPromiseLikeBase(promiseOrCallback)) {

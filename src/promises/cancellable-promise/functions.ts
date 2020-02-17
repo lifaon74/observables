@@ -7,8 +7,18 @@ import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advan
 import { AdvancedAbortController } from '../../misc/advanced-abort-controller/implementation';
 import { IsObject } from '../../helpers';
 import { IsAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/constructor';
+import { ICancellablePromise } from './interfaces';
 
 /** FUNCTIONS **/
+
+export function CancellablePromiseGetNormalizedOptions<T, TStrategy extends TAbortStrategy>(
+  instance: ICancellablePromise<T, TStrategy>,
+): ICancellablePromiseNormalizedOptions<TStrategy> {
+  return {
+    signal: instance.signal,
+    strategy: instance.strategy,
+  };
+}
 
 /* NORMALIZE: ICancellablePromiseOptions */
 

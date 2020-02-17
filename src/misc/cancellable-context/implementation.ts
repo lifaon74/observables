@@ -1,7 +1,6 @@
 import { ICancellablePromise } from '../../promises/cancellable-promise/interfaces';
 import { ICancellableContext } from './interfaces';
 import { IActivableLike } from '../activable/interfaces';
-import { IAdvancedAbortSignal } from '../advanced-abort-controller/advanced-abort-signal/interfaces';
 import { CancellablePromise } from '../../promises/cancellable-promise/implementation';
 import { IAdvancedAbortController } from '../advanced-abort-controller/interfaces';
 import { AdvancedAbortController } from '../advanced-abort-controller/implementation';
@@ -202,8 +201,6 @@ export function CancellableContextClearAll(
 
   return unsubscribe();
 }
-
-
 
 
 /** CLASS **/

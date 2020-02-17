@@ -9,9 +9,7 @@ import { ICancellablePromise } from '../../promises/cancellable-promise/interfac
 import { CancellablePromise } from '../../promises/cancellable-promise/implementation';
 import { TPromiseOrValue } from '../../promises/interfaces';
 import { PromiseTry } from '../../promises/helpers';
-import {
-  ICancellablePromiseNormalizedOptions, ICancellablePromiseOptions
-} from '../../promises/cancellable-promise/types';
+import { ICancellablePromiseOptions } from '../../promises/cancellable-promise/types';
 import { TAbortStrategy } from '../advanced-abort-controller/advanced-abort-signal/types';
 
 /** FUNCTIONS **/
@@ -95,9 +93,9 @@ export function ActivableToCancellablePromise<TStrategy extends TAbortStrategy>(
   return new CancellablePromise<void, TStrategy>((
     resolve: (value?: TPromiseOrValue<void>) => void,
     reject: (reason?: any) => void,
-    options: ICancellablePromiseNormalizedOptions<TStrategy>
+    cancellablePromise: ICancellablePromise<void, TStrategy>
   ) => {
-    const signalAbortListener = options.signal.addListener('abort', () => {
+    const signalAbortListener = cancellablePromise.signal.addListener('abort', () => {
       signalAbortListener.deactivate();
       activable.deactivate();
     });
@@ -105,7 +103,7 @@ export function ActivableToCancellablePromise<TStrategy extends TAbortStrategy>(
 
     resolve(
       PromiseTry(() => activable.activate())
-        .then(() => UntilActivableDeactivated(activable, options))
+        .then(() => UntilActivableDeactivated(activable, cancellablePromise))
         .then(() => {
           signalAbortListener.deactivate();
         })
@@ -120,7 +118,7 @@ export function UntilActivableDeactivated<TStrategy extends TAbortStrategy>(acti
   return new CancellablePromise<void, TStrategy>((
     resolve: (value?: TPromiseOrValue<void>) => void,
     reject: (reason?: any) => void,
-    options: ICancellablePromiseNormalizedOptions<TStrategy>
+    cancellablePromise: ICancellablePromise<void, TStrategy>
   ) => {
     if (activable.activated) {
       let stateListener: () => void;
@@ -141,7 +139,7 @@ export function UntilActivableDeactivated<TStrategy extends TAbortStrategy>(acti
         }
       };
 
-      const signalAbortListener = options.signal.addListener('abort', () => {
+      const signalAbortListener = cancellablePromise.signal.addListener('abort', () => {
         clear();
       });
       signalAbortListener.activate();
