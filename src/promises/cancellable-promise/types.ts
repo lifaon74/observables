@@ -10,10 +10,12 @@ export type TCancellablePromiseCreateCallback<T, TStrategy extends TAbortStrateg
   this: ICancellablePromise<T, TStrategy>,
   resolve: (value?: TPromiseOrValue<T>) => void,
   reject: (reason?: any) => void,
-  signal: IAdvancedAbortSignal
+  options: ICancellablePromiseNormalizedOptions<TStrategy>
 ) => void;
 
-export type TCancellablePromisePromiseOrCallback<T, TStrategy extends TAbortStrategy> = PromiseLike<T> | TCancellablePromiseCreateCallback<T, TStrategy>;
+export type TCancellablePromisePromiseOrCallback<T, TStrategy extends TAbortStrategy> =
+  PromiseLike<T>
+  | TCancellablePromiseCreateCallback<T, TStrategy>;
 
 export interface ICancellablePromiseOptions<TStrategy extends TAbortStrategy> {
   strategy?: TStrategy;
@@ -32,10 +34,10 @@ export interface ICancellablePromiseNormalizedOptions<TStrategy extends TAbortSt
 
 export type TCancellablePromiseTryCallback<T, TStrategy extends TAbortStrategy> = (
   this: ICancellablePromise<T, TStrategy>,
-  signal: IAdvancedAbortSignal
+  options: ICancellablePromiseNormalizedOptions<TStrategy>
 ) => TPromiseOrValue<T>;
 
-export type TCancellablePromiseFactory<T> = (signal: IAdvancedAbortSignal) => TPromiseOrValue<T>;
+export type TCancellablePromiseFactory<T, TStrategy extends TAbortStrategy> = (options: ICancellablePromiseNormalizedOptions<TStrategy>) => TPromiseOrValue<T>;
 
 export interface ICancellablePromiseFinallyOptions {
   includeCancelled?: boolean; // (default: true)
@@ -60,7 +62,7 @@ export type InferStrategyOfCancellablePromiseOptions<T extends Pick<ICancellable
 export type TCancellablePromiseOnFulfilled<T, TStrategy extends TAbortStrategy, TFulfilled> = (
   this: ICancellablePromise<T, TStrategy>,
   value: T,
-  signal: IAdvancedAbortSignal
+  options: ICancellablePromiseNormalizedOptions<TStrategy>
 ) => TPromiseOrValue<TFulfilled>;
 
 export type TCancellablePromiseOnFulfilledArgument<T, TStrategy extends TAbortStrategy, TFulfilled> =

@@ -1,6 +1,6 @@
 import { IActivableLike } from '../activable/interfaces';
-import { IAdvancedAbortSignal } from '../advanced-abort-controller/advanced-abort-signal/interfaces';
 import { TPromiseOrValue } from '../../promises/interfaces';
+import { ICancellablePromiseNormalizedOptions } from '../../promises/cancellable-promise/types';
 
 /* ACTIVABLE */
 
@@ -27,7 +27,7 @@ export type TCancellableContextRegisterCancellablePromiseOptionsMode = // if key
   TCancellableContextRegisterActivableOptionsMode
   | 'queue' // waits for previous promise to resolve or reject, then calls the promise factory
   ;
-export type TCancellableContextRegisterCancellablePromiseFactory<T> = (signal: IAdvancedAbortSignal) => TPromiseOrValue<T>;
+export type TCancellableContextRegisterCancellablePromiseFactory<T> = (options: ICancellablePromiseNormalizedOptions<'never'>) => TPromiseOrValue<T>;
 
 export interface ICancellableContextRegisterCancellablePromiseOptions {
   mode?: TCancellableContextRegisterCancellablePromiseOptionsMode;

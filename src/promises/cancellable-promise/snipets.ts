@@ -2,8 +2,7 @@ import { ICancellablePromise } from './interfaces';
 import { clearImmediate, setImmediate } from '../../classes/set-immediate';
 import { CancellablePromise } from './implementation';
 import { TPromiseOrValue } from '../interfaces';
-import { ICancellablePromiseOptions } from './types';
-import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
+import { ICancellablePromiseNormalizedOptions, ICancellablePromiseOptions } from './types';
 import { TAbortStrategy } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 
 /**
@@ -18,11 +17,15 @@ export function $delay<TStrategy extends TAbortStrategy>(timeout: number, option
       setTimeout(resolve, timeout);
     });
   } else {
-    return new CancellablePromise<void, TStrategy>((resolve: (value?: TPromiseOrValue<void>) => void, reject: (reason?: any) => void, signal: IAdvancedAbortSignal) => {
-      const abortSignalObserver = signal.addListener('abort', () => {
+    return new CancellablePromise<void, TStrategy>((
+      resolve: (value?: TPromiseOrValue<void>) => void,
+      reject: (reason?: any) => void,
+      options: ICancellablePromiseNormalizedOptions<TStrategy>
+    ) => {
+      const abortSignalObserver = options.signal.addListener('abort', () => {
         clearTimeout(timer);
         abortSignalObserver.deactivate();
-        reject(signal.reason);
+        reject(options.signal.reason);
       });
 
       const timer = setTimeout(() => {
@@ -51,11 +54,15 @@ export function $yield<TStrategy extends TAbortStrategy>(options?: ICancellableP
       setImmediate(resolve);
     });
   } else {
-    return new CancellablePromise<void, TStrategy>((resolve: (value?: TPromiseOrValue<void>) => void, reject: (reason?: any) => void, signal: IAdvancedAbortSignal) => {
-      const abortSignalObserver = signal.addListener('abort', () => {
+    return new CancellablePromise<void, TStrategy>((
+      resolve: (value?: TPromiseOrValue<void>) => void,
+      reject: (reason?: any) => void,
+      options: ICancellablePromiseNormalizedOptions<TStrategy>
+    ) => {
+      const abortSignalObserver = options.signal.addListener('abort', () => {
         clearImmediate(timer);
         abortSignalObserver.deactivate();
-        reject(signal.reason);
+        reject(options.signal.reason);
       });
 
       const timer = setImmediate(() => {

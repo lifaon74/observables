@@ -3,8 +3,7 @@ import { IsObject } from '../../helpers';
 import { CANCELLABLE_PROMISE_PRIVATE, ICancellablePromiseInternal, ICancellablePromisePrivate } from './privates';
 import { TPromise, TPromiseOrValue } from '../interfaces';
 import {
-  ICancellablePromiseNormalizedOptions, ICancellablePromiseOptions, TCancellablePromiseCreateCallback,
-  TCancellablePromisePromiseOrCallback
+  ICancellablePromiseNormalizedOptions, ICancellablePromiseOptions, TCancellablePromisePromiseOrCallback
 } from './types';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IsPromiseLikeBase } from '../helpers';
@@ -32,15 +31,18 @@ export function ConstructCancellablePromise<T, TStrategy extends TAbortStrategy>
       // ensures promiseOrCallback is called only if signal is not cancelled
       privates.promise = privates.signal.wrapFunction<() => TPromise<T>, TStrategy, never>((): TPromise<T> => {
         return new Promise<T>((resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void) => {
-          promiseOrCallback.call(instance, resolve, reject, privates.signal);
+          promiseOrCallback.call(instance, resolve, reject, {
+            signal: privates.signal,
+            strategy: privates.strategy,
+          } as ICancellablePromiseNormalizedOptions<TStrategy>);
         });
       }, privates)() as TPromise<T | TAbortStrategyReturn<TStrategy>>;
     } else if (IsPromiseLikeBase(promiseOrCallback)) {
       privates.isCancellablePromiseWithSameSignal = IsCancellablePromiseWithSameSignal<T, TStrategy>(promiseOrCallback, instance);
       privates.promise = (
         privates.isCancellablePromiseWithSameSignal
-        ? promiseOrCallback
-        : privates.signal.wrapPromise<T, TStrategy, never>(promiseOrCallback, privates)
+          ? promiseOrCallback
+          : privates.signal.wrapPromise<T, TStrategy, never>(promiseOrCallback, privates)
       ) as TPromise<T | TAbortStrategyReturn<TStrategy>>;
     } else {
       throw new TypeError(`Expected Promise or function as CancellablePromise first argument.`);

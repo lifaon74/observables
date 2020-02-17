@@ -2,9 +2,8 @@ import { TPromise } from '../interfaces';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 import { TAbortStrategy, TAbortStrategyReturn } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 import {
-  ICancellablePromiseFinallyOptions,
-  ICancellablePromiseOptions, TCancellablePromiseCancelledReturn, TCancellablePromiseCatchReturn,
-  TCancellablePromiseCreateCallback, TCancellablePromiseOnCancelledArgument, TCancellablePromiseOnFinallyArgument,
+  ICancellablePromiseFinallyOptions, ICancellablePromiseOptions, TCancellablePromiseCancelledReturn,
+  TCancellablePromiseCatchReturn, TCancellablePromiseOnCancelledArgument, TCancellablePromiseOnFinallyArgument,
   TCancellablePromiseOnFulfilledArgument, TCancellablePromiseOnRejectedArgument, TCancellablePromisePromiseOrCallback,
   TCancellablePromiseThenReturn
 } from './types';
@@ -153,6 +152,7 @@ export interface ICancellablePromiseConstructor {
 export interface ICancellablePromise<T, TStrategy extends TAbortStrategy = 'never'> extends TPromise<T> {
   readonly promise: Promise<T | TAbortStrategyReturn<TStrategy>>; // a promised wrapped by the CancellablePromise's signal. May never resolve if signal is cancelled (depends on strategy).
   readonly signal: IAdvancedAbortSignal; // the AdvancedAbortSignal associated with this CancellablePromise
+  readonly strategy: TStrategy;
 
   /**
    * Equivalent of the 'then' of a Promise:
