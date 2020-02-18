@@ -1,43 +1,35 @@
-import { TAbortStrategy } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
-import { PromiseFulfilledObject, PromiseRejectedObject, TPromiseOrValue } from '../interfaces';
+import { PromiseFulfilledObject, PromiseRejectedObject, TPromiseOrValue } from '../type-helpers';
 import { ICancellablePromise } from './interfaces';
 import { IAdvancedAbortController } from '../../misc/advanced-abort-controller/interfaces';
 
 /** TYPES **/
 
-export type TCancellablePromiseCreateCallback<T, TStrategy extends TAbortStrategy> = (
-  this: ICancellablePromise<T, TStrategy>,
+export type TCancellablePromiseCreateCallback<T> = (
+  this: ICancellablePromise<T>,
   resolve: (value?: TPromiseOrValue<T>) => void,
   reject: (reason?: any) => void,
-  instance: ICancellablePromise<T, TStrategy>
+  instance: ICancellablePromise<T>
 ) => void;
 
-export type TCancellablePromisePromiseOrCallback<T, TStrategy extends TAbortStrategy> =
+export type TCancellablePromisePromiseOrCallback<T> =
   PromiseLike<T>
-  | TCancellablePromiseCreateCallback<T, TStrategy>;
+  | TCancellablePromiseCreateCallback<T>;
 
-export interface ICancellablePromiseOptions<TStrategy extends TAbortStrategy> {
-  strategy?: TStrategy;
+export interface ICancellablePromiseOptions {
   signal?: IAdvancedAbortSignal;
 }
 
-export interface ICancellablePromiseOptionsWithStrategy<TStrategy extends TAbortStrategy> {
-  strategy: TStrategy;
-  signal?: IAdvancedAbortSignal;
-}
-
-export interface ICancellablePromiseNormalizedOptions<TStrategy extends TAbortStrategy> {
-  strategy: TStrategy;
+export interface ICancellablePromiseNormalizedOptions {
   signal: IAdvancedAbortSignal;
 }
 
-export type TCancellablePromiseTryCallback<T, TStrategy extends TAbortStrategy> = (
-  this: ICancellablePromise<T, TStrategy>,
-  instance: ICancellablePromise<T, TStrategy>
+export type TCancellablePromiseTryCallback<T> = (
+  this: ICancellablePromise<T>,
+  instance: ICancellablePromise<T>
 ) => TPromiseOrValue<T>;
 
-export type TCancellablePromiseFactory<T, TStrategy extends TAbortStrategy> = (instance: ICancellablePromise<T, TStrategy>) => TPromiseOrValue<T>;
+export type TCancellablePromiseFactory<T> = (instance: ICancellablePromise<T>) => TPromiseOrValue<T>;
 
 export interface ICancellablePromiseFinallyOptions {
   includeCancelled?: boolean; // (default: true)
@@ -49,61 +41,51 @@ export interface ICancellablePromiseNormalizedFinallyOptions {
 
 /*---*/
 
-export type InferStrategyOfCancellablePromiseOptions<T extends Pick<ICancellablePromiseOptions<TAbortStrategy>, 'strategy'>> = T extends Pick<ICancellablePromiseOptions<infer TStrategy>, 'strategy'>
-  ? (
-    TStrategy extends undefined
-      ? 'never'
-      : TStrategy
-    )
-  : never;
-
-/*---*/
-
-export type TCancellablePromiseOnFulfilled<T, TStrategy extends TAbortStrategy, TFulfilled> = (
-  this: ICancellablePromise<T, TStrategy>,
+export type TCancellablePromiseOnFulfilled<T, TFulfilled> = (
+  this: ICancellablePromise<T>,
   value: T,
-  instance: ICancellablePromise<T, TStrategy>
+  instance: ICancellablePromise<T>
 ) => TPromiseOrValue<TFulfilled>;
 
-export type TCancellablePromiseOnFulfilledArgument<T, TStrategy extends TAbortStrategy, TFulfilled> =
-  TCancellablePromiseOnFulfilled<T, TStrategy, TFulfilled>
+export type TCancellablePromiseOnFulfilledArgument<T, TFulfilled> =
+  TCancellablePromiseOnFulfilled<T, TFulfilled>
   | undefined
   | null;
 
 
-export type TCancellablePromiseOnRejected<T, TStrategy extends TAbortStrategy, TRejected> = (
-  this: ICancellablePromise<T, TStrategy>,
+export type TCancellablePromiseOnRejected<T, TRejected> = (
+  this: ICancellablePromise<T>,
   reason: any,
-  instance: ICancellablePromise<T, TStrategy>
+  instance: ICancellablePromise<T>
 ) => TPromiseOrValue<TRejected>;
 
-export type TCancellablePromiseOnRejectedArgument<T, TStrategy extends TAbortStrategy, TRejected> =
-  TCancellablePromiseOnRejected<T, TStrategy, TRejected>
+export type TCancellablePromiseOnRejectedArgument<T, TRejected> =
+  TCancellablePromiseOnRejected<T, TRejected>
   | undefined
   | null;
 
 
-export type TCancellablePromiseOnCancelled<T, TStrategy extends TAbortStrategy, TCancelled> = (
-  this: ICancellablePromise<T, TStrategy>,
+export type TCancellablePromiseOnCancelled<T, TCancelled> = (
+  this: ICancellablePromise<T>,
   reason: any,
   newController: IAdvancedAbortController,
-  instance: ICancellablePromise<T, TStrategy>
+  instance: ICancellablePromise<T>
 ) => TPromiseOrValue<TCancelled>;
 
-export type TCancellablePromiseOnCancelledArgument<T, TStrategy extends TAbortStrategy, TCancelled> =
-  TCancellablePromiseOnCancelled<T, TStrategy, TCancelled>
+export type TCancellablePromiseOnCancelledArgument<T, TCancelled> =
+  TCancellablePromiseOnCancelled<T, TCancelled>
   | undefined
   | null;
 
 
-export type TCancellablePromiseOnFinally<T, TStrategy extends TAbortStrategy> = (
-  this: ICancellablePromise<T, TStrategy>,
+export type TCancellablePromiseOnFinally<T> = (
+  this: ICancellablePromise<T>,
   state: OnFinallyResult<T>,
-  instance: ICancellablePromise<T, TStrategy>
+  instance: ICancellablePromise<T>
 ) => TPromiseOrValue<void>;
 
-export type TCancellablePromiseOnFinallyArgument<T, TStrategy extends TAbortStrategy> =
-  TCancellablePromiseOnFinally<T, TStrategy>
+export type TCancellablePromiseOnFinallyArgument<T> =
+  TCancellablePromiseOnFinally<T>
   | undefined
   | null;
 
@@ -121,32 +103,32 @@ export interface PromiseCancelledObject {
 
 export type OnFinallyResult<T> = PromiseFulfilledObject<T> | PromiseRejectedObject | PromiseCancelledObject;
 
-export type TCancellablePromiseThenReturnedValue<T, TStrategy extends TAbortStrategy, TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, TStrategy, any>, TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>, TCancelled extends TCancellablePromiseOnCancelledArgument<T, TStrategy, any>> =
-  TCancellablePromiseFulfilledReturnedValue<T, TStrategy, TFulfilled>
-  | TCancellablePromiseRejectedReturnedValue<T, TStrategy, TRejected>
-  | TCancellablePromiseCancelledReturnedValue<T, TStrategy, TCancelled>
+export type TCancellablePromiseThenReturnedValue<T, TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, any>, TRejected extends TCancellablePromiseOnRejectedArgument<T, any>, TCancelled extends TCancellablePromiseOnCancelledArgument<T, any>> =
+  TCancellablePromiseFulfilledReturnedValue<T, TFulfilled>
+  | TCancellablePromiseRejectedReturnedValue<T, TRejected>
+  | TCancellablePromiseCancelledReturnedValue<T, TCancelled>
   ;
 
-export type TCancellablePromiseFulfilledReturnedValue<T, TStrategy extends TAbortStrategy, TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, TStrategy, any>> =
-  TFulfilled extends (value: T, instance: ICancellablePromise<T, TStrategy>) => TPromiseOrValue<infer TFulfilledValue>
+export type TCancellablePromiseFulfilledReturnedValue<T, TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, any>> =
+  TFulfilled extends (value: T, instance: ICancellablePromise<T>) => TPromiseOrValue<infer TFulfilledValue>
     ? TFulfilledValue
     : T;
 
-export type TCancellablePromiseRejectedReturnedValue<T, TStrategy extends TAbortStrategy, TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>> =
-  TRejected extends (reason: any, instance: ICancellablePromise<T, TStrategy>) => TPromiseOrValue<infer TRejectedValue>
+export type TCancellablePromiseRejectedReturnedValue<T, TRejected extends TCancellablePromiseOnRejectedArgument<T, any>> =
+  TRejected extends (reason: any, instance: ICancellablePromise<T>) => TPromiseOrValue<infer TRejectedValue>
     ? TRejectedValue
     : never;
 
-export type TCancellablePromiseCancelledReturnedValue<T, TStrategy extends TAbortStrategy, TCancelled extends TCancellablePromiseOnCancelledArgument<T, TStrategy, any>> =
-  TCancelled extends (reason: any, newController: IAdvancedAbortController, instance: ICancellablePromise<T, TStrategy>) => TPromiseOrValue<infer TCancelledValue>
+export type TCancellablePromiseCancelledReturnedValue<T, TCancelled extends TCancellablePromiseOnCancelledArgument<T, any>> =
+  TCancelled extends (reason: any, newController: IAdvancedAbortController, instance: ICancellablePromise<T>) => TPromiseOrValue<infer TCancelledValue>
     ? TCancelledValue
     : never;
 
-export type TCancellablePromiseThenReturn<T, TStrategy extends TAbortStrategy, TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, TStrategy, any>, TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>, TCancelled extends TCancellablePromiseOnCancelledArgument<T, TStrategy, any>> =
-  ICancellablePromise<TCancellablePromiseThenReturnedValue<T, TStrategy, TFulfilled, TRejected, TCancelled>/* | TAbortStrategyReturn<TStrategy>*/, TStrategy>;
+export type TCancellablePromiseThenReturn<T, TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, any>, TRejected extends TCancellablePromiseOnRejectedArgument<T, any>, TCancelled extends TCancellablePromiseOnCancelledArgument<T, any>> =
+  ICancellablePromise<TCancellablePromiseThenReturnedValue<T, TFulfilled, TRejected, TCancelled>/* | TAbortStrategyReturn<TStrategy>*/>;
 
-export type TCancellablePromiseCatchReturn<T, TStrategy extends TAbortStrategy, TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>> =
-  TCancellablePromiseThenReturn<T, TStrategy, undefined, TRejected, undefined>;
+export type TCancellablePromiseCatchReturn<T, TRejected extends TCancellablePromiseOnRejectedArgument<T, any>> =
+  TCancellablePromiseThenReturn<T, undefined, TRejected, undefined>;
 
-export type TCancellablePromiseCancelledReturn<T, TStrategy extends TAbortStrategy, TCancelled extends TCancellablePromiseOnCancelledArgument<T, TStrategy, any>> =
-  TCancellablePromiseThenReturn<T, TStrategy, undefined, undefined, TCancelled>;
+export type TCancellablePromiseCancelledReturn<T, TCancelled extends TCancellablePromiseOnCancelledArgument<T, any>> =
+  TCancellablePromiseThenReturn<T, undefined, undefined, TCancelled>;

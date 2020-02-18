@@ -1,12 +1,12 @@
 import { IsObject, noop } from '../helpers';
 import {
-  AllSettledResult, ICancellablePromiseTuple, PromiseFulfilledObject, PromiseRejectedObject, TPromise,
-  TPromiseCreateCallback, TPromiseOrValue
-} from './interfaces';
+  AllSettledResult, PromiseFulfilledObject, PromiseRejectedObject,
+  TPromiseOrValue
+} from './type-helpers';
 import { IAdvancedAbortSignal } from '../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 
 
-export function IsPromiseLike(value: any): value is TPromise<any> {
+export function IsPromiseLike(value: any): value is Promise<any> {
   return IsPromiseLikeBase(value)
     && (typeof (value as any).catch === 'function')
     && (typeof (value as any).finally === 'function')
@@ -19,8 +19,8 @@ export function IsPromiseLikeBase(value: any): value is PromiseLike<any> {
     ;
 }
 
-export const NEVER_PROMISE: TPromise<never> = new Promise<never>(noop);
-export const VOID_PROMISE: TPromise<void> = Promise.resolve();
+export const NEVER_PROMISE: Promise<never> = new Promise<never>(noop);
+export const VOID_PROMISE: Promise<void> = Promise.resolve();
 
 
 export function PromiseCreateCallbackNoop(): TPromiseCreateCallback<never> {

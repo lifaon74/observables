@@ -1,8 +1,8 @@
 import { ICancellablePromise, ICancellablePromiseConstructor } from './interfaces';
 import {
   PromiseFulfilledObject, PromiseRejectedObject, TPromise, TPromiseOrValue, TPromiseOrValueFactoryTupleToValueTuple,
-  TPromiseOrValueFactoryTupleToValueUnion, TPromiseOrValueTupleToCancellablePromiseTuple, TPromiseType
-} from '../interfaces';
+  TPromiseOrValueFactoryTupleToValueUnion, TPromiseOrValueTupleToCancellablePromiseTuple, InferPromiseType
+} from '../type-helpers';
 import { Reason } from '../../misc/reason/implementation';
 import {
   ICancellablePromiseFinallyOptions, ICancellablePromiseNormalizedFinallyOptions, ICancellablePromiseOptions,
@@ -177,7 +177,7 @@ function AbortControllerWhenPromiseResolved<TPromise extends Promise<any>>(
 ): TPromise {
   return promise
     .then(
-      ...Finally<TPromiseType<TPromise>>(() => {
+      ...Finally<InferPromiseType<TPromise>>(() => {
         if (!controller.signal.aborted) {
           controller.abort(getReason());
         }

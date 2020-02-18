@@ -19,7 +19,7 @@ import { INotificationsObserver } from '../../notifications/core/notifications-o
 import { FunctionObservable } from '../../observables/distinct/function-observable/sync/implementation';
 import { Expression } from '../../observables/distinct/expression/implementation';
 import { $equal, $expression } from '../../operators/shortcuts/public';
-import { ICancellablePromiseTuple } from '../../promises/interfaces';
+import { ICancellablePromiseTuple } from '../../promises/type-helpers';
 import { SpreadCancellablePromiseTuple } from '../../promises/helpers';
 import { FiniteStateObservable } from '../../notifications/observables/finite-state/implementation';
 import { IFiniteStateObservable } from '../../notifications/observables/finite-state/interfaces';

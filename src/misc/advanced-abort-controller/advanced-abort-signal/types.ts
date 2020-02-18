@@ -1,4 +1,4 @@
-import { TPromise, TPromiseOrValue } from '../../../promises/interfaces';
+import { TPromise, TPromiseOrValue } from '../../../promises/type-helpers';
 import { IAdvancedAbortSignal } from './interfaces';
 import { IAdvancedAbortController } from '../interfaces';
 

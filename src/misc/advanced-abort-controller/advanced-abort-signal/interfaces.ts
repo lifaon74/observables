@@ -5,7 +5,7 @@ import {
   IAdvancedAbortSignalKeyValueMap, IAdvancedAbortSignalWrapPromiseOptions, TAbortStrategy,
   TAbortStrategyReturnedPromise, TAdvancedAbortSignalWrapPromiseCallback
 } from './types';
-import { TPromiseType } from '../../../promises/interfaces';
+import { InferPromiseType } from '../../../promises/type-helpers';
 
 
 /** INSTANCE **/
@@ -79,12 +79,12 @@ export interface IAdvancedAbortSignal extends INotificationsObservable<IAdvanced
   wrapFunction<CB extends (...args: any[]) => any>(
     callback: CB,
     options?: IAdvancedAbortSignalWrapPromiseOptions<'never', never>,
-  ): (...args: Parameters<CB>) => TAbortStrategyReturnedPromise<TPromiseType<ReturnType<CB>>, 'never', never>;
+  ): (...args: Parameters<CB>) => TAbortStrategyReturnedPromise<InferPromiseType<ReturnType<CB>>, 'never', never>;
 
   wrapFunction<CB extends (...args: any[]) => any, TStrategy extends TAbortStrategy, TAborted>(
     callback: CB,
     options?: IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted>,
-  ): (...args: Parameters<CB>) => TAbortStrategyReturnedPromise<TPromiseType<ReturnType<CB>>, TStrategy, TAborted>;
+  ): (...args: Parameters<CB>) => TAbortStrategyReturnedPromise<InferPromiseType<ReturnType<CB>>, TStrategy, TAborted>;
 
   /**
    * Wraps the fetch arguments with this AdvancedAbortSignal:

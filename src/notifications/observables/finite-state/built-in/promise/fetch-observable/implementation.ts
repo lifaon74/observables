@@ -2,7 +2,7 @@ import { IFetchObservable } from './interfaces';
 import { PromiseObservable } from '../promise-observable/implementation';
 import { INotificationsObservable } from '../../../../../core/notifications-observable/interfaces';
 import { promisePipe } from '../../../../../../operators/pipes/promisePipe';
-import { TPromiseOrValue } from '../../../../../../promises/interfaces';
+import { TPromiseOrValue } from '../../../../../../promises/type-helpers';
 import { IAdvancedAbortSignal } from '../../../../../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 import { FETCH_OBSERVABLE_PRIVATE, IFetchObservableInternal, IFetchObservablePrivate } from './privates';
 import { ConstructFetchObservable } from './constructor';

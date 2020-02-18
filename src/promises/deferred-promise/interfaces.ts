@@ -1,6 +1,6 @@
 import {
   TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion, TPromiseStatus
-} from '../interfaces';
+} from '../type-helpers';
 import { IsSubSet } from '../../classes/types';
 
 /** TYPES **/

@@ -1,4 +1,4 @@
-import { TPromise } from '../interfaces';
+import { TPromise } from '../type-helpers';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 import { TAbortStrategy, TAbortStrategyReturn } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 import {
@@ -139,7 +139,7 @@ export interface ICancellablePromiseConstructor {
   /**
    * Creates a new CancellablePromise from an exiting promise or the same function you may provide to a Promise.
    */
-  new<T, TStrategy extends TAbortStrategy>(promiseOrCallback: TCancellablePromisePromiseOrCallback<T, TStrategy>, options?: ICancellablePromiseOptions<TStrategy>): ICancellablePromise<T, TStrategy>;
+  new<T>(promiseOrCallback: TCancellablePromisePromiseOrCallback<T>, options?: ICancellablePromiseOptions): ICancellablePromise<T>;
 }
 
 
@@ -149,10 +149,8 @@ export interface ICancellablePromiseConstructor {
  *  - 'then', 'catch', and 'finally' won't be called and 'promise' will never resolve (depends on strategy)
  *  - 'cancelled' is called whatever its place in the promise chain (won't wait on provided promise to resolve)
  */
-export interface ICancellablePromise<T, TStrategy extends TAbortStrategy = 'never'> extends TPromise<T> {
-  readonly promise: Promise<T | TAbortStrategyReturn<TStrategy>>; // a promised wrapped by the CancellablePromise's signal. May never resolve if signal is cancelled (depends on strategy).
+export interface ICancellablePromise<T> extends TPromise<T> {
   readonly signal: IAdvancedAbortSignal; // the AdvancedAbortSignal associated with this CancellablePromise
-  readonly strategy: TStrategy;
 
   /**
    * Equivalent of the 'then' of a Promise:
@@ -160,46 +158,48 @@ export interface ICancellablePromise<T, TStrategy extends TAbortStrategy = 'neve
    *  - wraps 'onFulfilled' and 'onRejected' with the signal (may never be called if signal is cancelled)
    *  - handles 'onCancelled'
    */
-  then(): TCancellablePromiseThenReturn<T, TStrategy, undefined, undefined, undefined>;
+  then(): TCancellablePromiseThenReturn<T, undefined, undefined, undefined>;
 
-  then<TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, TStrategy, any>>(
+  then<TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, any>>(
     onFulfilled: TFulfilled,
-  ): TCancellablePromiseThenReturn<T, TStrategy, TFulfilled, undefined, undefined>;
+  ): TCancellablePromiseThenReturn<T, TFulfilled, undefined, undefined>;
 
-  then<TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, TStrategy, any>, TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>>(
+  then<TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, any>, TRejected extends TCancellablePromiseOnRejectedArgument<T, any>>(
     onFulfilled: TFulfilled,
     onRejected: TRejected,
-  ): TCancellablePromiseThenReturn<T, TStrategy, TFulfilled, TRejected, undefined>;
+  ): TCancellablePromiseThenReturn<T, TFulfilled, TRejected, undefined>;
 
-  then<TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, TStrategy, any>, TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>, TCancelled extends TCancellablePromiseOnCancelledArgument<T, TStrategy, any>>(
+  then<TFulfilled extends TCancellablePromiseOnFulfilledArgument<T, any>, TRejected extends TCancellablePromiseOnRejectedArgument<T, any>, TCancelled extends TCancellablePromiseOnCancelledArgument<T, any>>(
     onFulfilled: TFulfilled,
     onRejected: TRejected,
     onCancelled: TCancelled,
-  ): TCancellablePromiseThenReturn<T, TStrategy, TFulfilled, TRejected, TCancelled>;
+  ): TCancellablePromiseThenReturn<T, TFulfilled, TRejected, TCancelled>;
 
   /**
    * Equivalent of the 'catch' of a Promise:
    *  - same behaviour as previously mentioned (may never be called)
    */
-  catch(): TCancellablePromiseCatchReturn<T, TStrategy, undefined>;
+  catch(): TCancellablePromiseCatchReturn<T, undefined>;
 
-  catch<TRejected extends TCancellablePromiseOnRejectedArgument<T, TStrategy, any>>(onRejected: TRejected): TCancellablePromiseCatchReturn<T, TStrategy, TRejected>;
+  catch<TRejected extends TCancellablePromiseOnRejectedArgument<T, any>>(onRejected: TRejected): TCancellablePromiseCatchReturn<T, TRejected>;
 
   /**
    * Kind of 'catch' but handles the cancelled state:
    *  - if the signal is cancelled before this promise resolves, 'onCancelled' is called
    *  - returned value is transmit to the chain
    */
-  cancelled(): TCancellablePromiseCancelledReturn<T, TStrategy, undefined>;
+  cancelled(): TCancellablePromiseCancelledReturn<T, undefined>;
 
-  cancelled<TCancelled extends TCancellablePromiseOnCancelledArgument<T, TStrategy, any>>(onCancelled: TCancelled): TCancellablePromiseCancelledReturn<T, TStrategy, TCancelled>;
+  cancelled<TCancelled extends TCancellablePromiseOnCancelledArgument<T, any>>(onCancelled: TCancelled): TCancellablePromiseCancelledReturn<T, TCancelled>;
 
   /**
    * Equivalent of the 'finally' of a Promise:
    *   - same behaviour as previously mentioned (may never be called)
    */
-  finally(onFinally?: TCancellablePromiseOnFinallyArgument<T, TStrategy>, options?: ICancellablePromiseFinallyOptions): ICancellablePromise<T, TStrategy>;
+  finally(onFinally?: TCancellablePromiseOnFinallyArgument<T>, options?: ICancellablePromiseFinallyOptions): ICancellablePromise<T>;
 
+
+  toPromise<TStrategy extends TAbortStrategy>(): Promise<T | TAbortStrategyReturn<TStrategy>>;
 }
 
 /*

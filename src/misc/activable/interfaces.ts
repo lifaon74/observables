@@ -1,4 +1,4 @@
-import { TPromiseOrValue } from '../../promises/interfaces';
+import { TPromiseOrValue } from '../../promises/type-helpers';
 
 /** TYPES **/
 

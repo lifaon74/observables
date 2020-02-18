@@ -1,7 +1,7 @@
 import { ICancellablePromise } from './interfaces';
 import { clearImmediate, setImmediate } from '../../classes/set-immediate';
 import { CancellablePromise } from './implementation';
-import { TPromiseOrValue } from '../interfaces';
+import { TPromiseOrValue } from '../type-helpers';
 import { ICancellablePromiseOptions } from './types';
 import { TAbortStrategy } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 

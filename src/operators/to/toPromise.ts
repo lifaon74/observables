@@ -1,6 +1,6 @@
 import { IObservable } from '../../core/observable/interfaces';
 import { Observer } from '../../core/observer/implementation';
-import { ICancellablePromiseTuple, TPromiseOrValue } from '../../promises/interfaces';
+import { ICancellablePromiseTuple, TPromiseOrValue } from '../../promises/type-helpers';
 import { IFiniteStateObservable } from '../../notifications/observables/finite-state/interfaces';
 import { IObserver } from '../../core/observer/interfaces';
 import { IsObservable } from '../../core/observable/constructor';

@@ -595,9 +595,9 @@ export async function test() {
   // testMisc();
   // testFactoryV2();
   // testInstanceof();
-  testPerformances();
+  // testPerformances();
   // testSignalingServer();
-  // testPromises();
+  testPromises();
   // testClasses();
   // testProgram();
   // await testTask();

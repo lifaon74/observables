@@ -1,4 +1,4 @@
-import { TPromise } from '../interfaces';
+import { TPromise } from '../type-helpers';
 import { ICancellablePromise } from './interfaces';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 import { TAbortStrategy, TAbortStrategyReturn } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
@@ -7,16 +7,16 @@ import { TAbortStrategy, TAbortStrategyReturn } from '../../misc/advanced-abort-
 
 export const CANCELLABLE_PROMISE_PRIVATE = Symbol('cancellable-promise-private');
 
-export interface ICancellablePromisePrivate<T, TStrategy extends TAbortStrategy> {
-  promise: TPromise<T | TAbortStrategyReturn<TStrategy>>;
+export interface ICancellablePromisePrivate<T> {
+  // promise: TPromise<T>;
+  promise: TPromise<T | TAbortStrategyReturn<'never'>>;
   signal: IAdvancedAbortSignal;
-  strategy: TStrategy;
   isCancellablePromiseWithSameSignal: boolean;
 }
 
-export interface ICancellablePromisePrivatesInternal<T, TStrategy extends TAbortStrategy> {
-  [CANCELLABLE_PROMISE_PRIVATE]: ICancellablePromisePrivate<T, TStrategy>;
+export interface ICancellablePromisePrivatesInternal<T> {
+  [CANCELLABLE_PROMISE_PRIVATE]: ICancellablePromisePrivate<T>;
 }
 
-export interface ICancellablePromiseInternal<T, TStrategy extends TAbortStrategy> extends ICancellablePromisePrivatesInternal<T, TStrategy>, ICancellablePromise<T, TStrategy> {
+export interface ICancellablePromiseInternal<T> extends ICancellablePromisePrivatesInternal<T>, ICancellablePromise<T> {
 }

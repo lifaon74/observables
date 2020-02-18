@@ -5,7 +5,7 @@ import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPr
 import { IsObject, noop } from '../../helpers';
 import {
   TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion, TPromiseStatus
-} from '../interfaces';
+} from '../type-helpers';
 
 
 export const DEFERRED_PROMISE_PRIVATE = Symbol('deferred-promise-private');

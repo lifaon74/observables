@@ -1,6 +1,6 @@
-import { ICancellablePromise } from './cancellable-promise/interfaces';
-import { IAdvancedAbortController } from '../misc/advanced-abort-controller/interfaces';
-import { IAdvancedAbortSignal } from '../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
+import { ICancellablePromise } from '../cancellable-promise/interfaces';
+import { IAdvancedAbortController } from '../../misc/advanced-abort-controller/interfaces';
+import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 
 /**
  * BETTER DEFINITIONS AND HELPERS FOR PROMISE
@@ -12,6 +12,28 @@ export type TPromiseStatus =
   | 'pending' // promise is neither resolved nor resolving
   | 'resolving';
 
+// export type TPromiseTypeConstraint<T> = [T] extends [{ then: any }]
+//   ? never
+//   : any;
+
+export type THasThen<T> = T extends { then: any }
+  ? true
+  : false;
+
+export type TPromiseTypeConstraint<T> = THasThen<T> extends false
+  ? any
+  : never;
+
+
+// const b: THasThen<string> = null as any;
+// const c: THasThen<'a' | 10>;
+// const d: THasThen<Promise<'a'> | 10>;
+// const a: THasThen<Promise<'a'> | 10>;
+//
+// const b: TPromiseTypeConstraint<string> = null as any;
+// const c: TPromiseTypeConstraint<'a' | 10>;
+// const d: TPromiseTypeConstraint<Promise<'a'> | 10>;
+// const a: TPromiseTypeConstraint<Promise<'a'> | 10>;
 
 export type TPromiseFulfilledArgument<TIn, TOut> = ((value: TIn) => TPromiseOrValue<TOut>) | undefined | null;
 export type TPromiseRejectedArgument<TOut> = ((reason: any) => TPromiseOrValue<TOut>) | undefined | null;
@@ -84,6 +106,7 @@ export interface TPromiseLike<T> extends PromiseLike<T> {
 /**
  * Better definition of a Promise
  */
+// extends TPromiseTypeConstraint<T>
 export interface TPromise<T> extends Promise<T> {
   then(): TPromiseThenReturn<T, undefined, undefined>;
 
@@ -110,6 +133,9 @@ export interface TPromise<T> extends Promise<T> {
   finally(onFinally?: (() => void) | undefined | null): TPromise<T>;
 }
 
+// const a: TPromise<'a' | 10> = null as any;
+// const b: TPromise<TPromise<'a'>> = null as any;
+// const c: TPromise<TPromise<'a'> | 10> = null as any;
 
 // type T1 = (() => 1) | undefined;
 // const g: TPromiseThenReturn<boolean, T1, undefined>;
@@ -149,6 +175,10 @@ export type TPromiseType<P> = P extends PromiseLike<infer T>
     ? never
     : T
   : P;
+
+// export type TPromiseType<P> = P extends PromiseLike<infer T>
+//   ? T
+//   : never;
 
 export type TPromiseOrValueFactoryType<F extends TPromiseOrValueFactory<any>> = F extends TPromiseOrValueFactory<infer P>
   ? TPromiseType<P>

@@ -5,7 +5,7 @@ import { AllowAdvancedAbortSignalConstruct, ConstructAdvancedAbortSignal } from 
 import { ADVANCED_ABORT_SIGNAL_PRIVATE, IAdvancedAbortSignalInternal } from './privates';
 import { INotificationsObserver } from '../../../notifications/core/notifications-observer/interfaces';
 
-import { TPromise, TPromiseOrValue, TPromiseType } from '../../../promises/interfaces';
+import { TPromise, TPromiseOrValue, InferPromiseType } from '../../../promises/type-helpers';
 import {
   IAdvancedAbortSignalKeyValueMap, IAdvancedAbortSignalWrapPromiseOptions, TAbortStrategy, TAbortStrategyReturn,
   TAbortStrategyReturnedPromise, TAdvancedAbortSignalWrapPromiseCallback
@@ -90,8 +90,8 @@ export function AdvancedAbortSignalWrapFunction<CB extends (...args: any[]) => a
   instance: IAdvancedAbortSignal,
   callback: CB,
   options: IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted>,
-): (...args: Parameters<CB>) => TAbortStrategyReturnedPromise<TPromiseType<ReturnType<CB>>, TStrategy, TAborted> {
-  type T = TPromiseType<ReturnType<CB>>;
+): (...args: Parameters<CB>) => TAbortStrategyReturnedPromise<InferPromiseType<ReturnType<CB>>, TStrategy, TAborted> {
+  type T = InferPromiseType<ReturnType<CB>>;
   return function (...args: Parameters<CB>): TAbortStrategyReturnedPromise<T, TStrategy, TAborted> {
     return instance.aborted
       ? ApplyOnAbortCallback<TStrategy, TAborted>(instance, options)
@@ -192,7 +192,7 @@ export class AdvancedAbortSignal extends NotificationsObservable<IAdvancedAbortS
   wrapFunction<CB extends (...args: any[]) => any, TStrategy extends TAbortStrategy, TAborted>(
     callback: CB,
     options?: IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted>,
-  ): (...args: Parameters<CB>) => TAbortStrategyReturnedPromise<TPromiseType<ReturnType<CB>>, TStrategy, TAborted> {
+  ): (...args: Parameters<CB>) => TAbortStrategyReturnedPromise<InferPromiseType<ReturnType<CB>>, TStrategy, TAborted> {
     return AdvancedAbortSignalWrapFunction<CB, TStrategy, TAborted>(this, callback, AdvancedAbortSignalNormalizeWrapPromiseOptions(options));
   }
 

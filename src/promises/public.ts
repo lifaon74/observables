@@ -1,4 +1,4 @@
-export * from './interfaces';
+export * from './type-helpers';
 export * from './cancellable-promise/public';
 export * from './deferred-promise/public';
 export * from './helpers';

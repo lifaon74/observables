@@ -1,4 +1,4 @@
-import { TPromiseOrValue, TPromiseOrValueFactory } from '../interfaces';
+import { TPromiseOrValue, TPromiseOrValueFactory } from '../type-helpers';
 import { PromiseTry } from '../helpers';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 import { IsAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/constructor';

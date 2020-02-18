@@ -3,7 +3,7 @@ import {
   TFiniteStateObservableMode
 } from '../../../types';
 import { IAdvancedAbortSignal } from '../../../../../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
-import { TPromiseOrValue } from '../../../../../../promises/interfaces';
+import { TPromiseOrValue } from '../../../../../../promises/type-helpers';
 import { KeyValueMapToNotifications } from '../../../../../core/notifications-observable/types';
 import { IPromiseObservable } from './interfaces';
 

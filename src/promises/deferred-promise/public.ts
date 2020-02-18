@@ -1,4 +1,4 @@
 export * from './interfaces';
 export { DeferredPromise, IsDeferredPromise } from './implementation';
-export { TPromiseStatus } from '../interfaces';
+export { TPromiseStatus } from '../type-helpers';
 

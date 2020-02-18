@@ -17,7 +17,7 @@ import { IFiniteStateObservable } from '../notifications/observables/finite-stat
 import {
   TFiniteStateObservableGeneric, TFiniteStateObserverGeneric
 } from '../notifications/observables/finite-state/types';
-import { TPromiseOrValue } from '../promises/interfaces';
+import { TPromiseOrValue } from '../promises/type-helpers';
 import { IActivable } from '../misc/activable/interfaces';
 
 //

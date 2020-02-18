@@ -2,7 +2,7 @@ import { IObserver } from '../../core/observer/interfaces';
 import { IPromiseObservable } from '../../notifications/observables/finite-state/built-in/promise/promise-observable/interfaces';
 import { Observer } from '../../core/observer/implementation';
 import { PromiseObservable } from '../../notifications/observables/finite-state/built-in/promise/promise-observable/implementation';
-import { TPromiseOrValue } from '../../promises/interfaces';
+import { TPromiseOrValue } from '../../promises/type-helpers';
 import { IPipe } from '../../core/observable-observer/pipe/interfaces';
 import { Pipe } from '../../core/observable-observer/pipe/implementation';
 import { TPromiseObservableNotifications } from '../../notifications/observables/finite-state/built-in/promise/promise-observable/types';

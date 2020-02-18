@@ -1,5 +1,5 @@
 import { Activable } from '../implementation';
-import { TPromiseOrValue } from '../../../promises/interfaces';
+import { TPromiseOrValue } from '../../../promises/type-helpers';
 
 /**
  * Activable for a list of classes on a element.

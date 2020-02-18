@@ -3,7 +3,7 @@ import { ADVANCED_ABORT_SIGNAL_PRIVATE, IAdvancedAbortSignalInternal, IAdvancedA
 import { AbortNotification } from '../abort-notification';
 import { IsObject } from '../../../helpers';
 import { IAdvancedAbortSignalWrapPromiseOptions, TAbortStrategy, TAbortStrategyReturn } from './types';
-import { TPromise } from '../../../promises/interfaces';
+import { TPromise } from '../../../promises/type-helpers';
 import { Finally, NEVER_PROMISE, PromiseTry, VOID_PROMISE } from '../../../promises/helpers';
 import { INotificationsObserver } from '../../../notifications/core/notifications-observer/interfaces';
 import { AdvancedAbortController } from '../implementation';
