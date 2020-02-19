@@ -1,9 +1,11 @@
-import { Any } from '../../classes/types';
 
+
+// very generic PromiseLike, used to infer its type
 export interface ILightPromiseLike<T> {
   then(cb: (value: T, ...args: any[]) => any): any;
 }
 
+// returns the type of a PromiseLike, or never
 export type TInferLightPromiseLikeType<T extends ILightPromiseLike<unknown>> = T extends ILightPromiseLike<infer TValue>
   ? TValue
   : never;
@@ -14,7 +16,7 @@ export type TInferLightPromiseLikeType<T extends ILightPromiseLike<unknown>> = T
 // const a: TInferLightPromiseLikeType<IPromiseLike<number | string>>;
 
 
-
+// returns all the key of an union of types
 export type KeysOfUnion<T> = T extends any ? keyof T : never;
 
 // INFO debug KeysOfUnion
@@ -29,6 +31,7 @@ export type KeysOfUnion<T> = T extends any ? keyof T : never;
 // const a: KeysOfUnion<{}>;
 // const a: KeysOfUnion<{ a: 1 } | { b: 2 }>;
 
+// returns true if T contains the property 'then'
 export type TContainsThen<T> = KeysOfUnion<T> extends never
   ? false
   // : KeysOfUnion<any> extends KeysOfUnion<T>
@@ -63,10 +66,8 @@ export type TContainsThen<T> = KeysOfUnion<T> extends never
 //       : unknown
 //     );
 
+// constraints T to have no property 'then'
 export type TPromiseLikeConstraint<T> = TContainsThen<T> extends true ? never : unknown;
-// export type TPromiseLikeForcedConstraint<T> = T extends TPromiseLikeConstraint<T> ? T : never;
-// export type TPromiseLikeForcedConstraint2<T> = [T] extends [TPromiseLikeConstraint<T>] ? T : never;
-
 
 // INFO debug TPromiseLikeConstraint
 // const a: TPromiseLikeConstraint<unknown>;
@@ -81,8 +82,8 @@ export type TPromiseLikeConstraint<T> = TContainsThen<T> extends true ? never : 
 // const a: TPromiseLikeConstraint<{ a: 1 } | { b: 2 }>;
 // const a: TPromiseLikeConstraint<{ a: 1 } | Promise<number>>;
 
-export type IPromiseLikeNonConstrained<T> = [T] extends [TPromiseLikeConstraint<T>] ? IPromiseLike<T> : never;
 
+// better definition of a PromiseLike
 export interface IPromiseLike<T extends TPromiseLikeConstraint<T>> {
   then(): TInferPromiseLikeReturnedByThen<T, undefined, undefined>;
   then<
@@ -93,6 +94,10 @@ export interface IPromiseLike<T extends TPromiseLikeConstraint<T>> {
     TRejected extends TPromiseLikeRejectedArgument
   >(fulfilled: TFulfilled, rejected: TRejected): TInferPromiseLikeReturnedByThen<T, TFulfilled, TRejected>;
 }
+
+// returns an IPromiseLike<T> if T fulfills the constraint, else returns never
+export type IPromiseLikeNonConstrained<T> = [T] extends [TPromiseLikeConstraint<T>] ? IPromiseLike<T> : never;
+
 
 // // INFO debug IPromiseLike
 // const a: IPromiseLike<unknown>;
@@ -107,11 +112,13 @@ export interface IPromiseLike<T extends TPromiseLikeConstraint<T>> {
 // const a: IPromiseLike<{ a: 1 } | { b: 2 }>;
 // const a: IPromiseLike<{ a: 1 } | Promise<number>>; // nope
 
-
+// a PromiseLike or a value of type T
 export type TPromiseLikeOrValue<T extends TPromiseLikeConstraint<T>> = IPromiseLike<T> | T;
 
+// the 'fulfilled' (first argument of 'then') callback definition
 export type TPromiseLikeFulfilledCallback<Tin extends TPromiseLikeConstraint<Tin>> = (value: Tin) => TPromiseLikeOrValue<unknown>;
 
+// the 'fulfilled' (first argument of 'then') argument definition
 export type TPromiseLikeFulfilledArgument<Tin extends TPromiseLikeConstraint<Tin>> =
   TPromiseLikeFulfilledCallback<Tin>
   | undefined
@@ -142,31 +149,25 @@ export type TPromiseLikeFulfilledArgument<Tin extends TPromiseLikeConstraint<Tin
 // d.then(void 0); // OK
 // d.then(null); // OK
 
+// the 'rejected' (second argument of 'then') callback definition
 export type TPromiseLikeRejectedCallback = (reason: any) => TPromiseLikeOrValue<unknown>;
 
+// the 'rejected' (second argument of 'then') argument definition
 export type TPromiseLikeRejectedArgument =
   TPromiseLikeRejectedCallback
   | undefined
   | null;
 
 
+// infers returned value of the 'then' method of a PromiseLike. If one of the types is incorrect, returns never
 export type TInferPromiseLikeReturnedByThen<Tin extends TPromiseLikeConstraint<Tin>,
   TFulfilled extends TPromiseLikeFulfilledArgument<Tin>,
   TRejected extends TPromiseLikeRejectedArgument> =
   TFulfilled extends (...args: any[]) => infer TFulfillValue
     ? ( // TFulfilled is a function
       TFulfillValue extends ILightPromiseLike<infer TFulfillPromiseValue>
-        ? (  // TFulfilled returned value is a Promise
-          TInferPromiseLikeReturnedByThenRejectNonConstrained<TFulfillPromiseValue, TRejected>
-          // TFulfillPromiseValue extends TPromiseLikeConstraint<TFulfillPromiseValue>
-          //   ? TInferPromiseLikeReturnedByThenReject<TFulfillPromiseValue, TRejected>
-          //   : never
-          )
-        : ( // TFulfilled returned value is a simple value
-          TFulfillValue extends TPromiseLikeConstraint<TFulfillValue>
-            ? TInferPromiseLikeReturnedByThenReject<TFulfillValue, TRejected>
-            : never
-          )
+        ? TInferPromiseLikeReturnedByThenRejectNonConstrained<TFulfillPromiseValue, TRejected> // TFulfilled returned value is a PromiseLike
+        : TInferPromiseLikeReturnedByThenRejectNonConstrained<TFulfillValue, TRejected> // TFulfilled returned value is a simple value
       )
     : ( // TFulfilled is a not function
       TFulfilled extends (null | undefined)
@@ -175,31 +176,13 @@ export type TInferPromiseLikeReturnedByThen<Tin extends TPromiseLikeConstraint<T
       )
   ;
 
-export type TInferPromiseLikeReturnedByThenRejectNonConstrained<U, TRejected extends TPromiseLikeRejectedArgument> =
-  U extends TPromiseLikeConstraint<U>
-    ? TInferPromiseLikeReturnedByThenReject<U, TRejected>
-    : never;
-
-
+// infers returned value of the 'then' method of a PromiseLike, working on the TRejected definition. If one of the types is incorrect, returns never
 export type TInferPromiseLikeReturnedByThenReject<U  extends TPromiseLikeConstraint<U>, TRejected extends TPromiseLikeRejectedArgument> =
   TRejected extends (...args: any[]) => infer TRejectValue
     ? (  // TRejected is a function
       TRejectValue extends ILightPromiseLike<infer TRejectPromiseValue>
-        ? ( // TRejected returned value is a Promise
-          IPromiseLikeNonConstrained<U | TRejectPromiseValue>
-          // TRejectPromiseValue extends TPromiseLikeConstraint<TRejectPromiseValue>
-          //   // ? IPromiseLike<<U | TRejectPromiseValue>
-          //   // ? IPromiseLike<U> | IPromiseLike<TRejectPromiseValue>
-          //   : never
-          )
-        : ( // TRejected returned value is a simple value
-          IPromiseLikeNonConstrained<U | TRejectValue>
-          // TRejectValue extends TPromiseLikeConstraint<TRejectValue>
-          //   // ? IPromiseLike<U | TRejectValue>
-          //   // ? IPromiseLike<U> | IPromiseLike<TRejectValue>
-          //   ? IPromiseLikeNonConstrained<U | TRejectValue>
-          //   : never
-          )
+        ? IPromiseLikeNonConstrained<U | TRejectPromiseValue> // TRejected returned value is a PromiseLike
+        : IPromiseLikeNonConstrained<U | TRejectValue> // TRejected returned value is a simple value
       )
     : ( // TRejected is not a function
       TRejected  extends (null | undefined)
@@ -207,6 +190,12 @@ export type TInferPromiseLikeReturnedByThenReject<U  extends TPromiseLikeConstra
         : never
       )
 ;
+
+// returns an TInferPromiseLikeReturnedByThenReject<U, TRejected> if U fulfills the constraint, else returns never
+export type TInferPromiseLikeReturnedByThenRejectNonConstrained<U, TRejected extends TPromiseLikeRejectedArgument> =
+  U extends TPromiseLikeConstraint<U>
+    ? TInferPromiseLikeReturnedByThenReject<U, TRejected>
+    : never;
 
 // INFO debug TInferPromiseLikeReturnedByThen
 // const a: TInferPromiseLikeReturnedByThen<'a', null, null>; // 'a'
@@ -227,13 +216,15 @@ export type TInferPromiseLikeReturnedByThenReject<U  extends TPromiseLikeConstra
 // const a: TInferPromiseLikeReturnedByThen<'a', () => Promise<Promise<'b'>>, () => 'c'>; // nope
 // const a: TInferPromiseLikeReturnedByThen<'a', () => Promise<Promise<'b'>>, () => Promise<Promise<'c'>>>; // nope
 
-export type TInferPromiseLikeType<P extends IPromiseLike<Any>> = P extends IPromiseLike<infer T> ? T : never;
+export type TInferPromiseLikeType<P extends IPromiseLike<unknown>> = P extends IPromiseLike<infer T> ? T : never;
 
-// INFO debug with long example
 
-const a: IPromiseLike<'a'> = null as any;
-const b = a.then((): 'b' => 'b', (): 'c' => 'c');
-const c = b.then((v: 'b' | 'c') => {
+// INFO debug with longer example
+// const a: IPromiseLike<'a'> = null as any;
+// const b = a.then((): 'b' => 'b', (): 'c' => 'c');
+// const c = b.then((v: 'b' | 'c'): 'd' => 'd');
+// const d = c.then(void 0, (): 'e' => 'e');
 
-});
+// const a: IPromiseLike<unknown> = null as any;
+// const b = a.then((v: unknown) => 'a');
 
