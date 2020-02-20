@@ -20,7 +20,7 @@ import { FunctionObservable } from '../../observables/distinct/function-observab
 import { Expression } from '../../observables/distinct/expression/implementation';
 import { $equal, $expression } from '../../operators/shortcuts/public';
 import { ICancellablePromiseTuple } from '../../promises/type-helpers';
-import { SpreadCancellablePromiseTuple } from '../../promises/helpers';
+import { SpreadCancellablePromiseTuple } from '../../promises/types/helpers';
 import { FiniteStateObservable } from '../../notifications/observables/finite-state/implementation';
 import { IFiniteStateObservable } from '../../notifications/observables/finite-state/interfaces';
 import { IFetchObservable } from '../../notifications/observables/finite-state/built-in/promise/fetch-observable/interfaces';

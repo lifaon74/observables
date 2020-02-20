@@ -1,6 +1,6 @@
 import { TPromise } from '../type-helpers';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
-import { TAbortStrategy, TAbortStrategyReturn } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
+import { TAbortStrategy, TInferAbortStrategyReturn } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 import {
   ICancellablePromiseFinallyOptions, ICancellablePromiseOptions, TCancellablePromiseCancelledReturn,
   TCancellablePromiseCatchReturn, TCancellablePromiseOnCancelledArgument, TCancellablePromiseOnFinallyArgument,
@@ -199,7 +199,7 @@ export interface ICancellablePromise<T> extends TPromise<T> {
   finally(onFinally?: TCancellablePromiseOnFinallyArgument<T>, options?: ICancellablePromiseFinallyOptions): ICancellablePromise<T>;
 
 
-  toPromise<TStrategy extends TAbortStrategy>(): Promise<T | TAbortStrategyReturn<TStrategy>>;
+  toPromise<TStrategy extends TAbortStrategy>(): Promise<T | TInferAbortStrategyReturn<TStrategy>>;
 }
 
 /*

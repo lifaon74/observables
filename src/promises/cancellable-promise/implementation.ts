@@ -14,12 +14,12 @@ import {
 } from './types';
 import { CANCELLABLE_PROMISE_PRIVATE, ICancellablePromiseInternal, ICancellablePromisePrivate } from './privates';
 import { ConstructCancellablePromise, IsCancellablePromise, NewCancellablePromiseFromInstance } from './constructor';
-import { TAbortStrategy, TAbortStrategyReturn } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
+import { TAbortStrategy, TInferAbortStrategyReturn } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 
 import { AdvancedAbortController } from '../../misc/advanced-abort-controller/implementation';
 import { IAdvancedAbortController } from '../../misc/advanced-abort-controller/interfaces';
-import { Finally, PromiseTry } from '../helpers';
+import { PromiseFinally, PromiseTry } from '../types/helpers';
 import { NormalizeICancellablePromiseFinallyOptions } from './functions';
 import { IsObject } from '../../helpers';
 
@@ -34,7 +34,7 @@ function CancellablePromiseInternalThen<T, TStrategy extends TAbortStrategy, TFu
 ): TCancellablePromiseThenReturn<T, TStrategy, TFulfilled, TRejected, TCancelled> {
   const privates: ICancellablePromisePrivate<T, TStrategy> = (instance as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE];
 
-  type TPrivatePromiseInValue = T | TAbortStrategyReturn<TStrategy>;
+  type TPrivatePromiseInValue = T | TInferAbortStrategyReturn<TStrategy>;
   type TPrivatePromiseOutValue = never | TFulfilled | TRejected | TPrivatePromiseInValue;
   type TPromiseValue = TCancelled | TPrivatePromiseOutValue;
 
@@ -177,7 +177,7 @@ function AbortControllerWhenPromiseResolved<TPromise extends Promise<any>>(
 ): TPromise {
   return promise
     .then(
-      ...Finally<InferPromiseType<TPromise>>(() => {
+      ...PromiseFinally<InferPromiseType<TPromise>>(() => {
         if (!controller.signal.aborted) {
           controller.abort(getReason());
         }
@@ -193,7 +193,7 @@ function AbortControllerWhenPromiseResolved<TPromise extends Promise<any>>(
 
 /* GETTERS/SETTERS */
 
-export function CancellablePromiseGetPromise<T, TStrategy extends TAbortStrategy>(instance: ICancellablePromise<T, TStrategy>): Promise<T | TAbortStrategyReturn<TStrategy>> {
+export function CancellablePromiseGetPromise<T, TStrategy extends TAbortStrategy>(instance: ICancellablePromise<T, TStrategy>): Promise<T | TInferAbortStrategyReturn<TStrategy>> {
   return (instance as ICancellablePromiseInternal<T, TStrategy>)[CANCELLABLE_PROMISE_PRIVATE].promise;
 }
 
@@ -480,7 +480,7 @@ export class CancellablePromise<T, TStrategy extends TAbortStrategy = 'never'> i
     ConstructCancellablePromise<T, TStrategy>(this, promiseOrCallback, options);
   }
 
-  get promise(): Promise<T | TAbortStrategyReturn<TStrategy>> {
+  get promise(): Promise<T | TInferAbortStrategyReturn<TStrategy>> {
     return CancellablePromiseGetPromise<T, TStrategy>(this);
   }
 

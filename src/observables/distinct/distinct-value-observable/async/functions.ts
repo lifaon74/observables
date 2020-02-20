@@ -6,7 +6,7 @@ import { AbortReason } from '../../../../misc/reason/built-in/abort-reason';
 import { AdvancedAbortController } from '../../../../misc/advanced-abort-controller/implementation';
 import { IAdvancedAbortController } from '../../../../misc/advanced-abort-controller/interfaces';
 import { TAsyncDistinctValueObservableContextEmitFactory } from './context/types';
-import { PromiseTry } from '../../../../promises/helpers';
+import { PromiseTry } from '../../../../promises/types/helpers';
 
 /** FUNCTIONS **/
 

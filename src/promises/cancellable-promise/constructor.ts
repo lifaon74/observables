@@ -6,8 +6,8 @@ import {
   ICancellablePromiseNormalizedOptions, ICancellablePromiseOptions, TCancellablePromisePromiseOrCallback
 } from './types';
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
-import { IsPromiseLikeBase } from '../helpers';
-import { TAbortStrategy, TAbortStrategyReturn } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
+import { IsPromiseLikeBase } from '../types/helpers';
+import { TAbortStrategy, TInferAbortStrategyReturn } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 import { NormalizeICancellablePromiseOptions } from './functions';
 
 /** CONSTRUCTOR **/
@@ -43,7 +43,7 @@ export function ConstructCancellablePromise<T>(
         privates.isCancellablePromiseWithSameSignal
           ? promiseOrCallback
           : privates.signal.wrapPromise<T, never>(promiseOrCallback, privates)
-      ) as TPromise<T | TAbortStrategyReturn>;
+      ) as TPromise<T | TInferAbortStrategyReturn>;
     } else {
       throw new TypeError(`Expected Promise or function as CancellablePromise first argument.`);
     }
@@ -54,7 +54,7 @@ export function ConstructCancellablePromise<T>(
     privates.signal = _options.signal;
     privates.strategy = _options.strategy as TStrategy;
     privates.isCancellablePromiseWithSameSignal = IsCancellablePromiseWithSameSignal<T>(promiseOrCallback, instance);
-    privates.promise = promiseOrCallback as Promise<T | TAbortStrategyReturn>;
+    privates.promise = promiseOrCallback as Promise<T | TInferAbortStrategyReturn>;
   }
 }
 

@@ -1,7 +1,7 @@
 import { TPromise } from '../type-helpers';
 import { ICancellablePromise } from './interfaces';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
-import { TAbortStrategy, TAbortStrategyReturn } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
+import { TAbortStrategy, TInferAbortStrategyReturn } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 
 /** PRIVATES **/
 
@@ -9,7 +9,7 @@ export const CANCELLABLE_PROMISE_PRIVATE = Symbol('cancellable-promise-private')
 
 export interface ICancellablePromisePrivate<T> {
   // promise: TPromise<T>;
-  promise: TPromise<T | TAbortStrategyReturn<'never'>>;
+  promise: TPromise<T | TInferAbortStrategyReturn<'never'>>;
   signal: IAdvancedAbortSignal;
   isCancellablePromiseWithSameSignal: boolean;
 }

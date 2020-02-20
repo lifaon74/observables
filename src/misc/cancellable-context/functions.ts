@@ -8,7 +8,7 @@ import { IActivableLike } from '../activable/interfaces';
 import { ICancellablePromise } from '../../promises/cancellable-promise/interfaces';
 import { CancellablePromise } from '../../promises/cancellable-promise/implementation';
 import { TPromiseOrValue } from '../../promises/type-helpers';
-import { PromiseTry } from '../../promises/helpers';
+import { PromiseTry } from '../../promises/types/helpers';
 import { ICancellablePromiseOptions } from '../../promises/cancellable-promise/types';
 import { TAbortStrategy } from '../advanced-abort-controller/advanced-abort-signal/types';
 

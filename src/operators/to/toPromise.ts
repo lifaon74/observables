@@ -14,7 +14,7 @@ import { IsFiniteStateObservable } from '../../notifications/observables/finite-
 import { TPromiseObservableNotifications } from '../../notifications/observables/finite-state/built-in/promise/promise-observable/types';
 import { IAdvancedAbortController } from '../../misc/advanced-abort-controller/interfaces';
 import {
-  IAdvancedAbortSignalWrapPromiseOptions, TAbortStrategy, TAbortStrategyReturn
+  IAdvancedAbortSignalWrapPromiseOptions, TAbortStrategy, TInferAbortStrategyReturn
 } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 import { AdvancedAbortController } from '../../misc/advanced-abort-controller/implementation';
 import { IsAdvancedAbortController } from '../../misc/advanced-abort-controller/constructor';
@@ -41,7 +41,7 @@ function ObservableToCancellablePromiseTupleOptionsToController(options: IObserv
 export function genericObservableToCancellablePromiseTuple<T, TStrategy extends TAbortStrategy>(
   observable: IObservable<T>,
   options?: IObservableToCancellablePromiseTupleOptions<TStrategy>,
-): ICancellablePromiseTuple<T | TAbortStrategyReturn<TStrategy>> {
+): ICancellablePromiseTuple<T | TInferAbortStrategyReturn<TStrategy>> {
   const controller: IAdvancedAbortController = ObservableToCancellablePromiseTupleOptionsToController(options);
   return {
     promise: controller.signal.wrapPromise<T, TStrategy, never>((resolve: (value?: TPromiseOrValue<T>) => void) => {
@@ -80,7 +80,7 @@ export function finiteStateObservableToCancellablePromiseTuple<TValue,
   TStrategy extends TAbortStrategy>(
   observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
   options?: IObservableToCancellablePromiseTupleOptions<TStrategy>,
-): ICancellablePromiseTuple<TValue[] | TAbortStrategyReturn<TStrategy>> {
+): ICancellablePromiseTuple<TValue[] | TInferAbortStrategyReturn<TStrategy>> {
   const controller: IAdvancedAbortController = ObservableToCancellablePromiseTupleOptionsToController(options);
   return {
     promise: controller.signal.wrapPromise<TValue[], TStrategy, never>((resolve: (value?: TPromiseOrValue<TValue[]>) => void, reject: (reason?: any) => void) => {
@@ -143,10 +143,10 @@ export function singleFiniteStateObservableToCancellablePromiseTuple<TValue,
   TStrategy extends TAbortStrategy>(
   observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
   options?: IObservableToCancellablePromiseTupleOptions<TStrategy>,
-): ICancellablePromiseTuple<TValue | TAbortStrategyReturn<TStrategy> | void> {
-  const result: ICancellablePromiseTuple<TValue[] | TAbortStrategyReturn<TStrategy>> = finiteStateObservableToCancellablePromiseTuple<TValue, TFinalState, TMode, TKVMap, TStrategy>(observable, options);
+): ICancellablePromiseTuple<TValue | TInferAbortStrategyReturn<TStrategy> | void> {
+  const result: ICancellablePromiseTuple<TValue[] | TInferAbortStrategyReturn<TStrategy>> = finiteStateObservableToCancellablePromiseTuple<TValue, TFinalState, TMode, TKVMap, TStrategy>(observable, options);
   return {
-    promise: result.promise.then((result: TValue[] | TAbortStrategyReturn<TStrategy>): (TValue | void) => {
+    promise: result.promise.then((result: TValue[] | TInferAbortStrategyReturn<TStrategy>): (TValue | void) => {
       if (Array.isArray(result) && (result.length > 0)) {
         return result[result.length - 1];
       } else {
@@ -163,11 +163,11 @@ export function singleFiniteStateObservableToCancellablePromiseTuple<TValue,
 export function toCancellablePromiseTuple<T, TStrategy extends TAbortStrategy>(
   observable: TFiniteStateObservableGeneric<T> | IObservable<T>,
   options?: IObservableToCancellablePromiseTupleOptions<TStrategy>,
-): ICancellablePromiseTuple<T | TAbortStrategyReturn<TStrategy> | void> {
+): ICancellablePromiseTuple<T | TInferAbortStrategyReturn<TStrategy> | void> {
   if (IsFiniteStateObservable(observable)) {
     return singleFiniteStateObservableToCancellablePromiseTuple<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>, TStrategy>(observable, options);
   } else if (IsObservable(observable)) {
-    return genericObservableToCancellablePromiseTuple<T, TStrategy>(observable as IObservable<T>, options) as ICancellablePromiseTuple<T | TAbortStrategyReturn<TStrategy> | void>;
+    return genericObservableToCancellablePromiseTuple<T, TStrategy>(observable as IObservable<T>, options) as ICancellablePromiseTuple<T | TInferAbortStrategyReturn<TStrategy> | void>;
   } else {
     throw new TypeError(`Expected Observable as observable`);
   }
@@ -178,7 +178,7 @@ export function toCancellablePromiseTuple<T, TStrategy extends TAbortStrategy>(
 export function genericObservableToPromise<T, TStrategy extends TAbortStrategy>(
   observable: IObservable<T>,
   options?: IObservableToCancellablePromiseTupleOptions<TStrategy>,
-): Promise<T | TAbortStrategyReturn<TStrategy>> {
+): Promise<T | TInferAbortStrategyReturn<TStrategy>> {
   return genericObservableToCancellablePromiseTuple<T, TStrategy>(observable, options).promise;
 }
 
@@ -190,7 +190,7 @@ export function finiteStateObservableToPromise<TValue,
   TStrategy extends TAbortStrategy>(
   observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
   options?: IObservableToCancellablePromiseTupleOptions<TStrategy>,
-): Promise<TValue[] | TAbortStrategyReturn<TStrategy>> {
+): Promise<TValue[] | TInferAbortStrategyReturn<TStrategy>> {
   return finiteStateObservableToCancellablePromiseTuple<TValue, TFinalState, TMode, TKVMap, TStrategy>(observable, options).promise;
 }
 
@@ -201,13 +201,13 @@ export function singleFiniteStateObservableToPromise<TValue,
   TStrategy extends TAbortStrategy>(
   observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
   options?: IObservableToCancellablePromiseTupleOptions<TStrategy>,
-): Promise<TValue | TAbortStrategyReturn<TStrategy> | void> {
+): Promise<TValue | TInferAbortStrategyReturn<TStrategy> | void> {
   return singleFiniteStateObservableToCancellablePromiseTuple<TValue, TFinalState, TMode, TKVMap, TStrategy>(observable, options).promise;
 }
 
 export function toPromise<T, TStrategy extends TAbortStrategy>(
   observable: TFiniteStateObservableGeneric<T> | IObservable<T>,
   options?: IObservableToCancellablePromiseTupleOptions<TStrategy>,
-): Promise<T | TAbortStrategyReturn<TStrategy> | void> {
+): Promise<T | TInferAbortStrategyReturn<TStrategy> | void> {
   return toCancellablePromiseTuple<T, TStrategy>(observable, options).promise;
 }
