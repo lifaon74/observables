@@ -19,6 +19,7 @@ import { NewFiniteStateObservableContext } from './context/implementation';
 import {
   NormalizeFiniteStateObservableFinalStates, NormalizeFiniteStateObservableMode, NormalizeFiniteStateObservableModes
 } from './functions';
+import { IObserver } from '../../../core/observer/interfaces';
 
 
 /** CONSTRUCTOR **/
@@ -37,6 +38,7 @@ export function ConstructFiniteStateObservable<TValue,
 
   privates.context = context;
   privates.values = [];
+  privates.lastValueIndexPerObserver = new WeakMap<IObserver<KeyValueMapToNotifications<TKVMap>>, number>();
 
   if (IsObject(options)) {
     privates.finalStates = NormalizeFiniteStateObservableFinalStates<TFinalState>(options.finalStates);

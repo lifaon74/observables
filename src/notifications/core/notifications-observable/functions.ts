@@ -12,11 +12,11 @@ import { IObservable } from '../../../core/observable/interfaces';
 
 /** FUNCTIONS **/
 
-export type INotificationsObservableMatchOptionStrict = Required<INotificationsObservableMatchOptions>;
+export type INotificationsObservableMatchNormalizedOption = Required<INotificationsObservableMatchOptions>;
 
-export function NormalizeNotificationsObservableMatchOptions(options: INotificationsObservableMatchOptions = {}): INotificationsObservableMatchOptionStrict {
+export function NormalizeNotificationsObservableMatchOptions(options: INotificationsObservableMatchOptions = {}): INotificationsObservableMatchNormalizedOption {
   if (IsObject(options)) {
-    const _options: INotificationsObservableMatchOptionStrict = {} as INotificationsObservableMatchOptionStrict;
+    const _options: INotificationsObservableMatchNormalizedOption = {} as INotificationsObservableMatchNormalizedOption;
 
     _options.includeGlobalObservers = Boolean(options.includeGlobalObservers);
 

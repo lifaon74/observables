@@ -31,8 +31,11 @@ export type TFiniteStateObservableMode =
   'once' // (default) does not cache any values => after the final state (TFinalState), no observers will ever receive a value ('next')
   | 'uniq' // does not cache any values => after the final state, throws an error if a new observer observes 'next' or TFinalState.
   | 'cache' // caches own notifications ('next' and TFinalState). Every observer will receive the whole list of own emitted notifications
+  | 'cache-per-observer' // like 'cache' but remembers each observer to emits only new values
   | 'cache-final-state' // caches TFinalState notification. Every observer will receive this final state notification
+  | 'cache-final-state-per-observer'
   | 'cache-all' // caches all notifications (including ones with a different name than 'next', and TFinalState). Every observer will receive the whole list of all emitted notifications
+  | 'cache-all-per-observer'
   ;
 
 // constraints TMode to be a superset of TFiniteStateObservableMode

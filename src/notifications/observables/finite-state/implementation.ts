@@ -28,7 +28,10 @@ import {
   TFiniteStateObservableState
 } from './types';
 import { ConstructFiniteStateObservable, IS_COMPLETE_STATE_OBSERVABLE_CONSTRUCTOR } from './constructor';
-import { IsFiniteStateObservableFinalState, IsFiniteStateObservableNextState } from './functions';
+import {
+  IsFiniteStateObservableCachingValuesPerObserverMode, IsFiniteStateObservableFinalState,
+  IsFiniteStateObservableNextState
+} from './functions';
 
 
 /** CONSTRUCTOR FUNCTIONS **/
@@ -54,8 +57,16 @@ export function FiniteStateObservableOnObserved<TValue,
     }
   }
 
+  const startIndex: number = (
+    IsFiniteStateObservableCachingValuesPerObserverMode(privates.mode)
+    && privates.lastValueIndexPerObserver.has(observer)
+  )
+    ? privates.lastValueIndexPerObserver.get(observer) as number
+    : 0;
+
+
   // INFO privates.values is empty if not cached
-  for (let i = 0, l = privates.values.length; i < l; i++) {
+  for (let i = startIndex, l = privates.values.length; i < l; i++) {
     observer.emit(privates.values[i]);
   }
 
@@ -66,7 +77,11 @@ export function FiniteStateObservableOnUnobserved<TValue,
   TFinalState extends TFinalStateConstraint<TFinalState>,
   TMode extends TFiniteStateObservableModeConstraint<TMode>,
   TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>>(instance: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>, observer: IObserver<KeyValueMapToNotifications<TKVMap>>): void {
-  (instance as IFiniteStateObservableInternal<TValue, TFinalState, TMode, TKVMap>)[FINITE_STATE_OBSERVABLE_PRIVATE].onUnobserveHook(observer);
+  const privates: IFiniteStateObservablePrivate<TValue, TFinalState, TMode, TKVMap> = (instance as IFiniteStateObservableInternal<TValue, TFinalState, TMode, TKVMap>)[FINITE_STATE_OBSERVABLE_PRIVATE];
+  if (IsFiniteStateObservableCachingValuesPerObserverMode(privates.mode)) {
+    privates.lastValueIndexPerObserver.set(observer, privates.values.length);
+  }
+  privates.onUnobserveHook(observer);
 }
 
 /** METHODS **/

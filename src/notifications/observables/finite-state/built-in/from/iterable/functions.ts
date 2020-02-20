@@ -3,17 +3,18 @@ import { IFromIterableObservableOptions, TSyncOrAsyncIterable } from './types';
 
 /** FUNCTIONS **/
 
-export interface IFromIterableObservableOptionsStrict extends IFromIterableObservableOptions {
+export interface IFromIterableObservableNormalizedOptions extends IFromIterableObservableOptions {
   isAsync: boolean;
 }
 
-export interface IFromIterableObservableNormalizedArguments<TIterable extends TSyncOrAsyncIterable<any>> extends IFromIterableObservableOptionsStrict {
+export interface IFromIterableObservableNormalizedArguments<TIterable extends TSyncOrAsyncIterable<any>> extends IFromIterableObservableNormalizedOptions {
   iterable: TIterable;
 }
 
 export function NormalizeFromIterableObservableOptionsAndIterable<TIterable extends TSyncOrAsyncIterable<any>>(iterable: TIterable, options: IFromIterableObservableOptions = {}): IFromIterableObservableNormalizedArguments<TIterable> {
   const args: IFromIterableObservableNormalizedArguments<TIterable> = {
-    iterable
+    iterable,
+    ...options
   } as IFromIterableObservableNormalizedArguments<TIterable>;
 
   const isIterable: boolean = IsIterable(iterable);

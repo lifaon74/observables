@@ -69,7 +69,7 @@ export function NormalizeFiniteStateObservableFinalStates<TFinalState extends TF
  * Creates a Set containing the default modes of a FiniteStateObservable
  */
 export function GetFiniteStateObservableDefaultModes(): Set<TFiniteStateObservableMode> {
-  return new Set<TFiniteStateObservableMode>(['once', 'uniq', 'cache', 'cache-final-state', 'cache-all'] as TFiniteStateObservableMode[]);
+  return new Set<TFiniteStateObservableMode>(['once', 'uniq', 'cache', 'cache-per-observer', 'cache-final-state',  'cache-final-state-per-observer', 'cache-all', 'cache-all-per-observer'] as TFiniteStateObservableMode[]);
 }
 
 /**
@@ -141,13 +141,24 @@ export function IsFiniteStateObservableNextState(name: string): boolean {
   return (name === 'next');
 }
 
+/**
+ * Returns true if 'mode' implies caching some per observer
+ */
+export function IsFiniteStateObservableCachingValuesPerObserverMode<TMode extends TFiniteStateObservableModeConstraint<TMode>>(mode: TMode): boolean {
+  return (
+    (mode === 'cache-per-observer')
+    || (mode === 'cache-final-state-per-observer')
+    || (mode === 'cache-all-per-observer')
+  );
+}
 
 /**
  * Returns true if 'mode' implies caching some values
  */
 export function IsFiniteStateObservableCachingValuesMode<TMode extends TFiniteStateObservableModeConstraint<TMode>>(mode: TMode): boolean {
   return (
-    (mode === 'cache')
+    IsFiniteStateObservableCachingValuesPerObserverMode<TMode>(mode)
+    || (mode === 'cache')
     || (mode === 'cache-final-state')
     || (mode === 'cache-all')
   );
@@ -187,9 +198,14 @@ export function FiniteStateObservableOnEmit<TValue,
     if (privates.state === 'next') {
       if (
         (privates.mode === 'cache')
+        || (privates.mode === 'cache-per-observer')
         || (privates.mode === 'cache-all')
+        || (privates.mode === 'cache-all-per-observer')
         || (
-          (privates.mode === 'cache-final-state')
+          (
+            (privates.mode === 'cache-final-state')
+            || (privates.mode === 'cache-final-state-per-observer')
+          )
           && isFinalState
         )
       ) {
@@ -203,7 +219,10 @@ export function FiniteStateObservableOnEmit<TValue,
       ThrowFiniteStateObservableCannotEmitAfterFiniteState(privates.state, notification.name);
     }
   } else {
-    if (privates.mode === 'cache-all') {
+    if (
+      (privates.mode === 'cache-all')
+      || (privates.mode === 'cache-all-per-observer')
+    ) {
       privates.values.push(notification);
     }
   }

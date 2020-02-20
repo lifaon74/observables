@@ -22,7 +22,7 @@ import {
   INotificationsObservableMatchOptions, KeyValueMapToNotifications, KeyValueMapToNotificationsObservers,
   TNotificationsObservableConstructorArgs, TNotificationsObservableHook
 } from './types';
-import { INotificationsObservableMatchOptionStrict, NormalizeNotificationsObservableMatchOptions } from './functions';
+import { INotificationsObservableMatchNormalizedOption, NormalizeNotificationsObservableMatchOptions } from './functions';
 import { IsNotificationsObserver } from '../notifications-observer/constructor';
 
 
@@ -106,7 +106,7 @@ export function NotificationsObservableHasListener<TKVMap extends KeyValueMapGen
   callback?: (value: any) => void,
   options?: INotificationsObservableMatchOptions,
 ): boolean {
-  const _options: INotificationsObservableMatchOptionStrict = NormalizeNotificationsObservableMatchOptions(options);
+  const _options: INotificationsObservableMatchNormalizedOption = NormalizeNotificationsObservableMatchOptions(options);
   const privates: INotificationsObservablePrivate<TKVMap> = (instance as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE];
 
   if (
@@ -140,7 +140,7 @@ export function * NotificationsObservableMatches<TKVMap extends KeyValueMapGener
   callback?: (value: any) => void,
   options?: INotificationsObservableMatchOptions,
 ): Generator<IObserver<KeyValueMapToNotifications<TKVMap>>, void, undefined> {
-  const _options: INotificationsObservableMatchOptionStrict = NormalizeNotificationsObservableMatchOptions(options);
+  const _options: INotificationsObservableMatchNormalizedOption = NormalizeNotificationsObservableMatchOptions(options);
   const privates: INotificationsObservablePrivate<TKVMap> = (instance as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE];
 
   if (privates.observersMap.has(name as KeyValueMapKeys<TKVMap>)) {

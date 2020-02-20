@@ -1,5 +1,6 @@
 import { ILightPromiseLike, TInferLightPromiseLikeType, TInferPromiseLikeOrValue } from './promise-like';
 import { IAdvancedAbortController } from '../../misc/advanced-abort-controller/interfaces';
+import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 
 export type TPromiseStatus =
   'fulfilled' // promise is fulfilled
@@ -40,7 +41,7 @@ export type TInferNativePromiseOrValueFactoryTupleToUnionOfValues<TTuple extends
 
 export type INativeCancellablePromiseTuple<T> = {
   promise: Promise<T>,
-  controller: IAdvancedAbortController,
+  signal: IAdvancedAbortSignal,
 };
 
 export interface INativePromiseFulfilledObject<T> {

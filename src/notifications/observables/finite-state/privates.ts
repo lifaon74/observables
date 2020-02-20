@@ -7,6 +7,7 @@ import {
   TFinalStateConstraint, TFiniteStateKeyValueMapConstraint, TFiniteStateObservableModeConstraint,
   TFiniteStateObservableState
 } from './types';
+import { IObserver } from '../../../core/observer/interfaces';
 
 
 /** PRIVATES **/
@@ -19,6 +20,7 @@ export interface IFiniteStateObservablePrivate<TValue,
   TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>> extends IObservableHookPrivate<KeyValueMapToNotifications<TKVMap>> {
   context: INotificationsObservableContext<TKVMap>;
   values: KeyValueMapToNotifications<TKVMap>[];
+  lastValueIndexPerObserver: WeakMap<IObserver<KeyValueMapToNotifications<TKVMap>>, number>;
 
   finalStates: Set<TFinalState>;
   modes: Set<TMode>;

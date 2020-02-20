@@ -81,6 +81,6 @@ export function PromiseAllSettled<T>(promises: Iterable<Promise<T>>): Promise<TN
   );
 }
 
-export function SpreadCancellablePromiseTuple<T>({ promise, controller }: INativeCancellablePromiseTuple<T>): [Promise<T>, IAdvancedAbortSignal] {
-  return [promise, controller.signal];
+export function SpreadCancellablePromiseTuple<T>({ promise, signal }: INativeCancellablePromiseTuple<T>): [Promise<T>, IAdvancedAbortSignal] {
+  return [promise, signal];
 }
