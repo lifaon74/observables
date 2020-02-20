@@ -19,6 +19,8 @@ import {
 import { ConstructCancellableContext } from './constructor';
 import { AbortReason } from '../reason/built-in/abort-reason';
 import { ICancellablePromiseNormalizedOptions } from '../../promises/cancellable-promise/types';
+import { AdvancedAbortSignal } from '../advanced-abort-controller/advanced-abort-signal/implementation';
+import { IAdvancedAbortSignal } from '../advanced-abort-controller/advanced-abort-signal/interfaces';
 
 
 /** METHODS **/
@@ -54,7 +56,7 @@ export function CancellableContextPrivateRegisterCancellablePromiseFromFactory<T
   return CancellableContextPrivateRegisterCancellablePromise<T>(
     instance,
     key,
-    CancellablePromise.try<T, 'never'>(factory, { signal: controller.signal }),
+    CancellablePromise.try<T>(factory, { signal: controller.signal }),
     controller
   );
 }
@@ -153,9 +155,9 @@ export function CancellableContextRegisterActivable<TActivable extends IActivabl
   factory: TCancellableContextRegisterActivableFactory<TActivable>,
   options?: ICancellableContextRegisterActivableOptions,
 ): ICancellablePromise<TActivable> {
-  return CancellableContextRegisterCancellablePromise<TActivable>(instance, key, (options: ICancellablePromiseNormalizedOptions<'never'>) => {
+  return CancellableContextRegisterCancellablePromise<TActivable>(instance, key, (signal: IAdvancedAbortSignal) => {
     const activable: TActivable = factory();
-    return ActivableToCancellablePromise(activable, options)
+    return ActivableToCancellablePromise(activable, { signal })
       .then(() => activable);
   }, options);
 }

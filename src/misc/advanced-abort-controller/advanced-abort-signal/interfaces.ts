@@ -6,7 +6,6 @@ import {
   TAdvancedAbortSignalWrapPromiseArgument, TInferAbortStrategyReturnedPromise,
   TInferAdvancedAbortSignalWrapFunctionReturn
 } from './types';
-import { TPromiseLikeConstraint } from '../../../promises/types/promise-like';
 
 
 /** INSTANCE **/
@@ -37,12 +36,12 @@ export interface IAdvancedAbortSignal extends INotificationsObservable<IAdvanced
    *  controller.abort();
    *
    */
-  wrapPromise<T extends TPromiseLikeConstraint<T>>(
+  wrapPromise<T>(
     promiseOrCallback: TAdvancedAbortSignalWrapPromiseArgument<T>,
     options?: IAdvancedAbortSignalWrapPromiseOptions<'never', never>,
   ): TInferAbortStrategyReturnedPromise<T, 'never', never>;
 
-  wrapPromise<T extends TPromiseLikeConstraint<T>, TStrategy extends TAbortStrategy, TAborted extends TPromiseLikeConstraint<TAborted>>(
+  wrapPromise<T, TStrategy extends TAbortStrategy, TAborted>(
     promiseOrCallback: TAdvancedAbortSignalWrapPromiseArgument<T>,
     options?: IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted>,
   ): TInferAbortStrategyReturnedPromise<T, TStrategy, TAborted>;
@@ -82,7 +81,7 @@ export interface IAdvancedAbortSignal extends INotificationsObservable<IAdvanced
     options?: IAdvancedAbortSignalWrapPromiseOptions<'never', never>,
   ): TInferAdvancedAbortSignalWrapFunctionReturn<CB, 'never', never>;
 
-  wrapFunction<CB extends (...args: any[]) => any, TStrategy extends TAbortStrategy, TAborted extends TPromiseLikeConstraint<TAborted>>(
+  wrapFunction<CB extends (...args: any[]) => any, TStrategy extends TAbortStrategy, TAborted>(
     callback: CB,
     options?: IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted>,
   ): TInferAdvancedAbortSignalWrapFunctionReturn<CB, TStrategy, TAborted>;

@@ -1,8 +1,8 @@
 import { ICommandArgument } from './argument/interfaces';
 import { IReadonlySet } from '../../../src/misc/readonly-set/interfaces';
-import { TPromiseOrValue } from '../../../src/promises/type-helpers';
+import { TNativePromiseLikeOrValue } from '../../../src/promises/types/native';
 
-export type TCommandFunction = (this: ICommand, args: TCommandFunctionArguments) => TPromiseOrValue<void>;
+export type TCommandFunction = (this: ICommand, args: TCommandFunctionArguments) => TNativePromiseLikeOrValue<void>;
 export type TCommandFunctionArguments = { [key: string]: any };
 
 export interface ICommandOptions {

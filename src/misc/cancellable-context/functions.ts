@@ -7,10 +7,11 @@ import {
 import { IActivableLike } from '../activable/interfaces';
 import { ICancellablePromise } from '../../promises/cancellable-promise/interfaces';
 import { CancellablePromise } from '../../promises/cancellable-promise/implementation';
-import { TPromiseOrValue } from '../../promises/type-helpers';
 import { PromiseTry } from '../../promises/types/helpers';
 import { ICancellablePromiseOptions } from '../../promises/cancellable-promise/types';
 import { TAbortStrategy } from '../advanced-abort-controller/advanced-abort-signal/types';
+import { TNativePromiseLikeOrValue } from '../../promises/types/native';
+import { IAdvancedAbortSignal } from '../advanced-abort-controller/advanced-abort-signal/interfaces';
 
 /** FUNCTIONS **/
 
@@ -89,13 +90,13 @@ export function CancellableContextNormalizeKey(key: string | any[]): any[] {
  *  - deactivates the Activable if the AdvancedAbortSignal is aborted
  *  - resolves when the Activable is deactivated
  */
-export function ActivableToCancellablePromise<TStrategy extends TAbortStrategy>(activable: IActivableLike, options?: ICancellablePromiseOptions<TStrategy>): ICancellablePromise<void, TStrategy> {
-  return new CancellablePromise<void, TStrategy>((
-    resolve: (value?: TPromiseOrValue<void>) => void,
+export function ActivableToCancellablePromise(activable: IActivableLike, options?: ICancellablePromiseOptions): ICancellablePromise<void> {
+  return new CancellablePromise<void>((
+    resolve: (value?: TNativePromiseLikeOrValue<void>) => void,
     reject: (reason?: any) => void,
-    cancellablePromise: ICancellablePromise<void, TStrategy>
+    signal: IAdvancedAbortSignal
   ) => {
-    const signalAbortListener = cancellablePromise.signal.addListener('abort', () => {
+    const signalAbortListener = signal.addListener('abort', () => {
       signalAbortListener.deactivate();
       activable.deactivate();
     });
@@ -103,7 +104,7 @@ export function ActivableToCancellablePromise<TStrategy extends TAbortStrategy>(
 
     resolve(
       PromiseTry(() => activable.activate())
-        .then(() => UntilActivableDeactivated(activable, cancellablePromise))
+        .then(() => UntilActivableDeactivated(activable, { signal }))
         .then(() => {
           signalAbortListener.deactivate();
         })
@@ -114,11 +115,11 @@ export function ActivableToCancellablePromise<TStrategy extends TAbortStrategy>(
 /**
  * Creates a promise resolved when the Activable is deactivated
  */
-export function UntilActivableDeactivated<TStrategy extends TAbortStrategy>(activable: IActivableLike, options?: ICancellablePromiseOptions<TStrategy>): ICancellablePromise<void, TStrategy> {
-  return new CancellablePromise<void, TStrategy>((
-    resolve: (value?: TPromiseOrValue<void>) => void,
+export function UntilActivableDeactivated(activable: IActivableLike, options?: ICancellablePromiseOptions): ICancellablePromise<void> {
+  return new CancellablePromise<void>((
+    resolve: (value?: TNativePromiseLikeOrValue<void>) => void,
     reject: (reason?: any) => void,
-    cancellablePromise: ICancellablePromise<void, TStrategy>
+    signal: IAdvancedAbortSignal
   ) => {
     if (activable.activated) {
       let stateListener: () => void;
@@ -139,7 +140,7 @@ export function UntilActivableDeactivated<TStrategy extends TAbortStrategy>(acti
         }
       };
 
-      const signalAbortListener = cancellablePromise.signal.addListener('abort', () => {
+      const signalAbortListener = signal.addListener('abort', () => {
         clear();
       });
       signalAbortListener.activate();

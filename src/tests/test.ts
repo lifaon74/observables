@@ -597,10 +597,10 @@ export async function test() {
   // testInstanceof();
   // testPerformances();
   // testSignalingServer();
-  testPromises();
+  // testPromises();
   // testClasses();
   // testProgram();
-  // await testTask();
+  await testTask();
   // await testFactory();
   // await testUnit();
 

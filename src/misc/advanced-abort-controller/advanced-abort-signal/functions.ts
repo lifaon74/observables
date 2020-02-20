@@ -4,18 +4,12 @@ import { AbortNotification } from '../abort-notification';
 import { IsObject } from '../../../helpers';
 import { IAdvancedAbortSignalWrapPromiseOptions, TAbortStrategy, TInferAbortStrategyReturn } from './types';
 import {
-  PromiseFinally, NEVER_PROMISE, PromiseTry, VOID_PROMISE, PromiseFinallyNonConstrained,
-  TPromiseFinallySpreadArgumentsNonConstrained
+  PromiseFinally, NEVER_PROMISE, PromiseTry, VOID_PROMISE,
 } from '../../../promises/types/helpers';
 import { INotificationsObserver } from '../../../notifications/core/notifications-observer/interfaces';
 import { AdvancedAbortController } from '../implementation';
 import { IAdvancedAbortController } from '../interfaces';
 import { IsAdvancedAbortController } from '../constructor';
-import { IPromiseLike, KeysOfUnion, TPromiseLikeConstraint } from '../../../promises/types/promise-like';
-import {
-  IPromise, IPromiseNonConstrained, TMapPromiseLikeOrValueTupleToValueTuple
-} from '../../../promises/types/promise';
-import { $Promise } from '../../../promises/types/constants';
 
 
 /** FUNCTIONS **/
@@ -36,11 +30,11 @@ export function AdvancedAbortSignalAbort(instance: IAdvancedAbortSignal, reason:
 /**
  * Normalizes options provided to AdvancedAbortSignal.wrapPromise
  */
-export interface IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy extends TAbortStrategy, TAborted extends TPromiseLikeConstraint<TAborted>> extends IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted> {
+export interface IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy extends TAbortStrategy, TAborted> extends IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted> {
   strategy: TStrategy;
 }
 
-export function AdvancedAbortSignalNormalizeWrapPromiseOptions<TStrategy extends TAbortStrategy, TAborted extends TPromiseLikeConstraint<TAborted>>(options?: IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted>): IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted> {
+export function AdvancedAbortSignalNormalizeWrapPromiseOptions<TStrategy extends TAbortStrategy, TAborted>(options?: IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted>): IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted> {
   const _options: IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted> = {} as IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted>;
   if (options === void 0) {
     options = {};
@@ -88,15 +82,15 @@ export function AdvancedAbortSignalNormalizeWrapPromiseOptions<TStrategy extends
  *  - resolve: resolves with undefined
  *  - reject: rejects with instance.reason
  */
-export function ApplyAbortStrategy<TStrategy extends TAbortStrategy>(strategy?: TStrategy, reason?: string): IPromiseNonConstrained<TInferAbortStrategyReturn<TStrategy>> {
+export function ApplyAbortStrategy<TStrategy extends TAbortStrategy>(strategy?: TStrategy, reason?: string): Promise<TInferAbortStrategyReturn<TStrategy>> {
   switch (strategy) {
     case void 0:
     case 'never':
-      return NEVER_PROMISE as IPromiseNonConstrained<TInferAbortStrategyReturn<TStrategy>>;
+      return NEVER_PROMISE as Promise<TInferAbortStrategyReturn<TStrategy>>;
     case 'resolve':
-      return VOID_PROMISE as unknown as IPromiseNonConstrained<TInferAbortStrategyReturn<TStrategy>>;
+      return VOID_PROMISE as unknown as Promise<TInferAbortStrategyReturn<TStrategy>>;
     case 'reject':
-      return Promise.reject(reason) as IPromiseNonConstrained<TInferAbortStrategyReturn<TStrategy>>;
+      return Promise.reject(reason) as Promise<TInferAbortStrategyReturn<TStrategy>>;
     default:
       throw new TypeError(`Unexpected strategy: ${ strategy }`);
   }
@@ -106,7 +100,7 @@ export function ApplyAbortStrategyUsingAdvancedAbortSignalReason<TStrategy exten
   instance: IAdvancedAbortSignal,
   strategy?: TStrategy,
   reason: string = instance.reason
-): IPromiseNonConstrained<TInferAbortStrategyReturn<TStrategy>> {
+): Promise<TInferAbortStrategyReturn<TStrategy>> {
   return ApplyAbortStrategy<TStrategy>(strategy, reason);
 }
 
@@ -116,34 +110,34 @@ export function ApplyAbortStrategyUsingAdvancedAbortSignalReason<TStrategy exten
  *  - if undefined => applies specified abort strategy
  *  - else calls 'onAborted' with a new controller, and returns the result wrapped by this controller's signal
  */
-export function ApplyOnAbortCallback<TStrategy extends TAbortStrategy, TAborted extends TPromiseLikeConstraint<TAborted>>(
+export function ApplyOnAbortCallback<TStrategy extends TAbortStrategy, TAborted>(
   instance: IAdvancedAbortSignal,
   options: IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted>,
-): IPromiseNonConstrained<TAborted | TInferAbortStrategyReturn<TStrategy>> {
+): Promise<TAborted | TInferAbortStrategyReturn<TStrategy>> {
+  type T = TAborted | TInferAbortStrategyReturn<TStrategy>;
   if (typeof options.onAborted === 'function') {
     const newController: IAdvancedAbortController = options.onAbortedController as IAdvancedAbortController;
-    return newController.signal.wrapPromise<unknown, TStrategy, never>(
-      PromiseTry<unknown>(() => (options.onAborted as Function).call(instance, instance.reason, newController)),
+    return newController.signal.wrapPromise<T, TStrategy, never>(
+      PromiseTry<T>(() => (options.onAborted as Function).call(instance, instance.reason, newController)),
       {
         strategy: options.strategy,
       }
-    ) as IPromiseNonConstrained<TAborted | TInferAbortStrategyReturn<TStrategy>>;
+    );
   } else {
-    return ApplyAbortStrategyUsingAdvancedAbortSignalReason<TStrategy>(instance, options.strategy) as IPromiseNonConstrained<TAborted | TInferAbortStrategyReturn<TStrategy>>;
+    return ApplyAbortStrategyUsingAdvancedAbortSignalReason<TStrategy>(instance, options.strategy);
   }
 }
 
 /**
  * Returns a Promise resolving as soon as 'promise' is resolved or 'instance' is aborted
  */
-export function RaceAborted<T extends TPromiseLikeConstraint<T>>(
+export function RaceAborted<T>(
   instance: IAdvancedAbortSignal,
-  promise: IPromiseLike<T>,
-): IPromiseNonConstrained<T | void> {
+  promise: PromiseLike<T>,
+): Promise<T | void> {
   let observer: INotificationsObserver<'abort', void>;
-
-  const p1 = $Promise.race([
-    new $Promise<void>((resolve: any) => {
+  return Promise.race([
+    new Promise<void>((resolve: any) => {
       if (instance.aborted) {
         resolve();
       } else {
@@ -154,17 +148,12 @@ export function RaceAborted<T extends TPromiseLikeConstraint<T>>(
       }
     }),
     promise
-  ] as [
-    IPromise<void>,
-    IPromiseLike<T>,
-  ]);
-
-  return p1
-    .then(...PromiseFinally<unknown>(() => {
+  ])
+    .then(...PromiseFinally<T | void>(() => {
       if (observer !== void 0) {
         observer.deactivate();
       }
-    })) as IPromiseNonConstrained<T | void>;
+    }));
 }
 
 

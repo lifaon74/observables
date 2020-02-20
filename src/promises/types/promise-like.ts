@@ -1,5 +1,3 @@
-
-
 // very generic PromiseLike, used to infer its type
 export interface ILightPromiseLike<T> {
   then(cb: (value: T, ...args: any[]) => any): any;
@@ -38,9 +36,9 @@ export type TContainsThen<T> = KeysOfUnion<T> extends never
   // ? false
   : (
     'then' extends KeysOfUnion<T>
-  ? true
-  : false
-);
+      ? true
+      : false
+    );
 
 // INFO debug TContainsThen
 // const a: TContainsThen<unknown> = false;
@@ -86,13 +84,12 @@ export type TPromiseLikeConstraint<T> = TContainsThen<T> extends true ? never : 
 // better definition of a PromiseLike
 export interface IPromiseLike<T extends TPromiseLikeConstraint<T>> {
   then(): TInferPromiseLikeReturnedByThen<T, undefined, undefined>;
-  then<
-    TFulfilled extends TPromiseLikeFulfilledArgument<T>,
-  >(fulfilled: TFulfilled): TInferPromiseLikeReturnedByThen<T, TFulfilled, undefined>;
-  then<
-    TFulfilled extends TPromiseLikeFulfilledArgument<T>,
-    TRejected extends TPromiseLikeRejectedArgument
-  >(fulfilled: TFulfilled, rejected: TRejected): TInferPromiseLikeReturnedByThen<T, TFulfilled, TRejected>;
+
+  then<TFulfilled extends TPromiseLikeFulfilledArgument<T>,
+    >(fulfilled: TFulfilled): TInferPromiseLikeReturnedByThen<T, TFulfilled, undefined>;
+
+  then<TFulfilled extends TPromiseLikeFulfilledArgument<T>,
+    TRejected extends TPromiseLikeRejectedArgument>(fulfilled: TFulfilled, rejected: TRejected): TInferPromiseLikeReturnedByThen<T, TFulfilled, TRejected>;
 }
 
 // returns an IPromiseLike<T> if T fulfills the constraint, else returns never
@@ -199,15 +196,15 @@ export type TInferPromiseLikeReturnedByThen<Tin extends TPromiseLikeConstraint<T
   ;
 
 // infers returned value of the 'then' method of a PromiseLike, working on the TRejected definition. If one of the types is incorrect, returns never
-export type TInferPromiseLikeReturnedByThenReject<U  extends TPromiseLikeConstraint<U>, TRejected extends TPromiseLikeRejectedArgument> =
+export type TInferPromiseLikeReturnedByThenReject<U extends TPromiseLikeConstraint<U>, TRejected extends TPromiseLikeRejectedArgument> =
   TRejected extends (...args: any[]) => infer TRejectValue
     ? IPromiseLikeNonConstrained<U | TInferPromiseLikeOrValue<TRejectValue>>  // TRejected is a function
     : ( // TRejected is not a function
-      TRejected  extends (null | undefined)
+      TRejected extends (null | undefined)
         ? IPromiseLike<U | never> // TRejected is null
         : never
       )
-;
+  ;
 
 // returns an TInferPromiseLikeReturnedByThenReject<U, TRejected> if U fulfills the constraint, else returns never
 export type TInferPromiseLikeReturnedByThenRejectNonConstrained<U, TRejected extends TPromiseLikeRejectedArgument> =

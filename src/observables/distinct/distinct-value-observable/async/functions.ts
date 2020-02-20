@@ -32,5 +32,6 @@ export function AsyncDistinctValueObservableEmit<T>(
   return controller.signal.wrapPromise<T, 'never', never>(privates.promise)
     .then((value: T) => {
       privates.context.emit(value);
+      return value;
     });
 }

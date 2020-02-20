@@ -1,11 +1,10 @@
-import { TPromise } from '../type-helpers';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
-import { TAbortStrategy, TInferAbortStrategyReturn } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
+import { TAbortStrategy } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 import {
-  ICancellablePromiseFinallyOptions, ICancellablePromiseOptions, TCancellablePromiseCancelledReturn,
-  TCancellablePromiseCatchReturn, TCancellablePromiseOnCancelledArgument, TCancellablePromiseOnFinallyArgument,
-  TCancellablePromiseOnFulfilledArgument, TCancellablePromiseOnRejectedArgument, TCancellablePromisePromiseOrCallback,
-  TCancellablePromiseThenReturn
+  ICancellablePromiseFinallyOptions, ICancellablePromiseOptions, ICancellablePromiseToPromiseOptions,
+  TInferCancellablePromiseToPromiseReturn, TCancellablePromiseCancelledReturn, TCancellablePromiseCatchReturn,
+  TCancellablePromiseOnCancelledArgument, TCancellablePromiseOnFinallyArgument, TCancellablePromiseOnFulfilledArgument,
+  TCancellablePromiseOnRejectedArgument, TCancellablePromisePromiseOrCallback, TCancellablePromiseThenReturn
 } from './types';
 
 
@@ -149,7 +148,7 @@ export interface ICancellablePromiseConstructor {
  *  - 'then', 'catch', and 'finally' won't be called and 'promise' will never resolve (depends on strategy)
  *  - 'cancelled' is called whatever its place in the promise chain (won't wait on provided promise to resolve)
  */
-export interface ICancellablePromise<T> extends TPromise<T> {
+export interface ICancellablePromise<T> extends Promise<T> {
   readonly signal: IAdvancedAbortSignal; // the AdvancedAbortSignal associated with this CancellablePromise
 
   /**
@@ -199,7 +198,8 @@ export interface ICancellablePromise<T> extends TPromise<T> {
   finally(onFinally?: TCancellablePromiseOnFinallyArgument<T>, options?: ICancellablePromiseFinallyOptions): ICancellablePromise<T>;
 
 
-  toPromise<TStrategy extends TAbortStrategy>(): Promise<T | TInferAbortStrategyReturn<TStrategy>>;
+  toPromise(): TInferCancellablePromiseToPromiseReturn<T, 'never'>;
+  toPromise<TStrategy extends TAbortStrategy>(options: ICancellablePromiseToPromiseOptions<TStrategy> | undefined): TInferCancellablePromiseToPromiseReturn<T, TStrategy>;
 }
 
 /*

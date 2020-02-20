@@ -1,13 +1,14 @@
-import {
-  TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion, TPromiseStatus
-} from '../type-helpers';
 import { IsSubSet } from '../../classes/types';
+import {
+  TInferNativePromiseLikeOrValueTupleToValueTuple, TInferNativePromiseOrValueTupleToValueUnion,
+  TNativePromiseLikeOrValue, TPromiseStatus
+} from '../types/native';
 
 /** TYPES **/
 
 // promise is resolving => its final state is not known yet, but the promise's resolve/reject functions can't be called anymore
 
-export type TDeferredPromiseRaceReturn<TTuple extends TPromiseOrValue<any>[], TReference, TReturn> =
+export type TDeferredPromiseRaceReturn<TTuple extends TNativePromiseLikeOrValue<any>[], TReference, TReturn> =
   true extends {
     [key in keyof TTuple]: TTuple[key] extends Promise<infer T>
       ? IsSubSet<T, TReference>
@@ -15,8 +16,8 @@ export type TDeferredPromiseRaceReturn<TTuple extends TPromiseOrValue<any>[], TR
   }[keyof TTuple] ? TReturn : never;
 
 
-export type TDeferredPromiseAllReturn<TTuple extends TPromiseOrValue<any>[], TReference, TReturn> =
-  TPromiseOrValueTupleToValueTuple<TTuple> extends TReference
+export type TDeferredPromiseAllReturn<TTuple extends TNativePromiseLikeOrValue<any>[], TReference, TReturn> =
+  TInferNativePromiseLikeOrValueTupleToValueTuple<TTuple> extends TReference
     ? TReturn
     : never;
 
@@ -35,19 +36,19 @@ export interface IDeferredPromiseConstructor extends IDeferredPromiseCodes {
   // Equivalent of Promise.resolve
   resolve(): IDeferredPromise<void>;
 
-  resolve<T>(value: TPromiseOrValue<T>,): IDeferredPromise<T>;
+  resolve<T>(value: TNativePromiseLikeOrValue<T>,): IDeferredPromise<T>;
 
   // Equivalent of Promise.reject
   reject<T = never>(reason?: any,): IDeferredPromise<T>;
 
   // Equivalent of new Promise(_ => _(callback())
-  try<T>(callback: () => TPromiseOrValue<T>): IDeferredPromise<T>;
+  try<T>(callback: () => TNativePromiseLikeOrValue<T>): IDeferredPromise<T>;
 
   // Equivalent of Promise.race
-  race<TTuple extends TPromiseOrValue<any>[]>(values: TTuple): IDeferredPromise<TPromiseOrValueTupleToValueUnion<TTuple>>;
+  race<TTuple extends TNativePromiseLikeOrValue<any>[]>(values: TTuple): IDeferredPromise<TInferNativePromiseOrValueTupleToValueUnion<TTuple>>;
 
   // Equivalent of Promise.all
-  all<TTuple extends TPromiseOrValue<any>[]>(values: TTuple): Promise<TPromiseOrValueTupleToValueTuple<TTuple>>;
+  all<TTuple extends TNativePromiseLikeOrValue<any>[]>(values: TTuple): Promise<TInferNativePromiseLikeOrValueTupleToValueTuple<TTuple>>;
 
   /**
    * Creates a new DeferredPromise.
@@ -73,7 +74,7 @@ export interface IDeferredPromise<T> extends IDeferredPromiseCodes, Promise<T> {
    */
 
   // Resolves this DeferredPromise with value
-  resolve(value?: TPromiseOrValue<T>): this;
+  resolve(value?: TNativePromiseLikeOrValue<T>): this;
 
   // Rejects this DeferredPromise with value
   reject(reason?: any): this;
@@ -83,30 +84,30 @@ export interface IDeferredPromise<T> extends IDeferredPromiseCodes, Promise<T> {
    *  - kind of this.resolve(new Promise(_ => _(callback())))
    * @param callback
    */
-  try(callback: () => TPromiseOrValue<T>): this;
+  try(callback: () => TNativePromiseLikeOrValue<T>): this;
 
   /**
    * Resolves this DeferredPromise with the first value/promise to resolve from 'values'
    * @param values
    */
-  race<TTuple extends TPromiseOrValue<any>[]>(values: TTuple): TDeferredPromiseRaceReturn<TTuple, T, this>;
+  race<TTuple extends TNativePromiseLikeOrValue<any>[]>(values: TTuple): TDeferredPromiseRaceReturn<TTuple, T, this>;
 
   /**
    * Resolves this DeferredPromise when all 'values' are resolved
    * @param values
    */
-  all<TTuple extends TPromiseOrValue<any>[]>(values: TTuple): TDeferredPromiseAllReturn<TTuple, T, this>;
+  all<TTuple extends TNativePromiseLikeOrValue<any>[]>(values: TTuple): TDeferredPromiseAllReturn<TTuple, T, this>;
 
 
   // Equivalent of the 'then' of a Promise
   then<TResult1 = T, TResult2 = never>(
-    onFulfilled?: ((value: T) => TPromiseOrValue<TResult1>) | undefined | null,
-    onRejected?: ((reason: any) => TPromiseOrValue<TResult2>) | undefined | null
+    onFulfilled?: ((value: T) => TNativePromiseLikeOrValue<TResult1>) | undefined | null,
+    onRejected?: ((reason: any) => TNativePromiseLikeOrValue<TResult2>) | undefined | null
   ): IDeferredPromise<TResult1 | TResult2>;
 
   // Equivalent of the 'catch' of a Promise
   catch<TResult = never>(
-    onRejected?: ((reason: any) => TPromiseOrValue<TResult>) | undefined | null
+    onRejected?: ((reason: any) => TNativePromiseLikeOrValue<TResult>) | undefined | null
   ): IDeferredPromise<T | TResult>;
 
   // Equivalent of the 'finally' of a Promise

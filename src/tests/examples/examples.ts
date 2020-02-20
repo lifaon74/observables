@@ -19,7 +19,6 @@ import { INotificationsObserver } from '../../notifications/core/notifications-o
 import { FunctionObservable } from '../../observables/distinct/function-observable/sync/implementation';
 import { Expression } from '../../observables/distinct/expression/implementation';
 import { $equal, $expression } from '../../operators/shortcuts/public';
-import { ICancellablePromiseTuple } from '../../promises/type-helpers';
 import { SpreadCancellablePromiseTuple } from '../../promises/types/helpers';
 import { FiniteStateObservable } from '../../notifications/observables/finite-state/implementation';
 import { IFiniteStateObservable } from '../../notifications/observables/finite-state/interfaces';
@@ -48,6 +47,7 @@ import { ISource } from '../../observables/distinct/source/sync/interfaces';
 import { Source } from '../../observables/distinct/source/sync/implementation';
 import { EventKeyValueMapConstraint } from '../../notifications/observables/events/events-observable/types';
 import { $string } from '../../operators/shortcuts/others/$string';
+import { INativeCancellablePromiseTuple } from '../../promises/types/native';
 
 
 /**
@@ -708,7 +708,7 @@ async function observableToPromiseExample1(): Promise<void> {
   // provides CancelToken too, to detect cancellation
   observePromise(
     'fetch url with abort controller with using AdvancedAbortController',
-    ...SpreadCancellablePromiseTuple(singleFiniteStateObservableToCancellablePromiseTuple(new FetchObservable(url1, { signal: abortController.signal }), { strategy: 'reject' }) as ICancellablePromiseTuple<Response>)
+    ...SpreadCancellablePromiseTuple<Response>(singleFiniteStateObservableToCancellablePromiseTuple(new FetchObservable(url1, { signal: abortController.signal }), { strategy: 'reject' }) as INativeCancellablePromiseTuple<Response>)
   ); // will cancel
 }
 

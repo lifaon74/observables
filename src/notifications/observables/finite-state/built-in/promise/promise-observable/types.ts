@@ -3,9 +3,9 @@ import {
   TFiniteStateObservableMode
 } from '../../../types';
 import { IAdvancedAbortSignal } from '../../../../../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
-import { TPromiseOrValue } from '../../../../../../promises/type-helpers';
 import { KeyValueMapToNotifications } from '../../../../../core/notifications-observable/types';
 import { IPromiseObservable } from './interfaces';
+import { TNativePromiseLikeOrValue } from '../../../../../../promises/types/native';
 
 /** TYPES **/
 
@@ -25,4 +25,4 @@ export interface IPromiseObservableFromPromiseOptions extends IPromiseObservable
   // signal?: IAdvancedAbortSignal;
 }
 
-export type TPromiseObservableFactory<T> = (this: IPromiseObservable<T>, signal: IAdvancedAbortSignal) => TPromiseOrValue<T>;
+export type TPromiseObservableFactory<T> = (this: IPromiseObservable<T>, signal: IAdvancedAbortSignal) => TNativePromiseLikeOrValue<T>;

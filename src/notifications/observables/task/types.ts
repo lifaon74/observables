@@ -1,6 +1,7 @@
 import { IProgress } from '../../../misc/progress/interfaces';
 import { ITask} from './interfaces';
 import { ITaskContext } from './context/interfaces';
+import { TFiniteStateObservableFinalState } from '../finite-state/types';
 
 /** TYPES **/
 
@@ -13,7 +14,9 @@ export type TTaskState =
   | 'error' // task errored
   ;
 
-export interface ITaskKeyValueMap<TValue> {
+// export type TTaskFinalState = TFiniteStateObservableFinalState | 'abort';
+
+export interface ITaskKeyValueMap<TValue>/* extends TFiniteStateObservableKeyValueMapGeneric<>*/ {
   'start': void;
   'pause': void;
   'resume': void;

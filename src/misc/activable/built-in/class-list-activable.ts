@@ -1,5 +1,5 @@
 import { Activable } from '../implementation';
-import { TPromiseOrValue } from '../../../promises/type-helpers';
+import { TNativePromiseLikeOrValue } from '../../../promises/types/native';
 
 /**
  * Activable for a list of classes on a element.
@@ -13,10 +13,10 @@ export class ClassListActivable extends Activable {
 
   constructor(target: Element, classNames: Iterable<string>) {
     super({
-      activate: (): TPromiseOrValue<void> => {
+      activate: (): TNativePromiseLikeOrValue<void> => {
         this._target.classList.add(...this._classNames);
       },
-      deactivate: (): TPromiseOrValue<void> => {
+      deactivate: (): TNativePromiseLikeOrValue<void> => {
         this._target.classList.remove(...this._classNames);
       }
     });
