@@ -1,17 +1,25 @@
 import { FromIterableObservable } from '../../../../notifications/observables/finite-state/built-in/from/iterable/implementation';
 import { $delay } from '../../../../promises/cancellable-promise/snipets';
 import { finiteStateObservableToPromise } from '../../../../operators/to/toPromise';
+import { finiteStateObservableToAsyncIterable } from '../../../../operators/to/toAsyncIterable';
 
-
-async function debugFiniteStateObservableUsingAsyncIterator() {
-  const asyncIterator = (async function * () {
-    for (let i = 0; i < 10; i++) {
-      await $delay(1000);
+async function * GenerateIterableObservable(start: number, end: number, delay: number, debug: boolean = true): AsyncGenerator<number> {
+  for (let i: number = start; i < end; i++) {
+    await $delay(delay);
+    if (debug) {
       console.log('yielding', i);
-      yield i;
     }
-  })();
+    yield i;
+  }
+}
 
+/**
+ * TODO continue here
+ * - replace Task by FiniteStateObservable
+ * - provide examples and use cases
+ */
+async function debugFiniteStateObservableUsingAsyncIterator() {
+  const asyncIterator = GenerateIterableObservable(0, 10, 1000);
 
   const observable = new FromIterableObservable(asyncIterator, { mode: 'cache-per-observer' })
     .on('complete', () => {
@@ -35,7 +43,17 @@ async function debugFiniteStateObservableUsingAsyncIterator() {
   console.log(values);
 }
 
+async function debugFiniteStateObservableToAsyncIterator() {
+  const asyncIterator = GenerateIterableObservable(0, 10, 100);
+
+  const observable = new FromIterableObservable(asyncIterator, { mode: 'cache-per-observer' });
+
+  for await (const value of finiteStateObservableToAsyncIterable(observable)) {
+    console.log('value', value);
+  }
+}
 
 export async function debugFiniteStateObservable() {
-  await debugFiniteStateObservableUsingAsyncIterator();
+  // await debugFiniteStateObservableUsingAsyncIterator();
+  await debugFiniteStateObservableToAsyncIterator();
 }

@@ -4,7 +4,7 @@ import { NotificationsObserver } from '../../notifications/core/notifications-ob
 import { EventsObservable } from '../../notifications/observables/events/events-observable/implementation';
 import { FetchObservable } from '../../notifications/observables/finite-state/built-in/promise/fetch-observable/implementation';
 import {
-  singleFiniteStateObservableToCancellablePromiseTuple, singleFiniteStateObservableToPromise
+  lastFiniteStateObservableValueToCancellablePromiseTuple, lastFiniteStateObservableValueToPromise
 } from '../../operators/to/toPromise';
 import { Reason } from '../../misc/reason/implementation';
 import { PromiseObservable } from '../../notifications/observables/finite-state/built-in/promise/promise-observable/implementation';
@@ -695,20 +695,20 @@ async function observableToPromiseExample1(): Promise<void> {
   const url1: string = 'https://server.test-cors.org/server?id=643798&enable=true&status=200&credentials=false&response_headers=Access-Control-Allow-Origin%3A%20*'; // valid cors url
   const url2: string = 'https://invalid url'; // invalid  url
 
-  observePromise('fetch url 1', singleFiniteStateObservableToPromise(new FetchObservable(url1)) as Promise<Response>); // will complete
-  observePromise('fetch url 2', singleFiniteStateObservableToPromise(new FetchObservable(url2)) as Promise<Response>); // will error
+  observePromise('fetch url 1', lastFiniteStateObservableValueToPromise(new FetchObservable(url1)) as Promise<Response>); // will complete
+  observePromise('fetch url 2', lastFiniteStateObservableValueToPromise(new FetchObservable(url2)) as Promise<Response>); // will error
 
   const abortController: AbortController = new AbortController();
   observePromise(
     'fetch url with abort controller',
-    singleFiniteStateObservableToPromise(new FetchObservable(url1, { signal: abortController.signal }), { strategy: 'reject' }) as Promise<Response>
+    lastFiniteStateObservableValueToPromise(new FetchObservable(url1, { signal: abortController.signal }), { strategy: 'reject' }) as Promise<Response>
   ); // will cancel
   abortController.abort();
 
   // provides CancelToken too, to detect cancellation
   observePromise(
     'fetch url with abort controller with using AdvancedAbortController',
-    ...SpreadCancellablePromiseTuple<Response>(singleFiniteStateObservableToCancellablePromiseTuple(new FetchObservable(url1, { signal: abortController.signal }), { strategy: 'reject' }) as INativeCancellablePromiseTuple<Response>)
+    ...SpreadCancellablePromiseTuple<Response>(lastFiniteStateObservableValueToCancellablePromiseTuple(new FetchObservable(url1, { signal: abortController.signal }), { strategy: 'reject' }) as INativeCancellablePromiseTuple<Response>)
   ); // will cancel
 }
 

@@ -4,7 +4,7 @@ import { Observer } from '../core/observer/implementation';
 import { PromiseObservable } from '../notifications/observables/finite-state/built-in/promise/promise-observable/implementation';
 import { IObservable } from '../core/observable/interfaces';
 import {
-  singleFiniteStateObservableToPromise
+  lastFiniteStateObservableValueToPromise
 } from '../operators/to/toPromise';
 import { IFunctionObservable } from '../observables/distinct/function-observable/sync/interfaces';
 import { IsObject } from '../helpers';
@@ -131,7 +131,7 @@ export function assertPipe(values: any[], timeout?: number, equalFunction?: (a: 
 }
 
 export function assertObservableEmits(observable: IObservable<any>, values: any[], timeout?: number, equalFunction?: (a: any, b: any) => boolean): Promise<void> {
-  return singleFiniteStateObservableToPromise(
+  return lastFiniteStateObservableValueToPromise(
     observable.pipeThrough(assertPipe(values, timeout, equalFunction))
   );
 }

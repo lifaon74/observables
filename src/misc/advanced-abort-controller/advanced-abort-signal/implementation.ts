@@ -11,12 +11,14 @@ import {
   TInferAdvancedAbortSignalWrapFunctionReturn
 } from './types';
 import {
-  AdvancedAbortSignalNormalizeWrapPromiseOptions, ApplyOnAbortCallback, IAdvancedAbortSignalWrapPromiseNormalizedOptions,
-  LinkAdvancedAbortSignalWithFetchArgumentsSpread, RaceAborted
+  ApplyOnAbortCallback, LinkAdvancedAbortSignalWithFetchArgumentsSpread, RaceAborted
 } from './functions';
 import { IsPromiseLikeBase, PromiseTry } from '../../../promises/types/helpers';
 import { clearImmediate, setImmediate } from '../../../classes/set-immediate';
 import { TInferNativePromiseLikeOrValue, TNativePromiseLikeOrValue } from '../../../promises/types/native';
+import {
+  NormalizeAdvancedAbortSignalWrapPromiseOptions, IAdvancedAbortSignalWrapPromiseNormalizedOptions
+} from './helpers';
 
 
 /** NEW **/
@@ -190,7 +192,7 @@ export class AdvancedAbortSignal extends NotificationsObservable<IAdvancedAbortS
     promiseOrCallback: TAdvancedAbortSignalWrapPromiseArgument<T>,
     options?: IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted>,
   ): TInferAbortStrategyReturnedPromise<T, TStrategy, TAborted> {
-    return AdvancedAbortSignalWrapPromiseOrCreate<T, TStrategy, TAborted>(this, promiseOrCallback, AdvancedAbortSignalNormalizeWrapPromiseOptions(options));
+    return AdvancedAbortSignalWrapPromiseOrCreate<T, TStrategy, TAborted>(this, promiseOrCallback, NormalizeAdvancedAbortSignalWrapPromiseOptions(options));
   }
 
   wrapFunction<CB extends (...args: any[]) => any>(
@@ -201,7 +203,7 @@ export class AdvancedAbortSignal extends NotificationsObservable<IAdvancedAbortS
     callback: CB,
     options: IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted> | undefined,
   ): TInferAdvancedAbortSignalWrapFunctionReturn<CB, TStrategy, TAborted> {
-    return AdvancedAbortSignalWrapFunction<CB, TStrategy, TAborted>(this, callback, AdvancedAbortSignalNormalizeWrapPromiseOptions(options));
+    return AdvancedAbortSignalWrapFunction<CB, TStrategy, TAborted>(this, callback, NormalizeAdvancedAbortSignalWrapPromiseOptions(options));
   }
 
   wrapFetchArguments(requestInfo: RequestInfo, requestInit?: RequestInit): [RequestInfo, RequestInit | undefined] {

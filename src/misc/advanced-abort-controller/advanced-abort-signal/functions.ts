@@ -2,14 +2,12 @@ import { IAdvancedAbortSignal } from './interfaces';
 import { ADVANCED_ABORT_SIGNAL_PRIVATE, IAdvancedAbortSignalInternal, IAdvancedAbortSignalPrivate } from './privates';
 import { AbortNotification } from '../abort-notification';
 import { IsObject } from '../../../helpers';
-import { IAdvancedAbortSignalWrapPromiseOptions, TAbortStrategy, TInferAbortStrategyReturn } from './types';
-import {
-  PromiseFinally, NEVER_PROMISE, PromiseTry, VOID_PROMISE,
-} from '../../../promises/types/helpers';
+import { TAbortStrategy, TInferAbortStrategyReturn } from './types';
+import { NEVER_PROMISE, PromiseFinally, PromiseTry, VOID_PROMISE, } from '../../../promises/types/helpers';
 import { INotificationsObserver } from '../../../notifications/core/notifications-observer/interfaces';
 import { AdvancedAbortController } from '../implementation';
 import { IAdvancedAbortController } from '../interfaces';
-import { IsAdvancedAbortController } from '../constructor';
+import { IAdvancedAbortSignalWrapPromiseNormalizedOptions } from './helpers';
 
 
 /** FUNCTIONS **/
@@ -24,55 +22,6 @@ export function AdvancedAbortSignalAbort(instance: IAdvancedAbortSignal, reason:
     privates.reason = reason;
     privates.context.emit(new AbortNotification(reason));
   }
-}
-
-
-/**
- * Normalizes options provided to AdvancedAbortSignal.wrapPromise
- */
-export interface IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy extends TAbortStrategy, TAborted> extends IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted> {
-  strategy: TStrategy;
-}
-
-export function AdvancedAbortSignalNormalizeWrapPromiseOptions<TStrategy extends TAbortStrategy, TAborted>(options?: IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted>): IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted> {
-  const _options: IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted> = {} as IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted>;
-  if (options === void 0) {
-    options = {};
-  } else if (!IsObject(options)) {
-    throw new TypeError(`Expected object or void as options`);
-  }
-
-  if (options.strategy === void 0) {
-    _options.strategy = 'never' as TStrategy;
-  } else if (['resolve', 'reject', 'never'].includes(options.strategy)) {
-    _options.strategy = options.strategy;
-  } else {
-    throw new TypeError(`Expected 'resolve', 'reject', 'never' or void as options.strategy`);
-  }
-
-  if (options.onAborted === void 0) {
-    _options.onAborted = void 0;
-  } else if (typeof options.onAborted === 'function') {
-    _options.onAborted = options.onAborted;
-  } else {
-    throw new TypeError(`Expected function or void as options.onAborted`);
-  }
-
-
-  if (options.onAbortedController === void 0) {
-    if (_options.onAborted !== void 0) {
-      _options.onAbortedController = new AdvancedAbortController();
-    }
-  } else if (IsAdvancedAbortController(options.onAbortedController)) {
-    if (_options.onAborted === void 0) {
-      throw new Error(`options.onAbortedController is defined but options.onAborted is missing`);
-    } else {
-      _options.onAbortedController = options.onAbortedController;
-    }
-  } else {
-    throw new TypeError(`Expected AdvancedAbortController or void as options.onAbortedController`);
-  }
-  return _options;
 }
 
 
