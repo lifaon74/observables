@@ -1,7 +1,6 @@
 import { IFiniteStateObservable } from '../../../interfaces';
 import { Notification } from '../../../../../core/notification/implementation';
 import { IObserver } from '../../../../../../core/observer/interfaces';
-import { INotificationsObserver } from '../../../../../core/notifications-observer/interfaces';
 import { FiniteStateObservableHookDefaultOnUnobserved } from '../../../helpers';
 import { KeyValueMapToNotifications } from '../../../../../core/notifications-observable/types';
 import {
@@ -15,13 +14,11 @@ import { AbortReason } from '../../../../../../misc/reason/built-in/abort-reason
 import { AdvancedAbortController } from '../../../../../../misc/advanced-abort-controller/implementation';
 import { IAdvancedAbortSignal } from '../../../../../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 
-
 /**
  * Generates an Hook for a FiniteStateObservable, based on a Promise:
  *  - when the Observable is freshly observed, calls the factory
  *  - emits 'next' when the promise is fulfilled, with the incoming value, then emits 'complete'
  *  - emits 'error' if promise is errored
- *  - emits 'abort' if promise is aborted from the factory
  *  - if the FiniteStateObservable is no more observed and the promise is still pending, aborts the signal, and resets the state
  */
 export function GenerateFiniteStateObservableHookFromPromise<TValue>(
@@ -36,11 +33,9 @@ export function GenerateFiniteStateObservableHookFromPromise<TValue>(
   type TKVMap = TFiniteStateObservableKeyValueMapGeneric<TValue, TFinalState>;
   return function (context: IFiniteStateObservableContext<TValue, TFinalState, TMode, TKVMap>) {
     let abortController: IAdvancedAbortController | null = null;
-    let signalObserver: INotificationsObserver<'abort', any>;
 
     const clear = () => {
       if (abortController !== null) {
-        signalObserver.deactivate();
         if (!abortController.signal.aborted) {
           abortController.abort(new AbortReason(`Observer stopped observing this promise`));
         }
@@ -58,11 +53,6 @@ export function GenerateFiniteStateObservableHookFromPromise<TValue>(
         ) {
           abortController = new AdvancedAbortController();
           const signal: IAdvancedAbortSignal = abortController.signal; // fix the signal
-
-          signalObserver = signal.addListener('abort', (reason: any) => {
-            context.emit(new Notification<'abort', any>('abort', reason));
-            clear();
-          }).activate();
 
           (signal.wrapFunction(promiseFactory).call(instance, signal) as Promise<TValue>)
             .then((value: TValue) => {
@@ -116,17 +106,11 @@ export function GenerateFiniteStateObservableHookFromPromiseForEachObservers<TVa
         function clear() {
           if (clearFunctions.has(observer)) {
             clearFunctions.delete(observer);
-            signalObserver.deactivate();
             if (!signal.aborted) {
               abortController.abort(new AbortReason(`Observer stopped observing this promise`));
             }
           }
         }
-
-        const signalObserver = signal.addListener('abort', (reason: any) => {
-          observer.emit(new Notification<'abort', any>('abort', reason));
-          clear();
-        }).activate();
 
         (signal.wrapFunction(promiseFactory).call(instance, signal) as Promise<TValue>)
           .then((value: TValue) => {

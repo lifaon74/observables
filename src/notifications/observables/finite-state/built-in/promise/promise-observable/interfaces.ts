@@ -4,7 +4,6 @@ import {
   TPromiseObservableFactory, TPromiseObservableFinalState, TPromiseObservableMode
 } from './types';
 
-
 /** INTERFACES **/
 
 export interface IPromiseObservableStatic extends Omit<IFiniteStateObservableConstructor, 'new'> {
