@@ -1,7 +1,7 @@
 import { FromIterableObservable } from '../../../../notifications/observables/finite-state/built-in/from/iterable/implementation';
 import { $delay } from '../../../../promises/cancellable-promise/snipets';
 import { finiteStateObservableToPromise } from '../../../../operators/to/toPromise';
-import { finiteStateObservableToAsyncIterable } from '../../../../operators/to/toAsyncIterable';
+import { toAsyncIterable } from '../../../../operators/to/toAsyncIterable';
 
 async function * GenerateIterableObservable(start: number, end: number, delay: number, debug: boolean = true): AsyncGenerator<number> {
   for (let i: number = start; i < end; i++) {
@@ -18,7 +18,7 @@ async function * GenerateIterableObservable(start: number, end: number, delay: n
  * - replace Task by FiniteStateObservable
  * - provide examples and use cases
  */
-async function debugFiniteStateObservableUsingAsyncIterator() {
+async function debugFiniteStateObservableToPromise() {
   const asyncIterator = GenerateIterableObservable(0, 10, 1000);
 
   const observable = new FromIterableObservable(asyncIterator, { mode: 'cache-per-observer' })
@@ -43,17 +43,40 @@ async function debugFiniteStateObservableUsingAsyncIterator() {
   console.log(values);
 }
 
-async function debugFiniteStateObservableToAsyncIterator() {
+async function debugFiniteStateObservableToAsyncIterator1() {
   const asyncIterator = GenerateIterableObservable(0, 10, 100);
 
   const observable = new FromIterableObservable(asyncIterator, { mode: 'cache-per-observer' });
 
-  for await (const value of finiteStateObservableToAsyncIterable(observable)) {
+  for await (const value of toAsyncIterable(observable)) {
     console.log('value', value);
   }
 }
 
+async function debugFiniteStateObservableParallel() {
+  const observable1 = new FromIterableObservable(GenerateIterableObservable(0, 10, 100), { mode: 'cache-per-observer' });
+  const observable2 = new FromIterableObservable(GenerateIterableObservable(10, 20, 100), { mode: 'cache-per-observer' });
+
+  // observable
+  //   .on('complete', () => {
+  //     console.log('complete');
+  //   })
+  //   .on('error', (error: any) => {
+  //     console.log('error', error);
+  //   })
+  //   .on('next', (value: any) => {
+  //     console.log('next', value);
+  //   });
+
+  // for await (const value of toAsyncIterable(observable)) {
+  //   console.log('value', value);
+  // }
+  // console.log('done');
+}
+
+
 export async function debugFiniteStateObservable() {
-  // await debugFiniteStateObservableUsingAsyncIterator();
-  await debugFiniteStateObservableToAsyncIterator();
+  // await debugFiniteStateObservableToPromise();
+  // await debugFiniteStateObservableToAsyncIterator();
+  await debugFiniteStateObservableParallel();
 }

@@ -38,7 +38,10 @@ export type TInferNativePromiseLikeOrValueFactoryTupleToValueTuple<TTuple extend
 export type TInferNativePromiseOrValueTupleToValueUnion<TTuple extends TInferNativePromiseLikeOrValue<any>[]> = TInferNativePromiseLikeOrValueTupleToValueTuple<TTuple>[Extract<keyof TTuple, number>];
 export type TInferNativePromiseOrValueFactoryTupleToUnionOfValues<TTuple extends TNativePromiseLikeOrValueFactory<any>[]> = TInferNativePromiseLikeOrValueFactoryTupleToValueTuple<TTuple>[Extract<keyof TTuple, number>];
 
-
+/**
+ * A tuple composed of a promise and an AdvancedAbortSignal
+ *  - the 'signal' is used to notify that the promise has been cancelled
+ */
 export type INativeCancellablePromiseTuple<T> = {
   promise: Promise<T>,
   signal: IAdvancedAbortSignal,

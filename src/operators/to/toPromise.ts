@@ -125,9 +125,9 @@ export function genericObservableToPromise<T, TStrategy extends TAbortStrategy>(
  *  - a 'promise' (Promise) which resolves when the 'observable' emits a 'complete' notification
  *    -> resolved value is an array composed of the values received through 'next'
  *    -> rejected value is the error received through 'error'
- *  - a 'signal' (IAdvancedAbortSignal), which aborts when an 'abort' notification is received
+ *  - a 'signal' (IAdvancedAbortSignal), which aborts when an 'abort' notification is received or when options.signal is aborted
  *
- *  -> if options.signal or 'observable' is aborted, the promise is aborted (may: reject, resolve undefined, or never resolve -> depending on the provided strategy)
+ *  -> if returned signal is aborted, the promise is aborted depending on the provided strategy (may: reject, resolve with undefined, or never resolve)
  */
 export function finiteStateObservableToCancellablePromiseTuple<TValue,
   TFinalState extends TFinalStateConstraint<TFinalState>,
