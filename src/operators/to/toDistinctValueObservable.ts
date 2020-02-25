@@ -11,9 +11,6 @@ export function toDistinctValueObservable<T>(observable: IPromiseObservable<T>):
     .on('error', (error: any) => {
       console.error('error', error);
     })
-    .on('abort', (reason: any) => {
-      console.warn('abort', reason);
-    })
     .pipeThrough(
       new Pipe<INotificationsObserver<'complete', T>,
         IObservable<T>>(() => {

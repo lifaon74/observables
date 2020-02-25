@@ -199,9 +199,6 @@ const observable = http(url)
   }) // generates a new activated Observer, the promiseFactory is called and the request starts
   .on('error', (reason: any) => {
     console.error('error', reason);
-  })
-  .on('abort', (reason: any) => {
-    console.warn('abort', reason);
   });
 ```
 
@@ -219,9 +216,6 @@ new FetchObservable(url)
   })
   .on('error', (error: any) => {
     console.error('error', error);
-  })
-  .on('abort', (reason: any) => {
-    console.warn('abort', reason);
   });
 ```
 
@@ -236,9 +230,6 @@ new FetchObservable(url)
   })
   .on('error', (error: any) => {
     console.error('error', error);
-  })
-  .on('abort', (reason: any) => {
-    console.warn('abort', reason);
   });
 ```
 

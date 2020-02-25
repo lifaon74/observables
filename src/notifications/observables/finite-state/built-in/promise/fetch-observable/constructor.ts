@@ -2,14 +2,15 @@ import { IFetchObservable } from './interfaces';
 import { IsObject } from '../../../../../../helpers';
 import { FETCH_OBSERVABLE_PRIVATE, IFetchObservableInternal, IFetchObservablePrivate } from './privates';
 import { ConstructClassWithPrivateMembers } from '../../../../../../misc/helpers/ClassWithPrivateMembers';
-import { IFetchObservableOptions } from './types';
+import { IFetchObservableOptions, IFetchObservableRequestInit } from './types';
+import { EnsureRequestInitDoesntContainSignal } from './functions';
 
 /** CONSTRUCTOR **/
 
 export function ConstructFetchObservable(
   instance: IFetchObservable,
   requestInfo: RequestInfo,
-  requestInit?: RequestInit,
+  requestInit?: IFetchObservableRequestInit,
   options: IFetchObservableOptions = {}
 ): void {
   ConstructClassWithPrivateMembers(instance, FETCH_OBSERVABLE_PRIVATE);
@@ -21,7 +22,8 @@ export function ConstructFetchObservable(
     throw new TypeError(`Expected string or Request as first parameter of FetchObservable's constructor.`);
   }
 
-  if ((typeof requestInit === 'object') && (requestInit !== null)) {
+  if (IsObject(requestInit)) {
+    EnsureRequestInitDoesntContainSignal(requestInit, 'FetchObservable');
     privates.requestInit = requestInit;
   } else if (requestInit !== void 0) {
     throw new TypeError(`Expected RequestInit or void as second parameter of FetchObservable's constructor.`);

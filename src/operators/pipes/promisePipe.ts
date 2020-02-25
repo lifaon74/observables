@@ -19,7 +19,8 @@ export function promisePipe<T, TResult1 = T, TResult2 = never>(
   onRejected: (reason: any, signal: IAdvancedAbortSignal) => TNativePromiseLikeOrValue<TResult2> = (error: any) => Promise.reject(error),
 ): IPipe<IObserver<TPromiseObservableNotifications<T>>,
   IPromiseObservable<TResult1 | TResult2>> {
-  return new Pipe<IObserver<TPromiseObservableNotifications<T>>,
+  type TNotification = TPromiseObservableNotifications<T>;
+  return new Pipe<IObserver<TNotification>,
     IPromiseObservable<TResult1 | TResult2>>(() => {
     if (typeof onFulfilled !== 'function') {
       throw new TypeError(`Expected function or void as onFulfilled`);
@@ -31,38 +32,35 @@ export function promisePipe<T, TResult1 = T, TResult2 = never>(
 
     let resolve: (value: TNativePromiseLikeOrValue<TResult1 | TResult2>) => void;
     let reject: (reason: any) => void;
-    let controller: IAdvancedAbortController;
+    let signal: IAdvancedAbortSignal;
     let value: T;
 
     return {
-      observer: new Observer<TPromiseObservableNotifications<T>>((notification: TPromiseObservableNotifications<T>) => {
-        if (!controller.signal.aborted) {
+      observer: new Observer<TNotification>((notification: TNotification) => {
+        if (!signal.aborted) {
           switch (notification.name) {
             case 'next':
               value = notification.value;
               break;
             case 'complete':
               try {
-                resolve(onFulfilled(value, controller.signal));
+                resolve(onFulfilled(value, signal));
               } catch (error) {
                 reject(error);
               }
               break;
             case 'error':
               try {
-                resolve(onRejected(notification.value, controller.signal));
+                resolve(onRejected(notification.value, signal));
               } catch (error) {
                 reject(error);
               }
               break;
-            case 'abort':
-              controller.abort(notification.value);
-              break;
           }
         }
       }),
-      observable: new PromiseObservable<TResult1 | TResult2>((signal: IAdvancedAbortSignal) => {
-        controller = AdvancedAbortController.fromAbortSignals(signal);
+      observable: new PromiseObservable<TResult1 | TResult2>((_signal: IAdvancedAbortSignal) => {
+        signal = _signal;
         return new Promise<TResult1 | TResult2>((_resolve, _reject) => {
           resolve = _resolve;
           reject = _reject;

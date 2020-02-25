@@ -2,14 +2,15 @@ import { IXHRObservable } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../../../../misc/helpers/ClassWithPrivateMembers';
 import { IXHRObservableInternal, IXHRObservablePrivate, XHR_OBSERVABLE_PRIVATE } from './privates';
 import { IsObject } from '../../../../../../helpers';
-import { IXHRObservableOptions } from './types';
+import { IXHRObservableOptions, IXHRObservableRequestInit } from './types';
+import { EnsureRequestInitDoesntContainSignal } from '../fetch-observable/functions';
 
 /** CONSTRUCTOR **/
 
 export function ConstructXHRObservable(
   instance: IXHRObservable,
   requestInfo: RequestInfo,
-  requestInit?: RequestInit,
+  requestInit?: IXHRObservableRequestInit,
   options: IXHRObservableOptions = {}
 ): void {
   ConstructClassWithPrivateMembers(instance, XHR_OBSERVABLE_PRIVATE);
@@ -22,6 +23,7 @@ export function ConstructXHRObservable(
   }
 
   if (IsObject(requestInit)) {
+    EnsureRequestInitDoesntContainSignal(requestInit, 'XHRObservable');
     privates.requestInit = requestInit;
   } else if (requestInit !== void 0) {
     throw new TypeError(`Expected RequestInit or void as second parameter of XHRObservable's constructor.`);

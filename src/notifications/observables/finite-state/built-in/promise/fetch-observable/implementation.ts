@@ -5,7 +5,7 @@ import { promisePipe } from '../../../../../../operators/pipes/promisePipe';
 import { IAdvancedAbortSignal } from '../../../../../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 import { FETCH_OBSERVABLE_PRIVATE, IFetchObservableInternal, IFetchObservablePrivate } from './privates';
 import { ConstructFetchObservable } from './constructor';
-import { IFetchObservableOptions, TFetchObservableCastKeyValueMap } from './types';
+import { IFetchObservableOptions, IFetchObservableRequestInit, TFetchObservableCastKeyValueMap } from './types';
 import { TNativePromiseLikeOrValue } from '../../../../../../promises/types/native';
 
 
@@ -38,7 +38,7 @@ export function FetchObservablePromiseTo<T>(instance: IFetchObservable, callback
 
 export class FetchObservable extends PromiseObservable<Response> implements IFetchObservable {
 
-  constructor(requestInfo: RequestInfo, requestInit?: RequestInit, options?: IFetchObservableOptions) {
+  constructor(requestInfo: RequestInfo, requestInit?: IFetchObservableRequestInit, options?: IFetchObservableOptions) {
     super((signal: IAdvancedAbortSignal): Promise<Response> => {
       return FetchObservablePromiseFactory(this, signal);
     }, options);

@@ -4,7 +4,7 @@ import { NotificationsObserver } from '../../notifications/core/notifications-ob
 import { EventsObservable } from '../../notifications/observables/events/events-observable/implementation';
 import { FetchObservable } from '../../notifications/observables/finite-state/built-in/promise/fetch-observable/implementation';
 import {
-  lastFiniteStateObservableValueToCancellablePromiseTuple, lastFiniteStateObservableValueToPromise
+  lastFiniteStateObservableValueToPromise
 } from '../../operators/to/toPromise';
 import { Reason } from '../../misc/reason/implementation';
 import { PromiseObservable } from '../../notifications/observables/finite-state/built-in/promise/promise-observable/implementation';
@@ -510,9 +510,6 @@ function promiseObservableExample1(): void {
     })
     .on('error', (reason: any) => {
       console.error('error', reason);
-    })
-    .on('abort', (reason: any) => {
-      console.warn('cancel', reason);
     });
 
   /*for (const observer of Array.from(observable.observers)) {
@@ -532,9 +529,6 @@ function observeFetchObservable(observable: IFetchObservable): IFetchObservable 
     })
     .on('error', (error: any) => {
       console.error('error', error);
-    })
-    .on('abort', (reason: any) => {
-      console.warn('cancelled', reason);
     });
 }
 
@@ -556,9 +550,7 @@ function fetchObservableExample1(): void {
   observeFetchObservable(new FetchObservable(url1)); // will complete
   observeFetchObservable(new FetchObservable(url2)); // will error
 
-  const abortController: AbortController = new AbortController();
-  observeFetchObservable(new FetchObservable(url1, { signal: abortController.signal })); // will cancel
-  abortController.abort();
+  observeFetchObservable(new FetchObservable(url1)).clearObservers(); // will cancel
 
 }
 
@@ -698,18 +690,18 @@ async function observableToPromiseExample1(): Promise<void> {
   observePromise('fetch url 1', lastFiniteStateObservableValueToPromise(new FetchObservable(url1)) as Promise<Response>); // will complete
   observePromise('fetch url 2', lastFiniteStateObservableValueToPromise(new FetchObservable(url2)) as Promise<Response>); // will error
 
-  const abortController: AbortController = new AbortController();
-  observePromise(
-    'fetch url with abort controller',
-    lastFiniteStateObservableValueToPromise(new FetchObservable(url1, { signal: abortController.signal }), { strategy: 'reject' }) as Promise<Response>
-  ); // will cancel
-  abortController.abort();
+  // const abortController: AbortController = new AbortController();
+  // observePromise(
+  //   'fetch url with abort controller',
+  //   lastFiniteStateObservableValueToPromise(new FetchObservable(url1), { strategy: 'reject' }) as Promise<Response>
+  // ); // will cancel
+  // abortController.abort();
 
-  // provides CancelToken too, to detect cancellation
-  observePromise(
-    'fetch url with abort controller with using AdvancedAbortController',
-    ...SpreadCancellablePromiseTuple<Response>(lastFiniteStateObservableValueToCancellablePromiseTuple(new FetchObservable(url1, { signal: abortController.signal }), { strategy: 'reject' }) as INativeCancellablePromiseTuple<Response>)
-  ); // will cancel
+  // // provides CancelToken too, to detect cancellation
+  // observePromise(
+  //   'fetch url with abort controller with using AdvancedAbortController',
+  //   ...SpreadCancellablePromiseTuple<Response>(lastFiniteStateObservableValueToCancellablePromiseTuple(new FetchObservable(url1, { signal: abortController.signal }), { strategy: 'reject' }) as INativeCancellablePromiseTuple<Response>)
+  // ); // will cancel
 }
 
 

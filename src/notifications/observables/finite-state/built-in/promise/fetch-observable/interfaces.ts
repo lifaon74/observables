@@ -1,11 +1,11 @@
 import { IPromiseObservable } from '../promise-observable/interfaces';
 import { INotificationsObservable } from '../../../../../core/notifications-observable/interfaces';
-import { IFetchObservableOptions, TFetchObservableCastKeyValueMap } from './types';
+import { IFetchObservableOptions, IFetchObservableRequestInit, TFetchObservableCastKeyValueMap } from './types';
 
 /** INTERFACES **/
 
 export interface IFetchObservableConstructor {
-  new(requestInfo: RequestInfo, requestInit?: RequestInit, options?: IFetchObservableOptions): IFetchObservable;
+  new(requestInfo: RequestInfo, requestInit?: IFetchObservableRequestInit, options?: IFetchObservableOptions): IFetchObservable;
 }
 
 /**

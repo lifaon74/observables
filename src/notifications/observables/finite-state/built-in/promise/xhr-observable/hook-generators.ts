@@ -14,7 +14,7 @@ import { IAdvancedAbortController } from '../../../../../../misc/advanced-abort-
 import { AbortReason } from '../../../../../../misc/reason/built-in/abort-reason';
 import { TFiniteStateObservableCreateCallback, TFiniteStateObservableMode } from '../../../types';
 import { IFiniteStateObservableContext } from '../../../context/interfaces';
-import { IXHRObservableKeyValueMap, TXHRObservableFinalState } from './types';
+import { IXHRObservableKeyValueMap, IXHRObservableRequestInit, TXHRObservableFinalState } from './types';
 
 
 export interface IGenerateFiniteStateObservableHookFromXHROptions {
@@ -26,22 +26,13 @@ export interface IGenerateFiniteStateObservableHookFromXHROptions {
  *  - when the Observable is freshly observed, starts the request
  *  - emits 'next' when the request if complete with the incoming value, then emits 'complete'
  *  - emits 'error' if promise is errored
- *  - emits 'abort' if promise is abortled from the factory
  *  - if the FiniteStateObservable is no more observed and the promise is still pending, aborts the request, and resets the state
  */
 export function GenerateFiniteStateObservableHookFromXHR(
   requestInfo: RequestInfo,
-  requestInit?: RequestInit,
+  requestInit?: IXHRObservableRequestInit,
   options: IGenerateFiniteStateObservableHookFromXHROptions = {},
 ): TFiniteStateObservableCreateCallback<Response, TXHRObservableFinalState, TFiniteStateObservableMode, IXHRObservableKeyValueMap> {
-
-  // if ((typeof requestInfo !== 'string') && !(requestInfo instanceof Request)) {
-  //   throw new TypeError(`Expected string or Request as first parameter.`);
-  // }
-  //
-  // if (!IsObject(requestInit) && (requestInit !== void 0)) {
-  //   throw new TypeError(`Expected RequestInit or void as second parameter.`);
-  // }
 
   const request: Request = new Request(requestInfo, requestInit);
 
@@ -121,13 +112,6 @@ export function GenerateFiniteStateObservableHookFromXHR(
             .on('progress', (event: ProgressEvent) => {
               if (xhr !== null) { // optional check
                 context.emit(new Notification<'progress', IProgress>('progress', Progress.fromEvent(event, 'download')));
-              }
-            })
-            .on('abort', () => {
-              if (xhr !== null) { // optional check
-                if (instance.observed) {
-                  context.emit(new Notification<'abort', AbortReason>('abort', new AbortReason(`XHR aborted`)));
-                }
               }
             })
           ;
