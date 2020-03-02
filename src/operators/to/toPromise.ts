@@ -11,12 +11,10 @@ import {
 } from '../../notifications/observables/finite-state/types';
 import { IsFiniteStateObservable } from '../../notifications/observables/finite-state/constructor';
 import { TPromiseObservableNotifications } from '../../notifications/observables/finite-state/built-in/promise/promise-observable/types';
-import { IAdvancedAbortController } from '../../misc/advanced-abort-controller/interfaces';
 import {
   TAbortStrategy, TInferAbortStrategyReturn
 } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
-import { AdvancedAbortController } from '../../misc/advanced-abort-controller/implementation';
-import { INativeCancellablePromiseTuple, TNativePromiseLikeOrValue } from '../../promises/types/native';
+import { TNativePromiseLikeOrValue } from '../../promises/types/native';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 import {
   NormalizeAdvancedAbortSignal, NormalizeAdvancedAbortSignalWrapPromiseOptionsStrategy
@@ -30,7 +28,7 @@ export type TBasePromiseObservableNotification<T> = TPromiseObservableNotificati
 export type TValueOrNotificationType<T> = T | TBasePromiseObservableNotification<T>;
 
 export interface IObservableToPromiseOptions<TStrategy extends TAbortStrategy> {
-  signal?: IAdvancedAbortSignal;
+  signal?: IAdvancedAbortSignal; // signal used to abort/stop the promise
   strategy?: TStrategy; // (default: 'never') how to resolve the promise if signal is aborted
 }
 
@@ -59,7 +57,7 @@ export function NormalizeObservableToPromiseOptions<TStrategy extends TAbortStra
     return {
       ...options,
       signal: NormalizeObservableToPromiseOptionsSignal(options.signal),
-      strategy: NormalizeObservableToPromiseOptionsStrategy(options.strategy),
+      strategy: NormalizeObservableToPromiseOptionsStrategy<TStrategy>(options.strategy),
     };
   } else {
     throw new TypeError(`Expected object or void as options`);
@@ -121,7 +119,7 @@ function ObservableToCancellablePromise<TIn, TOut, TStrategy extends TAbortStrat
   observable: IObservable<TIn>,
   options: IObservableToPromiseNormalizedOptions<TStrategy>,
   emit: TObservableToPromiseEmitFunction<TIn, TOut>,
-): Promise<TOut | TInferAbortStrategyReturn<TStrategy>>  {
+): Promise<TOut | TInferAbortStrategyReturn<TStrategy>> {
   const signal: IAdvancedAbortSignal = options.signal;
   return signal.wrapPromise<TOut, TStrategy, never>((resolve: (value?: TNativePromiseLikeOrValue<TOut>) => void, reject: (reason?: any) => void) => {
     let resolved: boolean = false;
@@ -172,7 +170,7 @@ function ObservableToPromise<TIn, TOut, TStrategy extends TAbortStrategy>(
 /* GENERIC */
 
 /**
- * Creates a Promise from an Observable.
+ * Creates a Promise from an Observable
  *  - when the observable receives a value, the promise is resolved with this value.
  *  - you may provide an options.signal (IAdvancedAbortSignal) to abort the promise. When the signal is aborted:
  *    -> we stop observing 'observable' (to free some resources)

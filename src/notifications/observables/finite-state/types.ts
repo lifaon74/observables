@@ -91,6 +91,7 @@ export type TFiniteStateObservableConstructorArgs<TValue, TFinalState extends TF
 
 // alias for a generic FiniteStateObservable
 export type TFiniteStateObservableGeneric<T = any> = IFiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>>;
+export type TFiniteStateObservableSuperGeneric<T = any> = IFiniteStateObservable<T, TFiniteStateObservableFinalState, string, TFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>>;
 
 export type TFiniteStateObserverGeneric<T = any> = IObserver<KeyValueMapToNotifications<TFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>>>;
 

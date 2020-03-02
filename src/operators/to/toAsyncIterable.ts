@@ -11,9 +11,11 @@ import {
 } from '../../notifications/observables/finite-state/types';
 import { IsFiniteStateObservable } from '../../notifications/observables/finite-state/constructor';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
-import { IAdvancedAbortController } from '../../misc/advanced-abort-controller/interfaces';
-import { AdvancedAbortController } from '../../misc/advanced-abort-controller/implementation';
 import { NormalizeAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/helpers';
+import { IsObject } from '../../helpers';
+import { TNativePromiseLikeOrValue } from '../../promises/types/native';
+import { INotificationsObserver } from '../../notifications/core/notifications-observer/interfaces';
+import { INotification } from '../../notifications/core/notification/interfaces';
 
 /** DEFINITIONS **/
 
@@ -37,18 +39,12 @@ export type TInferAbortObservableToAsyncIterableStrategyReturn<TStrategy extends
     ? never
     : never;
 
-export interface IObservableToAsyncIterableOptions<TStrategy> {
+export interface IObservableToAsyncIterableOptions<TStrategy extends TAbortObservableToAsyncIterableStrategy> {
   signal?: IAdvancedAbortSignal; // signal used to abort/stop the async iterable
-  strategy?: TStrategy; // (default: 'return')
+  strategy?: TStrategy; // (default: 'return') how to end the iterable if signal is aborted
 }
 
-/**
- * A tuple composed of an AsyncIterable and an AdvancedAbortSignal
- *  - the 'signal' is used to notify that the iterable has been cancelled
- */
-export interface ICancellableAsyncIterableTuple<T> {
-  iterable: AsyncGenerator<T>;
-  signal: IAdvancedAbortSignal;
+export interface IObservableToAsyncIterableNormalizedOptions<TStrategy extends TAbortObservableToAsyncIterableStrategy> extends Required<IObservableToAsyncIterableOptions<TStrategy>> {
 }
 
 
@@ -72,130 +68,276 @@ export function NormalizeObservableToAsyncIterableOptionsStrategy<TStrategy exte
 }
 
 
+export function NormalizeObservableToAsyncIterableOptions<TStrategy extends TAbortObservableToAsyncIterableStrategy>(
+  options: IObservableToAsyncIterableOptions<TStrategy> = {},
+): IObservableToAsyncIterableNormalizedOptions<TStrategy> {
+  if (IsObject(options)) {
+    return {
+      ...options,
+      signal: NormalizeObservableToAsyncIterableOptionsSignal(options.signal),
+      strategy: NormalizeObservableToAsyncIterableOptionsStrategy<TStrategy>(options.strategy),
+    };
+  } else {
+    throw new TypeError(`Expected object or void as options`);
+  }
+}
 
 /** CONVERT **/
 
-/**
- * Creates an AsyncIterator which returns values received by 'observable'
- *  -> you may provide an options.signal to abort the iterator (iterator will return void, or throw the reason depending on the strategy)
- */
-export async function * genericObservableToAsyncIterable<TValue, TStrategy extends TAbortObservableToAsyncIterableStrategy>(
-  observable: IObservable<TValue>,
-  options: IObservableToAsyncIterableOptions<TStrategy> = {}
-): AsyncGenerator<TValue> {
-  const signal: IAdvancedAbortSignal = NormalizeObservableToAsyncIterableOptionsSignal(options.signal);
-  const strategy: TStrategy = NormalizeObservableToAsyncIterableOptionsStrategy(options.strategy);
+/* INTERNAL HELPERS */
 
-  const values: TValue[] = [];
+// represents a deferred promise
+interface IDeferredPromise<T> {
+  promise: Promise<T>;
+  resolve: (value?: TNativePromiseLikeOrValue<T>) => void;
+  reject: (reason?: any) => void;
+}
 
-  let resolve: () => void;
-  let promise: Promise<void> = new Promise(_resolve => {
+// creates a deferred promise
+function CreateDeferredPromise<T>(): IDeferredPromise<T> {
+  let resolve: (value?: TNativePromiseLikeOrValue<T>) => void;
+  let reject: (reason?: any) => void;
+  const promise = new Promise<T>((_resolve, _reject) => {
     resolve = _resolve;
-  }); // used as breakpoint in the generator
-
-  const next = (value: TValue) => {
-    values.push(value);
-    resolve();
-    promise = new Promise(_resolve => {
-      resolve = _resolve;
-    });
-  };
-
-  const clear = () => {
-    observer.deactivate();
-    signalObserver.deactivate();
-    resolve();
-  };
-
-  const signalObserver = signal.addListener('abort', () => {
-    clear();
+    reject = _reject;
   });
 
-  const observer: IObserver<TValue> = new Observer<TValue>((notification: TValue) => {
+
+  return {
+    promise,
+    // @ts-ignore
+    resolve,
+    // @ts-ignore
+    reject
+  };
+}
+
+type TGenericObservableToStoppableAsyncIterableStopFunction<TStrategy extends TAbortObservableToAsyncIterableStrategy> = (strategy: TStrategy, reason?: any) => void;
+
+interface TGenericObservableToStoppableAsyncIterableMapFunctionReturn<TValue, TStrategy extends TAbortObservableToAsyncIterableStrategy> {
+  action?: 'skip' | 'yield' | TStrategy;
+  reason?: any;
+  value?: TValue;
+}
+
+type TGenericObservableToStoppableAsyncIterableMapValueFunction<TIn, TOut, TStrategy extends TAbortObservableToAsyncIterableStrategy> = (value: TIn) => TGenericObservableToStoppableAsyncIterableMapFunctionReturn<TOut, TStrategy>;
+
+function DefaultMapValueFunction<TIn, TOut>(value: TIn): TOut {
+  return value as unknown as TOut;
+}
+
+/**
+ * Creates an AsyncIterable from an Observable
+ */
+async function * ObservableToStoppableAsyncIterable<TIn, TOut, TStrategy extends TAbortObservableToAsyncIterableStrategy>(
+  observable: IObservable<TIn>,
+  mapValue: TGenericObservableToStoppableAsyncIterableMapValueFunction<TIn, TOut, TStrategy> = DefaultMapValueFunction,
+  onStop?: (stop: TGenericObservableToStoppableAsyncIterableStopFunction<TStrategy>) => void, // optional callback which will receive a 'stop' callback to stop the iterable
+): AsyncGenerator<TOut, void, undefined> {
+  const values: TIn[] = [];
+  let stopped: boolean = false;
+  let stoppedStrategy: TStrategy = 'return' as TStrategy;
+  let stoppedReason: any = void 0 as any;
+
+  let deferred: IDeferredPromise<void> = CreateDeferredPromise<void>();
+
+  const next = (value: TIn) => {
+    values.push(value);
+    deferred.resolve();
+    deferred = CreateDeferredPromise<void>();
+  };
+
+  const observer: IObserver<TIn> = new Observer<TIn>((notification: TIn) => {
     next(notification);
   }).observe(observable);
-
   observer.activate();
-  signalObserver.activate();
+
+  const stop = (strategy: TStrategy, reason?: any) => {
+    stopped = true;
+    stoppedStrategy = strategy;
+    stoppedReason = reason;
+    observer.deactivate();
+    deferred.resolve();
+  };
+
+  if (onStop !== void 0) {
+    onStop(stop);
+  }
 
   while (true) {
-    await promise;
+    await deferred.promise;
 
-    while ((values.length > 0) || signal.aborted) {
-      if (signal.aborted) {
-        switch (strategy) {
-          case 'return':
-            return;
-          case 'throw':
-            throw signal.reason;
-          default:
-            throw new Error(`Unexpected strategy: ${ strategy }`);
-        }
-      } else {
-        yield values.shift() as TValue;
+    while ((values.length > 0) || stopped) {
+      let result: TGenericObservableToStoppableAsyncIterableMapFunctionReturn<TOut, TStrategy> = void 0 as any;
+
+      if (!stopped) {
+        result = mapValue(values.shift() as TIn);
+      }
+
+      // separate in case 'mapValue' triggers a 'stop'
+      if (stopped) {
+        result = {
+          action: stoppedStrategy,
+          reason: stoppedReason,
+        };
+      }
+
+      switch (result.action) {
+        case 'skip':
+          break;
+        case 'yield':
+          yield result.value as TOut;
+          break;
+        case 'return':
+          if (!stopped) {
+            stop('return' as TStrategy);
+          }
+          return;
+        case 'throw':
+          if (!stopped) {
+            stop('throw' as TStrategy, result.reason);
+          }
+          throw result.reason;
+        default:
+          throw new Error(`Unexpected action: ${ result.action }`);
       }
     }
   }
 }
 
 
+function BuildObservableToStoppableAsyncIterableStopFunction<TStrategy extends TAbortObservableToAsyncIterableStrategy>(
+  signal: IAdvancedAbortSignal,
+  strategy: TStrategy
+) {
+  return (stop: TGenericObservableToStoppableAsyncIterableStopFunction<TStrategy>): INotificationsObserver<any, any> | undefined => {
+    if (signal.aborted) {
+      stop(strategy, signal.reason);
+      return void 0;
+    } else {
+      const signalObserver = signal.addListener('abort', (reason: any) => {
+        signalObserver.deactivate();
+        stop(strategy, reason);
+      });
+      signalObserver.activate();
+      return signalObserver;
+    }
+  };
+}
+
+function BuildFiniteStateMapValueFunction<TNotification extends INotification<string, any>, TValue>(
+  finished: () => void = () => {
+  }
+) {
+  return (notification: TNotification): TGenericObservableToStoppableAsyncIterableMapFunctionReturn<TValue, TAbortObservableToAsyncIterableStrategy> => {
+    switch (notification.name) {
+      case 'next':
+        return {
+          action: 'yield',
+          value: notification.value
+        };
+      case 'complete':
+        finished();
+        return {
+          action: 'throw',
+        };
+      case 'error':
+        finished();
+        return {
+          action: 'throw',
+          reason: notification.value
+        };
+      default:
+        return {
+          action: 'skip'
+        };
+    }
+  };
+}
+
+/* GENERIC */
+
+function genericObservableToCancellableAsyncIterable<TValue, TStrategy extends TAbortObservableToAsyncIterableStrategy>(
+  observable: IObservable<TValue>,
+  options: IObservableToAsyncIterableNormalizedOptions<TStrategy>
+): AsyncGenerator<TValue, void, undefined> {
+  return ObservableToStoppableAsyncIterable<TValue, TValue, TStrategy>(
+    observable,
+    undefined,
+    BuildObservableToStoppableAsyncIterableStopFunction<TStrategy>(options.signal, options.strategy)
+  );
+}
+
+function genericObservableToNonCancellableAsyncIterable<TValue>(
+  observable: IObservable<TValue>
+): AsyncGenerator<TValue, void, undefined> {
+  return ObservableToStoppableAsyncIterable<TValue, TValue, never>(observable);
+}
+
 /**
- * INFO: INTERNAL
- * like finiteStateObservableToAsyncIterable, but assumes specific arguments
+ * Creates an AsyncIterator from an Observable
+ *  - the iterator returns values received by 'observable'
+ *  - you SHOULD provide an options.signal to abort the iterator (iterator will return void, or throw the reason depending on the strategy)
  */
-async function * finiteStateObservableToAsyncGenerator<TValue,
+export function genericObservableToAsyncIterable<TValue, TStrategy extends TAbortObservableToAsyncIterableStrategy>(
+  observable: IObservable<TValue>,
+  options: IObservableToAsyncIterableOptions<TStrategy> = {}
+): AsyncGenerator<TValue, void, undefined> {
+  return ((options === void 0) || (options.signal === void 0))
+    ? genericObservableToNonCancellableAsyncIterable<TValue>(observable)
+    : genericObservableToCancellableAsyncIterable<TValue, TStrategy>(observable, NormalizeObservableToAsyncIterableOptions<TStrategy>(options));
+}
+
+
+/* FINITE STATE */
+
+function finiteStateObservableToCancellableAsyncIterable<TValue,
   TFinalState extends TFinalStateConstraint<TFinalState>,
   TMode extends TFiniteStateObservableModeConstraint<TMode>,
   TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>,
   TStrategy extends TAbortObservableToAsyncIterableStrategy>(
   observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
-  strategy: TStrategy, // how to end when observable emits an 'abort',
-  controller: IAdvancedAbortController, // controller able to stop the iterable and receive the 'abort' from the observable
-): AsyncGenerator<TValue> {
-  const subController: IAdvancedAbortController = AdvancedAbortController.fromAbortSignals(controller.signal); // controller to stop the iterable
+  options: IObservableToAsyncIterableNormalizedOptions<TStrategy>
+): AsyncGenerator<TValue, void, undefined> {
+  type TNotification = KeyValueMapToNotifications<TKVMap>;
+  let signalObserver: INotificationsObserver<any, any> | undefined;
 
-  const _options: IObservableToAsyncIterableOptions<'return'> = {
-    signal: subController.signal,
-    strategy: 'return',
+  const clear = () => {
+    if (signalObserver !== void 0) {
+      signalObserver.deactivate();
+    }
   };
 
-  const iterator: AsyncIterator<KeyValueMapToNotifications<TKVMap>> = genericObservableToAsyncIterable(observable, _options);
-  let result: IteratorResult<KeyValueMapToNotifications<TKVMap>>;
-  while (!(result = await iterator.next()).done) {
-    const notification: KeyValueMapToNotifications<TKVMap> = result.value;
-    switch (notification.name) {
-      case 'next':
-        yield notification.value;
-        break;
-      case 'complete':
-        subController.abort('complete');
-        return;
-      case 'error':
-        subController.abort('error');
-        throw notification.value;
-      case 'abort': // assumes abort is always a final state
-        subController.abort('abort');
-        controller.abort(notification.value);
-        switch (strategy) {
-          case 'return':
-            return;
-          case 'throw':
-            throw notification.value;
-          default:
-            throw new Error(`Unexpected strategy: ${ strategy }`);
-        }
+  const onStop = BuildObservableToStoppableAsyncIterableStopFunction<TStrategy>(options.signal, options.strategy); // fix signal and options
+
+  return ObservableToStoppableAsyncIterable<TNotification, TValue, TAbortObservableToAsyncIterableStrategy>(
+    observable,
+    BuildFiniteStateMapValueFunction<TNotification, TValue>(clear),
+    (stop: TGenericObservableToStoppableAsyncIterableStopFunction<TAbortObservableToAsyncIterableStrategy>) => {
+      signalObserver = onStop(stop);
     }
-  }
+  );
+}
+
+function finiteStateObservableToNonCancellableAsyncIterable<TValue,
+  TFinalState extends TFinalStateConstraint<TFinalState>,
+  TMode extends TFiniteStateObservableModeConstraint<TMode>,
+  TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>>(
+  observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
+): AsyncGenerator<TValue, void, undefined> {
+  type TNotification = KeyValueMapToNotifications<TKVMap>;
+  return ObservableToStoppableAsyncIterable<TNotification, TValue, TAbortObservableToAsyncIterableStrategy>(
+    observable,
+    BuildFiniteStateMapValueFunction<TNotification, TValue>(),
+  );
 }
 
 /**
- * Returns a tuple composed of :
- *  - an 'iterable' (AsyncIterator) which iterates over the values received through 'next'
- *    -> done when a 'complete' is received
- *    -> throws when an 'error' is received
- *  - a 'signal' (IAdvancedAbortSignal), which aborts when an 'abort' notification is received or when options.signal is aborted
- *
- *  -> if options.signal or 'observable' is aborted, the iterable is aborted (may: throw or return undefined -> depending on the provided strategy)
+ * Creates an AsyncIterator from an FiniteStateObservable
+ *  - the iterator returns values received by 'next'
+ *  - the iterator is done when a 'complete' is received
+ *  - the iterator throws when a 'error' is received
+ *  - you MAY provide an options.signal to abort the iterator (iterator will return void, or throw the reason depending on the strategy)
  */
 export function finiteStateObservableToAsyncIterable<TValue,
   TFinalState extends TFinalStateConstraint<TFinalState>,
@@ -204,18 +346,11 @@ export function finiteStateObservableToAsyncIterable<TValue,
   TStrategy extends TAbortObservableToAsyncIterableStrategy>(
   observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
   options: IObservableToAsyncIterableOptions<TStrategy> = {}
-): ICancellableAsyncIterableTuple<TValue> {
-  const strategy: TStrategy = NormalizeObservableToAsyncIterableOptionsStrategy(options.strategy);
-  const controller: IAdvancedAbortController = (options.signal === void 0)
-    ? new AdvancedAbortController()
-    : AdvancedAbortController.fromAbortSignals(options.signal);
-
-  return {
-    iterable: finiteStateObservableToAsyncGenerator(observable, strategy, controller),
-    signal: controller.signal,
-  };
+): AsyncGenerator<TValue, void, undefined> {
+  return ((options === void 0) || (options.signal === void 0))
+    ? finiteStateObservableToNonCancellableAsyncIterable<TValue, TFinalState, TMode, TKVMap>(observable)
+    : finiteStateObservableToCancellableAsyncIterable<TValue, TFinalState, TMode, TKVMap, TStrategy>(observable, NormalizeObservableToAsyncIterableOptions<TStrategy>(options));
 }
-
 
 /**
  * Converts an Observable to an AsyncIterable
@@ -226,7 +361,7 @@ export function toAsyncIterable<TValue, TStrategy extends TAbortObservableToAsyn
   options?: IObservableToAsyncIterableOptions<TStrategy>
 ): AsyncGenerator<TValue> {
   if (IsFiniteStateObservable(observable)) {
-    return finiteStateObservableToAsyncIterable<TValue, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<TValue, TFiniteStateObservableFinalState>, TStrategy>(observable, options).iterable;
+    return finiteStateObservableToAsyncIterable<TValue, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<TValue, TFiniteStateObservableFinalState>, TStrategy>(observable, options);
   } else if (IsObservable(observable)) {
     return genericObservableToAsyncIterable<TValue, TStrategy>(observable as IObservable<TValue>, options);
   } else {
