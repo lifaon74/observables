@@ -1,3 +1,3 @@
-export * from './async-iterable';
+export * from './iterable';
 export * from './promise';
 export * from './tasks';

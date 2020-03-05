@@ -1,7 +1,7 @@
 import { IProgress } from '../../../misc/progress/interfaces';
 import { ITask} from './interfaces';
 import { ITaskContext } from './context/interfaces';
-import { TFiniteStateObservableFinalState } from '../finite-state/types';
+import { TFiniteStateObservableFinalState, TFiniteStateObservableKeyValueMapGeneric } from '../finite-state/types';
 
 /** TYPES **/
 
@@ -14,18 +14,18 @@ export type TTaskState =
   | 'error' // task errored
   ;
 
-// export type TTaskFinalState = TFiniteStateObservableFinalState | 'abort';
+export type TTaskFinalState = TFiniteStateObservableFinalState | 'abort';
 
-export interface ITaskKeyValueMap<TValue>/* extends TFiniteStateObservableKeyValueMapGeneric<>*/ {
+export interface ITaskKeyValueMap<TValue> extends TFiniteStateObservableKeyValueMapGeneric<TValue, TTaskFinalState> {
   'start': void;
   'pause': void;
   'resume': void;
-  'abort': any;
+  // 'abort': any;
 
   'progress': IProgress;
-  'next': TValue;
-  'complete': void;
-  'error': any;
+  // 'next': TValue;
+  // 'complete': void;
+  // 'error': any;
 }
 
 export type TTaskCreateCallback<TValue> = (this: ITask<TValue>, context: ITaskContext<TValue>) => void;

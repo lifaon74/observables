@@ -34,6 +34,7 @@ import { AsyncSource } from '../observables/distinct/source/async/implementation
 import { debugCancellableContext } from './debug/debug-cancellable-context';
 import { testPerformances } from './test-performances';
 import { runDebug } from './debug/debug';
+import { debugVoxel } from './experimental/voxel/experiment-voxel';
 
 
 
@@ -576,7 +577,8 @@ export async function test() {
   // await testUnit();
 
   // await testAbortController();
-  await runDebug();
+  // await runDebug();
+  await debugVoxel();
 
   console.log('tests done');
 }

@@ -1,6 +1,6 @@
 import { IUnit, IUnitOptions, TUnitOrValue } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
-import { IsObject } from '../../helpers';
+import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
+import { IsObject } from '../../../helpers';
 import { GetTypeConverterOrThrow } from './converters/register';
 
 /** CONSTRUCTOR **/

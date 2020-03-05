@@ -85,6 +85,8 @@ export interface IFiniteStateObservableOptions<TFinalState extends TFinalStateCo
 export interface IFiniteStateObservableExposedOptions<TMode extends TFiniteStateObservableModeConstraint<TMode>> extends Omit<IFiniteStateObservableOptions<TFiniteStateObservableFinalState, TMode>, 'finalStates' | 'modes'> {
 }
 
+export type IFiniteStateObservableGenericOptions = IFiniteStateObservableExposedOptions<TFiniteStateObservableMode>;
+
 // list of arguments provided to the FiniteStateObservable constructor
 export type TFiniteStateObservableConstructorArgs<TValue, TFinalState extends TFinalStateConstraint<TFinalState>, TMode extends TFiniteStateObservableModeConstraint<TMode>, TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>> =
   [TFiniteStateObservableCreateCallback<TValue, TFinalState, TMode, TKVMap>?, IFiniteStateObservableOptions<TFinalState, TMode>?];

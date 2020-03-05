@@ -3,7 +3,7 @@ import {
 } from './interfaces';
 import {
   IFromIterableObservableKeyValueMap, IFromIterableObservableOptions, TFromIterableObservableConstructorArgs,
-  TFromIterableObservableFinalState, TFromIterableObservableMode, TSyncOrAsyncIterable
+  TFromIterableObservableFinalState, TFromIterableObservableMode
 } from './types';
 import { Constructor } from '../../../../../../classes/class-helpers/types';
 import { IFiniteStateObservable, IFiniteStateObservableTypedConstructor } from '../../../interfaces';
@@ -21,6 +21,7 @@ import { KeyValueMapToNotifications } from '../../../../../core/notifications-ob
 import {
   IFromIterableObservableNormalizedArguments, NormalizeFromIterableObservableOptionsAndIterable
 } from './functions';
+import { TSyncOrAsyncIterable } from '../../../../../../misc/helpers/iterators/interfaces';
 
 
 /** CLASS AND FACTORY **/

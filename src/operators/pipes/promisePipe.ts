@@ -4,7 +4,9 @@ import { Observer } from '../../core/observer/implementation';
 import { PromiseObservable } from '../../notifications/observables/finite-state/built-in/promise/promise-observable/implementation';
 import { IPipe } from '../../core/observable-observer/pipe/interfaces';
 import { Pipe } from '../../core/observable-observer/pipe/implementation';
-import { TPromiseObservableNotifications } from '../../notifications/observables/finite-state/built-in/promise/promise-observable/types';
+import {
+  IPromiseObservableOptions, TPromiseObservableNotifications
+} from '../../notifications/observables/finite-state/built-in/promise/promise-observable/types';
 import { IAdvancedAbortController } from '../../misc/advanced-abort-controller/interfaces';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 import { AdvancedAbortController } from '../../misc/advanced-abort-controller/implementation';
@@ -17,6 +19,7 @@ import { TNativePromiseLikeOrValue } from '../../promises/types/native';
 export function promisePipe<T, TResult1 = T, TResult2 = never>(
   onFulfilled: (value: T, signal: IAdvancedAbortSignal) => TNativePromiseLikeOrValue<TResult1> = (value: T) => (value as unknown as TResult1),
   onRejected: (reason: any, signal: IAdvancedAbortSignal) => TNativePromiseLikeOrValue<TResult2> = (error: any) => Promise.reject(error),
+  promiseObservableOptions?: IPromiseObservableOptions,
 ): IPipe<IObserver<TPromiseObservableNotifications<T>>,
   IPromiseObservable<TResult1 | TResult2>> {
   type TNotification = TPromiseObservableNotifications<T>;
@@ -65,7 +68,7 @@ export function promisePipe<T, TResult1 = T, TResult2 = never>(
           resolve = _resolve;
           reject = _reject;
         });
-      })
+      }, promiseObservableOptions)
     };
   });
 }

@@ -7,12 +7,13 @@ import { IEventsObservable } from '../../../notifications/observables/events/eve
 import { IObservable } from '../../../core/observable/interfaces';
 import { IObserver, Observer } from '../../../core/observer/public';
 import { InputOutput } from '../io-observable/implementation';
-import { IsIterable, IsObject } from '../../../helpers';
+import { IsObject } from '../../../helpers';
 import { WebSocketError } from './WebSocketCloseEvent';
 import { Observable, ObservableClearObservers } from '../../../core/observable/implementation';
 import { IObservableContext } from '../../../core/observable/context/interfaces';
 import { INotificationsObservableContext } from '../../../notifications/core/notifications-observable/context/interfaces';
 import { KeyValueMapToNotifications } from '../../../notifications/core/notifications-observable/types';
+import { IsIterable } from '../../../misc/helpers/iterators/is/is-iterable';
 
 
 export const WEBSOCKET_IO_PRIVATE = Symbol('websocket-io-private');

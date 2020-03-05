@@ -1,8 +1,8 @@
 import {
   INumericUnit, INumericUnitOptions, TNumericUnitOrValue, TNumericUnitToOptionsReturn, TNumericUnitToReturn
 } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
-import { IsObject } from '../../../helpers';
+import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
+import { IsObject } from '../../../../helpers';
 import {
   ConvertUnitOrConstantToOtherUnitValue, ConvertUnitToOtherUnitValue, IsValidUnit, Unit, UnitToOptions
 } from '../implementation';
