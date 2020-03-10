@@ -19,6 +19,9 @@ export class AbstractMemory {
   alloc(size: number): number {
     const index: number = this.writeIndex;
     this.writeIndex += size;
+    if (this.writeIndex > this.buffer.byteLength) {
+      throw new Error(`Alloc failed: not enough memory`);
+    }
     return index;
   }
 
@@ -62,5 +65,13 @@ export function AllocBiggestBuffer(): ArrayBuffer {
 
   // @ts-ignore
   return buffer;
+}
+
+export function LogMemory(
+  message: string,
+  memory: Uint8Array,
+  alloc: TAllocFunction
+) {
+  console.log(message, memory.slice(0, alloc(0)));
 }
 

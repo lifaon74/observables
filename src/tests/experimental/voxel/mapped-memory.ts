@@ -13,9 +13,27 @@ export type TMappedMemoryAddresses = Map<number, number>;
 export type TMappedMemories = Map<Uint8Array, TMappedMemoryAddresses>;
 
 
+export function CreateMappedMemoryAddresses(): TMappedMemoryAddresses {
+  return new Map<number, number>();
+}
+
 export function CreateMappedMemories(): TMappedMemories {
   return new Map<Uint8Array, TMappedMemoryAddresses>();
 }
+
+export function GetOrCreateMappedMemoryAddressesFromMappedMemories(
+  memory: Uint8Array,
+  memoriesMap: TMappedMemories,
+): TMappedMemoryAddresses {
+  if (memoriesMap.has(memory)) {
+    return memoriesMap.get(memory) as TMappedMemoryAddresses;
+  } else {
+    const subMap: TMappedMemoryAddresses = CreateMappedMemoryAddresses();
+    memoriesMap.set(memory, subMap);
+    return subMap;
+  }
+}
+
 
 /**
  * Map [sourceMemory, sourceAddress] to a known memory at 'destinationAddress', and stores it in 'memoriesMap'
@@ -27,13 +45,7 @@ export function MapMemory(
   memoriesMap: TMappedMemories,
   warn: boolean = true
 ): TMappedMemories  {
-  let subMap: TMappedMemoryAddresses;
-  if (memoriesMap.has(sourceMemory)) {
-    subMap = memoriesMap.get(sourceMemory) as TMappedMemoryAddresses;
-  } else {
-    subMap = new Map<number, number>();
-    memoriesMap.set(sourceMemory, subMap);
-  }
+  const subMap: TMappedMemoryAddresses = GetOrCreateMappedMemoryAddressesFromMappedMemories(sourceMemory, memoriesMap);
 
   if (warn && subMap.has(sourceAddress)) {
     console.warn('remap', sourceMemory, sourceAddress, destinationAddress);

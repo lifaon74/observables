@@ -2,7 +2,9 @@ import { ReadAddress, WriteAddress } from './memory-address';
 import { AbstractMemory } from './abstract-memory';
 import { CreateVoxelMaterial, VOXEL_MATERIAL_BYTES_PER_ELEMENT, VoxelMaterial } from './material';
 import { CreateVoxelOctree, GetVoxelOctreeDepthFromSide, VOXEL_OCTREE_BYTES_PER_ELEMENT, VoxelOctree } from './octree';
-import { drawImageData, drawRainbowSquareForOctree, drawRandomSquareForOctree, sliceOctree } from './draw';
+import {
+  drawImageData, drawRainbowSquareForOctree, drawRandomSquareForOctree, drawUniformRedSquareForOctree, sliceOctree
+} from './draw';
 import { CompactVoxelOctrees, ListVoxelOctreeMaterialAddresses } from './compact';
 // class Texture3D {
 //   x: number;
@@ -124,9 +126,10 @@ function experimentalVoxel4() {
   const MEMORY_VIEW = MEMORY.toUint8Array();
   const alloc = MEMORY.toAllocFunction();
 
-  const voxelDepth: number = GetVoxelOctreeDepthFromSide(2);
+  const voxelDepth: number = GetVoxelOctreeDepthFromSide(4);
   const voxel = VoxelOctree.create(MEMORY_VIEW, alloc, voxelDepth);
-  drawRainbowSquareForOctree(voxel.memory, voxel.address, voxel.depth, alloc);
+  // drawRainbowSquareForOctree(voxel.memory, voxel.address, voxel.depth, alloc);
+  drawUniformRedSquareForOctree(voxel.memory, voxel.address, voxel.depth, alloc);
 
   MEMORY.log('memory');
   console.log('voxel', voxel);
@@ -134,15 +137,17 @@ function experimentalVoxel4() {
   drawImageData(sliceOctree(voxel, 0));
 
   /* --- */
-
-  const COMPACTED_MEMORY = new AbstractMemory(2 ** 16);
-  const COMPACTED_MEMORY_VIEW = COMPACTED_MEMORY.toUint8Array();
-  const compactedAlloc = COMPACTED_MEMORY.toAllocFunction();
-  const compactedVoxels = CompactVoxelOctrees(COMPACTED_MEMORY_VIEW, compactedAlloc, [voxel], { originalSize: MEMORY.bytesUsed });
-
-  COMPACTED_MEMORY.log('compacted memory');
-  console.log('compactedVoxels', compactedVoxels[0]);
-  drawImageData(sliceOctree(compactedVoxels[0], 0));
+  //
+  // const COMPACTED_MEMORY = new AbstractMemory(2 ** 16);
+  // const COMPACTED_MEMORY_VIEW = COMPACTED_MEMORY.toUint8Array();
+  // const compactedAlloc = COMPACTED_MEMORY.toAllocFunction();
+  // console.warn('----------------');
+  // const compactedVoxels = CompactVoxelOctrees(COMPACTED_MEMORY_VIEW, compactedAlloc, [voxel], { originalSize: MEMORY.bytesUsed });
+  // console.warn('----------------');
+  //
+  // COMPACTED_MEMORY.log('compacted memory');
+  // console.log('compactedVoxels', compactedVoxels[0]);
+  // drawImageData(sliceOctree(compactedVoxels[0], 0));
 
 }
 

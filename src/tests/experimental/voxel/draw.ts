@@ -121,8 +121,7 @@ export function drawUniformRedSquareForOctree(
   alloc: TAllocFunction,
 ) {
   const side: number = GetVoxelOctreeSideFromDepth(depth);
-  const materialIndex = alloc(VOXEL_MATERIAL_BYTES_PER_ELEMENT);
-  CreateVoxelMaterial(memory, materialIndex, 255, 0, 0, 255, 0);
+  const material = VoxelMaterial.create(memory, alloc, 255, 0, 0, 255, 0);
 
   DrawSquare(
     ClampDraw((
@@ -138,7 +137,7 @@ export function drawUniformRedSquareForOctree(
           x,
           y,
           z,
-          materialIndex,
+          material.address,
         );
       },
       0, 0, 0, side, side, side
@@ -241,7 +240,7 @@ export function drawRainbowSquareForOctree(
           Math.floor(y / (side - 1) * 255),
           Math.floor(z / (side - 1) * 255),
           255,
-          0
+          /*0*/123
         );
 
         WriteVoxelOctreeMaterialAddress(

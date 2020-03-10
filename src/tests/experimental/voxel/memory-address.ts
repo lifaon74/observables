@@ -89,10 +89,7 @@ export function AreSameAddresses(
   memory2: Uint8Array,
   address2: number,
 ): boolean {
-  return (
-    /*(memory1 === memory2)
-    && (address1 === address2)
-  ) || (*/
+  return /*AreSameMemoriesAndAddresses(memory1, address1, memory2, address2) || */(
     (memory1[address1] === memory2[address2])
     && (memory1[address1 + 1] === memory2[address2 + 1])
     && (memory1[address1 + 2] === memory2[address2 + 2])
@@ -100,3 +97,12 @@ export function AreSameAddresses(
   );
 }
 
+export function AreSameMemoriesAndAddresses(
+  memory1: Uint8Array,
+  address1: number,
+  memory2: Uint8Array,
+  address2: number,
+): boolean {
+  return (memory1 === memory2)
+    && (address1 === address2);
+}

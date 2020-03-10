@@ -1,4 +1,4 @@
-import { MemoryView, TAllocFunction } from './memory-address';
+import { AreSameMemoriesAndAddresses, MemoryView, TAllocFunction } from './memory-address';
 
 export const VOXEL_MATERIAL_BYTES_PER_ELEMENT = 5;
 export const NO_MATERIAL_ADDRESS = 0xffffffff;
@@ -53,23 +53,29 @@ export function CreateVoxelMaterial(
   memory[address + 4] = reflection;
 }
 
+export function AreSameMaterialsAssumingMemoriesAndAddressesDifferent(
+  memory1: Uint8Array,
+  address1: number,
+  memory2: Uint8Array,
+  address2: number,
+): boolean {
+  for (let i = 0; i < VOXEL_MATERIAL_BYTES_PER_ELEMENT; i++) {
+    if (memory1[address1 + i] !== memory2[address2 + i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export function AreSameMaterials(
   memory1: Uint8Array,
   address1: number,
   memory2: Uint8Array,
   address2: number,
 ): boolean {
-  if (
-    (memory1 !== memory2)
-    || (address1 !== address2)
-  ) {
-    for (let i = 0; i < VOXEL_MATERIAL_BYTES_PER_ELEMENT; i++) {
-      if (memory1[address1 + i] !== memory2[address2 + i]) {
-        return false;
-      }
-    }
-  }
-  return true;
+  return AreSameMemoriesAndAddresses(memory1, address1, memory2, address2)
+    ? true
+    : AreSameMaterialsAssumingMemoriesAndAddressesDifferent(memory1, address1, memory2, address2);
 }
 
 export function CopyMaterial(

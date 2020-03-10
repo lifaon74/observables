@@ -1,10 +1,10 @@
 import { ADDRESS_BYTES_PER_ELEMENT, MemoryView, ReadAddress, TAllocFunction, WriteAddress } from './memory-address';
 import { NO_MATERIAL_ADDRESS } from './material';
-import { ResolveMappedMemory, TMappedMemories, TMappedMemoryAddresses } from './mapped-memory';
+import { ResolveMappedAddress, ResolveMappedMemory, TMappedMemories, TMappedMemoryAddresses } from './mapped-memory';
 import {
   Convert3DPositionToSubOctreeAddressIndex, IsSubOctreeAddressIndexAVoxelOctreeAddress,
   SubOctreeAddressIndexToMemoryAddress,
-  SubOctreeAddressIndexToMemoryAddressOffset, WriteSubOctreeAddressIndexAsSubVoxelOctree
+   WriteSubOctreeAddressIndexAsSubVoxelOctree
 } from './sub-octree-adress-index';
 
 export const VOXEL_OCTREE_BYTES_PER_ELEMENT = 1 + ADDRESS_BYTES_PER_ELEMENT * 8;
@@ -20,9 +20,10 @@ export class VoxelOctree extends MemoryView {
     memory: Uint8Array,
     alloc: TAllocFunction,
     depth: number,
+    materialAddress?: number,
   ): VoxelOctree {
     const voxelOctree = new VoxelOctree(memory, alloc(VOXEL_OCTREE_BYTES_PER_ELEMENT), depth);
-    CreateVoxelOctree(voxelOctree.memory, voxelOctree.address);
+    CreateVoxelOctree(voxelOctree.memory, voxelOctree.address, materialAddress);
     return voxelOctree;
   }
 
@@ -110,7 +111,109 @@ export function CopyVoxelOctree(
 }
 
 
+/**
+ * Returns the address of the material composing a Voxel Octree at position (x, y, z)
+ */
+export function ReadVoxelOctreeMaterialAddress(
+  memory: Uint8Array,
+  address: number,
+  depth: number,
+  x: number,
+  y: number,
+  z: number,
+): number {
+  let subOctreeAddressIndex: number;
+  let _address: number; // temp address
+
+  while (depth >= 0) {
+    subOctreeAddressIndex = Convert3DPositionToSubOctreeAddressIndex(depth, x, y, z);
+    _address = ReadAddress(memory, SubOctreeAddressIndexToMemoryAddress(address, subOctreeAddressIndex));
+    if (IsSubOctreeAddressIndexAVoxelOctreeAddress(memory, address, subOctreeAddressIndex)) {
+      address = _address;
+      depth--;
+    } else {
+      return _address;
+    }
+  }
+
+  throw new Error('Invalid coords');
+}
+
+/**
+ * Writes a new material address (materialAddress) at position (x, y, z) in a Voxel Octree
+ *  - creates new child octrees if required
+ */
+export function WriteVoxelOctreeMaterialAddress(
+  memory: Uint8Array,
+  address: number,
+  alloc: TAllocFunction,
+  depth: number,
+  x: number,
+  y: number,
+  z: number,
+  materialAddress: number,
+): void {
+  let subOctreeAddressIndex: number;
+  let _subOctreeAddress: number; // temp address of a sub octree's address
+  let _address: number; // temp address
+
+  // insert materialAddress at proper place
+  while (depth >= 0) {
+    subOctreeAddressIndex = Convert3DPositionToSubOctreeAddressIndex(depth, x, y, z);
+    _subOctreeAddress = SubOctreeAddressIndexToMemoryAddress(address, subOctreeAddressIndex);
+
+    if (depth === 0) {
+      // for depth === 0 mask should be equals to 'material' by default
+      // WriteAddressSpotAsVoxelMaterial(memory, address, subOctreeAddressIndex)
+      WriteAddress(memory, _subOctreeAddress, materialAddress);
+      break;
+    } else {
+      _address = ReadAddress(memory, _subOctreeAddress);
+      if (IsSubOctreeAddressIndexAVoxelOctreeAddress(memory, address, subOctreeAddressIndex)) { // is address type
+        address = _address;
+      } else {
+        if (_address === materialAddress) { // same values
+          break; // here we are not at the deepest lvl, material addresses are the same and octree should already be optimized => touch nothing
+        } else { // material addresses are different => must split current materialAddress into another octree
+          const newAddress: number = alloc(VOXEL_OCTREE_BYTES_PER_ELEMENT); // allocates memory for a new octree
+          CreateVoxelOctree(memory, newAddress, _address); // put current material address as octree's materials
+
+          // replace mask value by octree type
+          WriteSubOctreeAddressIndexAsSubVoxelOctree(memory, address, subOctreeAddressIndex);
+
+          // replace value by newAddress
+          WriteAddress(memory, _subOctreeAddress, newAddress);
+
+          address = newAddress;
+        }
+      }
+    }
+
+    depth--;
+  }
+}
+
+
+
 /*--------------------------*/
+
+export function ReadMappedAddress(
+  memory: Uint8Array,
+  address: number,
+  addressesMap: TMappedMemoryAddresses,
+): number {
+  return ResolveMappedAddress(ReadAddress(memory, address), addressesMap);
+}
+
+export function CopyRemappedAddress(
+  sourceMemory: Uint8Array,
+  sourceAddress: number,
+  destinationMemory: Uint8Array,
+  destinationAddress: number,
+  addressesMap: TMappedMemoryAddresses,
+): void {
+  WriteAddress(destinationMemory, destinationAddress, ReadMappedAddress(sourceMemory, sourceAddress, addressesMap));
+}
 
 /**
  * Copies a Voxel Octree into another memory and address after applying a new memory mapping
@@ -120,11 +223,11 @@ export function CopyRemappedVoxelOctree(
   sourceAddress: number,
   destinationMemory: Uint8Array,
   destinationAddress: number,
-  memoriesMap: TMappedMemories
+  addressesMap: TMappedMemoryAddresses,
 ): void {
   destinationMemory[destinationAddress++] = sourceMemory[sourceAddress++];
   for (let i = 0; i < 8; i++) {
-    WriteAddress(destinationMemory, destinationAddress, ResolveMappedMemory(sourceMemory, sourceAddress, memoriesMap));
+    CopyRemappedAddress(sourceMemory, sourceAddress, destinationMemory, destinationAddress, addressesMap);
     sourceAddress += ADDRESS_BYTES_PER_ELEMENT;
     destinationAddress += ADDRESS_BYTES_PER_ELEMENT;
   }
@@ -227,87 +330,5 @@ export function AreSameRemappedVoxelOctrees(
   }
 }
 
-
-/**
- * Returns the address of the material composing a Voxel Octree at position (x, y, z)
- */
-export function ReadVoxelOctreeMaterialAddress(
-  memory: Uint8Array,
-  address: number,
-  depth: number,
-  x: number,
-  y: number,
-  z: number,
-): number {
-  let subOctreeAddressIndex: number;
-  let _address: number; // temp address
-
-  while (depth >= 0) {
-    subOctreeAddressIndex = Convert3DPositionToSubOctreeAddressIndex(depth, x, y, z);
-    _address = ReadAddress(memory, SubOctreeAddressIndexToMemoryAddress(address, subOctreeAddressIndex));
-    if (IsSubOctreeAddressIndexAVoxelOctreeAddress(memory, address, subOctreeAddressIndex)) {
-      address = _address;
-      depth--;
-    } else {
-      return _address;
-    }
-  }
-
-  throw new Error('Invalid coords');
-}
-
-/**
- * Writes a new material address (materialAddress) at position (x, y, z) in a Voxel Octree
- *  - creates new child octrees if required
- */
-export function WriteVoxelOctreeMaterialAddress(
-  memory: Uint8Array,
-  address: number,
-  alloc: TAllocFunction,
-  depth: number,
-  x: number,
-  y: number,
-  z: number,
-  materialAddress: number,
-): void {
-  let subOctreeAddressIndex: number;
-  let _subOctreeAddress: number; // temp address of a sub octree's address
-  let _address: number; // temp address
-
-  // insert materialAddress at proper place
-  while (depth >= 0) {
-    subOctreeAddressIndex = Convert3DPositionToSubOctreeAddressIndex(depth, x, y, z);
-    _subOctreeAddress = SubOctreeAddressIndexToMemoryAddress(address, subOctreeAddressIndex);
-
-    if (depth === 0) {
-      // for depth === 0 mask should be equals to 'material' by default
-      // WriteAddressSpotAsVoxelMaterial(memory, address, subOctreeAddressIndex)
-      WriteAddress(memory, _subOctreeAddress, materialAddress);
-      break;
-    } else {
-      _address = ReadAddress(memory, _subOctreeAddress);
-      if (IsSubOctreeAddressIndexAVoxelOctreeAddress(memory, address, subOctreeAddressIndex)) { // is address type
-        address = _address;
-      } else {
-        if (_address === materialAddress) { // same values
-          break; // here we are not at the deepest lvl, material addresses are the same and octree should already be optimized => touch nothing
-        } else { // material addresses are different => must split current materialAddress into another octree
-          const newAddress: number = alloc(VOXEL_OCTREE_BYTES_PER_ELEMENT); // allocates memory for a new octree
-          CreateVoxelOctree(memory, newAddress, _address); // put current material address as octree's materials
-
-          // replace mask value by octree type
-          WriteSubOctreeAddressIndexAsSubVoxelOctree(memory, address, subOctreeAddressIndex);
-
-          // replace value by newAddress
-          WriteAddress(memory, _subOctreeAddress, newAddress);
-
-          address = newAddress;
-        }
-      }
-    }
-
-    depth--;
-  }
-}
 
 
