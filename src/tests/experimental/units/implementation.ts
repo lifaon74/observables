@@ -24,7 +24,7 @@ export function ConstructUnit<T>(
   if (IsObject(options)) {
     privates.value = options.value;
 
-    if (!IsValidUnit(options.unit)) {
+    if (IsValidUnit(options.unit)) {
       privates.unit = options.unit;
     } else {
       throw new TypeError(`Expected non empty string as Unit.options.unit`);
@@ -91,6 +91,10 @@ export function UnitEquals<T>(instance: IUnit<T>, value: TUnitOrValue<T>): boole
   return ConvertUnitOrConstantToOtherUnitValue<T>(value, instance.unit) === instance.value;
 }
 
+export function UnitToString<T>(instance: IUnit<T>): string {
+  return `${ instance.value }${ instance.unit }`;
+}
+
 /** CLASS **/
 
 export class Unit<T> implements IUnit<T> {
@@ -118,6 +122,10 @@ export class Unit<T> implements IUnit<T> {
 
   equals(value: TUnitOrValue<T>): boolean {
     return UnitEquals<T>(this, value);
+  }
+
+  toString(): string {
+    return UnitToString<T>(this);
   }
 }
 

@@ -65,6 +65,16 @@ export function RegisterTypeAliases(type: TType, aliases: TType[]): void {
 
 /*---------------------*/
 
+export function RegisterAdditionConverter(type1: TType, type2: TType, value: number): void {
+  RegisterCompleteTypeConverter(
+    type1, type2,
+    (input: number): number => (input - value),
+    (input: number): number => (input + value),
+  );
+}
+
+/*---------------------*/
+
 /**
  * Structure used to create automatically some converters, from one number to another by using a simple multiplication
  */
@@ -98,6 +108,11 @@ export function RegisterMultiplierTypeConverterBySymbols(type: TType, converter:
   }
 }
 
+export function RegisterMultiplierTypeConverterSymbols(type: TType, converter: MultiplierTypeConverter): void {
+  RegisterMultiplierTypeConverterBySymbols(type, converter);
+  RegisterMultiplierTypeConverterSymbolsAsAliasesOfName(converter);
+}
+
 export function RegisterMultiplierTypeConverterSymbolsAsAliases(type: TType, converter: MultiplierTypeConverter): void {
   if (converter.symbols !== void 0) {
     RegisterTypeAliases(type, converter.symbols);
@@ -111,9 +126,14 @@ export function RegisterMultiplierTypeConverterSymbolsAsAliasesOfName(converter:
 }
 
 export function RegisterMultiplierTypeConverter(type: TType, converter: MultiplierTypeConverter): void {
-  RegisterMultiplierTypeConverterByName(type, converter);
-  RegisterMultiplierTypeConverterBySymbols(type, converter);
-  RegisterMultiplierTypeConverterSymbolsAsAliasesOfName(converter);
+  if (converter.name === type) {
+    if (converter.multiplier !== 1) {
+      throw new Error(`RegisterMultiplierTypeConverter: type and converter name identical but multiplier is different than 1`);
+    }
+  } else {
+    RegisterMultiplierTypeConverterByName(type, converter);
+  }
+  RegisterMultiplierTypeConverterSymbols(type, converter);
 }
 
 /*---------------------*/
@@ -203,8 +223,8 @@ export function GetTypeConverters<TConverter extends TTypeConverter<any, any>>(f
  * Returns a type converter (may be built on the fly) from one type to another, or throws
  */
 export function GetTypeConverterOrThrow<TConverter extends TTypeConverter<any, any>>(from: TType, to: TType, depth?: number): TConverter {
-  const converter: TConverter | undefined= FastGetTypeConverter<TConverter>(from, to);
-  if (converter === undefined) {
+  const converter: TConverter | undefined = FastGetTypeConverter<TConverter>(from, to);
+  if (converter === void 0) {
     const converters: ITypeConverterAndPath<TConverter>[] = GetTypeConverters<TConverter>(from, to, depth);
     if (converters.length === 0) {
       throw new Error(`No converter found from '${ from }' to '${ to }'`);

@@ -35,6 +35,7 @@ import { debugCancellableContext } from './debug/debug-cancellable-context';
 import { testPerformances } from './test-performances';
 import { runDebug } from './debug/debug';
 import { debugVoxel } from './experimental/voxel/experiment-voxel';
+import { testUnit } from './experimental/units/unit';
 
 
 
@@ -574,11 +575,11 @@ export async function test() {
   // testProgram();
   // await testTask();
   // await testFactory();
-  // await testUnit();
+  await testUnit();
 
   // await testAbortController();
   // await runDebug();
-  await debugVoxel();
+  // await debugVoxel();
 
   console.log('tests done');
 }

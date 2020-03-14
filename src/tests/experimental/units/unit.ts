@@ -1,32 +1,16 @@
 import { GenerateAllUnitConverters } from './converters/all-converters';
-import { cm, meter, mm } from './shortcuts';
+import { cm, meter, mm } from './shortcuts/length';
 import { INumericUnit, TNumericUnitOrValue } from './numeric/interfaces';
 import { IsNumericUnit, NumericUnit } from './numeric/implementation';
 import { IsUnit } from './implementation';
 import { IUnit, IUnitOptions } from './interfaces';
+import { GetTypeConverterOrThrow } from './converters/register';
+import { fahrenheit, kelvin } from './shortcuts/temperature';
 
 // import { ReadonlySet } from '../../misc/readonly-set/implementation';
 
 
 /*----*/
-
-
-
-
-// export class LengthUnit extends NumericUnit {
-//   constructor(options: IUnitOptions<number>) {
-//     super(options);
-//   }
-// }
-//
-// export class MeterUnit extends LengthUnit {
-//   constructor(value: number) {
-//     super({
-//       value,
-//       unit: 'm'
-//     });
-//   }
-// }
 
 /*----------------*/
 
@@ -131,6 +115,63 @@ export class PCBHole extends PCBItem {
 /*----------------*/
 
 
+export class Shape2DPart {
+
+}
+
+export interface ILineToShape2DPartOptions {
+  x: number; // x end position
+  y: number; // y end position
+}
+
+export class LineTo extends Shape2DPart {
+  public readonly x: number;
+  public readonly y: number;
+
+  constructor(options: ILineToShape2DPartOptions) {
+    super();
+    this.x = options.x;
+    this.y = options.y;
+  }
+
+}
+
+export interface IArcToShape2DPartOptions {
+  x: number; // x center position
+  y: number; // y center position
+  angle: number;
+}
+
+export class ArcTo extends Shape2DPart {
+  public readonly x: number;
+  public readonly y: number;
+
+  constructor(options: ILineToShape2DPartOptions) {
+    super();
+    this.x = options.x;
+    this.y = options.y;
+  }
+
+}
+
+/*--*/
+
+export class Shape2D {
+
+}
+
+
+
+export class Area extends Shape2D {
+
+}
+
+
+
+export class Perimeter {
+
+}
+/*----------------*/
 
 
 
@@ -150,6 +191,12 @@ export function testUnit() {
   //
   // console.log(GetTypeConverterOrThrow('minute', 'meter')(1));
 
+  // console.log(GetTypeConverterOrThrow('degree', 'radian')(180));
+  // console.log(GetTypeConverterOrThrow('rad', 'deg')(Math.PI / 2));
 
-  console.log(meter(1).add(mm(1000)).sub(cm(10)).to('cm'));
+  // console.log(GetTypeConverterOrThrow('celcius', 'kelvin')(0));
+  // console.log(GetTypeConverterOrThrow('celcius', '°F')(0));
+
+  // console.log(meter(1).add(mm(1000)).sub(cm(10)).to('cm').toString());
+  console.log(NumericUnit.mean(fahrenheit(32), kelvin(273.15)).to('celcius').toString());
 }

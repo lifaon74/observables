@@ -1,5 +1,6 @@
 import {
-  INumericUnit, INumericUnitOptions, TNumericUnitOrValue, TNumericUnitToOptionsReturn, TNumericUnitToReturn
+  INumericUnit, INumericUnitConstructor, INumericUnitOptions, TNumericUnitOrValue, TNumericUnitToOptionsReturn,
+  TNumericUnitToReturn
 } from './interfaces';
 import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../../../helpers';
@@ -8,7 +9,8 @@ import {
 } from '../implementation';
 import { IUnit, IUnitOptions } from '../interfaces';
 
-/** CONSTRUCTOR **/
+/** PRIVATES **/
+
 export const NUMERIC_UNIT_PRIVATE = Symbol('numerir-unit-private');
 
 export interface INumericUnitPrivate {
@@ -19,12 +21,14 @@ export interface INumericUnitInternal extends INumericUnit {
   [NUMERIC_UNIT_PRIVATE]: INumericUnitPrivate;
 }
 
+/** CONSTRUCTOR **/
+
 export function ConstructNumericUnit(
   instance: INumericUnit,
   options: INumericUnitOptions
 ): void {
   ConstructClassWithPrivateMembers(instance, NUMERIC_UNIT_PRIVATE);
-  const privates: INumericUnitPrivate = (instance as INumericUnitInternal)[NUMERIC_UNIT_PRIVATE];
+  // const privates: INumericUnitPrivate = (instance as INumericUnitInternal)[NUMERIC_UNIT_PRIVATE];
   if (IsObject(options)) {
     if (typeof options.value !== 'number') {
       throw new TypeError(`Expected number as NumericUnit.value`);
@@ -46,21 +50,38 @@ const add = (a: number, b: number) => (a + b);
 const sub = (a: number, b: number) => (a - b);
 const mul = (a: number, b: number) => (a * b);
 const div = (a: number, b: number) => (a / b);
+// const mean = (length: number) => ((a: number, b: number) => (a + (b / length)));
 
 
-export function NumericUnitReduce(instance: NumericUnit, values: TNumericUnitOrValue[], reducer: (previousValue: number, currentValue: number) => number): number {
+export function NumericUnitReduce(instance: INumericUnit, values: TNumericUnitOrValue[], reducer: (previousValue: number, currentValue: number) => number): number {
   return values.reduce((value: number, unit: TNumericUnitOrValue) => {
     return reducer(value, ConvertUnitOrConstantToOtherUnitValue<number>(unit, instance.unit));
   }, instance.value);
 }
 
-export function NumericUnitReduceOperation(instance: NumericUnit, values: TNumericUnitOrValue[], reducer: (previousValue: number, currentValue: number) => number): INumericUnit {
+export function NumericUnitReduceOperation(instance: INumericUnit, values: TNumericUnitOrValue[], reducer: (previousValue: number, currentValue: number) => number): INumericUnit {
   return new NumericUnit({
-    value: NumericUnitReduce(instance, values, add),
+    value: NumericUnitReduce(instance, values, reducer),
     unit: instance.unit,
   });
 }
 
+
+export function NumericUnitStaticReduce(values: INumericUnit[], reducer: (previousValue: number, currentValue: number) => number): number {
+  if (values.length > 0) {
+    return NumericUnitReduce(values[0], values.slice(1), reducer);
+  } else {
+    throw new Error(`Expects at least one value`)
+  }
+}
+
+export function NumericUnitStaticReduceOperation(values: INumericUnit[], reducer: (previousValue: number, currentValue: number) => number): INumericUnit {
+  if (values.length > 0) {
+    return NumericUnitReduceOperation(values[0], values.slice(1), reducer);
+  } else {
+    throw new Error(`Expects at least one value`)
+  }
+}
 
 /** METHODS **/
 
@@ -68,8 +89,8 @@ export function NumericUnitReduceOperation(instance: NumericUnit, values: TNumer
 export function NumericUnitTo<TTo>(instance: INumericUnit, unit: string): INumericUnit | IUnit<TTo> {
   const options: IUnitOptions<TTo> = UnitToOptions(instance, unit);
   return (typeof options.value === 'number')
-    ? new Unit<TTo>(options)
-    : new NumericUnit(options as unknown as INumericUnitOptions);
+    ? new NumericUnit(options as unknown as INumericUnitOptions)
+    : new Unit<TTo>(options);
 }
 
 export function NumericUnitAdd(instance: INumericUnit, values: TNumericUnitOrValue[]): INumericUnit {
@@ -96,9 +117,25 @@ export function NumericUnitMax(instance: INumericUnit, values: TNumericUnitOrVal
   return NumericUnitReduceOperation(instance, values, Math.max);
 }
 
+
+/* STATIC METHODS */
+
+export function NumericUnitStaticMean(values: INumericUnit[]): INumericUnit {
+  if (values.length > 0) {
+    return values[0].add(...values.slice(1)).div(values.length);
+  } else {
+    throw new Error(`Expects at least one value`)
+  }
+}
+
+
 /** CLASS **/
 
 export class NumericUnit extends Unit<number> implements INumericUnit {
+
+  static mean(...values: INumericUnit[]): INumericUnit {
+    return NumericUnitStaticMean(values);
+  }
 
   constructor(options: INumericUnitOptions) {
     super(options);

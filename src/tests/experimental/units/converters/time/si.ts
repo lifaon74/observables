@@ -1,11 +1,9 @@
 import { MultiplierTypeConverter, RegisterCompleteTypeConverter, RegisterMultiplierTypeConverter } from '../register';
-import { IMPERIAL_LENGTH_CONVERTERS, ImperialLengthConverter } from '../length/imperial';
 
-export interface TimeMultiplier extends MultiplierTypeConverter {
+export interface TimeConverter extends MultiplierTypeConverter {
 }
 
-
-export const TimeMultipliers: TimeMultiplier[] = [
+export const TIME_CONVERTERS: TimeConverter[] = [
   {
     name: 'second',
     symbols: ['s'],
@@ -34,7 +32,9 @@ export const TimeMultipliers: TimeMultiplier[] = [
 ];
 
 export function GenerateTimeUnitConverters(): void {
-  IMPERIAL_LENGTH_CONVERTERS.forEach((converter: ImperialLengthConverter) => {
-    RegisterMultiplierTypeConverter('second', converter);
+  TIME_CONVERTERS.forEach((converter: TimeConverter) => {
+    if (converter.name !== 'second') {
+      RegisterMultiplierTypeConverter('second', converter);
+    }
   });
 }
