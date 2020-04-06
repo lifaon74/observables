@@ -2,9 +2,21 @@ import { ITask } from './interfaces';
 import { NotificationsObservable } from '../../core/notifications-observable/implementation';
 import { INotificationsObservableContext } from '../../core/notifications-observable/context/interfaces';
 import { TAbortStrategy } from '../../../misc/advanced-abort-controller/advanced-abort-signal/types';
-import { ITaskKeyValueMap, TTaskCreateCallback, TTaskState } from './types';
+import {
+  ITaskKeyValueMap, ITaskToCancellablePromiseOptions, ITaskToCancellablePromiseOptionsLastOnly,
+  ITaskToCancellablePromiseOptionsNotLastOnly, ITaskToPromiseOptions,
+  ITaskToPromiseOptionsLastOnly,
+  ITaskToPromiseOptionsNotLastOnly,
+  TTaskCreateCallback, TTaskState
+} from './types';
 import { ITaskInternal, ITaskPrivate, TASK_PRIVATE } from './privates';
 import { ConstructTask } from './constructor';
+import { ICancellablePromise } from '../../../promises/cancellable-promise/interfaces';
+import { CancellablePromise } from '../../../promises/cancellable-promise/implementation';
+import { TNativePromiseLikeOrValue } from '../../../promises/types/native';
+import { IAdvancedAbortSignal } from '../../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
+import { IAdvancedAbortController } from '../../../misc/advanced-abort-controller/interfaces';
+import { AdvancedAbortController } from '../../../misc/advanced-abort-controller/implementation';
 
 
 /** METHODS **/
@@ -77,11 +89,13 @@ export function TaskAbort<TValue>(instance: ITask<TValue>, reason?: any): void {
   }
 }
 
-export function TaskToPromise<TValue>(instance: ITask<TValue>, abortStrategy?: TAbortStrategy): Promise<TValue> {
-  return new Promise<TValue>((resolve: any, reject: any) => {
-    const privates: ITaskPrivate<TValue> = (instance as ITaskInternal<TValue>)[TASK_PRIVATE];
 
-    const onComplete = (value: TValue) => {
+export function TaskToPromise<TValue>(instance: ITask<TValue>, options: ITaskToPromiseOptions = {}): Promise<TValue[] | TValue> {
+  type TReturnedValue = TValue[] | TValue;
+  return new Promise<TReturnedValue>((resolve: any, reject: any) => {
+    const privates: ITaskPrivate<TReturnedValue> = (instance as ITaskInternal<TReturnedValue>)[TASK_PRIVATE];
+
+    const onComplete = (value: TReturnedValue) => {
       resolve(value);
     };
 
@@ -90,7 +104,7 @@ export function TaskToPromise<TValue>(instance: ITask<TValue>, abortStrategy?: T
     };
 
     const onAbort = (reason?: any) => {
-      switch (abortStrategy) {
+      switch (options.abortStrategy) {
         case void 0:
         case 'never':
           break;
@@ -101,7 +115,7 @@ export function TaskToPromise<TValue>(instance: ITask<TValue>, abortStrategy?: T
           reject(reason);
           break;
         default:
-          reject(new TypeError(`Unexpected abortStrategy: ${ abortStrategy }`));
+          reject(new TypeError(`Unexpected abortStrategy: ${ options.abortStrategy }`));
           break;
       }
     };
@@ -142,11 +156,82 @@ export function TaskToPromise<TValue>(instance: ITask<TValue>, abortStrategy?: T
         errorListener.activate();
         cancelListener.activate();
       }
-      break;
+        break;
     }
   });
 }
 
+export function TaskToCancellablePromise<TValue>(instance: ITask<TValue>, options: ITaskToCancellablePromiseOptions = {}): ICancellablePromise<TValue[] | TValue> {
+  type TReturnedValue = TValue[] | TValue;
+  const controller: IAdvancedAbortController = AdvancedAbortController.fromAbortSignals(options.signal);
+  return new CancellablePromise<TReturnedValue>((
+    resolve: (value?: TNativePromiseLikeOrValue<TReturnedValue>) => void,
+    reject: (reason?: any) => void,
+    signal: IAdvancedAbortSignal,
+  ) => {
+    const privates: ITaskPrivate<TReturnedValue> = (instance as ITaskInternal<TReturnedValue>)[TASK_PRIVATE];
+
+    const onComplete = (value: TReturnedValue) => {
+      resolve(value);
+    };
+
+    const onError = (error?: any) => {
+      reject(error);
+    };
+
+    const onAbort = (reason?: any) => {
+      controller.abort(reason);
+    };
+
+    switch (privates.state) {
+      case 'complete':
+        onComplete(privates.result);
+        break;
+      case 'error':
+        onError(privates.result);
+        break;
+      case 'abort':
+        onAbort(privates.result);
+        break;
+      default: {
+        const clear = () => {
+          completeListener.deactivate();
+          errorListener.deactivate();
+          abortListener.deactivate();
+          signalAbortListener.deactivate();
+        };
+
+        const completeListener = instance.addListener('complete', () => {
+          clear();
+          onComplete(privates.result);
+        });
+
+        const errorListener = instance.addListener('error', (error: any) => {
+          clear();
+          onError(error);
+        });
+
+        const abortListener = instance.addListener('abort', (reason: any) => {
+          clear();
+          onAbort(reason);
+        });
+
+        const signalAbortListener = signal.addListener('abort', () => {
+          clear();
+        });
+
+        completeListener.activate();
+        errorListener.activate();
+        abortListener.activate();
+        signalAbortListener.activate();
+      }
+        break;
+    }
+  }, {
+    ...options,
+    signal: controller.signal
+  });
+}
 
 /** CLASS **/
 
@@ -193,9 +278,16 @@ export class Task<TValue> extends NotificationsObservable<ITaskKeyValueMap<TValu
     return this;
   }
 
-  // INFO: could return a CancellablePromise instead
-  toPromise(abortStrategy?: TAbortStrategy): Promise<TValue> {
-    return TaskToPromise<TValue>(this, abortStrategy);
+  toPromise(options?: ITaskToPromiseOptionsNotLastOnly): Promise<TValue[]>;
+  toPromise(options: ITaskToPromiseOptionsLastOnly): Promise<TValue>;
+  toPromise(options?: ITaskToPromiseOptions): Promise<TValue[] | TValue> {
+    return TaskToPromise<TValue>(this, options);
+  }
+
+  toCancellablePromise(options?: ITaskToCancellablePromiseOptionsNotLastOnly): ICancellablePromise<TValue[]>;
+  toCancellablePromise(options: ITaskToCancellablePromiseOptionsLastOnly): ICancellablePromise<TValue>;
+  toCancellablePromise(options?: ITaskToCancellablePromiseOptions): ICancellablePromise<TValue[] | TValue> {
+    return TaskToCancellablePromise<TValue>(this, options);
   }
 }
 

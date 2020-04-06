@@ -1,4 +1,4 @@
-export * from './parallel/public';
-export * from './sequencial/public';
+// export * from './parallel/public';
+// export * from './sequencial/public';
 
 

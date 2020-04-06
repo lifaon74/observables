@@ -298,7 +298,7 @@ async function finiteStateObservableExample2() {
       async function readAll() {
         let result: ReadableStreamReadResult<T>;
         while (!(result = await reader.read()).done) {
-          context.next(result.value);
+          context.next((result as ReadableStreamReadValueResult<T>).value);
         }
         context.complete();
       }
@@ -320,7 +320,7 @@ async function finiteStateObservableExample2() {
     return new FromIterableObservable((async function * () {
       let result: ReadableStreamReadResult<T>;
       while (!(result = await reader.read()).done) {
-        yield result.value;
+        yield (result as ReadableStreamReadValueResult<T>).value;
       }
     })(), { mode: 'cache' });
   }

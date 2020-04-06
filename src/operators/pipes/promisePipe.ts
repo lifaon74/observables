@@ -7,9 +7,7 @@ import { Pipe } from '../../core/observable-observer/pipe/implementation';
 import {
   IPromiseObservableOptions, TPromiseObservableNotifications
 } from '../../notifications/observables/finite-state/built-in/promise/promise-observable/types';
-import { IAdvancedAbortController } from '../../misc/advanced-abort-controller/interfaces';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
-import { AdvancedAbortController } from '../../misc/advanced-abort-controller/implementation';
 import { TNativePromiseLikeOrValue } from '../../promises/types/native';
 
 /**
