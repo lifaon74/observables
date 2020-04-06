@@ -1,6 +1,6 @@
 {
   "name": "@lifaon/observables",
-  "version": "2.0.8",
+  "version": "2.1.0",
   "description": "Better observables for everyone",
   "main": "index.js",
   "scripts": {
@@ -96,7 +96,7 @@
     "shx": "^0.3.2",
     "tsc-watch": "^4.0.0",
     "tslib": "^1.10.0",
-    "typescript": "3.7.4",
+    "typescript": "3.7.5",
     "typescript-tuple": "^2.2.1",
     "uglify-es": "^3.3.9"
   },

@@ -1,7 +1,7 @@
-import { TPromiseOrValue, TPromiseOrValueFactory } from '../interfaces';
-import { PromiseTry } from '../helpers';
+import { PromiseTry } from '../types/helpers';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 import { IsAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/constructor';
+import { TNativePromiseLikeOrValue, TNativePromiseLikeOrValueFactory } from '../types/native';
 
 /**
  * INFO:
@@ -13,8 +13,8 @@ import { IsAdvancedAbortSignal } from '../../misc/advanced-abort-controller/adva
 /**
  * Converts a list of promise factories into an iterator of promises
  */
-export function * PromiseFactoriesIteratorToPromiseIterable<T>(iterator: Iterator<TPromiseOrValueFactory<T>>): IterableIterator<Promise<T>> {
-  let result: IteratorResult<TPromiseOrValueFactory<T>>;
+export function * PromiseFactoriesIteratorToPromiseIterable<T>(iterator: Iterator<TNativePromiseLikeOrValueFactory<T>>): IterableIterator<Promise<T>> {
+  let result: IteratorResult<TNativePromiseLikeOrValueFactory<T>>;
   while (!(result = iterator.next()).done) {
     yield PromiseTry<T>(result.value);
   }
@@ -23,12 +23,12 @@ export function * PromiseFactoriesIteratorToPromiseIterable<T>(iterator: Iterato
 /**
  * Runs in parallel up to 'concurrent' promises
  */
-export function RunConcurrentPromises<T>(iterator: Iterator<TPromiseOrValue<T>>, concurrent: number = 1, signal?: IAdvancedAbortSignal): Promise<void> {
+export function RunConcurrentPromises<T>(iterator: Iterator<TNativePromiseLikeOrValue<T>>, concurrent: number = 1, signal?: IAdvancedAbortSignal): Promise<void> {
   // ensures job is cancelled if one of the promise rejects or if the token is cancelled manually
   let errored: boolean = false;
-  let next = (): TPromiseOrValue<void> => {
+  let next = (): TNativePromiseLikeOrValue<void> => {
     if (!errored) {
-      const result: IteratorResult<TPromiseOrValue<T>> = iterator.next();
+      const result: IteratorResult<TNativePromiseLikeOrValue<T>> = iterator.next();
       if (!result.done) {
         return Promise.resolve(result.value).then(next);
       }
@@ -36,7 +36,7 @@ export function RunConcurrentPromises<T>(iterator: Iterator<TPromiseOrValue<T>>,
   };
 
   if (IsAdvancedAbortSignal(signal)) {
-    next = signal.wrapFunction<() => TPromiseOrValue<void>, 'never', never>(next);
+    next = signal.wrapFunction<() => TNativePromiseLikeOrValue<void>, 'never', never>(next);
   }
 
   return Promise.all(

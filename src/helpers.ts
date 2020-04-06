@@ -46,21 +46,6 @@ export function IsArray(value: any): value is Iterable<any> {
   return Array.isArray(value);
 }
 
-export function IsIterable(value: any): value is Iterable<any> {
-  return IsObject(value)
-    && (Symbol.iterator in value);
-}
-
-export function IsAsyncIterable(value: any): value is AsyncIterable<any> {
-  return IsObject(value)
-    && (Symbol.asyncIterator in value);
-}
-
-
-export function IsIterator(value: any): value is Iterable<any> {
-  return IsObject(value)
-    && (typeof (value as any).next === 'function');
-}
 
 export function IsNullOrUndefined(value: any): value is (null | undefined) {
   return (value === null) || (value === void 0);

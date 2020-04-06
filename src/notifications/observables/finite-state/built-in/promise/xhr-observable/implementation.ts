@@ -4,7 +4,8 @@ import { GenerateFiniteStateObservableHookFromXHR } from './hook-generators';
 import { TFiniteStateObservableCreateCallback } from '../../../types';
 import { ConstructXHRObservable } from './constructor';
 import {
-  IXHRObservableKeyValueMap, IXHRObservableOptions, TXHRObservableFinalState, TXHRObservableMode
+  IXHRObservableKeyValueMap, IXHRObservableOptions, IXHRObservableRequestInit, TXHRObservableFinalState,
+  TXHRObservableMode
 } from './types';
 
 
@@ -22,7 +23,7 @@ import {
 
 export class XHRObservable extends FiniteStateObservable<Response, TXHRObservableFinalState, TXHRObservableMode, IXHRObservableKeyValueMap> implements IXHRObservable {
 
-  constructor(requestInfo: RequestInfo, requestInit?: RequestInit, options?: IXHRObservableOptions) {
+  constructor(requestInfo: RequestInfo, requestInit?: IXHRObservableRequestInit, options?: IXHRObservableOptions) {
     super(
       GenerateFiniteStateObservableHookFromXHR(requestInfo, requestInit) as TFiniteStateObservableCreateCallback<Response, TXHRObservableFinalState, TXHRObservableMode, IXHRObservableKeyValueMap>,
       options

@@ -1,13 +1,14 @@
 import { IFiniteStateObservable } from '../../../interfaces';
 import {
-  IXHRObservableKeyValueMap, IXHRObservableOptions, TXHRObservableFinalState, TXHRObservableMode
+  IXHRObservableKeyValueMap, IXHRObservableOptions, IXHRObservableRequestInit, TXHRObservableFinalState,
+  TXHRObservableMode
 } from './types';
 
 
 /** INTERFACES **/
 
 export interface IXHRObservableConstructor {
-  new(requestInfo: RequestInfo, requestInit?: RequestInit, options?: IXHRObservableOptions): IXHRObservable;
+  new(requestInfo: RequestInfo, requestInit?: IXHRObservableRequestInit, options?: IXHRObservableOptions): IXHRObservable;
 }
 
 /**

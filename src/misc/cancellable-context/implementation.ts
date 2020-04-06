@@ -1,7 +1,6 @@
 import { ICancellablePromise } from '../../promises/cancellable-promise/interfaces';
 import { ICancellableContext } from './interfaces';
 import { IActivableLike } from '../activable/interfaces';
-import { IAdvancedAbortSignal } from '../advanced-abort-controller/advanced-abort-signal/interfaces';
 import { CancellablePromise } from '../../promises/cancellable-promise/implementation';
 import { IAdvancedAbortController } from '../advanced-abort-controller/interfaces';
 import { AdvancedAbortController } from '../advanced-abort-controller/implementation';
@@ -19,6 +18,9 @@ import {
 } from './privates';
 import { ConstructCancellableContext } from './constructor';
 import { AbortReason } from '../reason/built-in/abort-reason';
+import { ICancellablePromiseNormalizedOptions } from '../../promises/cancellable-promise/types';
+import { AdvancedAbortSignal } from '../advanced-abort-controller/advanced-abort-signal/implementation';
+import { IAdvancedAbortSignal } from '../advanced-abort-controller/advanced-abort-signal/interfaces';
 
 
 /** METHODS **/
@@ -155,7 +157,7 @@ export function CancellableContextRegisterActivable<TActivable extends IActivabl
 ): ICancellablePromise<TActivable> {
   return CancellableContextRegisterCancellablePromise<TActivable>(instance, key, (signal: IAdvancedAbortSignal) => {
     const activable: TActivable = factory();
-    return ActivableToCancellablePromise(activable, signal)
+    return ActivableToCancellablePromise(activable, { signal })
       .then(() => activable);
   }, options);
 }
@@ -201,8 +203,6 @@ export function CancellableContextClearAll(
 
   return unsubscribe();
 }
-
-
 
 
 /** CLASS **/

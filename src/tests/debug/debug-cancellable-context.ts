@@ -1,7 +1,7 @@
 import { CancellableContext } from '../../misc/cancellable-context/implementation';
 import { $delay } from '../../promises/cancellable-promise/snipets';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
-import { OnFinallyResult } from '../../promises/cancellable-promise/types';
+import { TOnFinallyResult } from '../../promises/cancellable-promise/types';
 import { AdvancedAbortController } from '../../misc/advanced-abort-controller/implementation';
 import { EventsObservable } from '../../notifications/observables/events/events-observable/public';
 import { ClassListActivable } from '../../misc/activable/built-in/class-list-activable';
@@ -11,7 +11,7 @@ export async function debugCancellablePromise1() {
   controller.abort('end');
 
   await $delay(1000, { signal: controller.signal })
-    .finally((state: OnFinallyResult<void>) => {
+    .finally((state: TOnFinallyResult<void>) => {
       console.log(`'p1' finished with state:`);
       console.log(state);
     }, { includeCancelled: true })
@@ -21,8 +21,7 @@ export async function debugCancellablePromise1() {
       console.log('rejected');
     }, () => {
       console.log('cancelled');
-    })
-    .promise;
+    }).toPromise();
 
 
 }
@@ -34,7 +33,7 @@ export async function debugCancellableContext1() {
     return (signal: IAdvancedAbortSignal) => {
       console.log(`'${ name }' started`);
       return $delay(1000, { signal })
-        .finally((state: OnFinallyResult<void>) => {
+        .finally((state: TOnFinallyResult<void>) => {
           console.log(`'${ name }' finished with state:`);
           console.log(state);
         }, { includeCancelled: true });

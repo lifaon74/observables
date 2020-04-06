@@ -1,6 +1,5 @@
 import { IObservable } from '../../core/observable/interfaces';
 import { Observer } from '../../core/observer/implementation';
-import { ICancellablePromiseTuple, TPromiseOrValue } from '../../promises/interfaces';
 import { IFiniteStateObservable } from '../../notifications/observables/finite-state/interfaces';
 import { IObserver } from '../../core/observer/interfaces';
 import { IsObservable } from '../../core/observable/constructor';
@@ -12,202 +11,254 @@ import {
 } from '../../notifications/observables/finite-state/types';
 import { IsFiniteStateObservable } from '../../notifications/observables/finite-state/constructor';
 import { TPromiseObservableNotifications } from '../../notifications/observables/finite-state/built-in/promise/promise-observable/types';
-import { IAdvancedAbortController } from '../../misc/advanced-abort-controller/interfaces';
 import {
-  IAdvancedAbortSignalWrapPromiseOptions, TAbortStrategy, TAbortStrategyReturn
+  TAbortStrategy, TInferAbortStrategyReturn
 } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
-import { AdvancedAbortController } from '../../misc/advanced-abort-controller/implementation';
-import { IsAdvancedAbortController } from '../../misc/advanced-abort-controller/constructor';
+import { TNativePromiseLikeOrValue } from '../../promises/types/native';
+import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
+import {
+  NormalizeAdvancedAbortSignal, NormalizeAdvancedAbortSignalWrapPromiseOptionsStrategy
+} from '../../misc/advanced-abort-controller/advanced-abort-signal/helpers';
+import { IsObject } from '../../helpers';
 
+
+/** DEFINITIONS **/
 
 export type TBasePromiseObservableNotification<T> = TPromiseObservableNotifications<T>;
 export type TValueOrNotificationType<T> = T | TBasePromiseObservableNotification<T>;
 
-export interface IObservableToCancellablePromiseTupleOptions<TStrategy extends TAbortStrategy> extends IAdvancedAbortSignalWrapPromiseOptions<TStrategy, never> {
-  controller?: IAdvancedAbortController;
+export interface IObservableToPromiseOptions<TStrategy extends TAbortStrategy> {
+  signal?: IAdvancedAbortSignal; // signal used to abort/stop the promise
+  strategy?: TStrategy; // (default: 'never') how to resolve the promise if signal is aborted
 }
 
-function ObservableToCancellablePromiseTupleOptionsToController(options: IObservableToCancellablePromiseTupleOptions<any> = {}): IAdvancedAbortController {
-  return IsAdvancedAbortController(options.controller)
-    ? options.controller
-    : new AdvancedAbortController();
-}
-
-/**
- * Returns a tuple composed of :
- *  - a 'promise' (Promise) which resolves when the 'observable' emits a value
- *  - a 'controller' (AdvancedAbortController), used to stop observing 'observable' when aborted
- */
-export function genericObservableToCancellablePromiseTuple<T, TStrategy extends TAbortStrategy>(
-  observable: IObservable<T>,
-  options?: IObservableToCancellablePromiseTupleOptions<TStrategy>,
-): ICancellablePromiseTuple<T | TAbortStrategyReturn<TStrategy>> {
-  const controller: IAdvancedAbortController = ObservableToCancellablePromiseTupleOptionsToController(options);
-  return {
-    promise: controller.signal.wrapPromise<T, TStrategy, never>((resolve: (value?: TPromiseOrValue<T>) => void) => {
-      const clear = () => {
-        observer.deactivate();
-        signalObserver.deactivate();
-      };
-
-      const signalObserver = controller.signal.addListener('abort', () => {
-        clear();
-      });
-
-      const observer: IObserver<T> = new Observer<T>((value: T) => {
-        clear();
-        resolve(value);
-      }).observe(observable);
-
-      observer.activate();
-      signalObserver.activate();
-    }, options),
-    controller
-  };
+export interface IObservableToPromiseNormalizedOptions<TStrategy extends TAbortStrategy> extends Required<IObservableToPromiseOptions<TStrategy>> {
 }
 
 
-/**
- * Returns a tuple composed of :
- *  - a 'promise' (Promise) which resolves when the 'observable' emits a 'complete' notification
- *    -> resolved value is an array composed of the values emitted through 'next'
- *  - a 'controller' (AdvancedAbortController), used to stop observing 'observable' when aborted
- */
-export function finiteStateObservableToCancellablePromiseTuple<TValue,
-  TFinalState extends TFinalStateConstraint<TFinalState>,
-  TMode extends TFiniteStateObservableModeConstraint<TMode>,
-  TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>,
-  TStrategy extends TAbortStrategy>(
-  observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
-  options?: IObservableToCancellablePromiseTupleOptions<TStrategy>,
-): ICancellablePromiseTuple<TValue[] | TAbortStrategyReturn<TStrategy>> {
-  const controller: IAdvancedAbortController = ObservableToCancellablePromiseTupleOptionsToController(options);
-  return {
-    promise: controller.signal.wrapPromise<TValue[], TStrategy, never>((resolve: (value?: TPromiseOrValue<TValue[]>) => void, reject: (reason?: any) => void) => {
-      const values: TValue[] = [];
+/** NORMALIZE **/
 
-      const _clear = () => {
-        observer.deactivate();
-        tokenObserver.deactivate();
-      };
-
-      const _resolve = () => {
-        _clear();
-        resolve(values);
-      };
-
-      const _reject = (error: any): void => {
-        _clear();
-        reject(error);
-      };
-
-      const tokenObserver = controller.signal.addListener('abort', () => {
-        _clear();
-      });
-
-      const observer: IObserver<KeyValueMapToNotifications<TKVMap>> = new Observer<KeyValueMapToNotifications<TKVMap>>((notification: KeyValueMapToNotifications<TKVMap>) => {
-        switch (notification.name) {
-          case 'next':
-            values.push(notification.value);
-            break;
-          case 'complete':
-            _resolve();
-            break;
-          case 'error':
-            _reject(notification.value);
-            break;
-          case 'cancel':
-            controller.abort(notification.value);
-            break;
-        }
-      }).observe(observable);
-
-      observer.activate();
-      tokenObserver.activate();
-    }, options),
-    controller
-  };
+export function NormalizeObservableToPromiseOptionsSignal(signal?: IAdvancedAbortSignal): IAdvancedAbortSignal {
+  return NormalizeAdvancedAbortSignal(signal);
 }
 
 
-/**
- * Returns a tuple composed of :
- *  - a 'promise' (Promise) which resolves when the 'observable' emits a 'complete' notification
- *    -> resolved value is the last value emitted through 'next'
- *  - a 'controller' (AdvancedAbortController), used to stop observing 'observable' when aborted
- */
-export function singleFiniteStateObservableToCancellablePromiseTuple<TValue,
-  TFinalState extends TFinalStateConstraint<TFinalState>,
-  TMode extends TFiniteStateObservableModeConstraint<TMode>,
-  TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>,
-  TStrategy extends TAbortStrategy>(
-  observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
-  options?: IObservableToCancellablePromiseTupleOptions<TStrategy>,
-): ICancellablePromiseTuple<TValue | TAbortStrategyReturn<TStrategy> | void> {
-  const result: ICancellablePromiseTuple<TValue[] | TAbortStrategyReturn<TStrategy>> = finiteStateObservableToCancellablePromiseTuple<TValue, TFinalState, TMode, TKVMap, TStrategy>(observable, options);
-  return {
-    promise: result.promise.then((result: TValue[] | TAbortStrategyReturn<TStrategy>): (TValue | void) => {
-      if (Array.isArray(result) && (result.length > 0)) {
-        return result[result.length - 1];
-      } else {
-        return void 0;
-      }
-    }),
-    controller: result.controller
-  };
+export function NormalizeObservableToPromiseOptionsStrategy<TStrategy extends TAbortStrategy>(
+  strategy?: TStrategy,
+  defaultValue?: TAbortStrategy
+): TStrategy {
+  return NormalizeAdvancedAbortSignalWrapPromiseOptionsStrategy<TStrategy>(strategy, defaultValue);
 }
 
-/**
- * "Converts" an Observable to a Promise and its AdvancedAbortController
- */
-export function toCancellablePromiseTuple<T, TStrategy extends TAbortStrategy>(
-  observable: TFiniteStateObservableGeneric<T> | IObservable<T>,
-  options?: IObservableToCancellablePromiseTupleOptions<TStrategy>,
-): ICancellablePromiseTuple<T | TAbortStrategyReturn<TStrategy> | void> {
-  if (IsFiniteStateObservable(observable)) {
-    return singleFiniteStateObservableToCancellablePromiseTuple<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>, TStrategy>(observable, options);
-  } else if (IsObservable(observable)) {
-    return genericObservableToCancellablePromiseTuple<T, TStrategy>(observable as IObservable<T>, options) as ICancellablePromiseTuple<T | TAbortStrategyReturn<TStrategy> | void>;
+export function NormalizeObservableToPromiseOptions<TStrategy extends TAbortStrategy>(
+  options: IObservableToPromiseOptions<TStrategy> = {},
+): IObservableToPromiseNormalizedOptions<TStrategy> {
+  if (IsObject(options)) {
+    return {
+      ...options,
+      signal: NormalizeObservableToPromiseOptionsSignal(options.signal),
+      strategy: NormalizeObservableToPromiseOptionsStrategy<TStrategy>(options.strategy),
+    };
   } else {
-    throw new TypeError(`Expected Observable as observable`);
+    throw new TypeError(`Expected object or void as options`);
   }
 }
 
-/*-------------------------*/
 
-export function genericObservableToPromise<T, TStrategy extends TAbortStrategy>(
-  observable: IObservable<T>,
-  options?: IObservableToCancellablePromiseTupleOptions<TStrategy>,
-): Promise<T | TAbortStrategyReturn<TStrategy>> {
-  return genericObservableToCancellablePromiseTuple<T, TStrategy>(observable, options).promise;
+/** CONVERT **/
+
+/* INTERNAL HELPERS */
+
+type TObservableToPromiseResolveFunction<TIn, TOut> = (value: TOut, observer: IObserver<TIn>) => void;
+type TObservableToPromiseRejectFunction<TIn> = (reason: any, observer: IObserver<TIn>) => void;
+
+type TObservableToPromiseEmitFunction<TIn, TOut> = (
+  value: TIn,
+  observer: IObserver<TIn>,
+  resolve: TObservableToPromiseResolveFunction<TIn, TOut>,
+  reject: TObservableToPromiseRejectFunction<TIn>,
+) => void;
+
+// Static default clear function
+function DeactivateObserver<T>(observer: IObserver<T>) {
+  observer.deactivate();
 }
 
 
+/**
+ * Creates a context for an observer observing 'observable'; and for clear, resolve and reject functions
+ */
+function CreateObservableToPromiseObserverWithClearFunction<TIn, TOut>(
+  observable: IObservable<TIn>,
+  emit: TObservableToPromiseEmitFunction<TIn, TOut>,
+  resolve: (value?: TNativePromiseLikeOrValue<TOut>) => void,
+  reject: (reason?: any) => void,
+  clear: (observer: IObserver<TIn>) => void,
+): IObserver<TIn> {
+  const _resolve = (value: TOut, observer: IObserver<TIn>) => {
+    clear(observer);
+    resolve(value);
+  };
+
+  const _reject = (reason: any, observer: IObserver<TIn>) => {
+    clear(observer);
+    reject(reason);
+  };
+
+  const observer: IObserver<TIn> = new Observer<TIn>((value: TIn) => {
+    emit(value, observer, _resolve, _reject);
+  }).observe(observable);
+
+  return observer.activate();
+}
+
+/**
+ * Creates a Promise from an Observable, assuming the user provided an abort signal
+ */
+function ObservableToCancellablePromise<TIn, TOut, TStrategy extends TAbortStrategy>(
+  observable: IObservable<TIn>,
+  options: IObservableToPromiseNormalizedOptions<TStrategy>,
+  emit: TObservableToPromiseEmitFunction<TIn, TOut>,
+): Promise<TOut | TInferAbortStrategyReturn<TStrategy>> {
+  const signal: IAdvancedAbortSignal = options.signal;
+  return signal.wrapPromise<TOut, TStrategy, never>((resolve: (value?: TNativePromiseLikeOrValue<TOut>) => void, reject: (reason?: any) => void) => {
+    let resolved: boolean = false;
+
+    const clear = (observer: IObserver<TIn>) => {
+      resolved = true;
+      observer.deactivate();
+      signalObserver.deactivate();
+    };
+
+    const signalObserver = signal.addListener('abort', () => {  // may only append if resolved === false
+      clear(observer);
+    });
+
+    const observer: IObserver<TIn> = CreateObservableToPromiseObserverWithClearFunction<TIn, TOut>(observable, emit, resolve, reject, clear);
+
+    if (!resolved) {
+      signalObserver.activate();
+    }
+  }, options);
+}
+
+/**
+ * Creates a Promise from an Observable, assuming the user did NOT provid an abort signal
+ */
+function ObservableToNonCancellablePromise<TIn, TOut>(
+  observable: IObservable<TIn>,
+  emit: TObservableToPromiseEmitFunction<TIn, TOut>,
+): Promise<TOut> {
+  return new Promise((resolve: (value?: TNativePromiseLikeOrValue<TOut>) => void, reject: (reason?: any) => void) => {
+    CreateObservableToPromiseObserverWithClearFunction<TIn, TOut>(observable, emit, resolve, reject, DeactivateObserver);
+  });
+}
+
+/**
+ * Creates a Promise from an Observable, using an emit function
+ */
+function ObservableToPromise<TIn, TOut, TStrategy extends TAbortStrategy>(
+  observable: IObservable<TIn>,
+  options: IObservableToPromiseOptions<TStrategy> | undefined,
+  emit: TObservableToPromiseEmitFunction<TIn, TOut>,
+): Promise<TOut | TInferAbortStrategyReturn<TStrategy>> {
+  return ((options === void 0) || (options.signal === void 0))
+    ? ObservableToNonCancellablePromise<TIn, TOut>(observable, emit)
+    : ObservableToCancellablePromise<TIn, TOut, TStrategy>(observable, NormalizeObservableToPromiseOptions<TStrategy>(options), emit);
+}
+
+/* GENERIC */
+
+/**
+ * Creates a Promise from an Observable
+ *  - when the observable receives a value, the promise is resolved with this value.
+ *  - you may provide an options.signal (IAdvancedAbortSignal) to abort the promise. When the signal is aborted:
+ *    -> we stop observing 'observable' (to free some resources)
+ *    -> we resolve / reject the promise according to the provided 'strategy'
+ */
+export function genericObservableToPromise<T, TStrategy extends TAbortStrategy>(
+  observable: IObservable<T>,
+  options?: IObservableToPromiseOptions<TStrategy>,
+): Promise<T | TInferAbortStrategyReturn<TStrategy>> {
+  return ObservableToPromise<T, T, TStrategy>(observable, options, (value: T, observer: IObserver<T>, resolve: TObservableToPromiseResolveFunction<T, T>) => {
+    resolve(value, observer);
+  });
+}
+
+
+/* FINITE STATE */
+
+/**
+ * Creates a Promise from a FiniteStateObservable
+ *  - resolves when the observable emits a 'complete' notification, with all the values received though 'next'
+ *  - rejects when the observable emits an 'error' notification
+ *  - like genericObservableToPromise, you may provide an options.signal to abort the promise
+ */
 export function finiteStateObservableToPromise<TValue,
   TFinalState extends TFinalStateConstraint<TFinalState>,
   TMode extends TFiniteStateObservableModeConstraint<TMode>,
   TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>,
   TStrategy extends TAbortStrategy>(
   observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
-  options?: IObservableToCancellablePromiseTupleOptions<TStrategy>,
-): Promise<TValue[] | TAbortStrategyReturn<TStrategy>> {
-  return finiteStateObservableToCancellablePromiseTuple<TValue, TFinalState, TMode, TKVMap, TStrategy>(observable, options).promise;
+  options?: IObservableToPromiseOptions<TStrategy>,
+): Promise<TValue[] | TInferAbortStrategyReturn<TStrategy>> {
+  type TNotification = KeyValueMapToNotifications<TKVMap>;
+  const values: TValue[] = [];
+  return ObservableToPromise<TNotification, TValue[], TStrategy>(observable, options, (
+    notification: TNotification,
+    observer: IObserver<TNotification>,
+    resolve: TObservableToPromiseResolveFunction<TNotification, TValue[]>,
+    reject: TObservableToPromiseRejectFunction<TNotification>,
+  ) => {
+    switch (notification.name) {
+      case 'next':
+        values.push(notification.value);
+        break;
+      case 'complete':
+        resolve(values, observer);
+        break;
+      case 'error':
+        reject(notification.value, observer);
+        break;
+    }
+  });
 }
 
-export function singleFiniteStateObservableToPromise<TValue,
+
+/**
+ * Like finiteStateObservableToPromise but returns the last emitted value of 'observable' instead of an array.
+ */
+export function lastFiniteStateObservableValueToPromise<TValue,
   TFinalState extends TFinalStateConstraint<TFinalState>,
   TMode extends TFiniteStateObservableModeConstraint<TMode>,
   TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>,
   TStrategy extends TAbortStrategy>(
   observable: IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap>,
-  options?: IObservableToCancellablePromiseTupleOptions<TStrategy>,
-): Promise<TValue | TAbortStrategyReturn<TStrategy> | void> {
-  return singleFiniteStateObservableToCancellablePromiseTuple<TValue, TFinalState, TMode, TKVMap, TStrategy>(observable, options).promise;
+  options?: IObservableToPromiseOptions<TStrategy>,
+): Promise<TValue | TInferAbortStrategyReturn<TStrategy> | void> {
+  return finiteStateObservableToPromise<TValue, TFinalState, TMode, TKVMap, TStrategy>(observable, options)
+    .then((result: TValue[] | TInferAbortStrategyReturn<TStrategy>): (TValue | void) => {
+      if (Array.isArray(result) && (result.length > 0)) {
+        return result[result.length - 1];
+      } else {
+        return void 0;
+      }
+    });
 }
 
-export function toPromise<T, TStrategy extends TAbortStrategy>(
-  observable: TFiniteStateObservableGeneric<T> | IObservable<T>,
-  options?: IObservableToCancellablePromiseTupleOptions<TStrategy>,
-): Promise<T | TAbortStrategyReturn<TStrategy> | void> {
-  return toCancellablePromiseTuple<T, TStrategy>(observable, options).promise;
+/**
+ * Converts an Observable to a Promise
+ *  -> calls proper conversion function depending on the Observable's type
+ */
+export function toPromise<TValue, TStrategy extends TAbortStrategy>(
+  observable: TFiniteStateObservableGeneric<TValue> | IObservable<TValue>,
+  options?: IObservableToPromiseOptions<TStrategy>,
+): Promise<TValue | TInferAbortStrategyReturn<TStrategy> | void> {
+  if (IsFiniteStateObservable(observable)) {
+    return lastFiniteStateObservableValueToPromise<TValue, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<TValue, TFiniteStateObservableFinalState>, TStrategy>(observable, options);
+  } else if (IsObservable(observable)) {
+    return genericObservableToPromise<TValue, TStrategy>(observable as IObservable<TValue>, options);
+  } else {
+    throw new TypeError(`Expected Observable as observable`);
+  }
 }

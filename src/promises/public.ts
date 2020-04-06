@@ -1,6 +1,5 @@
-export * from './interfaces';
 export * from './cancellable-promise/public';
-export * from './deferred-promise/public';
-export * from './helpers';
+export * from './types/public';
 export * from './concurent-promises/helpers';
+export * from './deferred-promise/public';
 

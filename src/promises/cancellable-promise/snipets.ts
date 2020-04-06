@@ -1,24 +1,26 @@
 import { ICancellablePromise } from './interfaces';
 import { clearImmediate, setImmediate } from '../../classes/set-immediate';
 import { CancellablePromise } from './implementation';
-import { TPromiseOrValue } from '../interfaces';
 import { ICancellablePromiseOptions } from './types';
+import { TNativePromiseLikeOrValue } from '../types/native';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
-import { TAbortStrategy } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 
 /**
  * Returns a Promise or a CancellablePromise resolved after 'timeout' milliseconds
  */
 export function $delay(timeout: number): Promise<void>;
-export function $delay(timeout: number, options: ICancellablePromiseOptions<'never'>): ICancellablePromise<void, 'never'>;
-export function $delay<TStrategy extends TAbortStrategy>(timeout: number, options: ICancellablePromiseOptions<TStrategy>): ICancellablePromise<void, TStrategy>;
-export function $delay<TStrategy extends TAbortStrategy>(timeout: number, options?: ICancellablePromiseOptions<TStrategy>): Promise<void> | ICancellablePromise<void, TStrategy> {
+export function $delay(timeout: number, options: ICancellablePromiseOptions): ICancellablePromise<void>;
+export function $delay(timeout: number, options?: ICancellablePromiseOptions): Promise<void> | ICancellablePromise<void> {
   if (options === void 0) {
-    return new Promise<void>((resolve: (value?: TPromiseOrValue<void>) => void) => {
+    return new Promise<void>((resolve: (value?: TNativePromiseLikeOrValue<void>) => void) => {
       setTimeout(resolve, timeout);
     });
   } else {
-    return new CancellablePromise<void, TStrategy>((resolve: (value?: TPromiseOrValue<void>) => void, reject: (reason?: any) => void, signal: IAdvancedAbortSignal) => {
+    return new CancellablePromise<void>((
+      resolve: (value?: TNativePromiseLikeOrValue<void>) => void,
+      reject: (reason?: any) => void,
+      signal: IAdvancedAbortSignal
+    ) => {
       const abortSignalObserver = signal.addListener('abort', () => {
         clearTimeout(timer);
         abortSignalObserver.deactivate();
@@ -43,15 +45,18 @@ export function $delay<TStrategy extends TAbortStrategy>(timeout: number, option
  * Returns a Promise or a CancellablePromise resolved immediately after the environment has completed other operations such as events or display updates.
  */
 export function $yield(): Promise<void>;
-export function $yield(options: ICancellablePromiseOptions<'never'> | undefined): ICancellablePromise<void, 'never'>;
-export function $yield<TStrategy extends TAbortStrategy>(options: ICancellablePromiseOptions<TStrategy>): ICancellablePromise<void, TStrategy>;
-export function $yield<TStrategy extends TAbortStrategy>(options?: ICancellablePromiseOptions<TStrategy>): Promise<void> | ICancellablePromise<void, TStrategy> {
+export function $yield(options: ICancellablePromiseOptions): ICancellablePromise<void>;
+export function $yield(options?: ICancellablePromiseOptions): Promise<void> | ICancellablePromise<void> {
   if (options === void 0) {
-    return new Promise<void>((resolve: (value?: TPromiseOrValue<void>) => void) => {
+    return new Promise<void>((resolve: (value?: TNativePromiseLikeOrValue<void>) => void) => {
       setImmediate(resolve);
     });
   } else {
-    return new CancellablePromise<void, TStrategy>((resolve: (value?: TPromiseOrValue<void>) => void, reject: (reason?: any) => void, signal: IAdvancedAbortSignal) => {
+    return new CancellablePromise<void>((
+      resolve: (value?: TNativePromiseLikeOrValue<void>) => void,
+      reject: (reason?: any) => void,
+      signal: IAdvancedAbortSignal
+    ) => {
       const abortSignalObserver = signal.addListener('abort', () => {
         clearImmediate(timer);
         abortSignalObserver.deactivate();

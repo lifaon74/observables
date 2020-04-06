@@ -7,6 +7,14 @@ import { ITaskKeyValueMap, TTaskCreateCallback, TTaskState } from './types';
 // INFO: Task should extends FiniteStateObservable ?
 // INFO: is Task really useful ? => may it be replaced by other kind of FiniteStateObservable ?
 
+/**
+ * INFO
+ *  Task seems different that FiniteStateObservable:
+ *    - a Task is a PULL Source (starts by calling a method), where FiniteStateObservable is a PUSH Source (starts when observed)
+ *    - a Task may emit an abort, where a FiniteStateObservable can't
+ */
+
+
 export interface ITaskConstructor {
   new<TValue>(create: TTaskCreateCallback<TValue>): ITask<TValue>;
 }

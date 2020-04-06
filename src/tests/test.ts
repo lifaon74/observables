@@ -33,6 +33,7 @@ import { Source } from '../observables/distinct/source/sync/implementation';
 import { AsyncSource } from '../observables/distinct/source/async/implementation';
 import { debugCancellableContext } from './debug/debug-cancellable-context';
 import { testPerformances } from './test-performances';
+import { runDebug } from './debug/debug';
 
 
 
@@ -310,37 +311,7 @@ async function testFiniteStateObservable() {
 }
 
 
-async function testFromIterableObservable() {
-  console.log('test testFromIterableObservable');
-  const notifications = [
-    new Notification('next', 0),
-    new Notification('next', 1),
-    new Notification('next', 2),
-    new Notification('next', 3),
-    new Notification('complete', void 0),
-  ];
 
-  const values1 = new FromIterableObservable([0, 1, 2, 3], { mode: 'uniq' });
-
-  await assertObservableEmits(
-    values1,
-    notifications
-  );
-
-  await assertFails(() => values1.pipeTo(noop).activate());
-
-  const values2 = new FromIterableObservable([0, 1, 2, 3][Symbol.iterator](), { mode: 'cache' });
-
-  await assertObservableEmits(
-    values2,
-    notifications
-  );
-
-  await assertObservableEmits(
-    values2,
-    notifications
-  );
-}
 
 async function testReducePipe() {
   await assertObservableEmits(
@@ -595,17 +566,18 @@ export async function test() {
   // testMisc();
   // testFactoryV2();
   // testInstanceof();
-  testPerformances();
+  // testPerformances();
   // testSignalingServer();
   // testPromises();
   // testClasses();
   // testProgram();
   // await testTask();
   // await testFactory();
-  // await testUnit();
+
 
   // await testAbortController();
-  // await debugCancellableContext();
+  // await runDebug();
+  // await debugVoxel();
 
   console.log('tests done');
 }

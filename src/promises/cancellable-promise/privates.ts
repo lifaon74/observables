@@ -1,22 +1,29 @@
-import { TPromise } from '../interfaces';
 import { ICancellablePromise } from './interfaces';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
-import { TAbortStrategy, TAbortStrategyReturn } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
+import {
+  IAdvancedAbortSignalWrapPromiseOptions, TInferAbortStrategyReturn
+} from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 
 /** PRIVATES **/
 
 export const CANCELLABLE_PROMISE_PRIVATE = Symbol('cancellable-promise-private');
 
-export interface ICancellablePromisePrivate<T, TStrategy extends TAbortStrategy> {
-  promise: TPromise<T | TAbortStrategyReturn<TStrategy>>;
+export type TCancellablePromisePrivatePromiseType<T> = T | TInferAbortStrategyReturn<'never'>; // or T
+export type TCancellablePromisePrivatePromise<T> = PromiseLike<TCancellablePromisePrivatePromiseType<T>>; // or  Promise<T>
+
+export interface ICancellablePromisePrivate<T> {
+  promise: TCancellablePromisePrivatePromise<T>;
   signal: IAdvancedAbortSignal;
-  strategy: TStrategy;
   isCancellablePromiseWithSameSignal: boolean;
 }
 
-export interface ICancellablePromisePrivatesInternal<T, TStrategy extends TAbortStrategy> {
-  [CANCELLABLE_PROMISE_PRIVATE]: ICancellablePromisePrivate<T, TStrategy>;
+export interface ICancellablePromisePrivatesInternal<T> {
+  [CANCELLABLE_PROMISE_PRIVATE]: ICancellablePromisePrivate<T>;
 }
 
-export interface ICancellablePromiseInternal<T, TStrategy extends TAbortStrategy> extends ICancellablePromisePrivatesInternal<T, TStrategy>, ICancellablePromise<T, TStrategy> {
+export interface ICancellablePromiseInternal<T> extends ICancellablePromisePrivatesInternal<T>, ICancellablePromise<T> {
 }
+
+export const CANCELLABLE_PROMISE_DEFAULT_ABORT_SIGNAL_WRAP_OPTIONS: IAdvancedAbortSignalWrapPromiseOptions<'never', never> = Object.freeze({
+  strategy: 'never'
+});

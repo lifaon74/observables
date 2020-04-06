@@ -1,4 +1,3 @@
-import { TAbortStrategy } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 import {
   ICancellablePromiseFinallyOptions, ICancellablePromiseNormalizedFinallyOptions, ICancellablePromiseNormalizedOptions,
   ICancellablePromiseOptions
@@ -7,48 +6,28 @@ import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advan
 import { AdvancedAbortController } from '../../misc/advanced-abort-controller/implementation';
 import { IsObject } from '../../helpers';
 import { IsAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/constructor';
+import { NormalizeAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/helpers';
 
 /** FUNCTIONS **/
 
+
 /* NORMALIZE: ICancellablePromiseOptions */
 
-export function NormalizeICancellablePromiseOptionsStrategy<TStrategy extends TAbortStrategy>(
-  strategy?: TStrategy,
-  defaultValue: TAbortStrategy = 'never'
-): TStrategy {
-  switch (strategy) {
-    case void 0:
-      return defaultValue as TStrategy;
-    case 'resolve':
-    case 'reject':
-    case 'never':
-      return strategy;
-    default:
-      throw new TypeError(`Expected 'resolve', 'reject', 'never' or void as options.strategy`);
-  }
-}
 
 export function NormalizeICancellablePromiseOptionsSignal(
   signal?: IAdvancedAbortSignal,
-  defaultValue: IAdvancedAbortSignal = new AdvancedAbortController().signal
+  defaultValue?: IAdvancedAbortSignal
 ): IAdvancedAbortSignal {
-  if (signal === void 0) {
-    return defaultValue;
-  } else if (IsAdvancedAbortSignal(signal)) {
-    return signal;
-  } else {
-    throw new TypeError(`Expected AdvancedAbortSignal or void as options.signal`);
-  }
+  return NormalizeAdvancedAbortSignal(signal, defaultValue);
 }
 
-export function NormalizeICancellablePromiseOptions<TStrategy extends TAbortStrategy>(
-  options: ICancellablePromiseOptions<TStrategy> = {},
-  defaultValue?: ICancellablePromiseNormalizedOptions<TStrategy>
-): ICancellablePromiseNormalizedOptions<TStrategy> {
+export function NormalizeICancellablePromiseOptions(
+  options: ICancellablePromiseOptions = {},
+  defaultValue?: ICancellablePromiseNormalizedOptions
+): ICancellablePromiseNormalizedOptions {
   if (IsObject(options)) {
     return {
       ...options,
-      strategy: NormalizeICancellablePromiseOptionsStrategy<TStrategy>(options.strategy, (defaultValue === void 0) ? void 0 : defaultValue.strategy),
       signal: NormalizeICancellablePromiseOptionsSignal(options.signal, (defaultValue === void 0) ? void 0 : defaultValue.signal),
     };
   } else {

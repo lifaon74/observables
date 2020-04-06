@@ -2,13 +2,12 @@ import { IAdvancedAbortSignal } from './interfaces';
 import { ADVANCED_ABORT_SIGNAL_PRIVATE, IAdvancedAbortSignalInternal, IAdvancedAbortSignalPrivate } from './privates';
 import { AbortNotification } from '../abort-notification';
 import { IsObject } from '../../../helpers';
-import { IAdvancedAbortSignalWrapPromiseOptions, TAbortStrategy, TAbortStrategyReturn } from './types';
-import { TPromise } from '../../../promises/interfaces';
-import { Finally, NEVER_PROMISE, PromiseTry, VOID_PROMISE } from '../../../promises/helpers';
+import { TAbortStrategy, TInferAbortStrategyReturn } from './types';
+import { NEVER_PROMISE, PromiseFinally, PromiseTry, VOID_PROMISE, } from '../../../promises/types/helpers';
 import { INotificationsObserver } from '../../../notifications/core/notifications-observer/interfaces';
 import { AdvancedAbortController } from '../implementation';
 import { IAdvancedAbortController } from '../interfaces';
-import { IsAdvancedAbortController } from '../constructor';
+import { IAdvancedAbortSignalWrapPromiseNormalizedOptions } from './helpers';
 
 
 /** FUNCTIONS **/
@@ -27,69 +26,20 @@ export function AdvancedAbortSignalAbort(instance: IAdvancedAbortSignal, reason:
 
 
 /**
- * Normalizes options provided to AdvancedAbortSignal.wrapPromise
- */
-export interface IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy extends TAbortStrategy, TAborted> extends IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted> {
-  strategy: TStrategy;
-}
-
-export function AdvancedAbortSignalNormalizeWrapPromiseOptions<TStrategy extends TAbortStrategy, TAborted>(options?: IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted>): IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted> {
-  const _options: IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted> = {} as IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted>;
-  if (options === void 0) {
-    options = {};
-  } else if (!IsObject(options)) {
-    throw new TypeError(`Expected object or void as options`);
-  }
-
-  if (options.strategy === void 0) {
-    _options.strategy = 'never' as TStrategy;
-  } else if (['resolve', 'reject', 'never'].includes(options.strategy)) {
-    _options.strategy = options.strategy;
-  } else {
-    throw new TypeError(`Expected 'resolve', 'reject', 'never' or void as options.strategy`);
-  }
-
-  if (options.onAborted === void 0) {
-    _options.onAborted = void 0;
-  } else if (typeof options.onAborted === 'function') {
-    _options.onAborted = options.onAborted;
-  } else {
-    throw new TypeError(`Expected function or void as options.onAborted`);
-  }
-
-
-  if (options.onAbortedController === void 0) {
-    if (_options.onAborted !== void 0) {
-      _options.onAbortedController = new AdvancedAbortController();
-    }
-  } else if (IsAdvancedAbortController(options.onAbortedController)) {
-    if (_options.onAborted === void 0) {
-      throw new Error(`options.onAbortedController is defined but options.onAborted is missing`);
-    } else {
-      _options.onAbortedController = options.onAbortedController;
-    }
-  } else {
-    throw new TypeError(`Expected AdvancedAbortController or void as options.onAbortedController`);
-  }
-  return _options;
-}
-
-
-/**
  * Returns a Promise with an abort strategy:
  *  - never: never resolves
  *  - resolve: resolves with undefined
  *  - reject: rejects with instance.reason
  */
-export function ApplyAbortStrategy<TStrategy extends TAbortStrategy>(strategy?: TStrategy, reason?: string): TPromise<TAbortStrategyReturn<TStrategy>> {
+export function ApplyAbortStrategy<TStrategy extends TAbortStrategy>(strategy?: TStrategy, reason?: string): Promise<TInferAbortStrategyReturn<TStrategy>> {
   switch (strategy) {
     case void 0:
     case 'never':
-      return NEVER_PROMISE as TPromise<TAbortStrategyReturn<TStrategy>>;
+      return NEVER_PROMISE as Promise<TInferAbortStrategyReturn<TStrategy>>;
     case 'resolve':
-      return VOID_PROMISE as unknown as TPromise<TAbortStrategyReturn<TStrategy>>;
+      return VOID_PROMISE as unknown as Promise<TInferAbortStrategyReturn<TStrategy>>;
     case 'reject':
-      return Promise.reject(reason) as TPromise<TAbortStrategyReturn<TStrategy>>;
+      return Promise.reject(reason) as Promise<TInferAbortStrategyReturn<TStrategy>>;
     default:
       throw new TypeError(`Unexpected strategy: ${ strategy }`);
   }
@@ -99,7 +49,7 @@ export function ApplyAbortStrategyUsingAdvancedAbortSignalReason<TStrategy exten
   instance: IAdvancedAbortSignal,
   strategy?: TStrategy,
   reason: string = instance.reason
-): TPromise<TAbortStrategyReturn<TStrategy>> {
+): Promise<TInferAbortStrategyReturn<TStrategy>> {
   return ApplyAbortStrategy<TStrategy>(strategy, reason);
 }
 
@@ -112,17 +62,18 @@ export function ApplyAbortStrategyUsingAdvancedAbortSignalReason<TStrategy exten
 export function ApplyOnAbortCallback<TStrategy extends TAbortStrategy, TAborted>(
   instance: IAdvancedAbortSignal,
   options: IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy, TAborted>,
-): TPromise<TAborted | TAbortStrategyReturn<TStrategy>> {
+): Promise<TAborted | TInferAbortStrategyReturn<TStrategy>> {
+  type T = TAborted | TInferAbortStrategyReturn<TStrategy>;
   if (typeof options.onAborted === 'function') {
     const newController: IAdvancedAbortController = options.onAbortedController as IAdvancedAbortController;
-    return newController.signal.wrapPromise<TAborted | TAbortStrategyReturn<TStrategy>, TStrategy, never>(
-      PromiseTry<TAborted | TAbortStrategyReturn<TStrategy>>(() => (options.onAborted as Function).call(instance, instance.reason, newController)),
+    return newController.signal.wrapPromise<T, TStrategy, never>(
+      PromiseTry<T>(() => (options.onAborted as Function).call(instance, instance.reason, newController)),
       {
         strategy: options.strategy,
       }
     );
   } else {
-    return ApplyAbortStrategyUsingAdvancedAbortSignalReason<TStrategy>(instance, options.strategy) as TPromise<TAborted | TAbortStrategyReturn<TStrategy>>;
+    return ApplyAbortStrategyUsingAdvancedAbortSignalReason<TStrategy>(instance, options.strategy);
   }
 }
 
@@ -132,10 +83,9 @@ export function ApplyOnAbortCallback<TStrategy extends TAbortStrategy, TAborted>
 export function RaceAborted<T>(
   instance: IAdvancedAbortSignal,
   promise: PromiseLike<T>,
-): TPromise<T | void> {
+): Promise<T | void> {
   let observer: INotificationsObserver<'abort', void>;
-
-  return Promise.race<T | void>([
+  return Promise.race([
     new Promise<void>((resolve: any) => {
       if (instance.aborted) {
         resolve();
@@ -148,7 +98,7 @@ export function RaceAborted<T>(
     }),
     promise
   ])
-    .then(...Finally<T | void>(() => {
+    .then(...PromiseFinally<T | void>(() => {
       if (observer !== void 0) {
         observer.deactivate();
       }

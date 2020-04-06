@@ -13,8 +13,8 @@ import {
   FileReaderObservableKeyValueMap, IFormatsToTypeMap, TFileReaderObservableFinalState, TFileReaderReadType
 } from './types';
 
+
 /**
- /**
  * Generates an Hook for a FiniteStateObservable, reading the content of a Blob:
  *  - when the Observable is freshly observed, creates a FileReader from 'blob' and read it with 'type'
  *  - emits 'progress' to follow the progression

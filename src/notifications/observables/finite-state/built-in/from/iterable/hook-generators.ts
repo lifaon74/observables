@@ -1,21 +1,24 @@
 import { IFiniteStateObservable } from '../../../interfaces';
-import { IsAsyncIterable } from '../../../../../../helpers';
 import {
   IFromIterableObservableKeyValueMap, TFromIterableObservableCreateCallback,
-  TFromIterableObservableCreateCallbackContext, TFromIterableObservableFinalState, TFromIterableObservableMode,
-  TGetSyncOrAsyncIterableGenerator, TGetSyncOrAsyncIterableIterator, TGetSyncOrAsyncIterableValueType
+  TFromIterableObservableCreateCallbackContext, TFromIterableObservableFinalState, TFromIterableObservableMode
 } from './types';
+import {
+  TInferSyncOrAsyncIterableGenerator, TInferSyncOrAsyncIterableIterator, TInferSyncOrAsyncIterableValueType,
+  TSyncOrAsyncIterable
+} from '../../../../../../misc/helpers/iterators/interfaces';
+import { IsAsyncIterable } from '../../../../../../misc/helpers/iterators/is/is-async-iterable';
 
 /** TYPES **/
 
 
-export type TGenerateFiniteStateObservableHookFromIterableWithPauseWorkflowResumeFunction<TIterable extends (Iterable<any> | AsyncIterable<any>)> = TIterable extends Iterable<any>
+export type TGenerateFiniteStateObservableHookFromIterableWithPauseWorkflowResumeFunction<TIterable extends TSyncOrAsyncIterable<any>> = TIterable extends Iterable<any>
   ? () => void
   : TIterable extends AsyncIterable<any>
     ? () => Promise<void>
     : never;
 
-type TGenerateFiniteStateObservableHookFromIterableWithPauseWorkflowInstance<TIterable extends (Iterable<any> | AsyncIterable<any>)> = IFiniteStateObservable<TGetSyncOrAsyncIterableValueType<TIterable>, TFromIterableObservableFinalState, TFromIterableObservableMode, IFromIterableObservableKeyValueMap<TIterable>>;
+type TGenerateFiniteStateObservableHookFromIterableWithPauseWorkflowInstance<TIterable extends TSyncOrAsyncIterable<any>> = IFiniteStateObservable<TInferSyncOrAsyncIterableValueType<TIterable>, TFromIterableObservableFinalState, TFromIterableObservableMode, IFromIterableObservableKeyValueMap<TIterable>>;
 
 
 /** FUNCTION **/
@@ -26,15 +29,15 @@ type TGenerateFiniteStateObservableHookFromIterableWithPauseWorkflowInstance<TIt
  *  - iterates over the elements (emits 'next'). While iterating, if the observable is no more observed pause the iteration
  *  - when all elements are read, emits a 'complete'
  */
-export function GenerateFiniteStateObservableHookFromIterableWithPauseWorkflow<TIterable extends (Iterable<any> | AsyncIterable<any>)>(
+export function GenerateFiniteStateObservableHookFromIterableWithPauseWorkflow<TIterable extends TSyncOrAsyncIterable<any>>(
   iterable: TIterable,
   isAsync: boolean = IsAsyncIterable(iterable),
 ): TFromIterableObservableCreateCallback<TIterable> {
 
-  type TValue = TGetSyncOrAsyncIterableValueType<TIterable>;
+  type TValue = TInferSyncOrAsyncIterableValueType<TIterable>;
 
   return function (context: TFromIterableObservableCreateCallbackContext<TIterable>) {
-    let iterator: TGetSyncOrAsyncIterableIterator<TIterable>;
+    let iterator: TInferSyncOrAsyncIterableIterator<TIterable>;
     let state: 'paused' | 'iterating' | 'complete' = 'paused';
 
     const pause = (): void => {
@@ -43,7 +46,7 @@ export function GenerateFiniteStateObservableHookFromIterableWithPauseWorkflow<T
       }
     };
 
-    const generator: () => TGetSyncOrAsyncIterableGenerator<TIterable> = iterable[isAsync ? Symbol.asyncIterator : Symbol.iterator];
+    const generator: () => TInferSyncOrAsyncIterableGenerator<TIterable> = iterable[isAsync ? Symbol.asyncIterator : Symbol.iterator];
 
     let resume: TGenerateFiniteStateObservableHookFromIterableWithPauseWorkflowResumeFunction<TIterable>;
 

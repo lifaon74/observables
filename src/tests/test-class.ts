@@ -1,11 +1,12 @@
 import { ConstructClassWithPrivateMembers } from '../misc/helpers/ClassWithPrivateMembers';
-import { IsArray, IsIterable, IsObject } from '../helpers';
+import { IsArray, IsObject } from '../helpers';
 import { $this, CopyDescriptors, RegisterThis, SetConstructor, SetFunctionName } from './classes/helpers';
 import { IInstance } from './classes/instance/interfaces';
 import { Instance } from './classes/instance/implementation';
 import { IsInstanceOf, SetInstanceOf } from '../classes/class-helpers/instanceof';
 import { assert, assertFails } from '../classes/asserts';
 import { Constructor } from '../classes/class-helpers/types';
+import { IsIterable } from '../misc/helpers/iterators/is/is-iterable';
 
 // export type TClassBuilderInstance<TConstructArgs extends any[], TProtoTypes extends object[]> = {
 //   new ()

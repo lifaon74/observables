@@ -1,11 +1,11 @@
-import { TPromiseOrValue } from '../../promises/interfaces';
+import { TNativePromiseLikeOrValue } from '../../promises/types/native';
 
 /** TYPES **/
 
 export interface IActivableHook {
-  activate(this: IActivable): TPromiseOrValue<void>;
+  activate(this: IActivable): TNativePromiseLikeOrValue<void>;
 
-  deactivate(this: IActivable): TPromiseOrValue<void>;
+  deactivate(this: IActivable): TNativePromiseLikeOrValue<void>;
 }
 
 export type TActivableConstructorArgs = [IActivableHook];

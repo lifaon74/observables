@@ -3,9 +3,9 @@ import {
 } from '../../../notifications/core/notifications-observable/interfaces';
 import {
   IAdvancedAbortSignalKeyValueMap, IAdvancedAbortSignalWrapPromiseOptions, TAbortStrategy,
-  TAbortStrategyReturnedPromise, TAdvancedAbortSignalWrapPromiseCallback
+  TAdvancedAbortSignalWrapPromiseArgument, TInferAbortStrategyReturnedPromise,
+  TInferAdvancedAbortSignalWrapFunctionReturn
 } from './types';
-import { TPromiseType } from '../../../promises/interfaces';
 
 
 /** INSTANCE **/
@@ -37,14 +37,14 @@ export interface IAdvancedAbortSignal extends INotificationsObservable<IAdvanced
    *
    */
   wrapPromise<T>(
-    promiseOrCallback: PromiseLike<T> | TAdvancedAbortSignalWrapPromiseCallback<T>,
+    promiseOrCallback: TAdvancedAbortSignalWrapPromiseArgument<T>,
     options?: IAdvancedAbortSignalWrapPromiseOptions<'never', never>,
-  ): TAbortStrategyReturnedPromise<T, 'never', never>;
+  ): TInferAbortStrategyReturnedPromise<T, 'never', never>;
 
   wrapPromise<T, TStrategy extends TAbortStrategy, TAborted>(
-    promiseOrCallback: PromiseLike<T> | TAdvancedAbortSignalWrapPromiseCallback<T>,
+    promiseOrCallback: TAdvancedAbortSignalWrapPromiseArgument<T>,
     options?: IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted>,
-  ): TAbortStrategyReturnedPromise<T, TStrategy, TAborted>;
+  ): TInferAbortStrategyReturnedPromise<T, TStrategy, TAborted>;
 
   /**
    * Wraps a function with this AdvancedAbortSignal:
@@ -79,12 +79,12 @@ export interface IAdvancedAbortSignal extends INotificationsObservable<IAdvanced
   wrapFunction<CB extends (...args: any[]) => any>(
     callback: CB,
     options?: IAdvancedAbortSignalWrapPromiseOptions<'never', never>,
-  ): (...args: Parameters<CB>) => TAbortStrategyReturnedPromise<TPromiseType<ReturnType<CB>>, 'never', never>;
+  ): TInferAdvancedAbortSignalWrapFunctionReturn<CB, 'never', never>;
 
   wrapFunction<CB extends (...args: any[]) => any, TStrategy extends TAbortStrategy, TAborted>(
     callback: CB,
     options?: IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted>,
-  ): (...args: Parameters<CB>) => TAbortStrategyReturnedPromise<TPromiseType<ReturnType<CB>>, TStrategy, TAborted>;
+  ): TInferAdvancedAbortSignalWrapFunctionReturn<CB, TStrategy, TAborted>;
 
   /**
    * Wraps the fetch arguments with this AdvancedAbortSignal:

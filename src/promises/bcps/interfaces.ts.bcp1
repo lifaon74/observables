@@ -1,0 +1,392 @@
+import { ICancellablePromise } from './cancellable-promise/interfaces';
+import { Any } from '../classes/types';
+
+type T_INVALID_PROMISE = Promise<Promise<'a'>>;
+type T_INVALID_PROMISE_FACTORY = () => T_INVALID_PROMISE;
+type T_VALID_PROMISE_FACTORY = () => Promise<number>;
+
+type KeyOf<T> = keyof ((T extends any ? (k: T) => void : never) extends ((k: infer I) => void) ? I : never);
+
+
+// // type Constraint<T> = KeyOf<T> extends never
+// //   ? any
+// //     // : KeyOf<any> extends KeyOf<T>
+// //     // ? any
+// //   : (
+// //     'a' extends KeyOf<T>
+// //       ? never
+// //       : any
+// //     );
+//
+// type Constraint<T> = (
+//     [T] extends [{ a: any }]
+//       ? never
+//       : any
+//   );
+//
+// type ForceConstraint<T> = T extends Constraint<T> ? T : never;
+//
+// interface Interface<T extends Constraint<T>> {
+//   b: string;
+// }
+//
+// type Infer<CB> = CB extends () => infer TReturn
+//   ? ForceConstraint<TReturn>
+//   : never;
+//
+// type InferWithConstraint<CB> = ForceConstraint<Infer<CB>>;
+//
+// type A1 = Interface<unknown>;
+// type A2 = Interface<any>; // nope
+// type A3 = Interface<never>;
+// type A4 = Interface<undefined>;
+// type A5 = Interface<number>;
+// type A6 = Interface<string>;
+// type A7 = Interface<null>;
+// type A8 = Interface<object>;
+// type A9 = Interface<{}>;
+// type A_FAIL1 = Interface<{ a: 'b' }>; // nope
+// type A_FAIL2 = Interface<{ a: 'b' } | 1>; // nope
+//
+// const a: KeyOf<{ a: 'b' } | 1>;
+// const a: KeyOf<any>;
+// const a: Constraint<{ a: 'b' } | 1>;
+// const a: (('a' | 'b') extends 'a' ? true : false);
+// const a: ('a' extends ('a' | 'b') ? true : false);
+// const a: ('c' extends ('a' | 'b') ? true : false);
+// const a: ('c' extends ('a' | 'b') ? true : false);
+// const a: (any extends ('a' | 'b') ? true : false);
+//
+// type InferInterfaceFromCallback1<CB> = Interface<Infer<CB>>;
+// type InferInterfaceFromCallback<CB> = Interface<InferWithConstraint<CB>>;
+
+/**
+ * BETTER DEFINITIONS AND HELPERS FOR PROMISE
+ */
+
+export type TPromiseStatus =
+  'fulfilled' // promise is fulfilled
+  | 'rejected' // promise is rejected
+  | 'pending' // promise is neither resolved nor resolving
+  | 'resolving';
+
+
+/** CONSTRAINT **/
+
+// returns true if T has the property 'then'
+export type THasThen<T> = true extends (
+  T extends { then: any }
+    ? true
+    : false
+  ) ? true : false;
+
+// export type THasThen<T> = true extends (
+//     IsType<T, any> extends true
+//       ? false
+//       : (
+//         T extends { then: any }
+//           ? true
+//           : false
+//         )
+//     )
+//   ? true
+//   : false;
+
+
+// const a1: THasThen<string> = false;
+// const a2: THasThen<'a' | 10> = false;
+// const a3: THasThen<Promise<'a'> | 10> = true;
+// const a4: THasThen<Promise<'a'> | 10> = true;
+// const a5: THasThen<any> = true;
+// // const a5: THasThen<unknown> = true;
+// const a51: THasThen<Any> = false;
+// const a6: THasThen<unknown> = false;
+// const a7: THasThen<never> = false;
+
+
+// returns never if T is a PromiseLike, else returns any
+export type ConstraintPromiseType<T> = [T] extends [{ then: any }]
+  ? never
+  : any;
+
+// returns T if T follows ConstraintPromiseType, else return never
+export type ForceConstraintPromiseType<T> = T extends ConstraintPromiseType<T>
+  ? T
+  : never;
+
+/** THEN CALLBACK **/
+
+// returns any if TReturnedValue is a proper PromiseLike or a proper value
+export type ConstraintPromiseThenCallbackReturnedValue<TReturnedValue> =
+  [TReturnedValue] extends [PromiseLike<infer TPromise>]
+    ? THasThen<TPromise> extends true ? never : any
+    : THasThen<TReturnedValue> extends true ? never : any;
+
+// returns the promise's type of the returned value from the 'then' callback
+export type InferPromiseThenCallbackReturnedValueType<TReturnedValue extends ConstraintPromiseThenCallbackReturnedValue<TReturnedValue>> =
+  TReturnedValue extends PromiseLike<infer TPromiseValue>
+    ? TPromiseValue
+    : TReturnedValue;
+
+export type InferPromiseThenCallbackReturnedValueTypeWithConstraint<TReturnedValue extends ConstraintPromiseThenCallbackReturnedValue<TReturnedValue>> =
+  ForceConstraintPromiseType<InferPromiseThenCallbackReturnedValueType<TReturnedValue>>;
+
+
+/** FULFILLED **/
+
+// // shape of the promise's fulfilled callback
+// export type TPromiseFulfilledCallback<TIn extends ConstraintPromiseType<TIn>, TOut extends ConstraintPromiseType<TOut>> = (value: TIn) => TPromiseOrValue<TOut>;
+
+// returns any if TFulfilled respects the shape of TPromiseFulfilledCallback<T, Any>, else returns never
+export type ConstraintPromiseFulfilledCallback<T extends ConstraintPromiseType<T>, TFulfilled> =
+  [TFulfilled] extends [(value: T, ...args: any[]) => infer TReturnedValue]
+    ? ConstraintPromiseThenCallbackReturnedValue<TReturnedValue>
+    : never;
+
+// const a: (T_INVALID_PROMISE_FACTORY extends TPromiseFulfilledCallback<void, Any> ? true: false);
+// const a: ConstraintPromiseFulfilledCallback<void, T_INVALID_PROMISE_FACTORY>;
+// const a: ConstraintPromiseFulfilledCallback<void, () => Promise<'a'>>;
+// const a: ConstraintPromiseFulfilledCallback<void, any>;
+
+// // type of the promise's fulfilled argument
+// export type TPromiseFulfilledArgument<TIn extends ConstraintPromiseType<TIn>, TOut extends ConstraintPromiseType<TOut>> =
+//   TPromiseFulfilledCallback<TIn, TOut>
+//   | undefined
+//   | null;
+
+// returns any if TFulfilled respects the shape of TPromiseFulfilledCallback<T, Any>, is null or is undefined; else returns never
+export type ConstraintPromiseFulfilledArguments<T extends ConstraintPromiseType<T>, TFulfilled> =
+  ConstraintPromiseFulfilledCallback<T, TFulfilled>
+  | undefined
+  | null;
+
+// const a: ConstraintPromiseFulfilledArguments<void, T_VALID_PROMISE_FACTORY>;
+// const a: ConstraintPromiseFulfilledArguments<void, null>;
+
+// returns the promise's type of the returned value from the fulfilled callback
+export type InferPromiseFulfilledReturnedValue<T extends ConstraintPromiseType<T>, TFulfilled extends ConstraintPromiseFulfilledArguments<T, TFulfilled>> =
+  TFulfilled extends (value: T, ...args: any[]) => infer TReturnedValue
+    ? TReturnedValue extends ConstraintPromiseThenCallbackReturnedValue<TReturnedValue>
+      ? InferPromiseThenCallbackReturnedValueTypeWithConstraint<TReturnedValue>
+      : never
+    : T;
+
+export type InferPromiseFulfilledReturnedValueWithConstraint<T extends ConstraintPromiseType<T>, TFulfilled extends ConstraintPromiseFulfilledArguments<T, TFulfilled>> =
+  ForceConstraintPromiseType<InferPromiseFulfilledReturnedValue<T, TFulfilled>>;
+
+
+// const a: InferPromiseFulfilledReturnedValue<void, T_VALID_PROMISE_FACTORY>;
+// const a: InferPromiseFulfilledReturnedValue<void, any>;
+// const a: ConstraintPromiseType<InferPromiseFulfilledReturnedValue<void, T_VALID_PROMISE_FACTORY>>;
+// const a: ConstraintPromiseType<InferPromiseFulfilledReturnedValue<void, T_INVALID_PROMISE_FACTORY>>;
+// const a: ConstraintPromiseType<InferPromiseFulfilledReturnedValue<void, any>>;
+
+/** REJECTED **/
+
+// returns any if TRejected respects the shape of TPromiseRejectedCallback<Any>, else returns never
+export type ConstraintPromiseRejectedCallback<TRejected> =
+  [TRejected] extends [(reason: any, ...args: any[]) => infer TReturnedValue]
+    ? ConstraintPromiseThenCallbackReturnedValue<TReturnedValue>
+    : never;
+
+// returns any if TRejected respects the shape of TPromiseRejectedCallback<Any>, is null or is undefined; else returns never
+export type ConstraintPromiseRejectedArguments<TRejected> =
+  ConstraintPromiseRejectedCallback<TRejected>
+  | undefined
+  | null;
+
+// returns the promise's type of the returned value from the rejected callback
+export type InferPromiseRejectedReturnedValue<TRejected extends ConstraintPromiseRejectedArguments<TRejected>> =
+  TRejected extends (reason: any, ...args: any[]) => infer TReturnedValue
+    ? TReturnedValue extends ConstraintPromiseThenCallbackReturnedValue<TReturnedValue>
+      ? InferPromiseThenCallbackReturnedValueTypeWithConstraint<TReturnedValue>
+      : never
+    : never;
+
+export type InferPromiseRejectedReturnedValueWithConstraint<TRejected extends ConstraintPromiseRejectedArguments<TRejected>> =
+  ForceConstraintPromiseType<InferPromiseRejectedReturnedValue<TRejected>>;
+
+
+/** THEN **/
+
+export type InferPromiseThenReturnedValue<T extends ConstraintPromiseType<T>,
+  TFulfilled extends ConstraintPromiseFulfilledArguments<T, TFulfilled>,
+  TRejected extends ConstraintPromiseRejectedArguments<TRejected>> =
+  InferPromiseFulfilledReturnedValueWithConstraint<T, TFulfilled>
+  | InferPromiseRejectedReturnedValue<TRejected>;
+
+export type InferPromiseThenReturnedValueWithConstraint<T extends ConstraintPromiseType<T>,
+  TFulfilled extends ConstraintPromiseFulfilledArguments<T, TFulfilled>,
+  TRejected extends ConstraintPromiseRejectedArguments<TRejected>> =
+  ForceConstraintPromiseType<
+    InferPromiseFulfilledReturnedValueWithConstraint<T, TFulfilled>
+  | InferPromiseRejectedReturnedValue<TRejected>
+  >;
+
+export type InferPromiseLikeThenReturn<T extends ConstraintPromiseType<T>,
+  TFulfilled extends ConstraintPromiseFulfilledArguments<T, TFulfilled>,
+  TRejected extends ConstraintPromiseRejectedArguments<TRejected>> =
+  TPromiseLike<InferPromiseThenReturnedValueWithConstraint<T, TFulfilled, TRejected>>;
+
+/** PROMISE LIKE **/
+
+export interface TPromiseLike<T extends ConstraintPromiseType<T>> /*extends PromiseLike<T>*/ {
+  then(): InferPromiseLikeThenReturn<T, undefined, undefined>;
+
+  then<TFulfilled extends ConstraintPromiseFulfilledArguments<T, TFulfilled>>(
+    onFulfilled: TFulfilled,
+  ): InferPromiseLikeThenReturn<T, TFulfilled, undefined>;
+
+  then<TFulfilled extends ConstraintPromiseFulfilledArguments<T, TFulfilled>,
+    TRejected extends ConstraintPromiseRejectedArguments<TRejected>>(
+    onFulfilled: TFulfilled,
+    onRejected: TRejected,
+  ): InferPromiseLikeThenReturn<T, TFulfilled, TRejected>;
+}
+
+/** PROMISE **/
+
+export type InferPromiseThenReturn<T extends ConstraintPromiseType<T>,
+  TFulfilled extends ConstraintPromiseFulfilledArguments<T, TFulfilled>,
+  TRejected extends ConstraintPromiseRejectedArguments<TRejected>> =
+  TPromise<InferPromiseThenReturnedValueWithConstraint<T, TFulfilled, TRejected>>;
+
+export type InferPromiseCatchReturn<T extends ConstraintPromiseType<T>, TRejected extends ConstraintPromiseRejectedArguments<TRejected>> =
+  InferPromiseLikeThenReturn<T, undefined, TRejected>;
+
+
+export interface TPromise<T extends ConstraintPromiseType<T>> extends TPromiseLike<T> {
+  then(): InferPromiseThenReturn<T, undefined, undefined>;
+
+  then<TFulfilled extends ConstraintPromiseFulfilledArguments<T, TFulfilled>>(
+    onFulfilled: TFulfilled,
+  ): InferPromiseThenReturn<T, TFulfilled, undefined>;
+
+  then<TFulfilled extends ConstraintPromiseFulfilledArguments<T, TFulfilled>,
+    TRejected extends ConstraintPromiseRejectedArguments<TRejected>>(
+    onFulfilled: TFulfilled,
+    onRejected: TRejected,
+  ): InferPromiseThenReturn<T, TFulfilled, TRejected>;
+
+
+  catch(): InferPromiseCatchReturn<T, undefined>;
+
+  catch<TRejected extends ConstraintPromiseRejectedArguments<TRejected>>(onRejected: TRejected): InferPromiseCatchReturn<T, TRejected>;
+
+  finally(onFinally?: (() => void) | undefined | null): TPromise<T>;
+}
+
+// const a: TPromiseLike<'a' | 10> = null as any;
+// const b: TPromise<TPromise<'a'>> = null as any;
+// const c: TPromise<TPromise<'a'> | 10> = null as any;
+// const d = a.then((v: string | number): void => {
+//
+// });
+// type T1 = (() => 1) | undefined;
+// const g: TPromiseThenReturn<boolean, T1, undefined>;
+//
+// const a: TPromise<boolean> = null as any;
+// const b = a.then(() => 1); // TPromise<number>
+// const b = a.then(() => 1); // TPromise<number>
+// const c = a.then((3 as unknown as T1)); // TPromise<boolean | number>
+// const b = a.then(void 0); // TPromise<boolean>
+// const b = a.then(void 0, () => 'a'); // TPromise<boolean | string>
+// const b = a.then(() => 'a', () => 1); // TPromise<string | number>
+// const b = c.then((v: boolean) => null);  // TPromise<null>
+// const b = a.catch(); // TPromise<boolean | never>
+// const b = a.catch((v: boolean) => null); // TPromise<boolean | null>
+
+/** PROMISE CONSTRUCTOR **/
+
+export interface TPromiseConstructor/* extends PromiseConstructor*/ {
+  resolve(): TPromise<void>;
+
+  resolve<T extends ConstraintPromiseType<T>>(value: TPromiseOrValue<T>): TPromise<T>;
+
+  reject<T extends ConstraintPromiseType<T>>(reason?: any): TPromise<T>;
+}
+
+
+/** HELPERS **/
+
+export type TPromiseOrValue<T extends ConstraintPromiseType<T>> = T | TPromiseLike<T>;
+export type TPromiseOrValueFactory<T extends ConstraintPromiseType<T>> = (...args: any[]) => TPromiseOrValue<T>;
+export type TPromiseFactory<T extends ConstraintPromiseType<T>> = (...args: any[]) => TPromise<T>;
+
+
+// INFO doesnt guaranty that the type respects the constraint
+export type InferPromiseType<P extends PromiseLike<Any>> = P extends {
+  then(cb: (value: infer TValue) => any): any;
+}
+  ? TValue
+  : never;
+
+// export type InferPromiseType<P extends PromiseLike<Any>> = P extends PromiseLike<infer T>
+//   ? T
+//   : never;
+
+const a1: InferPromiseType<TPromise<number>>;
+// const a2: InferPromiseType<Promise<Promise<number>>>;
+
+
+export type InferPromiseOrValueType<T> = T extends TPromiseLike<infer TPromise>
+  ? TPromise
+  : T;
+
+// const a1: InferPromiseOrValueType<Promise<Promise<number>>>;
+
+
+// TODO verify
+export type TPromiseOrValueFactoryType<F extends TPromiseOrValueFactory<Any>> = F extends TPromiseOrValueFactory<infer P>
+  ? InferPromiseType<P>
+  : never;
+
+
+export type TPromiseOrValueTupleToCancellablePromiseTuple<TTuple extends TPromiseOrValue<any>[]> = {
+  [K in keyof TTuple]: ICancellablePromise<TTuple[K] extends TPromiseOrValueFactory<infer P>
+    ? InferPromiseType<P>
+    : TTuple[K]>;
+};
+
+export type TPromiseOrValueTupleToValueTuple<TTuple extends TPromiseOrValue<any>[]> = {
+  [K in keyof TTuple]: InferPromiseType<TTuple[K]>;
+};
+
+export type TPromiseOrValueFactoryTupleToValueTuple<TTuple extends TPromiseOrValueFactory<any>[]> = {
+  [K in keyof TTuple]: TTuple[K] extends TPromiseOrValueFactory<infer P>
+    ? InferPromiseType<P>
+    : TTuple[K];
+};
+
+export type TPromiseOrValueTupleToValueUnion<TTuple extends TPromiseOrValue<any>[]> = TPromiseOrValueTupleToValueTuple<TTuple>[Extract<keyof TTuple, number>];
+export type TPromiseOrValueFactoryTupleToValueUnion<TTuple extends TPromiseOrValueFactory<any>[]> = TPromiseOrValueFactoryTupleToValueTuple<TTuple>[Extract<keyof TTuple, number>];
+
+
+export type TPromiseCreateCallback<T> = (resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void) => void;
+export type TPromiseConstructorLike<P extends PromiseLike<any> = TPromiseLike<any>> = new(executor: TPromiseCreateCallback<InferPromiseType<P>>) => P;
+
+
+// export type TCancellablePromiseTuple<T> = [Promise<T>, ICancelToken];
+// export type ICancellablePromiseTuple<T> = {
+//   promise: TPromise<T>,
+//   controller: IAdvancedAbortController,
+// };
+//
+// export type IPromiseAndSignalTuple<T> = {
+//   promise: TPromise<T>,
+//   signal: IAdvancedAbortSignal,
+// };
+
+
+export interface PromiseFulfilledObject<T> {
+  status: 'fulfilled';
+  value: T;
+}
+
+export interface PromiseRejectedObject {
+  status: 'rejected';
+  reason: any;
+}
+
+export type AllSettledResult<T> = PromiseFulfilledObject<T> | PromiseRejectedObject;
+

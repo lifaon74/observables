@@ -1,8 +1,11 @@
 import { IFiniteStateObservable, IFiniteStateObservableConstructor } from '../../../interfaces';
 import {
   IFromIterableObservableKeyValueMap, IFromIterableObservableOptions, TFromIterableObservableFinalState,
-  TFromIterableObservableMode, TGetSyncOrAsyncIterableValueType, TSyncOrAsyncIterable
+  TFromIterableObservableMode
 } from './types';
+import {
+  TInferSyncOrAsyncIterableValueType, TSyncOrAsyncIterable
+} from '../../../../../../misc/helpers/iterators/interfaces';
 
 
 /** INTERFACES **/
@@ -20,5 +23,5 @@ export interface IFromIterableObservableTypedConstructor<TIterable extends TSync
 }
 
 
-export interface IFromIterableObservable<TIterable extends TSyncOrAsyncIterable<any>> extends IFiniteStateObservable<TGetSyncOrAsyncIterableValueType<TIterable>, TFromIterableObservableFinalState, TFromIterableObservableMode, IFromIterableObservableKeyValueMap<TIterable>> {
+export interface IFromIterableObservable<TIterable extends TSyncOrAsyncIterable<any>> extends IFiniteStateObservable<TInferSyncOrAsyncIterableValueType<TIterable>, TFromIterableObservableFinalState, TFromIterableObservableMode, IFromIterableObservableKeyValueMap<TIterable>> {
 }

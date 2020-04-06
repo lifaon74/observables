@@ -5,11 +5,13 @@ import {
   TCancellableContextRegisterActivableOptionsMode, TCancellableContextRegisterCancellablePromiseOptionsMode
 } from './types';
 import { IActivableLike } from '../activable/interfaces';
-import { IAdvancedAbortSignal } from '../advanced-abort-controller/advanced-abort-signal/interfaces';
 import { ICancellablePromise } from '../../promises/cancellable-promise/interfaces';
 import { CancellablePromise } from '../../promises/cancellable-promise/implementation';
-import { TPromiseOrValue } from '../../promises/interfaces';
-import { PromiseTry } from '../../promises/helpers';
+import { PromiseTry } from '../../promises/types/helpers';
+import { ICancellablePromiseOptions } from '../../promises/cancellable-promise/types';
+import { TAbortStrategy } from '../advanced-abort-controller/advanced-abort-signal/types';
+import { TNativePromiseLikeOrValue } from '../../promises/types/native';
+import { IAdvancedAbortSignal } from '../advanced-abort-controller/advanced-abort-signal/interfaces';
 
 /** FUNCTIONS **/
 
@@ -88,9 +90,9 @@ export function CancellableContextNormalizeKey(key: string | any[]): any[] {
  *  - deactivates the Activable if the AdvancedAbortSignal is aborted
  *  - resolves when the Activable is deactivated
  */
-export function ActivableToCancellablePromise(activable: IActivableLike, signal?: IAdvancedAbortSignal): ICancellablePromise<void> {
+export function ActivableToCancellablePromise(activable: IActivableLike, options?: ICancellablePromiseOptions): ICancellablePromise<void> {
   return new CancellablePromise<void>((
-    resolve: (value?: TPromiseOrValue<void>) => void,
+    resolve: (value?: TNativePromiseLikeOrValue<void>) => void,
     reject: (reason?: any) => void,
     signal: IAdvancedAbortSignal
   ) => {
@@ -102,19 +104,23 @@ export function ActivableToCancellablePromise(activable: IActivableLike, signal?
 
     resolve(
       PromiseTry(() => activable.activate())
-        .then(() => UntilActivableDeactivated(activable, signal))
+        .then(() => UntilActivableDeactivated(activable, { signal }))
         .then(() => {
           signalAbortListener.deactivate();
         })
     );
-  }, { signal });
+  }, options);
 }
 
 /**
  * Creates a promise resolved when the Activable is deactivated
  */
-export function UntilActivableDeactivated(activable: IActivableLike, signal?: IAdvancedAbortSignal): ICancellablePromise<void> {
-  return new CancellablePromise<void>((resolve: any, reject: any, signal: IAdvancedAbortSignal) => {
+export function UntilActivableDeactivated(activable: IActivableLike, options?: ICancellablePromiseOptions): ICancellablePromise<void> {
+  return new CancellablePromise<void>((
+    resolve: (value?: TNativePromiseLikeOrValue<void>) => void,
+    reject: (reason?: any) => void,
+    signal: IAdvancedAbortSignal
+  ) => {
     if (activable.activated) {
       let stateListener: () => void;
       let timer: any;
@@ -147,5 +153,5 @@ export function UntilActivableDeactivated(activable: IActivableLike, signal?: IA
     } else {
       resolve();
     }
-  }, { signal });
+  }, options);
 }

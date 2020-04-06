@@ -4,15 +4,16 @@ import {
 import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject, noop } from '../../helpers';
 import {
-  TPromiseOrValue, TPromiseOrValueTupleToValueTuple, TPromiseOrValueTupleToValueUnion, TPromiseStatus
-} from '../interfaces';
+  TInferNativePromiseLikeOrValueTupleToValueTuple, TInferNativePromiseOrValueTupleToValueUnion,
+  TNativePromiseLikeOrValue, TPromiseStatus
+} from '../types/native';
 
 
 export const DEFERRED_PROMISE_PRIVATE = Symbol('deferred-promise-private');
 
 export interface IDeferredPromisePrivate<T> {
   promise: Promise<T>;
-  resolve: ((value?: TPromiseOrValue<T>) => void);
+  resolve: ((value?: TNativePromiseLikeOrValue<T>) => void);
   reject: ((reason?: any) => void);
   status: TPromiseStatus;
 }
@@ -35,8 +36,8 @@ export function ConstructDeferredPromise<T>(
 
   privates.status = 'pending';
 
-  privates.promise = new Promise<T>((resolve: (value?: TPromiseOrValue<T>) => void, reject: (reason?: any) => void) => {
-    privates.resolve = (value?: TPromiseOrValue<T>): void => {
+  privates.promise = new Promise<T>((resolve: (value?: TNativePromiseLikeOrValue<T>) => void, reject: (reason?: any) => void) => {
+    privates.resolve = (value?: TNativePromiseLikeOrValue<T>): void => {
       privates.status = 'resolving';
       resolve(value);
     };
@@ -76,7 +77,7 @@ function EnsuresDeferredPromiseIsPending<T>(instance: IDeferredPromise<T>, metho
 }
 
 
-export function DeferredPromiseResolve<T>(instance: IDeferredPromise<T>, value?: TPromiseOrValue<T>): void {
+export function DeferredPromiseResolve<T>(instance: IDeferredPromise<T>, value?: TNativePromiseLikeOrValue<T>): void {
   EnsuresDeferredPromiseIsPending<T>(instance, 'resolve', () => {
     (instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].resolve(value);
   });
@@ -88,7 +89,7 @@ export function DeferredPromiseReject<T>(instance: IDeferredPromise<T>, reason?:
   });
 }
 
-export function DeferredPromiseTry<T>(instance: IDeferredPromise<T>, callback: () => TPromiseOrValue<T>): void {
+export function DeferredPromiseTry<T>(instance: IDeferredPromise<T>, callback: () => TNativePromiseLikeOrValue<T>): void {
   if (typeof callback !== 'function') {
     throw new TypeError(`Expected function as callback`);
   } else {
@@ -100,13 +101,13 @@ export function DeferredPromiseTry<T>(instance: IDeferredPromise<T>, callback: (
   }
 }
 
-export function DeferredPromiseRace<T>(instance: IDeferredPromise<T>, values: TPromiseOrValue<any>[]): void {
+export function DeferredPromiseRace<T>(instance: IDeferredPromise<T>, values: TNativePromiseLikeOrValue<any>[]): void {
   EnsuresDeferredPromiseIsPending<T>(instance, 'race', () => {
     (instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].resolve(Promise.race(values) as unknown as Promise<T>);
   });
 }
 
-export function DeferredPromiseAll<T>(instance: IDeferredPromise<T>, values: TPromiseOrValue<any>[]): void {
+export function DeferredPromiseAll<T>(instance: IDeferredPromise<T>, values: TNativePromiseLikeOrValue<any>[]): void {
   EnsuresDeferredPromiseIsPending<T>(instance, 'all', () => {
     (instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].resolve(Promise.all(values) as unknown as Promise<T>);
   });
@@ -142,7 +143,7 @@ export function DeferredPromiseThen<T, TResult1 = T, TResult2 = never>(
 
 export function DeferredPromiseCatch<T, TResult = never>(
   instance: IDeferredPromise<T>,
-  onRejected?: ((reason: any) => TPromiseOrValue<TResult>) | undefined | null
+  onRejected?: ((reason: any) => TNativePromiseLikeOrValue<TResult>) | undefined | null
 ): IDeferredPromise<T | TResult> {
   return new DeferredPromise<T | TResult>((deferred: DeferredPromise<T | TResult>) => {
     (instance as IDeferredPromiseInternal<T>)[DEFERRED_PROMISE_PRIVATE].promise
@@ -234,8 +235,8 @@ export class DeferredPromiseCodes implements IDeferredPromiseCodes {
 export class DeferredPromise<T> extends DeferredPromiseCodes implements IDeferredPromise<T> {
 
   static resolve(): DeferredPromise<void>;
-  static resolve<T>(value: TPromiseOrValue<T>): DeferredPromise<T>;
-  static resolve<T>(value?: TPromiseOrValue<T>): DeferredPromise<T | void> {
+  static resolve<T>(value: TNativePromiseLikeOrValue<T>): DeferredPromise<T>;
+  static resolve<T>(value?: TNativePromiseLikeOrValue<T>): DeferredPromise<T | void> {
     return new DeferredPromise<T | void>().resolve(value);
   }
 
@@ -243,16 +244,16 @@ export class DeferredPromise<T> extends DeferredPromiseCodes implements IDeferre
     return new DeferredPromise<T>().reject(reason);
   }
 
-  static try<T>(callback: () => TPromiseOrValue<T>): DeferredPromise<T> {
+  static try<T>(callback: () => TNativePromiseLikeOrValue<T>): DeferredPromise<T> {
     return new DeferredPromise<T>().try(callback);
   }
 
-  static race<TTuple extends TPromiseOrValue<any>[]>(values: TTuple): DeferredPromise<TPromiseOrValueTupleToValueUnion<TTuple>> {
-    return new DeferredPromise<TPromiseOrValueTupleToValueUnion<TTuple>>().race(values);
+  static race<TTuple extends TNativePromiseLikeOrValue<any>[]>(values: TTuple): DeferredPromise<TInferNativePromiseOrValueTupleToValueUnion<TTuple>> {
+    return new DeferredPromise<TInferNativePromiseOrValueTupleToValueUnion<TTuple>>().race(values);
   }
 
-  static all<TTuple extends TPromiseOrValue<any>[]>(values: TTuple): Promise<TPromiseOrValueTupleToValueTuple<TTuple>> {
-    return new DeferredPromise<TPromiseOrValueTupleToValueTuple<TTuple>>().all(values);
+  static all<TTuple extends TNativePromiseLikeOrValue<any>[]>(values: TTuple): Promise<TInferNativePromiseLikeOrValueTupleToValueTuple<TTuple>> {
+    return new DeferredPromise<TInferNativePromiseLikeOrValueTupleToValueTuple<TTuple>>().all(values);
   }
 
 
@@ -274,7 +275,7 @@ export class DeferredPromise<T> extends DeferredPromiseCodes implements IDeferre
   }
 
 
-  resolve(value: TPromiseOrValue<T>): this {
+  resolve(value: TNativePromiseLikeOrValue<T>): this {
     DeferredPromiseResolve<T>(this, value);
     return this;
   }
@@ -284,31 +285,31 @@ export class DeferredPromise<T> extends DeferredPromiseCodes implements IDeferre
     return this;
   }
 
-  try(callback: () => TPromiseOrValue<T>): this {
+  try(callback: () => TNativePromiseLikeOrValue<T>): this {
     DeferredPromiseTry<T>(this, callback);
     return this;
   }
 
-  race<TTuple extends TPromiseOrValue<any>[]>(values: TTuple): TDeferredPromiseRaceReturn<TTuple, T, this> {
+  race<TTuple extends TNativePromiseLikeOrValue<any>[]>(values: TTuple): TDeferredPromiseRaceReturn<TTuple, T, this> {
     DeferredPromiseRace<T>(this, values);
     return this as TDeferredPromiseRaceReturn<TTuple, T, this>;
   }
 
-  all<TTuple extends TPromiseOrValue<any>[]>(values: TTuple): TDeferredPromiseAllReturn<TTuple, T, this> {
+  all<TTuple extends TNativePromiseLikeOrValue<any>[]>(values: TTuple): TDeferredPromiseAllReturn<TTuple, T, this> {
     DeferredPromiseAll<T>(this, values);
     return this as TDeferredPromiseAllReturn<TTuple, T, this>;
   }
 
 
   then<TResult1 = T, TResult2 = never>(
-    onFulfilled?: ((value: T) => TPromiseOrValue<TResult1>) | undefined | null,
-    onRejected?: ((reason: any) => TPromiseOrValue<TResult2>) | undefined | null
+    onFulfilled?: ((value: T) => TNativePromiseLikeOrValue<TResult1>) | undefined | null,
+    onRejected?: ((reason: any) => TNativePromiseLikeOrValue<TResult2>) | undefined | null
   ): IDeferredPromise<TResult1 | TResult2> {
     return DeferredPromiseThen<T, TResult1, TResult2>(this, onFulfilled, onRejected);
   }
 
   catch<TResult = never>(
-    onRejected?: ((reason: any) => TPromiseOrValue<TResult>) | undefined | null
+    onRejected?: ((reason: any) => TNativePromiseLikeOrValue<TResult>) | undefined | null
   ): IDeferredPromise<T | TResult> {
     return DeferredPromiseCatch<T, TResult>(this, onRejected);
   }

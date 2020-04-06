@@ -5,8 +5,8 @@ import {
 } from './privates';
 import { HasFactoryWaterMark } from '../../../../../../classes/class-helpers/factory';
 import { IsObject } from '../../../../../../helpers';
-import { TSyncOrAsyncIterable } from './types';
 import { IFromIterableObservableNormalizedArguments } from './functions';
+import { TSyncOrAsyncIterable } from '../../../../../../misc/helpers/iterators/interfaces';
 
 /** CONSTRUCTOR **/
 

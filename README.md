@@ -1452,9 +1452,6 @@ newsRequest
   })
   .on('error', (error: Error) => {
     console.error('error', error);
-  })
-  .on('abort', (reason: any) => {
-    console.warn('abort', reason);
   });
   
 ```
@@ -1486,9 +1483,6 @@ new FetchObservable('https://domain/api/news')
   })
   .on('error', (error: Error) => {
     console.error('error', error);
-  })
-  .on('abort', (reason: any) => {
-    console.warn('abort', reason);
   });
 ```
 

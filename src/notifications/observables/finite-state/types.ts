@@ -31,8 +31,11 @@ export type TFiniteStateObservableMode =
   'once' // (default) does not cache any values => after the final state (TFinalState), no observers will ever receive a value ('next')
   | 'uniq' // does not cache any values => after the final state, throws an error if a new observer observes 'next' or TFinalState.
   | 'cache' // caches own notifications ('next' and TFinalState). Every observer will receive the whole list of own emitted notifications
+  | 'cache-per-observer' // like 'cache' but remembers each observer to emits only new values
   | 'cache-final-state' // caches TFinalState notification. Every observer will receive this final state notification
+  | 'cache-final-state-per-observer'
   | 'cache-all' // caches all notifications (including ones with a different name than 'next', and TFinalState). Every observer will receive the whole list of all emitted notifications
+  | 'cache-all-per-observer'
   ;
 
 // constraints TMode to be a superset of TFiniteStateObservableMode
@@ -82,12 +85,15 @@ export interface IFiniteStateObservableOptions<TFinalState extends TFinalStateCo
 export interface IFiniteStateObservableExposedOptions<TMode extends TFiniteStateObservableModeConstraint<TMode>> extends Omit<IFiniteStateObservableOptions<TFiniteStateObservableFinalState, TMode>, 'finalStates' | 'modes'> {
 }
 
+export type IFiniteStateObservableGenericOptions = IFiniteStateObservableExposedOptions<TFiniteStateObservableMode>;
+
 // list of arguments provided to the FiniteStateObservable constructor
 export type TFiniteStateObservableConstructorArgs<TValue, TFinalState extends TFinalStateConstraint<TFinalState>, TMode extends TFiniteStateObservableModeConstraint<TMode>, TKVMap extends TFiniteStateKeyValueMapConstraint<TValue, TFinalState, TKVMap>> =
   [TFiniteStateObservableCreateCallback<TValue, TFinalState, TMode, TKVMap>?, IFiniteStateObservableOptions<TFinalState, TMode>?];
 
 // alias for a generic FiniteStateObservable
 export type TFiniteStateObservableGeneric<T = any> = IFiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>>;
+export type TFiniteStateObservableSuperGeneric<T = any> = IFiniteStateObservable<T, TFiniteStateObservableFinalState, string, TFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>>;
 
 export type TFiniteStateObserverGeneric<T = any> = IObserver<KeyValueMapToNotifications<TFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>>>;
 

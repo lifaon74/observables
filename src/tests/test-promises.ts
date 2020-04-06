@@ -1,10 +1,10 @@
 import { CancellablePromise } from '../promises/cancellable-promise/implementation';
-import { DeferredPromise } from '../promises/deferred-promise/implementation';
 import { $delay } from '../promises/cancellable-promise/snipets';
-import { OnFinallyResult } from '../promises/cancellable-promise/types';
+import { TOnFinallyResult } from '../promises/cancellable-promise/types';
 import { AdvancedAbortController } from '../misc/advanced-abort-controller/implementation';
 import { IAdvancedAbortSignal } from '../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 import { IAdvancedAbortController } from '../misc/advanced-abort-controller/interfaces';
+import { DeferredPromise } from '../promises/deferred-promise/implementation';
 
 
 export function testCancellablePromise() {
@@ -23,7 +23,7 @@ export function testCancellablePromise() {
     });
 
   const c = b
-    .finally((state: OnFinallyResult<void>) => {
+    .finally((state: TOnFinallyResult<void>) => {
       console.log('finally', state);
       return $delay(1000);
     }, { includeCancelled: true })
@@ -39,7 +39,7 @@ export function testCancellablePromise() {
       console.log('after cancelled caught', value);
     });
 
-  b.promise
+  b.toPromise()
     .then(() =>{
       console.log('never append');
     });
@@ -70,6 +70,30 @@ export function testCancellablePromise() {
   // console.log(a);
   // debugger;
 }
+
+// export function testCancellablePromise2() {
+//   const controller = new AdvancedAbortController();
+//   const p1 = CancellablePromise.resolve(1, { signal: controller.signal });
+//
+//   p1
+//     .then(() => {
+//       const childController = new AdvancedAbortController();
+//       childController.abort();
+//       return CancellablePromise.resolve(1, { signal: childController.signal })
+//     })
+//     .cancelled(() => {
+//       console.log('never cancelled');
+//     });
+//
+//   p1
+//     .then((v: any, signal: IAdvancedAbortSignal) => {
+//       const childController = AdvancedAbortController.fromAbortSignals(signal);
+//       return CancellablePromise.resolve(1, { signal: childController.signal })
+//     })
+//     .cancelled(() => {
+//       console.log('properly cancelled');
+//     });
+// }
 
 // export function testConcurrentCancellablePromise() {
 //   console.time('concurrent');
@@ -106,6 +130,7 @@ export function testDeferredPromise() {
 
 export function testPromises() {
   testCancellablePromise();
+  // testCancellablePromise2();
   // testConcurrentCancellablePromise();
   // testDeferredPromise();
 }

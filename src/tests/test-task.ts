@@ -3,7 +3,7 @@ import { ITask} from '../notifications/observables/task/interfaces';
 import { IFromReadableStreamObservable } from '../notifications/observables/finite-state/built-in/from/readable-stream/interfaces';
 import { FromReadableStreamObservable } from '../notifications/observables/finite-state/built-in/from/readable-stream/implementation';
 import { IProgress } from '../misc/progress/interfaces';
-import { ITaskAsyncIteratorValue, taskFromAsyncIterator } from '../notifications/observables/task/built-in/from/async-iterable';
+import { ITaskFromIteratorValue, taskFromIterator } from '../notifications/observables/task/built-in/from/iterable';
 import { Progress } from '../misc/progress/implementation';
 import { taskFromPromise, taskFromPromiseFactory } from '../notifications/observables/task/built-in/from/promise';
 import { taskFromTasksInParallel } from '../notifications/observables/task/built-in/from/tasks';
@@ -17,7 +17,6 @@ import { IFiniteStateObservable } from '../notifications/observables/finite-stat
 import {
   TFiniteStateObservableGeneric, TFiniteStateObserverGeneric
 } from '../notifications/observables/finite-state/types';
-import { TPromiseOrValue } from '../promises/interfaces';
 import { IActivable } from '../misc/activable/interfaces';
 
 //
@@ -314,7 +313,7 @@ export async function testTaskFetch() {
 
 export async function testTaskAsyncIterable() {
 
-  async function * run(urls: string[]): AsyncIterableIterator<ITaskAsyncIteratorValue<Blob>> {
+  async function * run(urls: string[]): AsyncIterableIterator<ITaskFromIteratorValue<Blob>> {
     for (let i = 0, l = urls.length; i < l; i++) {
       const response: Response = await fetch(urls[i]);
       if (response.ok) {
@@ -325,7 +324,7 @@ export async function testTaskAsyncIterable() {
     }
   }
 
-  const task = logTask(taskFromAsyncIterator(run(urls.map(_ => noCORS(_)))));
+  const task = logTask(taskFromIterator(run(urls.map(_ => noCORS(_)))));
 
   generateTaskControlButton(task);
 

@@ -2,11 +2,11 @@ import { IFetchObservable } from './interfaces';
 import { PromiseObservable } from '../promise-observable/implementation';
 import { INotificationsObservable } from '../../../../../core/notifications-observable/interfaces';
 import { promisePipe } from '../../../../../../operators/pipes/promisePipe';
-import { TPromiseOrValue } from '../../../../../../promises/interfaces';
 import { IAdvancedAbortSignal } from '../../../../../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 import { FETCH_OBSERVABLE_PRIVATE, IFetchObservableInternal, IFetchObservablePrivate } from './privates';
 import { ConstructFetchObservable } from './constructor';
-import { IFetchObservableOptions, TFetchObservableCastKeyValueMap } from './types';
+import { IFetchObservableOptions, IFetchObservableRequestInit, TFetchObservableCastKeyValueMap } from './types';
+import { TNativePromiseLikeOrValue } from '../../../../../../promises/types/native';
 
 
 /** CONSTRUCTOR FUNCTIONS **/
@@ -23,7 +23,7 @@ export function FetchObservablePromiseFactory(instance: IFetchObservable, signal
 
 /* FUNCTIONS */
 
-export function FetchObservablePromiseTo<T>(instance: IFetchObservable, callback: (response: Response) => TPromiseOrValue<T>): INotificationsObservable<TFetchObservableCastKeyValueMap<T>> {
+export function FetchObservablePromiseTo<T>(instance: IFetchObservable, callback: (response: Response) => TNativePromiseLikeOrValue<T>): INotificationsObservable<TFetchObservableCastKeyValueMap<T>> {
   return instance.pipeThrough(promisePipe<Response, T, never>((response: Response) => {
     if (response.ok) {
       return callback(response);
@@ -38,7 +38,7 @@ export function FetchObservablePromiseTo<T>(instance: IFetchObservable, callback
 
 export class FetchObservable extends PromiseObservable<Response> implements IFetchObservable {
 
-  constructor(requestInfo: RequestInfo, requestInit?: RequestInit, options?: IFetchObservableOptions) {
+  constructor(requestInfo: RequestInfo, requestInit?: IFetchObservableRequestInit, options?: IFetchObservableOptions) {
     super((signal: IAdvancedAbortSignal): Promise<Response> => {
       return FetchObservablePromiseFactory(this, signal);
     }, options);
