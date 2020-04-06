@@ -337,46 +337,46 @@ export async function testTaskFromPromise() {
   console.log('promise', await task.toPromise());
 }
 
-export async function testMultiTasks() {
-
-  const tasks: ITask<any>[] = urls.map(url => $fetch(noCORS(url)));
-
-  // const task = logTask(taskFromTasksInSequence(tasks)).start();
-  // const task = logTask(taskFromTasksInParallel(tasks, 'aggregate')).start();
-
-  const task = logTask(
-    taskFromTasksInParallel([
-      taskFromTasksInParallel(urls.map(url => $fetch(noCORS(url))), 'aggregate'),
-      taskFromTasksInParallel(urls.map(url => $fetch(noCORS(url))), 'aggregate'),
-      taskFromTasksInParallel(urls.map(url => $fetch(noCORS(url))), 'aggregate'),
-      taskFromTasksInParallel(urls.map(url => $fetch(noCORS(url))), 'aggregate'),
-    ], 'aggregate')
-  ).start();
-
-  console.log('promise', await task.toPromise());
-}
-
-// export async function testSequentialTasks2() {
-//   function sequentialTasks(tasks: ITask<any>[]): ITask<void> {
-//     return taskFromAsyncIterator<void>((async function * (): AsyncIterableIterator<ITaskAsyncIteratorValue<void>> {
-//       for (let i = 0, l = tasks.length; i < l; i++) {
-//         await tasks[i].start().toPromise();
-//         yield { progress: new Progress(i + 1, l) };
-//       }
-//     })());
-//   }
+// export async function testMultiTasks() {
 //
-//   const tasks: ITask<any>[] = [
-//     noCORS('https://file-examples.com/wp-content/uploads/2017/10/file_example_JPG_100kB.jpg'),
-//     noCORS('https://file-examples.com/wp-content/uploads/2017/10/file_example_JPG_500kB.jpg'),
-//     noCORS('https://file-examples.com/wp-content/uploads/2017/10/file_example_JPG_1MB.jpg'),
-//     noCORS('https://file-examples.com/wp-content/uploads/2017/10/file_example_JPG_2500kB.jpg'),
-//   ].map(url => $fetch(url));
+//   const tasks: ITask<any>[] = urls.map(url => $fetch(noCORS(url)));
 //
-//   const task = logTask(sequentialTasks(tasks)).start();
+//   // const task = logTask(taskFromTasksInSequence(tasks)).start();
+//   // const task = logTask(taskFromTasksInParallel(tasks, 'aggregate')).start();
+//
+//   const task = logTask(
+//     taskFromTasksInParallel([
+//       taskFromTasksInParallel(urls.map(url => $fetch(noCORS(url))), 'aggregate'),
+//       taskFromTasksInParallel(urls.map(url => $fetch(noCORS(url))), 'aggregate'),
+//       taskFromTasksInParallel(urls.map(url => $fetch(noCORS(url))), 'aggregate'),
+//       taskFromTasksInParallel(urls.map(url => $fetch(noCORS(url))), 'aggregate'),
+//     ], 'aggregate')
+//   ).start();
 //
 //   console.log('promise', await task.toPromise());
 // }
+//
+// // export async function testSequentialTasks2() {
+// //   function sequentialTasks(tasks: ITask<any>[]): ITask<void> {
+// //     return taskFromAsyncIterator<void>((async function * (): AsyncIterableIterator<ITaskAsyncIteratorValue<void>> {
+// //       for (let i = 0, l = tasks.length; i < l; i++) {
+// //         await tasks[i].start().toPromise();
+// //         yield { progress: new Progress(i + 1, l) };
+// //       }
+// //     })());
+// //   }
+// //
+// //   const tasks: ITask<any>[] = [
+// //     noCORS('https://file-examples.com/wp-content/uploads/2017/10/file_example_JPG_100kB.jpg'),
+// //     noCORS('https://file-examples.com/wp-content/uploads/2017/10/file_example_JPG_500kB.jpg'),
+// //     noCORS('https://file-examples.com/wp-content/uploads/2017/10/file_example_JPG_1MB.jpg'),
+// //     noCORS('https://file-examples.com/wp-content/uploads/2017/10/file_example_JPG_2500kB.jpg'),
+// //   ].map(url => $fetch(url));
+// //
+// //   const task = logTask(sequentialTasks(tasks)).start();
+// //
+// //   console.log('promise', await task.toPromise());
+// // }
 
 export async function testTask() {
   await testTaskFetch();

@@ -24,7 +24,7 @@ export function GenerateFiniteStateObservableHookFromReadableStreamReaderWithPau
   return GenerateFiniteStateObservableHookFromIterableWithPauseWorkflow<AsyncIterable<TValue>>((async function * () {
     let result: ReadableStreamReadResult<TValue>;
     while (!(result = await reader.read()).done) {
-      yield result.value;
+      yield (result as ReadableStreamReadValueResult<TValue>).value;
     }
   })(), true);
 }

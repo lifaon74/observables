@@ -576,7 +576,7 @@ export async function test() {
 
 
   // await testAbortController();
-  // await runDebug();
+  await runDebug();
   // await debugVoxel();
 
   console.log('tests done');

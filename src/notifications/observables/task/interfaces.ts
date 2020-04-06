@@ -1,6 +1,11 @@
 import { INotificationsObservable } from '../../core/notifications-observable/interfaces';
-import { TAbortStrategy } from '../../../misc/advanced-abort-controller/advanced-abort-signal/types';
-import { ITaskKeyValueMap, TTaskCreateCallback, TTaskState } from './types';
+import {
+  ITaskKeyValueMap, ITaskToCancellablePromiseOptionsLastOnly, ITaskToCancellablePromiseOptionsNotLastOnly,
+  ITaskToPromiseOptionsLastOnly,
+  ITaskToPromiseOptionsNotLastOnly,
+  TTaskCreateCallback, TTaskState
+} from './types';
+import { ICancellablePromise } from '../../../promises/cancellable-promise/interfaces';
 
 /** INTERFACES **/
 
@@ -40,7 +45,11 @@ export interface ITask<TValue> extends INotificationsObservable<ITaskKeyValueMap
 
   abort(reason?: any): this;
 
-  toPromise(abortStrategy?: TAbortStrategy): Promise<TValue>;
+  toPromise(options?: ITaskToPromiseOptionsNotLastOnly): Promise<TValue[]>;
+  toPromise(options: ITaskToPromiseOptionsLastOnly): Promise<TValue>;
+
+  toCancellablePromise(options?: ITaskToCancellablePromiseOptionsNotLastOnly): ICancellablePromise<TValue[]>;
+  toCancellablePromise(options: ITaskToCancellablePromiseOptionsLastOnly): ICancellablePromise<TValue>;
 }
 
 

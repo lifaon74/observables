@@ -11,6 +11,10 @@ import { TAbortObservableToAsyncIterableStrategy } from '../../../../../operator
 import { KeyValueMapGeneric } from '../../../../core/interfaces';
 import { INotificationsObservable } from '../../../../core/notifications-observable/interfaces';
 
+/**
+ * Creates a Task form a FiniteStateObservable
+ *  - INFO: every values emitted by the FiniteStateObservable MUST be cached per observer
+ */
 export function taskFromFiniteStateObservable<TValue,
   TFinalState extends TFinalStateConstraint<TFinalState>,
   TMode extends TFiniteStateObservableModeConstraint<TMode>,
@@ -42,13 +46,11 @@ export function taskFromFiniteStateObservable<TValue,
 
     const finiteStateObservableNextObserver = (observable as unknown as TFiniteStateObservableGeneric)
       .addListener('next', (value: TValue) => {
-        clear();
         context.nextUntilRun(value);
       });
 
     const finiteStateObservableProgressObserver = (observable as unknown as INotificationsObservable<KeyValueMapGeneric>)
       .addListener('progress', (value: IProgress) => {
-        clear();
         context.progressUntilRun(value);
       });
 
@@ -80,8 +82,8 @@ export function taskFromFiniteStateObservable<TValue,
     const taskAbortListener = task.addListener('abort', clear);
 
     taskStartListener.activate();
-    taskStartListener.activate();
-    taskStartListener.activate();
-    taskStartListener.activate();
+    taskPauseListener.activate();
+    taskResumeListener.activate();
+    taskAbortListener.activate();
   });
 }
