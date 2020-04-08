@@ -23,3 +23,10 @@ export function IsEventEmitterEventsListener(value: any): value is IEventEmitter
   return IsObject(value)
     && value.hasOwnProperty(EVENT_EMITTER_EVENTS_LISTENER_PRIVATE as symbol);
 }
+
+export function IsEventEmitter(value: any): value is PureEventEmitter {
+  return IsObject(value)
+    && (typeof value['addListener'] === 'function')
+    && (typeof value['removeListener'] === 'function')
+    && (typeof value['emit'] === 'function');
+}

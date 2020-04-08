@@ -21,3 +21,11 @@ export function IsEventTargetEventsListener(value: any): value is IEventTargetEv
   return IsObject(value)
     && value.hasOwnProperty(EVENT_TARGET_EVENTS_LISTENER_PRIVATE as symbol);
 }
+
+export function IsEventTarget(value: any): value is PureEventTarget {
+  return IsObject(value)
+    && (typeof value['addEventListener'] === 'function')
+    && (typeof value['removeEventListener'] === 'function')
+    && (typeof value['dispatchEvent'] === 'function');
+}
+

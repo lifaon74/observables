@@ -1,4 +1,6 @@
+import { IsEventEmitter } from './constructor';
+
 export * from './interfaces';
 export * from './types';
 export { EventEmitterEventsListener } from './implementation';
-export { IsEventEmitterEventsListener } from './constructor';
+export { IsEventEmitterEventsListener, IsEventEmitter } from './constructor';
