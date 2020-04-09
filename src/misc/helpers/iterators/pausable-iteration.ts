@@ -11,12 +11,16 @@ export interface IPausableIteration {
   resume(): void;
 }
 
+export interface IPausableIterationWithDonePromise extends IPausableIteration {
+  promise: Promise<void>;
+}
+
 export function PausableAsyncIteration<TValue>(
   iterator: AsyncIterator<TValue>,
   next: (value: TValue) => void,
   complete: () => void,
   error: (reason: any) => void
-): IPausableIteration {
+): IPausableIterationWithDonePromise {
   let state: 'paused' | 'running' | 'done' = 'paused';
   let pendingUntilRunning: (() => void)[] = [];
 
@@ -76,12 +80,10 @@ export function PausableAsyncIteration<TValue>(
     }
   };
 
-  iterate();
-
-
   return {
     pause,
     resume,
+    promise: iterate(),
   };
 }
 
