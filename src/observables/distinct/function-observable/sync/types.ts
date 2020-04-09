@@ -1,7 +1,7 @@
-import { TupleArray } from '../../../../classes/types';
 import { IObservable } from '../../../../core/observable/interfaces';
 import { IFunctionObservable } from './interfaces';
 import { TupleTypes } from '../../../../misc/readonly-tuple/types';
+import { TupleArray } from '@lifaon/class-factory';
 
 /** TYPES **/
 

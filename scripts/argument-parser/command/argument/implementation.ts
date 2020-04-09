@@ -1,8 +1,8 @@
 import { ICommandArgument, ICommandArgumentOptions, TCommandArgumentType } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../../src/misc/helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../../../src/helpers';
 import { IReadonlySet } from '../../../../src/misc/readonly-set/interfaces';
 import { ReadonlySet } from '../../../../src/misc/readonly-set/implementation';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 export const COMMAND_ARGUMENT_NAME_PATTERN = '(-[\\w\\-]+)';
 export const COMMAND_ARGUMENT_NAME_REGEXP = new RegExp(`^${ COMMAND_ARGUMENT_NAME_PATTERN }$`);

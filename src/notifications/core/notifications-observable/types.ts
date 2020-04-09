@@ -3,10 +3,10 @@ import { INotificationsObserver } from '../notifications-observer/interfaces';
 import { INotification } from '../notification/interfaces';
 import { IObservableObserver } from '../../../core/observable-observer/interfaces';
 import { IObservable } from '../../../core/observable/interfaces';
-import { IsIntersecting, IsSubSet } from '../../../classes/types';
 import { INotificationsObservableContext } from './context/interfaces';
 import { IObservableHook } from '../../../core/observable/hook/interfaces';
 import { INotificationsObserverLike } from '../notifications-observer/types';
+import { IsIntersecting, IsSubSet } from '@lifaon/class-factory';
 
 /** TYPES **/
 

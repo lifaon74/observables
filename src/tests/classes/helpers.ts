@@ -1,6 +1,4 @@
 import { HandleError, TErrorStrategy } from './error-strategy';
-import { ISuper } from './instance/bcp/super/interfaces';
-import { Super } from './instance/bcp/super/implementation';
 
 export function CopyDescriptors<T extends object>(source: object, destination: T, conflictStrategy?: TErrorStrategy): T {
   Object.entries(Object.getOwnPropertyDescriptors(source)).forEach(([key, descriptor]) => {

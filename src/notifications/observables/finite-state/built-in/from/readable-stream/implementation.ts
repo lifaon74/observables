@@ -2,12 +2,9 @@ import { IFiniteStateObservable, IFiniteStateObservableTypedConstructor } from '
 import { IFromReadableStreamObservable, IFromReadableStreamObservableConstructor } from './interfaces';
 import { FiniteStateObservableFactory } from '../../../implementation';
 import { IObservableConstructor } from '../../../../../../core/observable/interfaces';
-import { GetSetSuperArgsFunction, IsFactoryClass, MakeFactory } from '../../../../../../classes/class-helpers/factory';
 import { NotificationsObservableFactory } from '../../../../../core/notifications-observable/implementation';
 import { INotificationsObservableTypedConstructor } from '../../../../../core/notifications-observable/interfaces';
 import { GenerateFiniteStateObservableHookFromReadableStreamReaderWithPauseWorkflow } from './hook-generators';
-import { Constructor } from '../../../../../../classes/class-helpers/types';
-import { BaseClass, IBaseClassConstructor } from '../../../../../../classes/class-helpers/base-class';
 import { ObservableFactory } from '../../../../../../core/observable/implementation';
 import { IsFiniteStateObservableConstructor } from '../../../constructor';
 import {
@@ -16,6 +13,9 @@ import {
   TFromReadableStreamObservableMode
 } from './types';
 import { ConstructFromReadableStreamObservable, IS_FROM_READABLE_STREAM_CONSTRUCTOR } from './constructor';
+import {
+  BaseClass, Constructor, GetSetSuperArgsFunction, IBaseClassConstructor, IsFactoryClass, MakeFactory
+} from '@lifaon/class-factory';
 
 
 /** CLASS AND FACTORY **/

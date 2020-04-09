@@ -1,8 +1,7 @@
 import { IFromReadableStreamObservable } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../../../../misc/helpers/ClassWithPrivateMembers';
 import { FROM_READABLE_STREAM_OBSERVABLE_PRIVATE } from './privates';
 import { IsObject } from '../../../../../../helpers';
-import { HasFactoryWaterMark } from '../../../../../../classes/class-helpers/factory';
+import { ConstructClassWithPrivateMembers, HasFactoryWaterMark } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

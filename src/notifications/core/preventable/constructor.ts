@@ -1,7 +1,7 @@
 import { IPreventable } from './interfaces';
 import { IsObject } from '../../../helpers';
 import { IPreventableInternal, PREVENTABLE_PRIVATE } from './privates';
-import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

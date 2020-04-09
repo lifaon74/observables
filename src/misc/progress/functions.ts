@@ -25,7 +25,6 @@ export function AggregateProgresses(progresses: IProgressLike[]): IProgressLike 
 }
 
 
-
 export function GroupProgressesByName(progresses: IProgressLikeWithName[]): Map<string | undefined, IProgressLikeWithName[]> {
   return GroupBy<IProgressLikeWithName, 'name'>(progresses, 'name');
 }

@@ -3,9 +3,7 @@ import { IPromiseObservable } from '../notifications/observables/finite-state/bu
 import { Observer } from '../core/observer/implementation';
 import { PromiseObservable } from '../notifications/observables/finite-state/built-in/promise/promise-observable/implementation';
 import { IObservable } from '../core/observable/interfaces';
-import {
-  lastFiniteStateObservableValueToPromise
-} from '../operators/to/toPromise';
+import { lastFiniteStateObservableValueToPromise } from '../operators/to/toPromise';
 import { IFunctionObservable } from '../observables/distinct/function-observable/sync/interfaces';
 import { IsObject } from '../helpers';
 import { IPipe } from '../core/observable-observer/pipe/interfaces';
@@ -35,11 +33,6 @@ export function assert(cb: () => boolean | Promise<boolean>, message: string = c
 export function assertFails(cb: () => any | Promise<any>, message: string = cb.toString()): Promise<void> {
   return assert(() => fails(cb), `expected to fail - ${ message }`);
 }
-
-
-
-
-
 
 
 export function failsSync(cb: () => void): boolean {
@@ -142,13 +135,12 @@ export function assertFunctionObservableEmits(valuesToEmit: any[], observable: I
   observable
     .observedBy(new Observer(destination).activate())
     .run(() => {
-        for (let i = 0; i < valuesToEmit.length; i++) {
-          (observable.args.item(i) as ISource<any>).emit(valuesToEmit[i]);
-        }
-      });
+      for (let i = 0; i < valuesToEmit.length; i++) {
+        (observable.args.item(i) as ISource<any>).emit(valuesToEmit[i]);
+      }
+    });
   return promise;
 }
-
 
 
 export function assertFailsSync(cb: () => void): void {

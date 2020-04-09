@@ -1,5 +1,4 @@
 import { IActivableLike } from '../activable/interfaces';
-import { ICancellablePromiseNormalizedOptions } from '../../promises/cancellable-promise/types';
 import { TNativePromiseLikeOrValue } from '../../promises/types/native';
 import { IAdvancedAbortSignal } from '../advanced-abort-controller/advanced-abort-signal/interfaces';
 

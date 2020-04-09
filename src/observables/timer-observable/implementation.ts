@@ -1,8 +1,8 @@
 import { ITimerObservable } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../helpers';
 import { Observable } from '../../core/observable/implementation';
 import { IObservableContext } from '../../core/observable/context/interfaces';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 
 export const TIMER_OBSERVABLE_PRIVATE = Symbol('timer-observable-private');

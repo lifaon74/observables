@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@lifaon/class-factory@1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@lifaon/class-factory/-/class-factory-1.0.2.tgz#44840547b28f862fe937f308d9e59244cd9cf99b"
+  integrity sha512-tUR2WFlKAs5GzqVqkkyDapEejE54exXWSxvpzSg9p4eGT2ACEBGjsXRWSIOH+BKIEyYZ5INVMjQbwSAW7D2SWA==
+
 "@types/estree@*":
   version "0.0.44"
   resolved "https://registry.yarnpkg.com/@types/estree/-/estree-0.0.44.tgz#980cc5a29a3ef3bea6ff1f7d021047d7ea575e21"

@@ -2,12 +2,13 @@ import { ICancellablePromise, ICancellablePromiseConstructor } from './interface
 import { Reason } from '../../misc/reason/implementation';
 import {
   ICancellablePromiseFinallyOptions, ICancellablePromiseNormalizedFinallyOptions, ICancellablePromiseOptions,
-  TInferCancellablePromiseStaticAllReturn, TInferCancellablePromiseStaticRaceReturn, ICancellablePromiseToPromiseOptions,
-  TInferCancellablePromiseToPromiseReturn, IPromiseCancelledObject, TCancellablePromiseCancelledReturn,
+  ICancellablePromiseToPromiseOptions, IPromiseCancelledObject, TCancellablePromiseCancelledReturn,
   TCancellablePromiseCatchReturn, TCancellablePromiseFactory, TCancellablePromiseOnCancelledArgument,
   TCancellablePromiseOnFinallyArgument, TCancellablePromiseOnFulfilled, TCancellablePromiseOnFulfilledArgument,
   TCancellablePromiseOnRejected, TCancellablePromiseOnRejectedArgument, TCancellablePromisePromiseOrCallback,
-  TCancellablePromiseThenReturn, TCancellablePromiseTryCallback, TNativePromiseLikeOrValueTupleToCancellablePromiseTuple
+  TCancellablePromiseThenReturn, TCancellablePromiseTryCallback, TInferCancellablePromiseStaticAllReturn,
+  TInferCancellablePromiseStaticRaceReturn, TInferCancellablePromiseToPromiseReturn,
+  TNativePromiseLikeOrValueTupleToCancellablePromiseTuple
 } from './types';
 import {
   CANCELLABLE_PROMISE_DEFAULT_ABORT_SIGNAL_WRAP_OPTIONS, CANCELLABLE_PROMISE_PRIVATE, ICancellablePromiseInternal,
@@ -23,9 +24,8 @@ import { PromiseFinally, PromiseTry } from '../types/helpers';
 import { NormalizeICancellablePromiseFinallyOptions } from './functions';
 import { IsObject } from '../../helpers';
 import {
-  INativePromiseFulfilledObject, INativePromiseRejectedObject, TInferNativePromiseLikeType,
-  TInferNativePromiseOrValueFactoryTupleToUnionOfValues, TInferNativePromiseLikeOrValueFactoryTupleToValueTuple,
-  TNativePromiseLikeOrValue
+  INativePromiseFulfilledObject, INativePromiseRejectedObject, TInferNativePromiseLikeOrValueFactoryTupleToValueTuple,
+  TInferNativePromiseLikeType, TInferNativePromiseOrValueFactoryTupleToUnionOfValues, TNativePromiseLikeOrValue
 } from '../types/native';
 
 

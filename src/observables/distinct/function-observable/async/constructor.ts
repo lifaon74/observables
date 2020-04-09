@@ -3,18 +3,17 @@ import { IsObject } from '../../../../helpers';
 import {
   ASYNC_FUNCTION_OBSERVABLE_PRIVATE, IAsyncFunctionObservableInternal, IAsyncFunctionObservablePrivate
 } from './privates';
-import { HasFactoryWaterMark } from '../../../../classes/class-helpers/factory';
 import {
   TAsyncFunctionObservableFactory, TAsyncFunctionObservableFactoryParameters, TAsyncFunctionObservableParameters,
   TAsyncFunctionObservableParametersUnion, TAsyncFunctionObservableValue
 } from './types';
 import { IAsyncDistinctValueObservableContext } from '../../distinct-value-observable/async/context/interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
 import { Observer } from '../../../../core/observer/implementation';
 import { IObservable } from '../../../../core/observable/interfaces';
 import { AbortReason } from '../../../../misc/reason/built-in/abort-reason';
 import { AsyncFunctionObservableCallFactory, AsyncFunctionObservableSetObservableValue } from './functions';
 import { ReadonlyTuple } from '../../../../misc/readonly-tuple/implementation';
+import { ConstructClassWithPrivateMembers, HasFactoryWaterMark } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

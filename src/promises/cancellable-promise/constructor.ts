@@ -7,10 +7,10 @@ import {
 import {
   ICancellablePromiseNormalizedOptions, ICancellablePromiseOptions, TCancellablePromisePromiseOrCallback
 } from './types';
-import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IsPromiseLikeBase } from '../types/helpers';
 import { NormalizeICancellablePromiseOptions } from './functions';
 import { TNativePromiseLikeOrValue } from '../types/native';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

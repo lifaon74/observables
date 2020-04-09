@@ -1,5 +1,5 @@
 import { IsObject } from '../../../../../../helpers';
-import { IFromIterableObservableOptions} from './types';
+import { IFromIterableObservableOptions } from './types';
 import { TSyncOrAsyncIterable } from '../../../../../../misc/helpers/iterators/interfaces';
 import { IsIterable } from '../../../../../../misc/helpers/iterators/is/is-iterable';
 import { IsAsyncIterable } from '../../../../../../misc/helpers/iterators/is/is-async-iterable';

@@ -11,7 +11,6 @@ import {
 import { FiniteStateObservableHookDefaultOnUnobserved } from '../../../helpers';
 import { AdvancedAbortController } from '../../../../../../misc/advanced-abort-controller/implementation';
 import { IAdvancedAbortController } from '../../../../../../misc/advanced-abort-controller/interfaces';
-import { AbortReason } from '../../../../../../misc/reason/built-in/abort-reason';
 import { TFiniteStateObservableCreateCallback, TFiniteStateObservableMode } from '../../../types';
 import { IFiniteStateObservableContext } from '../../../context/interfaces';
 import { IXHRObservableKeyValueMap, IXHRObservableRequestInit, TXHRObservableFinalState } from './types';

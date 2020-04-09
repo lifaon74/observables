@@ -2,7 +2,6 @@ import { CancellablePromise } from '../promises/cancellable-promise/implementati
 import { $delay } from '../promises/cancellable-promise/snipets';
 import { TOnFinallyResult } from '../promises/cancellable-promise/types';
 import { AdvancedAbortController } from '../misc/advanced-abort-controller/implementation';
-import { IAdvancedAbortSignal } from '../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 import { IAdvancedAbortController } from '../misc/advanced-abort-controller/interfaces';
 import { DeferredPromise } from '../promises/deferred-promise/implementation';
 
@@ -12,7 +11,7 @@ export function testCancellablePromise() {
 
   const a = CancellablePromise.resolve(1, { signal: controller.signal });
 
-  const b =  a
+  const b = a
     .then((value: number) => {
       console.log('then #1', value);
       controller.abort('manual cancel');
@@ -40,7 +39,7 @@ export function testCancellablePromise() {
     });
 
   b.toPromise()
-    .then(() =>{
+    .then(() => {
       console.log('never append');
     });
 

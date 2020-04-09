@@ -3,8 +3,8 @@ import { IsObject } from '../../../helpers';
 import { ITaskInternal, ITaskPrivate, TASK_PRIVATE } from './privates';
 import { INotificationsObservableContext } from '../../core/notifications-observable/context/interfaces';
 import { ITaskKeyValueMap, TTaskCreateCallback } from './types';
-import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { NewTaskContext } from './context/implementation';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

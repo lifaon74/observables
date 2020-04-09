@@ -1,7 +1,7 @@
 import { IEventLike } from './interfaces';
 import { IsObject } from '../../../../../helpers';
 import { EVENT_LIKE_PRIVATE, IEventLikeInternal, IEventLikePrivate } from './privates';
-import { ConstructClassWithPrivateMembers } from '../../../../../misc/helpers/ClassWithPrivateMembers';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

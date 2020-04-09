@@ -5,7 +5,6 @@ import { mapPipe } from '../operators/pipes/mapPipe';
 import { TimerObservable } from '../observables/timer-observable/implementation';
 import { Notification } from '../notifications/core/notification/implementation';
 import { WebSocketIO } from '../observables/io/websocket-observable/implementation';
-import { UnionToIntersection } from '../classes/types';
 import { reducePipe } from '../operators/pipes/reducePipe';
 import { flattenPipe } from '../operators/pipes/flattenPipe';
 import { assert, assertFails, assertObservableEmits, eq, notificationsEquals } from '../classes/asserts';
@@ -14,27 +13,20 @@ import { noop } from '../helpers';
 import { Observer } from '../core/observer/public';
 import { toRXJS } from '../operators/to/toRXJS';
 import {
-  FiniteStateObservable, IFiniteStateObservable, TFiniteStateObservableKeyValueMapGeneric,
-  TFiniteStateObservableFinalState, TFiniteStateObservableMode, FromIterableObservable
+  FiniteStateObservable, FromIterableObservable, IFiniteStateObservable, TFiniteStateObservableFinalState,
+  TFiniteStateObservableKeyValueMapGeneric, TFiniteStateObservableMode
 } from '../notifications/observables/finite-state/public';
 import { IFileReaderObservable } from '../notifications/observables/finite-state/built-in/file-reader/interfaces';
 import { FileReaderObservable } from '../notifications/observables/finite-state/built-in/file-reader/implementation';
-import { Progress } from '../misc/progress/implementation';
 import { FromRXJSObservable } from '../notifications/observables/finite-state/built-in/from/rxjs/public';
 import { aggregateNotificationsPipe } from '../operators/pipes/aggregateNotificationsPipe';
 import { finiteStateObservableToPromise, toPromise } from '../operators/to/toPromise';
-import { testExamples } from './examples/examples';
-import { testPromises } from './test-promises';
-import { testTask } from './test-task';
 import { IProgress } from '../misc/progress/interfaces';
 import { Observable } from '../core/observable/implementation';
-import { testAbortController } from './test-abort-controller';
 import { Source } from '../observables/distinct/source/sync/implementation';
 import { AsyncSource } from '../observables/distinct/source/async/implementation';
-import { debugCancellableContext } from './debug/debug-cancellable-context';
-import { testPerformances } from './test-performances';
 import { runDebug } from './debug/debug';
-
+import { UnionToIntersection } from '@lifaon/class-factory';
 
 
 // import { toAsyncIterable } from '../operators/to/async-iterator/toAsyncIterable';
@@ -205,7 +197,6 @@ export async function testAsyncSource() {
 }
 
 
-
 async function testFiniteStateObservable() {
 
   function assertFiniteStateObservableEmits<TValue>(observable: IFiniteStateObservable<any, TFiniteStateObservableFinalState, TFiniteStateObservableMode, TFiniteStateObservableKeyValueMapGeneric<any, TFiniteStateObservableFinalState>>, notifications: [string, any][]): Promise<void> {
@@ -239,16 +230,16 @@ async function testFiniteStateObservable() {
             context.complete();
           }
         }
-      }
+      };
     }, { mode: 'once' });
 
-    await assertFiniteStateObservableEmits(observable,[
+    await assertFiniteStateObservableEmits(observable, [
       ['next', 1],
       ['next', 2],
       ['complete', void 0],
     ]);
 
-    await assertFiniteStateObservableEmits(observable,[]);
+    await assertFiniteStateObservableEmits(observable, []);
   }
 
   async function testCache() {
@@ -260,13 +251,13 @@ async function testFiniteStateObservable() {
 
     await assert(() => (observable.state === 'complete'));
 
-    await assertFiniteStateObservableEmits(observable,[
+    await assertFiniteStateObservableEmits(observable, [
       ['next', 1],
       ['next', 2],
       ['complete', void 0],
     ]);
 
-    await assertFiniteStateObservableEmits(observable,[
+    await assertFiniteStateObservableEmits(observable, [
       ['next', 1],
       ['next', 2],
       ['complete', void 0],
@@ -282,11 +273,11 @@ async function testFiniteStateObservable() {
 
     await assert(() => (observable.state === 'complete'));
 
-    await assertFiniteStateObservableEmits(observable,[
+    await assertFiniteStateObservableEmits(observable, [
       ['error', 'my-error'],
     ]);
 
-    await assertFiniteStateObservableEmits(observable,[
+    await assertFiniteStateObservableEmits(observable, [
       ['error', 'my-error'],
     ]);
   }
@@ -299,7 +290,8 @@ async function testFiniteStateObservable() {
     }, { mode: 'uniq' });
 
     await assert(() => (observable.state === 'complete'));
-    await assertFails(() => (observable.pipeTo(() => {}).activate()));
+    await assertFails(() => (observable.pipeTo(() => {
+    }).activate()));
   }
 
 
@@ -309,8 +301,6 @@ async function testFiniteStateObservable() {
   await testCacheFinalState();
   await testThrowAfterComplete();
 }
-
-
 
 
 async function testReducePipe() {
@@ -497,8 +487,6 @@ export function testInstanceof() {
 }
 
 
-
-
 export async function testFileReaderObservable() {
   // function assertFileReaderObservableEmits<T>(observable: IFileReaderObservable<any>, notifications: [string, T | any][]): Promise<void> {
   //   return assertObservableEmits(observable, notifications, 100, notificationsEquals);
@@ -511,7 +499,7 @@ export async function testFileReaderObservable() {
         console.log('progress', progress);
       })
       .on('next', (value: ArrayBuffer | string) => {
-        console.log('next', (typeof value === 'string') ? value: new Uint8Array(value));
+        console.log('next', (typeof value === 'string') ? value : new Uint8Array(value));
       })
       .on('complete', () => {
         console.log('complete');
@@ -519,7 +507,7 @@ export async function testFileReaderObservable() {
       .on('error', (error: DOMException) => {
         console.log('error', error);
       })
-    ;
+      ;
   };
 
   console.log('cache all');

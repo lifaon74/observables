@@ -6,10 +6,7 @@ import { INotificationsObserver } from '../notifications-observer/interfaces';
 import { NotificationsObserver } from '../notifications-observer/implementation';
 import { ObserverUnobserveOne } from '../../../core/observer/implementation';
 import { KeyValueMapGeneric, KeyValueMapGenericConstraint, KeyValueMapKeys, KeyValueMapValues } from '../interfaces';
-import { GetSetSuperArgsFunction, IsFactoryClass, MakeFactory } from '../../../classes/class-helpers/factory';
 import { IObserver } from '../../../core/observer/interfaces';
-import { Constructor } from '../../../classes/class-helpers/types';
-import { BaseClass, IBaseClassConstructor } from '../../../classes/class-helpers/base-class';
 import { IS_OBSERVABLE_LIKE_CONSTRUCTOR, IsObservableLikeConstructor } from '../../../core/observable/constructor';
 import { ObservableFactory } from '../../../core/observable/implementation';
 import { IObservableContext } from '../../../core/observable/context/interfaces';
@@ -22,8 +19,13 @@ import {
   INotificationsObservableMatchOptions, KeyValueMapToNotifications, KeyValueMapToNotificationsObservers,
   TNotificationsObservableConstructorArgs, TNotificationsObservableHook
 } from './types';
-import { INotificationsObservableMatchNormalizedOption, NormalizeNotificationsObservableMatchOptions } from './functions';
+import {
+  INotificationsObservableMatchNormalizedOption, NormalizeNotificationsObservableMatchOptions
+} from './functions';
 import { IsNotificationsObserver } from '../notifications-observer/constructor';
+import {
+  BaseClass, Constructor, GetSetSuperArgsFunction, IBaseClassConstructor, IsFactoryClass, MakeFactory
+} from '@lifaon/class-factory';
 
 
 /** CONSTRUCTOR FUNCTIONS **/

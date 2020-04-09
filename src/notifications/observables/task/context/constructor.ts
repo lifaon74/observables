@@ -1,7 +1,7 @@
 import { ITaskContext } from './interfaces';
 import { ITask } from '../interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
 import { ITaskContextInternal, TASK_CONTEXT_PRIVATE } from './privates';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 let ALLOW_TASK_CONTEXT_CONSTRUCT: boolean = false;
 

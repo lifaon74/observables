@@ -2,8 +2,8 @@ import { IObserver } from '../../../observer/interfaces';
 import { IObservable } from '../../../observable/interfaces';
 import { IPipeContext } from './interfaces';
 import { IPipe } from '../interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
 import { IPipeContextInternal, PIPE_CONTEXT_PRIVATE } from './privates';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

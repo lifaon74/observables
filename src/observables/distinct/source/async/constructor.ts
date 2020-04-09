@@ -1,8 +1,8 @@
 import { IAsyncSource } from './interfaces';
 import { IAsyncDistinctValueObservableContext } from '../../distinct-value-observable/async/context/interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
 import { ASYNC_SOURCE_PRIVATE, IAsyncSourceInternal } from './privates';
 import { IsObject } from '../../../../helpers';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

@@ -1,11 +1,10 @@
 import { IDOMResizeObservable, IDOMResizeObservableOptions } from './interfaces';
-import { ResizeObserver, ResizeObserverObserveOptions } from './ResizeObserver';  // TODO fix in the future when definition will exists
+import { ResizeObserver, ResizeObserverObserveOptions } from './ResizeObserver'; // TODO fix in the future when definition will exists
 import { IObservableContext } from '../../core/observable/context/interfaces';
-import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../helpers';
 import { periodTime } from '../../classes/pure-pipes';
 import { Observable } from '../../core/observable/implementation';
-
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 
 /** PRIVATES **/

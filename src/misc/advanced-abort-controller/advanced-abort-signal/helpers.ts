@@ -75,7 +75,6 @@ export function NormalizeAdvancedAbortSignalWrapPromiseOptionsOnAbortedControlle
 }
 
 
-
 export interface IAdvancedAbortSignalWrapPromiseNormalizedOptions<TStrategy extends TAbortStrategy, TAborted> extends IAdvancedAbortSignalWrapPromiseOptions<TStrategy, TAborted> {
   strategy: TStrategy;
 }

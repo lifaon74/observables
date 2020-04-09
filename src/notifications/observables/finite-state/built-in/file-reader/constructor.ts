@@ -5,7 +5,7 @@ import {
 } from './privates';
 import { TFileReaderReadType } from './types';
 import { IFileReaderObservableOptionsStrict } from './functions';
-import { ConstructClassWithPrivateMembers } from '../../../../../misc/helpers/ClassWithPrivateMembers';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

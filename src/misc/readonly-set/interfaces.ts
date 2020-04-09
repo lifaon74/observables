@@ -1,4 +1,3 @@
-
 /** INTERFACES **/
 
 export interface IReadonlySetConstructor {

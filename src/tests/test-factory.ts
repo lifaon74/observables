@@ -1,14 +1,8 @@
-import { ClassToFactory, MakeFactory } from '../classes/class-helpers/factory';
 import {
-  Constructor, ConstructorsParameters, ExcludeConstructors, InstancesTypes
-} from '../classes/class-helpers/types';
-import { TupleToIntersection } from '../classes/types';
-import {
-  BindDescriptor,
-  CopyClassStaticProperties, EXCLUDED_PROPERTY_NAMES, GetOwnPropertyKeys,
-  GetPropertyDescriptors, GetSafePropertyDescriptors
-} from '../classes/class-helpers/helpers';
-import { SetInstanceOf } from '../classes/class-helpers/instanceof';
+  BindDescriptor, ClassToFactory, Constructor, ConstructorsParameters, ExcludeConstructors, GetOwnPropertyKeys,
+  GetSafePropertyDescriptors, InstancesTypes, MakeFactory, SetInstanceOf, TupleToIntersection
+} from '@lifaon/class-factory';
+
 
 interface IA {
   a: string;

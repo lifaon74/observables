@@ -1,8 +1,8 @@
-import { IsSubSet } from '../../classes/types';
 import {
   TInferNativePromiseLikeOrValueTupleToValueTuple, TInferNativePromiseOrValueTupleToValueUnion,
   TNativePromiseLikeOrValue, TPromiseStatus
 } from '../types/native';
+import { IsSubSet } from '@lifaon/class-factory';
 
 /** TYPES **/
 

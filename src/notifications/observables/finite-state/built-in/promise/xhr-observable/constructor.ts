@@ -1,9 +1,9 @@
 import { IXHRObservable } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../../../../misc/helpers/ClassWithPrivateMembers';
 import { IXHRObservableInternal, IXHRObservablePrivate, XHR_OBSERVABLE_PRIVATE } from './privates';
 import { IsObject } from '../../../../../../helpers';
 import { IXHRObservableOptions, IXHRObservableRequestInit } from './types';
 import { EnsureRequestInitDoesntContainSignal } from '../fetch-observable/functions';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

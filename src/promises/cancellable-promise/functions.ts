@@ -3,9 +3,7 @@ import {
   ICancellablePromiseOptions
 } from './types';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
-import { AdvancedAbortController } from '../../misc/advanced-abort-controller/implementation';
 import { IsObject } from '../../helpers';
-import { IsAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/constructor';
 import { NormalizeAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/helpers';
 
 /** FUNCTIONS **/

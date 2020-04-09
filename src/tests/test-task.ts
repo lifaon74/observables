@@ -1,23 +1,17 @@
 import { Task } from '../notifications/observables/task/implementation';
-import { ITask} from '../notifications/observables/task/interfaces';
+import { ITask } from '../notifications/observables/task/interfaces';
 import { IFromReadableStreamObservable } from '../notifications/observables/finite-state/built-in/from/readable-stream/interfaces';
 import { FromReadableStreamObservable } from '../notifications/observables/finite-state/built-in/from/readable-stream/implementation';
 import { IProgress } from '../misc/progress/interfaces';
 import { ITaskFromIteratorValue, taskFromIterator } from '../notifications/observables/task/built-in/from/iterable';
 import { Progress } from '../misc/progress/implementation';
 import { taskFromPromise, taskFromPromiseFactory } from '../notifications/observables/task/built-in/from/promise';
-import { taskFromTasksInParallel } from '../notifications/observables/task/built-in/from/tasks';
 import { AbortReason } from '../misc/reason/built-in/abort-reason';
 import { AdvancedAbortController } from '../misc/advanced-abort-controller/implementation';
 import { IAdvancedAbortController } from '../misc/advanced-abort-controller/interfaces';
 import { ITaskContext } from '../notifications/observables/task/context/interfaces';
 import { IAdvancedAbortSignal } from '../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 import { CancellablePromise } from '../promises/cancellable-promise/implementation';
-import { IFiniteStateObservable } from '../notifications/observables/finite-state/interfaces';
-import {
-  TFiniteStateObservableGeneric, TFiniteStateObserverGeneric
-} from '../notifications/observables/finite-state/types';
-import { IActivable } from '../misc/activable/interfaces';
 
 //
 // // export interface IReversible {
@@ -85,7 +79,6 @@ import { IActivable } from '../misc/activable/interfaces';
 /*---------------------------------------------------*/
 
 
-
 function noCORS(url: string): string {
   return `https://cors-anywhere.herokuapp.com/${ url }`;
 }
@@ -110,7 +103,7 @@ function logTask<T extends ITask<any>>(task: T): T {
     .on('progress', (progress: IProgress) => {
       console.log('progress', progress.toString());
     })
-  ;
+    ;
 }
 
 function generateTaskControlButton<T extends ITask<any>>(task: T): T {
@@ -161,7 +154,7 @@ function generateTaskControlButton<T extends ITask<any>>(task: T): T {
     })
     .on('abort', (reason?: any) => {
       clear();
-      document.body.appendChild(new Text('[ABORTED]: ' + (reason ? reason.message: '')));
+      document.body.appendChild(new Text('[ABORTED]: ' + (reason ? reason.message : '')));
     });
 }
 
@@ -298,9 +291,6 @@ const urls: string[] = [
 ];
 
 
-
-
-
 export async function testTaskFetch() {
 
 
@@ -319,7 +309,7 @@ export async function testTaskAsyncIterable() {
       if (response.ok) {
         yield { value: await response.blob(), progress: new Progress(i + 1, l) };
       } else {
-        throw new Error(`Failed to fetch resource: ${ response.status } - ${ response.statusText }`)
+        throw new Error(`Failed to fetch resource: ${ response.status } - ${ response.statusText }`);
       }
     }
   }

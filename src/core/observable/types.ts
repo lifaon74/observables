@@ -2,8 +2,8 @@ import { IObservableContext } from './context/interfaces';
 import { IObservableHook } from './hook/interfaces';
 import { IObservableObserver } from '../observable-observer/interfaces';
 import { IObserver } from '../observer/interfaces';
-import { IsSubSet, TupleTypes, UnionToIntersection } from '../../classes/types';
 import { IObservable } from './interfaces';
+import { IsSubSet, TupleTypes, UnionToIntersection } from '@lifaon/class-factory';
 
 /** TYPES **/
 

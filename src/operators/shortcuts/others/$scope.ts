@@ -1,6 +1,6 @@
 import { IObserver } from '../../../core/observer/interfaces';
-import { TupleUnshift } from '../../../classes/types';
 import { scopePipe } from '../../pipes/scopePipe';
+import { TupleUnshift } from '@lifaon/class-factory';
 
 /**
  * Values received by the returned Observer, are concatenated with 'args' and emitted into the input 'observer'

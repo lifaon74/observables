@@ -1,10 +1,10 @@
 import { ICancellableContext } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../helpers/ClassWithPrivateMembers';
 import {
   CANCELLABLE_CONTEXT_PRIVATE, ICancellableContextInternal, ICancellableContextPrivate, ICancellablePromiseAndController
 } from './privates';
 import { DeepMap } from '../../classes/DeepMap';
 import { IsObject } from '../../helpers';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

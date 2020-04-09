@@ -1,6 +1,6 @@
-import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IInstance } from './interfaces';
 import { GetPropertyDescriptor } from '../../../classes/properties';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 // <instance, Map<propName, function>
 const propertiesFunctionMap: WeakMap<object, Map<string, Function>> = new WeakMap<object, Map<string, Function>>();

@@ -1,5 +1,3 @@
-
-
 export interface IInstance<TInstance extends object, TPrototype extends object> {
   readonly instance: TInstance;
   readonly proto: TPrototype;

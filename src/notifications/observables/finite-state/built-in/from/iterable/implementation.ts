@@ -5,23 +5,23 @@ import {
   IFromIterableObservableKeyValueMap, IFromIterableObservableOptions, TFromIterableObservableConstructorArgs,
   TFromIterableObservableFinalState, TFromIterableObservableMode
 } from './types';
-import { Constructor } from '../../../../../../classes/class-helpers/types';
 import { IFiniteStateObservable, IFiniteStateObservableTypedConstructor } from '../../../interfaces';
 import { ConstructFromIterableObservable, IS_FROM_ITERABLE_OBSERVABLE_CONSTRUCTOR } from './constructor';
-import { GetSetSuperArgsFunction, IsFactoryClass, MakeFactory } from '../../../../../../classes/class-helpers/factory';
 import { GenerateFiniteStateObservableHookFromIterableWithPauseWorkflow } from './hook-generators';
 import { INotificationsObservableTypedConstructor } from '../../../../../core/notifications-observable/interfaces';
 import { IObservableTypedConstructor } from '../../../../../../core/observable/interfaces';
 import { FiniteStateObservableFactory } from '../../../implementation';
 import { NotificationsObservableFactory } from '../../../../../core/notifications-observable/implementation';
 import { ObservableFactory } from '../../../../../../core/observable/implementation';
-import { BaseClass, IBaseClassConstructor } from '../../../../../../classes/class-helpers/base-class';
 import { IsFiniteStateObservableConstructor } from '../../../constructor';
 import { KeyValueMapToNotifications } from '../../../../../core/notifications-observable/types';
 import {
   IFromIterableObservableNormalizedArguments, NormalizeFromIterableObservableOptionsAndIterable
 } from './functions';
 import { TSyncOrAsyncIterable } from '../../../../../../misc/helpers/iterators/interfaces';
+import {
+  BaseClass, Constructor, GetSetSuperArgsFunction, IBaseClassConstructor, IsFactoryClass, MakeFactory
+} from '@lifaon/class-factory';
 
 
 /** CLASS AND FACTORY **/

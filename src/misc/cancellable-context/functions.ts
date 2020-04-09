@@ -9,7 +9,6 @@ import { ICancellablePromise } from '../../promises/cancellable-promise/interfac
 import { CancellablePromise } from '../../promises/cancellable-promise/implementation';
 import { PromiseTry } from '../../promises/types/helpers';
 import { ICancellablePromiseOptions } from '../../promises/cancellable-promise/types';
-import { TAbortStrategy } from '../advanced-abort-controller/advanced-abort-signal/types';
 import { TNativePromiseLikeOrValue } from '../../promises/types/native';
 import { IAdvancedAbortSignal } from '../advanced-abort-controller/advanced-abort-signal/interfaces';
 

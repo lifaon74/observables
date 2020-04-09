@@ -1,7 +1,6 @@
 import { IObserver } from '../../observer/interfaces';
 import { IObservable } from '../../observable/interfaces';
 import { IObservableObserver } from '../interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IPipeInternal, IPipePrivate, PIPE_PRIVATE } from './privates';
 import { IsObject } from '../../../helpers';
 import { OBSERVER_PRIVATE } from '../../observer/privates';
@@ -9,6 +8,7 @@ import { IObservableInternal, IObservablePrivate, OBSERVABLE_PRIVATE } from '../
 import { ObservableType } from '../../observable/types';
 import { IPipe } from './interfaces';
 import { PipeUpdateAutoActivate, PipeUpdateAutoDeactivate } from './functions';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

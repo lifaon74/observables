@@ -2,7 +2,6 @@ import { NotificationsObservable } from '../../../../core/notifications-observab
 import {
   ISwipeEvent, ISwipeEventInit, ISwipeObservable, ISwipeObservableKeyValueMap, TSwipeEventDirection
 } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../../../misc/helpers/ClassWithPrivateMembers';
 import { INotificationsObserver } from '../../../../core/notifications-observer/interfaces';
 import { EventsObservable } from '../implementation';
 import { CyclicTypedVectorArray } from '../../../../../classes/cyclic/CyclicTypedVectorArray';
@@ -15,6 +14,7 @@ import {
 } from '../../../../core/notifications-observable/types';
 import { NotificationsObservableDispatch } from '../../../../core/notifications-observable/functions';
 import { ExtractObserverNameAndCallback } from '../../../../core/notifications-observer/functions';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 
 // export abstract class Gesture {

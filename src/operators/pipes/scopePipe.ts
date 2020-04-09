@@ -1,8 +1,8 @@
 import { IObserver } from '../../core/observer/interfaces';
 import { IObservable } from '../../core/observable/interfaces';
 import { mapPipe } from './mapPipe';
-import { TupleUnshift } from '../../classes/types';
 import { IPipe } from '../../core/observable-observer/pipe/interfaces';
+import { TupleUnshift } from '@lifaon/class-factory';
 
 /**
  * ObservableObserver:

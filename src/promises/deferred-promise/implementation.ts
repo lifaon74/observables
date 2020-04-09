@@ -1,12 +1,12 @@
 import {
   IDeferredPromise, IDeferredPromiseCodes, TDeferredPromiseAllReturn, TDeferredPromiseRaceReturn
 } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IsObject, noop } from '../../helpers';
 import {
   TInferNativePromiseLikeOrValueTupleToValueTuple, TInferNativePromiseOrValueTupleToValueUnion,
   TNativePromiseLikeOrValue, TPromiseStatus
 } from '../types/native';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 
 export const DEFERRED_PROMISE_PRIVATE = Symbol('deferred-promise-private');

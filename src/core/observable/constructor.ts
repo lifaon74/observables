@@ -1,12 +1,11 @@
 import { IObservable, IObservableConstructor } from './interfaces';
 import { IsObject } from '../../helpers';
 import { IObservableInternal, IObservablePrivate, OBSERVABLE_PRIVATE } from './privates';
-import { HasFactoryWaterMark } from '../../classes/class-helpers/factory';
-import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IObservableHook } from './hook/interfaces';
 import { IObservableContext } from './context/interfaces';
 import { NewObservableContext } from './context/implementation';
 import { InitObservableHook } from './hook/init';
+import { ConstructClassWithPrivateMembers, HasFactoryWaterMark } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

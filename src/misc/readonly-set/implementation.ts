@@ -1,6 +1,6 @@
-import { ConstructClassWithPrivateMembers } from '../helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../helpers';
 import { IReadonlySet } from './interfaces';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 export const READONLY_SET_PRIVATE = Symbol('readonly-set-private');
 

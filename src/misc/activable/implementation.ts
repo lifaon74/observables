@@ -1,11 +1,10 @@
-import { ConstructClassWithPrivateMembers } from '../helpers/ClassWithPrivateMembers';
-import { HasFactoryWaterMark, MakeFactory } from '../../classes/class-helpers/factory';
 import {
   IActivable, IActivableConstructor, IActivableHook, TActivableConstructorArgs, TActivableSateListener
 } from './interfaces';
 import { IsObject } from '../../helpers';
-import { Constructor } from '../../classes/class-helpers/types';
-import { BaseClass, IBaseClassConstructor } from '../../classes/class-helpers/base-class';
+import {
+  BaseClass, ConstructClassWithPrivateMembers, Constructor, HasFactoryWaterMark, IBaseClassConstructor, MakeFactory
+} from '@lifaon/class-factory';
 
 /** PRIVATES **/
 

@@ -1,9 +1,7 @@
 import { IFiniteStateObservable } from '../../../interfaces';
 import {
-  TFinalStateConstraint, TFiniteStateKeyValueMapConstraint, TFiniteStateObservableCreateCallback,
-  TFiniteStateObservableFinalState,
-  TFiniteStateObservableGeneric, TFiniteStateObservableKeyValueMapGeneric, TFiniteStateObservableMode,
-  TFiniteStateObservableModeConstraint
+  TFiniteStateObservableCreateCallback, TFiniteStateObservableFinalState, TFiniteStateObservableKeyValueMapGeneric,
+  TFiniteStateObservableMode
 } from '../../../types';
 import { IFiniteStateObservableContext } from '../../../context/interfaces';
 import { IObserver } from '../../../../../../core/observer/interfaces';

@@ -1,5 +1,4 @@
-import { TupleArray } from '../classes/types';
-
+import { TupleArray } from '@lifaon/class-factory';
 
 function testRef() {
 

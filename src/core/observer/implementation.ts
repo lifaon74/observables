@@ -2,14 +2,12 @@ import { IObserver, IObserverConstructor, IObserverTypedConstructor } from './in
 import { IReadonlyList } from '../../misc/readonly-list/interfaces';
 import { ReadonlyList } from '../../misc/readonly-list/implementation';
 import { IObservable } from '../observable/interfaces';
-import { MakeFactory } from '../../classes/class-helpers/factory';
-import { Constructor } from '../../classes/class-helpers/types';
-import { BaseClass, IBaseClassConstructor } from '../../classes/class-helpers/base-class';
 import { IsObservable } from '../observable/constructor';
 import { LinkObservableAndObserver, UnLinkObservableAndObserver } from '../observable/functions';
 import { IObserverInternal, IObserverPrivate, OBSERVER_PRIVATE } from './privates';
 import { ConstructObserver } from './constructor';
 import { TObserverConstructorArgs, TObserverObserveResultNonCyclic, TObserverUnObserveResultNonCyclic } from './types';
+import { BaseClass, Constructor, IBaseClassConstructor, MakeFactory } from '@lifaon/class-factory';
 
 /** METHODS **/
 

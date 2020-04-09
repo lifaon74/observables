@@ -1,10 +1,10 @@
 import { ICancellablePromise } from '../../../../../../promises/cancellable-promise/interfaces';
 import { CancellablePromise } from '../../../../../../promises/cancellable-promise/implementation';
-import { StringMaxLength, ToIterable } from '../../../../../../helpers';
-import { PartialProperties } from '../../../../../../classes/types';
+import { StringMaxLength } from '../../../../../../helpers';
 import { INotificationsObserver } from '../../../../../core/notifications-observer/interfaces';
 import { IAdvancedAbortSignal } from '../../../../../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 import { AbortReason } from '../../../../../../misc/reason/built-in/abort-reason';
+import { PartialProperties } from '@lifaon/class-factory';
 
 export type XMLHttpRequestExtendedResponseType = XMLHttpRequestResponseType | 'binary-string';
 

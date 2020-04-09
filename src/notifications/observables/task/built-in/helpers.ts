@@ -43,6 +43,7 @@ export function ReplaceNativeMethod<TInstance extends object, TMethodName extend
 
 export interface IWrapTaskHandlers<TWrappedTaskValue> {
   onNext?(value: TWrappedTaskValue): void,
+
   onProgress?(progress: IProgress): void,
 }
 

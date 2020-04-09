@@ -2,9 +2,9 @@ import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advan
 import { TAbortStrategy } from '../../misc/advanced-abort-controller/advanced-abort-signal/types';
 import {
   ICancellablePromiseFinallyOptions, ICancellablePromiseOptions, ICancellablePromiseToPromiseOptions,
-  TInferCancellablePromiseToPromiseReturn, TCancellablePromiseCancelledReturn, TCancellablePromiseCatchReturn,
-  TCancellablePromiseOnCancelledArgument, TCancellablePromiseOnFinallyArgument, TCancellablePromiseOnFulfilledArgument,
-  TCancellablePromiseOnRejectedArgument, TCancellablePromisePromiseOrCallback, TCancellablePromiseThenReturn
+  TCancellablePromiseCancelledReturn, TCancellablePromiseCatchReturn, TCancellablePromiseOnCancelledArgument,
+  TCancellablePromiseOnFinallyArgument, TCancellablePromiseOnFulfilledArgument, TCancellablePromiseOnRejectedArgument,
+  TCancellablePromisePromiseOrCallback, TCancellablePromiseThenReturn, TInferCancellablePromiseToPromiseReturn
 } from './types';
 
 
@@ -199,6 +199,7 @@ export interface ICancellablePromise<T> extends Promise<T> {
 
 
   toPromise(): TInferCancellablePromiseToPromiseReturn<T, 'never'>;
+
   toPromise<TStrategy extends TAbortStrategy>(options: ICancellablePromiseToPromiseOptions<TStrategy> | undefined): TInferCancellablePromiseToPromiseReturn<T, TStrategy>;
 }
 

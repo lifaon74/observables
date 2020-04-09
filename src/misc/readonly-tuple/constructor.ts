@@ -1,7 +1,7 @@
 import { IReadonlyTuple } from './interfaces';
 import { IsObject } from '../../helpers';
 import { IReadonlyTupleInternal, READONLY_TUPLE_PRIVATE } from './privates';
-import { ConstructClassWithPrivateMembers } from '../helpers/ClassWithPrivateMembers';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

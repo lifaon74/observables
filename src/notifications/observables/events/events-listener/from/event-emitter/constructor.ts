@@ -4,8 +4,8 @@ import {
   EVENT_EMITTER_EVENTS_LISTENER_PRIVATE, IEventEmitterEventsListenerInternal, IEventEmitterEventsListenerPrivate
 } from './privates';
 import { PureEventEmitter } from './types';
-import { ConstructClassWithPrivateMembers } from '../../../../../../misc/helpers/ClassWithPrivateMembers';
 import { IEventLike } from '../../event-like/interfaces';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

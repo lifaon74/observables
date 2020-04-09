@@ -2,9 +2,9 @@ import {
   ADVANCED_ABORT_CONTROLLER_PRIVATE, IAdvancedAbortControllerInternal, IAdvancedAbortControllerPrivate
 } from './privates';
 import { IAdvancedAbortController } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../helpers';
 import { NewAdvancedAbortSignal } from './advanced-abort-signal/implementation';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

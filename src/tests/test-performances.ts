@@ -21,7 +21,7 @@ function timeExecution<T>(callback: () => T): { time: number; result: T } {
 function logPerf(...times: number[]): void {
   const minTime: number = times.reduce((min: number, value: number) => Math.min(min, value), Number.POSITIVE_INFINITY);
   times.forEach((time: number, index: number) => {
-    console.log(`time #${ index }`, Math.round(time), `(${Math.round((time / minTime) * 100) / 100})`);
+    console.log(`time #${ index }`, Math.round(time), `(${ Math.round((time / minTime) * 100) / 100 })`);
   });
 }
 
@@ -514,7 +514,7 @@ export function testPerformances10() {
     };
   });
 
-  const observer =  observable.pipeTo((v) => (sum += v));
+  const observer = observable.pipeTo((v) => (sum += v));
 
   const { time: time1, result: result1 } = timeExecution(() => {
     let sum = 0;

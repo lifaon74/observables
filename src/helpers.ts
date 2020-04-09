@@ -59,7 +59,7 @@ export type TCastableToIterableStrict<T> = Iterable<T> | Iterator<T>;
 export type TCastableToIterable<T> = TCastableToIterableStrict<T> | object;
 export type TCastableToIteratorStrict<T> = Iterable<T> | Iterator<T>;
 export type TCastableToIterator<T> = TCastableToIteratorStrict<T> | object;
-export type TCastableToMapStrict<K, V> =  Map<K, V> | Iterable<[K, V]> | Iterator<[K, V]>;
+export type TCastableToMapStrict<K, V> = Map<K, V> | Iterable<[K, V]> | Iterator<[K, V]>;
 export type TCastableToMap<K, V> = TCastableToMapStrict<K, V> | object;
 
 export function ToIterable<T>(value: any): Iterable<T> {
@@ -125,7 +125,6 @@ export function ToMap<K, V>(value: any): Map<K, V> {
     throw new TypeError(`Cannot cast value to a Map`);
   }
 }
-
 
 
 export function UntilDefined<T>(

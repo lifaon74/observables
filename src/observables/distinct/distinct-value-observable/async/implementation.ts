@@ -3,11 +3,8 @@ import { IObserver } from '../../../../core/observer/interfaces';
 import {
   IAsyncDistinctValueObservable, IAsyncDistinctValueObservableConstructor, IAsyncDistinctValueObservableTypedConstructor
 } from './interfaces';
-import { GetSetSuperArgsFunction, IsFactoryClass, MakeFactory } from '../../../../classes/class-helpers/factory';
 import { IDistinctValueObservable, IDistinctValueObservableTypedConstructor } from '../sync/interfaces';
 import { DistinctValueObservableFactory, } from '../sync/implementation';
-import { Constructor } from '../../../../classes/class-helpers/types';
-import { BaseClass, IBaseClassConstructor } from '../../../../classes/class-helpers/base-class';
 import { IS_OBSERVABLE_LIKE_CONSTRUCTOR } from '../../../../core/observable/constructor';
 import { ObservableFactory } from '../../../../core/observable/implementation';
 import { IObservableHook } from '../../../../core/observable/hook/interfaces';
@@ -17,6 +14,9 @@ import { IAsyncDistinctValueObservableContext } from './context/interfaces';
 import { DISTINCT_ASYNC_VALUE_OBSERVABLE_PRIVATE, IAsyncDistinctValueObservableInternal } from './privates';
 import { ConstructAsyncDistinctValueObservable, IS_ASYNC_VALUE_OBSERVABLE_CONSTRUCTOR } from './constructor';
 import { TAsyncDistinctValueObservableConstructorArgs } from './types';
+import {
+  BaseClass, Constructor, GetSetSuperArgsFunction, IBaseClassConstructor, IsFactoryClass, MakeFactory
+} from '@lifaon/class-factory';
 
 
 /** CONSTRUCTOR FUNCTIONS **/

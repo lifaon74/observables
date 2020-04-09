@@ -1,5 +1,4 @@
 import { IArgumentParser, IArgumentParserOptions, IParseResult, IParseResultJSON, } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../../src/misc/helpers/ClassWithPrivateMembers';
 import { IndentLines } from './snipets';
 import { Command } from './command/implementation';
 import { ICommand, TCommandFunctionArguments } from './command/interfaces';
@@ -9,6 +8,7 @@ import {
 } from './command/argument/implementation';
 import { IReadonlyMap } from '../../src/misc/readonly-map/interfaces';
 import { SIFT4 } from '../../src/classes/sift4';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 
 export function ParseResultToJSON(instance: IParseResult): IParseResultJSON {

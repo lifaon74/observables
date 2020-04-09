@@ -1,10 +1,10 @@
 import { ICommand, ICommandOptions, TCommandFunction, TCommandFunctionArguments } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../src/misc/helpers/ClassWithPrivateMembers';
 import { ICommandArgument } from './argument/interfaces';
 import { IsObject } from '../../../src/helpers';
 import { IReadonlySet } from '../../../src/misc/readonly-set/interfaces';
 import { ReadonlySet } from '../../../src/misc/readonly-set/implementation';
 import { PromiseTry } from '../../../src/promises/types/helpers';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 export const COMMAND_NAME_PATTERN = '([\\w]+)';
 export const COMMAND_NAME_REGEXP = new RegExp(`^${ COMMAND_NAME_PATTERN }$`);

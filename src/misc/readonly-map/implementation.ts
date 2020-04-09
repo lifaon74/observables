@@ -1,6 +1,6 @@
-import { ConstructClassWithPrivateMembers } from '../helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../helpers';
 import { IReadonlyMap } from './interfaces';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** PRIVATES **/
 

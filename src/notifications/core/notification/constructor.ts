@@ -1,7 +1,7 @@
 import { INotification } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { INotificationInternal, INotificationPrivate, NOTIFICATION_PRIVATE } from './privates';
 import { IsObject } from '../../../helpers';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

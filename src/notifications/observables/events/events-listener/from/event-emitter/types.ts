@@ -1,4 +1,5 @@
 import { IGenericEvent } from '../../event-like/generic/interfaces';
+
 type EventEmitter = NodeJS.EventEmitter;
 
 /**

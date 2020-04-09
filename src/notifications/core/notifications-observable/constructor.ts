@@ -1,4 +1,3 @@
-import { HasFactoryWaterMark } from '../../../classes/class-helpers/factory';
 import { INotificationsObservable } from './interfaces';
 import { KeyValueMapGeneric, KeyValueMapGenericConstraint, KeyValueMapKeys } from '../interfaces';
 import { IsObject } from '../../../helpers';
@@ -6,11 +5,11 @@ import {
   INotificationsObservableInternal, INotificationsObservablePrivate, NOTIFICATIONS_OBSERVABLE_PRIVATE
 } from './privates';
 import { IObservableContext } from '../../../core/observable/context/interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { InitObservableHook } from '../../../core/observable/hook/init';
 import { INotificationsObservableContext } from './context/interfaces';
 import { KeyValueMapToNotifications, KeyValueMapToNotificationsObservers, TNotificationsObservableHook } from './types';
 import { NewNotificationsObservableContext } from './context/implementation';
+import { ConstructClassWithPrivateMembers, HasFactoryWaterMark } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

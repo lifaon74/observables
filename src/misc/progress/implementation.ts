@@ -1,6 +1,6 @@
 import { IProgress, IProgressConstructor, IProgressJSON, IProgressOptions } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../helpers';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** PRIVATES **/
 

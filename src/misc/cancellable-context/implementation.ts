@@ -18,8 +18,6 @@ import {
 } from './privates';
 import { ConstructCancellableContext } from './constructor';
 import { AbortReason } from '../reason/built-in/abort-reason';
-import { ICancellablePromiseNormalizedOptions } from '../../promises/cancellable-promise/types';
-import { AdvancedAbortSignal } from '../advanced-abort-controller/advanced-abort-signal/implementation';
 import { IAdvancedAbortSignal } from '../advanced-abort-controller/advanced-abort-signal/interfaces';
 
 

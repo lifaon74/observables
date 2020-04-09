@@ -167,8 +167,8 @@ async function test$property(): Promise<void> {
   // const b: TObservableOrValueToValueType<IObservable<number>>;
   //
   const a = $property<string>(observableObject, 'a1', 'b1')
-  // const a = $property<string>(observableObject.a1, 'b1')
-  //   .pipeThrough(distinctPipe<string>())
+    // const a = $property<string>(observableObject.a1, 'b1')
+    //   .pipeThrough(distinctPipe<string>())
     .pipeTo((value: string) => {
       console.warn('changed', value);
     }).activate();

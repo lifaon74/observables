@@ -1,5 +1,5 @@
 import { IProgress } from '../../../misc/progress/interfaces';
-import { ITask} from './interfaces';
+import { ITask } from './interfaces';
 import { ITaskContext } from './context/interfaces';
 import { TFiniteStateObservableFinalState, TFiniteStateObservableKeyValueMapGeneric } from '../finite-state/types';
 import { TAbortStrategy } from '../../../misc/advanced-abort-controller/advanced-abort-signal/types';
@@ -41,7 +41,7 @@ export interface ITaskToPromiseOptions {
 export type ITaskToPromiseOptionsNotLastOnly = ITaskToPromiseOptions & { lastOnly?: false };
 export type ITaskToPromiseOptionsLastOnly = ITaskToPromiseOptions & { lastOnly: true };
 
-export type InferTaskToPromiseReturnedValue<TValue, TOptions extends ITaskToPromiseOptions> =  TOptions extends  { lastOnly: true }
+export type InferTaskToPromiseReturnedValue<TValue, TOptions extends ITaskToPromiseOptions> = TOptions extends { lastOnly: true }
   ? TValue
   : TValue[];
 

@@ -1,9 +1,9 @@
 import { periodTime } from '../../classes/pure-pipes';
-import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IDOMChangeObservable, IDOMChangeObservableOptions } from './interfaces';
 import { IsObject } from '../../helpers';
 import { Observable } from '../../core/observable/implementation';
 import { IObservableContext } from '../../core/observable/context/interfaces';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** PRIVATES **/
 

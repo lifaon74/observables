@@ -1,12 +1,10 @@
-import { ConstructClassWithPrivateMembers } from '../misc/helpers/ClassWithPrivateMembers';
 import { IsArray, IsObject } from '../helpers';
 import { $this, CopyDescriptors, RegisterThis, SetConstructor, SetFunctionName } from './classes/helpers';
 import { IInstance } from './classes/instance/interfaces';
 import { Instance } from './classes/instance/implementation';
-import { IsInstanceOf, SetInstanceOf } from '../classes/class-helpers/instanceof';
 import { assert, assertFails } from '../classes/asserts';
-import { Constructor } from '../classes/class-helpers/types';
 import { IsIterable } from '../misc/helpers/iterators/is/is-iterable';
+import { ConstructClassWithPrivateMembers, Constructor, IsInstanceOf, SetInstanceOf } from '@lifaon/class-factory';
 
 // export type TClassBuilderInstance<TConstructArgs extends any[], TProtoTypes extends object[]> = {
 //   new ()
@@ -150,7 +148,7 @@ export function ConstructClassBuilder(
     if (privates.classes.some(_class => IsInstanceOf(_this, _class))) {
       return _this;
     } else {
-      throw new TypeError(`'this' is not an instance of '${ privates.name }'`)
+      throw new TypeError(`'this' is not an instance of '${ privates.name }'`);
     }
   };
 
@@ -353,13 +351,12 @@ export function ClassBuilderSetInstanceOf(instance: IClassBuilder, _class: Funct
 }
 
 
-
 export function ClassBuilderBuild(instance: IClassBuilder): Constructor {
   const privates: IClassBuilderPrivate = (instance as IClassBuilderInternal)[CLASS_BUILDER_PRIVATE];
 
-  const _class = function(this: object, ...args: any[]) {
+  const _class = function (this: object, ...args: any[]) {
     if (new.target === void 0) {
-      throw new SyntaxError(`Must call class '${ privates.name  }' with new.`);
+      throw new SyntaxError(`Must call class '${ privates.name }' with new.`);
     }
 
     return ClassBuilderBuildConstructor(instance, this, new Set<object>(), args);
@@ -403,7 +400,6 @@ export function ClassBuilderIsInstanceOf(instance: IClassBuilder, superClass: IC
 }
 
 
-
 export class ClassBuilder implements IClassBuilder {
   constructor(create: IClassBuilderCreate) {
     ConstructClassBuilder(this, create);
@@ -431,6 +427,7 @@ export interface AConstructor {
 
 export interface APrototype {
   a_prop: string;
+
   a_method(arg: string): string;
 }
 
@@ -445,6 +442,7 @@ export interface BConstructor {
 
 export interface BPrototype {
   b_prop: number;
+
   b_method(arg: number): number;
 }
 
@@ -458,6 +456,7 @@ export interface CConstructor {
 
 export interface CPrototype {
   c_prop: boolean;
+
   c_method(arg: boolean): boolean;
 }
 
@@ -470,7 +469,9 @@ const e = Symbol('d');
 
 export interface ZPrototype {
   a: string;
+
   method(arg: number): string;
+
   readonly b: string
   c?: string;
   [d]: () => void;

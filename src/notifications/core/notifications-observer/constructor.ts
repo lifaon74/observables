@@ -4,7 +4,7 @@ import {
   INotificationsObserverInternal, INotificationsObserverPrivate, NOTIFICATIONS_OBSERVER_PRIVATE
 } from './privates';
 import { TNotificationsObserverCallback } from './types';
-import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

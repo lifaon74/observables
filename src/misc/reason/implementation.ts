@@ -1,6 +1,6 @@
 import { IReason, IReasonOptions } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../helpers/ClassWithPrivateMembers';
 import { IsObject } from '../../helpers';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 
 export const REASON_PRIVATE = Symbol('reason-private');

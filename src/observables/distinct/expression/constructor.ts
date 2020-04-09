@@ -1,9 +1,9 @@
 import { IExpression } from './interfaces';
 import { IObservableContext } from '../../../core/observable/context/interfaces';
 import { TExpressionFactory } from './types';
-import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { EXPRESSION_PRIVATE, IExpressionInternal, IExpressionPrivate } from './privates';
 import { IsObject } from '../../../helpers';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

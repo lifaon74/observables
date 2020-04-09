@@ -2,7 +2,7 @@ import { ISource } from './interfaces';
 import { IsObject } from '../../../../helpers';
 import { ISourceInternal, SOURCE_PRIVATE } from './privates';
 import { IObservableContext } from '../../../../core/observable/context/interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

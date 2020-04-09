@@ -1,4 +1,3 @@
-
 // TODO fix in the future when definition will exists
 
 export interface ResizeObserverConstructor {
@@ -127,7 +126,7 @@ export interface ResizeObserverObserveOptions {
    *
    * @default "content-box"
    */
-  box?: "content-box" | "border-box";
+  box?: 'content-box' | 'border-box';
 }
 
 /**

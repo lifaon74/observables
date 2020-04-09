@@ -1,9 +1,9 @@
 import { IFetchObservable } from './interfaces';
 import { IsObject } from '../../../../../../helpers';
 import { FETCH_OBSERVABLE_PRIVATE, IFetchObservableInternal, IFetchObservablePrivate } from './privates';
-import { ConstructClassWithPrivateMembers } from '../../../../../../misc/helpers/ClassWithPrivateMembers';
 import { IFetchObservableOptions, IFetchObservableRequestInit } from './types';
 import { EnsureRequestInitDoesntContainSignal } from './functions';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

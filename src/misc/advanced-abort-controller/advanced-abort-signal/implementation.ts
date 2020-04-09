@@ -6,18 +6,16 @@ import { ADVANCED_ABORT_SIGNAL_PRIVATE, IAdvancedAbortSignalInternal } from './p
 import { INotificationsObserver } from '../../../notifications/core/notifications-observer/interfaces';
 
 import {
-  IAdvancedAbortSignalKeyValueMap, IAdvancedAbortSignalWrapPromiseOptions, TAbortStrategy, TInferAbortStrategyReturn,
-  TInferAbortStrategyReturnedPromise, TAdvancedAbortSignalWrapPromiseCallback, TAdvancedAbortSignalWrapPromiseArgument,
-  TInferAdvancedAbortSignalWrapFunctionReturn
+  IAdvancedAbortSignalKeyValueMap, IAdvancedAbortSignalWrapPromiseOptions, TAbortStrategy,
+  TAdvancedAbortSignalWrapPromiseArgument, TAdvancedAbortSignalWrapPromiseCallback, TInferAbortStrategyReturn,
+  TInferAbortStrategyReturnedPromise, TInferAdvancedAbortSignalWrapFunctionReturn
 } from './types';
-import {
-  ApplyOnAbortCallback, LinkAdvancedAbortSignalWithFetchArgumentsSpread, RaceAborted
-} from './functions';
+import { ApplyOnAbortCallback, LinkAdvancedAbortSignalWithFetchArgumentsSpread, RaceAborted } from './functions';
 import { IsPromiseLikeBase, PromiseTry } from '../../../promises/types/helpers';
 import { clearImmediate, setImmediate } from '../../../classes/set-immediate';
 import { TInferNativePromiseLikeOrValue, TNativePromiseLikeOrValue } from '../../../promises/types/native';
 import {
-  NormalizeAdvancedAbortSignalWrapPromiseOptions, IAdvancedAbortSignalWrapPromiseNormalizedOptions
+  IAdvancedAbortSignalWrapPromiseNormalizedOptions, NormalizeAdvancedAbortSignalWrapPromiseOptions
 } from './helpers';
 
 

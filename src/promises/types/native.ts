@@ -1,5 +1,4 @@
 import { ILightPromiseLike, TInferLightPromiseLikeType, TInferPromiseLikeOrValue } from './promise-like';
-import { IAdvancedAbortController } from '../../misc/advanced-abort-controller/interfaces';
 import { IAdvancedAbortSignal } from '../../misc/advanced-abort-controller/advanced-abort-signal/interfaces';
 
 export type TPromiseStatus =

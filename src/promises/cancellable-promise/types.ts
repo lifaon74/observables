@@ -3,7 +3,7 @@ import { ICancellablePromise } from './interfaces';
 import { IAdvancedAbortController } from '../../misc/advanced-abort-controller/interfaces';
 import {
   INativePromiseFulfilledObject, INativePromiseRejectedObject, TInferNativePromiseLikeOrValue,
-  TInferNativePromiseOrValueFactoryTupleToUnionOfValues, TInferNativePromiseLikeOrValueFactoryTupleToValueTuple,
+  TInferNativePromiseLikeOrValueFactoryTupleToValueTuple, TInferNativePromiseOrValueFactoryTupleToUnionOfValues,
   TNativePromiseLikeOrValue, TNativePromiseLikeOrValueFactory
 } from '../types/native';
 import {

@@ -1,7 +1,7 @@
 import { IObservableContextBase } from './interfaces';
 import { IObservable } from '../../interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../../misc/helpers/ClassWithPrivateMembers';
 import { IObservableContextBaseInternal, OBSERVABLE_CONTEXT_BASE_PRIVATE } from './privates';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 
 /** CONSTRUCTOR **/

@@ -1,13 +1,10 @@
 import { ITask } from './interfaces';
 import { NotificationsObservable } from '../../core/notifications-observable/implementation';
 import { INotificationsObservableContext } from '../../core/notifications-observable/context/interfaces';
-import { TAbortStrategy } from '../../../misc/advanced-abort-controller/advanced-abort-signal/types';
 import {
   ITaskKeyValueMap, ITaskToCancellablePromiseOptions, ITaskToCancellablePromiseOptionsLastOnly,
-  ITaskToCancellablePromiseOptionsNotLastOnly, ITaskToPromiseOptions,
-  ITaskToPromiseOptionsLastOnly,
-  ITaskToPromiseOptionsNotLastOnly,
-  TTaskCreateCallback, TTaskState
+  ITaskToCancellablePromiseOptionsNotLastOnly, ITaskToPromiseOptions, ITaskToPromiseOptionsLastOnly,
+  ITaskToPromiseOptionsNotLastOnly, TTaskCreateCallback, TTaskState
 } from './types';
 import { ITaskInternal, ITaskPrivate, TASK_PRIVATE } from './privates';
 import { ConstructTask } from './constructor';

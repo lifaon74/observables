@@ -1,8 +1,8 @@
 import { IObserver } from './interfaces';
 import { IObservable } from '../observable/interfaces';
-import { ConstructClassWithPrivateMembers } from '../../misc/helpers/ClassWithPrivateMembers';
 import { IObserverInternal, IObserverPrivate, OBSERVER_PRIVATE } from './privates';
 import { IsObject } from '../../helpers';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

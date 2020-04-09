@@ -1,4 +1,3 @@
-
 export async function ArrayFromAsyncIterator<T>(iterator: AsyncIterator<T>): Promise<T[]> {
   const values: T[] = [];
   let result: IteratorResult<T>;

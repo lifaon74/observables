@@ -3,9 +3,7 @@ import { NotificationsObservable } from '../../notifications/core/notifications-
 import { NotificationsObserver } from '../../notifications/core/notifications-observer/implementation';
 import { EventsObservable } from '../../notifications/observables/events/events-observable/implementation';
 import { FetchObservable } from '../../notifications/observables/finite-state/built-in/promise/fetch-observable/implementation';
-import {
-  lastFiniteStateObservableValueToPromise
-} from '../../operators/to/toPromise';
+import { lastFiniteStateObservableValueToPromise } from '../../operators/to/toPromise';
 import { Reason } from '../../misc/reason/implementation';
 import { PromiseObservable } from '../../notifications/observables/finite-state/built-in/promise/promise-observable/implementation';
 import { IObserver } from '../../core/observer/interfaces';
@@ -19,7 +17,6 @@ import { INotificationsObserver } from '../../notifications/core/notifications-o
 import { FunctionObservable } from '../../observables/distinct/function-observable/sync/implementation';
 import { Expression } from '../../observables/distinct/expression/implementation';
 import { $equal, $expression } from '../../operators/shortcuts/public';
-import { SpreadCancellablePromiseTuple } from '../../promises/types/helpers';
 import { FiniteStateObservable } from '../../notifications/observables/finite-state/implementation';
 import { IFiniteStateObservable } from '../../notifications/observables/finite-state/interfaces';
 import { IFetchObservable } from '../../notifications/observables/finite-state/built-in/promise/fetch-observable/interfaces';
@@ -47,7 +44,6 @@ import { ISource } from '../../observables/distinct/source/sync/interfaces';
 import { Source } from '../../observables/distinct/source/sync/implementation';
 import { EventKeyValueMapConstraint } from '../../notifications/observables/events/events-observable/types';
 import { $string } from '../../operators/shortcuts/others/$string';
-import { INativeCancellablePromiseTuple } from '../../promises/types/native';
 
 
 /**
@@ -280,7 +276,7 @@ function finiteStateObservableExample1(): void {
             context.complete();
           }
         }
-      }
+      };
     }, { mode: 'cache' });
   }
 
@@ -312,7 +308,7 @@ async function finiteStateObservableExample2() {
             readAll();
           }
         }
-      }
+      };
     }, { mode: 'cache' });
   }
 
@@ -660,8 +656,6 @@ async function xhrObservableExample1() {
 }
 
 
-
-
 /**
  * Example how to cast an Observable to a Promise
  */
@@ -842,7 +836,6 @@ function expressionExample1() {
 }
 
 
-
 function sensorExample1() {
 
   interface AmbientLightObservableEventsMap {
@@ -945,8 +938,6 @@ function sensorExample1() {
       document.body.appendChild(div);
     });
 }
-
-
 
 
 export async function testExamples() {

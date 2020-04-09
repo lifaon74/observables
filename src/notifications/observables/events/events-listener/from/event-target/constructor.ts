@@ -4,7 +4,7 @@ import {
   EVENT_TARGET_EVENTS_LISTENER_PRIVATE, IEventTargetEventsListenerInternal, IEventTargetEventsListenerPrivate
 } from './privates';
 import { PureEventTarget } from './types';
-import { ConstructClassWithPrivateMembers } from '../../../../../../misc/helpers/ClassWithPrivateMembers';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

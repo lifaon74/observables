@@ -217,7 +217,7 @@ export async function testProgram2() {
 export async function testProgram3() {
   const program = new Program((a: Uint8Array, b: Uint8Array) => {
     const result = new Uint8Array(Math.max(a.length, b.length));
-    for (let i = 0, l = result.length; i < l ; i++) {
+    for (let i = 0, l = result.length; i < l; i++) {
       result[i] = ((i < a.length) ? a[i] : 0) + ((i < b.length) ? b[i] : 0);
     }
     return {

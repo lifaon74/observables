@@ -1,4 +1,3 @@
-
 // https://github.com/saary/heurdist/blob/master/index.js
 // http://siderite.blogspot.com/2014/11/super-fast-and-accurate-string-distance.html
 // https://www.npmjs.com/package/sift-distance
@@ -51,7 +50,7 @@ export function SIFT4(string1: string | Uint32Array, string2: string | Uint32Arr
   let c2: number = 0; // cursor for string 2
   let lcss: number = 0; // largest common subsequence
   let localCS: number = 0; // local common substring
-  let numberOfTranspositions : number = 0; // number of transpositions
+  let numberOfTranspositions: number = 0; // number of transpositions
   const offsets: SIFT4Offset[] = []; // offset array
 
   while ((c1 < codePointsLength1) && (c2 < codePointsLength2)) {
@@ -88,7 +87,7 @@ export function SIFT4(string1: string | Uint32Array, string2: string | Uint32Arr
       if (c1 !== c2) {
         c1 = c2 = Math.min(c1, c2);
       }
-      for (let i = 0; (i < maxOffset) &&  (((c1 + i) < codePointsLength1) || ((c2 + i) < codePointsLength2)); i++) {
+      for (let i = 0; (i < maxOffset) && (((c1 + i) < codePointsLength1) || ((c2 + i) < codePointsLength2)); i++) {
         if (((c1 + i) < codePointsLength1) && (codePoints1[c1 + i] === codePoints2[c2])) {
           c1 += i - 1;
           c2--;

@@ -1,23 +1,21 @@
 import { Observable as RXObservable } from 'rxjs';
 import { IFiniteStateObservable, IFiniteStateObservableTypedConstructor } from '../../../interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../../../../misc/helpers/ClassWithPrivateMembers';
 import {
   FromRXJSObservableKeyValueMap, IFromRXJSObservable, IFromRXJSObservableConstructor, IFromRXJSObservableOptions,
   TFromRXJSObservableConstructorArgs, TFromRXJSObservableFinalState, TFromRXJSObservableMode
 } from './interfaces';
 import { IsObject } from '../../../../../../helpers';
-import {
-  GetSetSuperArgsFunction, HasFactoryWaterMark, IsFactoryClass, MakeFactory
-} from '../../../../../../classes/class-helpers/factory';
 import { FiniteStateObservableFactory } from '../../../implementation';
 import { INotificationsObservableTypedConstructor } from '../../../../../core/notifications-observable/interfaces';
 import { IObservableConstructor } from '../../../../../../core/observable/interfaces';
 import { NotificationsObservableFactory } from '../../../../../core/notifications-observable/implementation';
 import { GenerateFiniteStateObservableHookFromRXJS } from './hook-generators';
-import { Constructor } from '../../../../../../classes/class-helpers/types';
-import { BaseClass, IBaseClassConstructor } from '../../../../../../classes/class-helpers/base-class';
 import { ObservableFactory } from '../../../../../../core/observable/implementation';
 import { IsFiniteStateObservableConstructor } from '../../../constructor';
+import {
+  BaseClass, ConstructClassWithPrivateMembers, Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark,
+  IBaseClassConstructor, IsFactoryClass, MakeFactory
+} from '@lifaon/class-factory';
 
 
 export const FROM_RXJS_OBSERVABLE_PRIVATE = Symbol('from-rxjs-observable-private');

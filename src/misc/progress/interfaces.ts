@@ -1,4 +1,4 @@
-import { Writeable } from '../../classes/types';
+import { Writeable } from '@lifaon/class-factory';
 
 export interface IProgressOptions {
   loaded?: number; // (default => 0)
@@ -19,8 +19,6 @@ export interface IProgressConstructor {
 
 export interface IProgressJSON extends Writeable<Pick<IProgress, 'loaded' | 'total' | 'lengthComputable' | 'name'>> {
 }
-
-
 
 
 /**

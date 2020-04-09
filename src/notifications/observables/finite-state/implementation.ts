@@ -6,12 +6,7 @@ import {
   IFiniteStateObservable, IFiniteStateObservableConstructor, IFiniteStateObservableTypedConstructor,
 } from './interfaces';
 import { NotificationsObservableFactory } from '../../core/notifications-observable/implementation';
-import {
-  GetSetSuperArgsFunction, IsFactoryClass, MakeFactory, TMakeFactoryCreateSuperClass
-} from '../../../classes/class-helpers/factory';
 import { IObserver } from '../../../core/observer/interfaces';
-import { Constructor } from '../../../classes/class-helpers/types';
-import { BaseClass, IBaseClassConstructor } from '../../../classes/class-helpers/base-class';
 import { ObservableFactory } from '../../../core/observable/implementation';
 import { IsNotificationsObservableConstructor } from '../../core/notifications-observable/constructor';
 import { INotificationsObservableContext } from '../../core/notifications-observable/context/interfaces';
@@ -32,6 +27,10 @@ import {
   IsFiniteStateObservableCachingValuesPerObserverMode, IsFiniteStateObservableFinalState,
   IsFiniteStateObservableNextState
 } from './functions';
+import {
+  BaseClass, Constructor, GetSetSuperArgsFunction, IBaseClassConstructor, IsFactoryClass, MakeFactory,
+  TMakeFactoryCreateSuperClass
+} from '@lifaon/class-factory';
 
 
 /** CONSTRUCTOR FUNCTIONS **/

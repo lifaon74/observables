@@ -69,7 +69,7 @@ export function NormalizeFiniteStateObservableFinalStates<TFinalState extends TF
  * Creates a Set containing the default modes of a FiniteStateObservable
  */
 export function GetFiniteStateObservableDefaultModes(): Set<TFiniteStateObservableMode> {
-  return new Set<TFiniteStateObservableMode>(['once', 'uniq', 'cache', 'cache-per-observer', 'cache-final-state',  'cache-final-state-per-observer', 'cache-all', 'cache-all-per-observer'] as TFiniteStateObservableMode[]);
+  return new Set<TFiniteStateObservableMode>(['once', 'uniq', 'cache', 'cache-per-observer', 'cache-final-state', 'cache-final-state-per-observer', 'cache-all', 'cache-all-per-observer'] as TFiniteStateObservableMode[]);
 }
 
 /**

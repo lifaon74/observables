@@ -1,9 +1,7 @@
 import { INotificationsObservable } from '../../core/notifications-observable/interfaces';
 import {
   ITaskKeyValueMap, ITaskToCancellablePromiseOptionsLastOnly, ITaskToCancellablePromiseOptionsNotLastOnly,
-  ITaskToPromiseOptionsLastOnly,
-  ITaskToPromiseOptionsNotLastOnly,
-  TTaskCreateCallback, TTaskState
+  ITaskToPromiseOptionsLastOnly, ITaskToPromiseOptionsNotLastOnly, TTaskCreateCallback, TTaskState
 } from './types';
 import { ICancellablePromise } from '../../../promises/cancellable-promise/interfaces';
 
@@ -46,9 +44,11 @@ export interface ITask<TValue> extends INotificationsObservable<ITaskKeyValueMap
   abort(reason?: any): this;
 
   toPromise(options?: ITaskToPromiseOptionsNotLastOnly): Promise<TValue[]>;
+
   toPromise(options: ITaskToPromiseOptionsLastOnly): Promise<TValue>;
 
   toCancellablePromise(options?: ITaskToCancellablePromiseOptionsNotLastOnly): ICancellablePromise<TValue[]>;
+
   toCancellablePromise(options: ITaskToCancellablePromiseOptionsLastOnly): ICancellablePromise<TValue>;
 }
 

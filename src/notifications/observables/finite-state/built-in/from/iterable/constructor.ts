@@ -1,12 +1,11 @@
 import { IFromIterableObservable } from './interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../../../../misc/helpers/ClassWithPrivateMembers';
 import {
   FROM_ITERABLE_OBSERVABLE_PRIVATE, IFromIterableObservableInternal, IFromIterableObservablePrivate
 } from './privates';
-import { HasFactoryWaterMark } from '../../../../../../classes/class-helpers/factory';
 import { IsObject } from '../../../../../../helpers';
 import { IFromIterableObservableNormalizedArguments } from './functions';
 import { TSyncOrAsyncIterable } from '../../../../../../misc/helpers/iterators/interfaces';
+import { ConstructClassWithPrivateMembers, HasFactoryWaterMark } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
 

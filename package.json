@@ -1,6 +1,6 @@
 {
   "name": "@lifaon/observables",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Better observables for everyone",
   "main": "index.js",
   "scripts": {
@@ -100,5 +100,7 @@
     "typescript-tuple": "^2.2.1",
     "uglify-es": "^3.3.9"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@lifaon/class-factory": "1.0.2"
+  }
 }

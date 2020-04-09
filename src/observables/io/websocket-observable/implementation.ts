@@ -1,4 +1,3 @@
-import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { IReadonlyList } from '../../../misc/readonly-list/interfaces';
 import { IWebSocketIO, IWebSocketIOKeyValueMap, IWebSocketIOOptions, TWebSocketData } from './interfaces';
 import { ReadonlyList } from '../../../misc/readonly-list/implementation';
@@ -14,6 +13,7 @@ import { IObservableContext } from '../../../core/observable/context/interfaces'
 import { INotificationsObservableContext } from '../../../notifications/core/notifications-observable/context/interfaces';
 import { KeyValueMapToNotifications } from '../../../notifications/core/notifications-observable/types';
 import { IsIterable } from '../../../misc/helpers/iterators/is/is-iterable';
+import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
 
 
 export const WEBSOCKET_IO_PRIVATE = Symbol('websocket-io-private');

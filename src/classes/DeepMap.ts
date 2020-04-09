@@ -1,17 +1,23 @@
-
 export interface IDeepMap<T> {
   readonly size: number;
   readonly empty: boolean;
 
   set(keys: any[], value: T): this;
+
   get(keys: any[]): T | undefined;
+
   has(keys: any[]): boolean;
+
   delete(keys: any[]): boolean;
 
   entries(): IterableIterator<[any[], T]>;
+
   keys(): IterableIterator<any[]>;
+
   values(): IterableIterator<T>;
+
   [Symbol.iterator](): IterableIterator<[any[], T]>;
+
   forEach(callback: (entry: T, key: any[], map: this) => void): void;
 }
 
@@ -281,7 +287,7 @@ export function * DeepMapEntries<T>(map: Map<any, any>, keys: any[] = []): Itera
   }
 }
 
-export function* DeepMapKeys(map: Map<any, any>, keys: any[] = []): IterableIterator<any[]> {
+export function * DeepMapKeys(map: Map<any, any>, keys: any[] = []): IterableIterator<any[]> {
   const iterator: IterableIterator<[any, any]> = map.entries();
   let entry: IteratorResult<[any, any]>;
   let value: any;
@@ -290,7 +296,7 @@ export function* DeepMapKeys(map: Map<any, any>, keys: any[] = []): IterableIter
     value = entry.value[1];
     const _keys: any[] = keys.concat([entry.value[0]]);
     if (value instanceof Map) {
-      yield* DeepMapKeys(value, _keys) as any;
+      yield * DeepMapKeys(value, _keys) as any;
     } else {
       while ((_keys.length > 0) && (_keys[_keys.length - 1] === void 0)) {
         _keys.pop();
@@ -300,13 +306,13 @@ export function* DeepMapKeys(map: Map<any, any>, keys: any[] = []): IterableIter
   }
 }
 
-export function* DeepMapValues<T>(map: Map<any, any>): IterableIterator<T> {
+export function * DeepMapValues<T>(map: Map<any, any>): IterableIterator<T> {
   const iterator: IterableIterator<any> = map.values();
   let entry: IteratorResult<T>;
 
   while (!(entry = iterator.next()).done) {
     if (entry.value instanceof Map) {
-      yield* DeepMapValues(entry.value) as any;
+      yield * DeepMapValues(entry.value) as any;
     } else {
       yield entry.value;
     }
@@ -333,7 +339,6 @@ export function DeepMapCompact(map: Map<any, any>): void {
     }
   });
 }
-
 
 
 /**

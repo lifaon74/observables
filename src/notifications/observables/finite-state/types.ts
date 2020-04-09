@@ -1,12 +1,11 @@
-import { IsSuperSet } from '../../../classes/types';
 import {
-  KeyValueMapToNotifications,
-  KeyValueMapToNotificationsSoft, TNotificationsObservableHook
+  KeyValueMapToNotifications, KeyValueMapToNotificationsSoft, TNotificationsObservableHook
 } from '../../core/notifications-observable/types';
 import { KeyValueMapConstraint } from '../../core/interfaces';
 import { IFiniteStateObservable } from './interfaces';
 import { IFiniteStateObservableContext } from './context/interfaces';
 import { IObserver } from '../../../core/observer/interfaces';
+import { IsSuperSet } from '@lifaon/class-factory';
 
 /** TYPES **/
 

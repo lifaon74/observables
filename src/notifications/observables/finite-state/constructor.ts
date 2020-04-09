@@ -10,16 +10,15 @@ import { IFiniteStateObservable } from './interfaces';
 import { INotificationsObservableContext } from '../../core/notifications-observable/context/interfaces';
 import { IFiniteStateObservableContext } from './context/interfaces';
 import { IObservableHook } from '../../../core/observable/hook/interfaces';
-import { ConstructClassWithPrivateMembers } from '../../../misc/helpers/ClassWithPrivateMembers';
 import { KeyValueMapToNotifications } from '../../core/notifications-observable/types';
 import { InitObservableHook } from '../../../core/observable/hook/init';
 import { IObservableContextBase } from '../../../core/observable/context/base/interfaces';
-import { HasFactoryWaterMark } from '../../../classes/class-helpers/factory';
 import { NewFiniteStateObservableContext } from './context/implementation';
 import {
   NormalizeFiniteStateObservableFinalStates, NormalizeFiniteStateObservableMode, NormalizeFiniteStateObservableModes
 } from './functions';
 import { IObserver } from '../../../core/observer/interfaces';
+import { ConstructClassWithPrivateMembers, HasFactoryWaterMark } from '@lifaon/class-factory';
 
 
 /** CONSTRUCTOR **/
