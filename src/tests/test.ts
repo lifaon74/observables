@@ -27,6 +27,7 @@ import { Source } from '../observables/distinct/source/sync/implementation';
 import { AsyncSource } from '../observables/distinct/source/async/implementation';
 import { runDebug } from './debug/debug';
 import { UnionToIntersection } from '@lifaon/class-factory';
+import { testTask } from './test-task';
 
 
 // import { toAsyncIterable } from '../operators/to/async-iterator/toAsyncIterable';
@@ -565,7 +566,6 @@ export async function test() {
 
   // await testAbortController();
   await runDebug();
-  // await debugVoxel();
 
   console.log('tests done');
 }

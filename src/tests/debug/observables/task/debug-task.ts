@@ -73,7 +73,7 @@ async function debugFetchTask() {
   const url: string = `http://info.cern.ch/hypertext/WWW/TheProject.html`;
   const task = logTask(fetchTask(noCORS(url)));
   task.start();
-  // setTimeout(() =>  task.abort('aborted'), 100);
+  // setTimeout(() => task.abort('aborted'), 100);
   // task.abort('manual cancel');
   console.log('promise', await task.toCancellablePromise().toPromise());
 }
@@ -120,6 +120,6 @@ async function debugTaskInParallel() {
 /*--------------------------*/
 
 export async function debugTask() {
-  // await debugFetchTask();
-  await debugWrapTask();
+  await debugFetchTask();
+  // await debugWrapTask();
 }

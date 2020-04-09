@@ -3,7 +3,7 @@ import { ITask } from '../notifications/observables/task/interfaces';
 import { IFromReadableStreamObservable } from '../notifications/observables/finite-state/built-in/from/readable-stream/interfaces';
 import { FromReadableStreamObservable } from '../notifications/observables/finite-state/built-in/from/readable-stream/implementation';
 import { IProgress } from '../misc/progress/interfaces';
-import { ITaskFromIteratorValue, taskFromIterator } from '../notifications/observables/task/built-in/from/iterable';
+import { ITaskFromIteratorValue, taskFromIterable } from '../notifications/observables/task/built-in/from/iterable';
 import { Progress } from '../misc/progress/implementation';
 import { taskFromPromise, taskFromPromiseFactory } from '../notifications/observables/task/built-in/from/promise';
 import { AbortReason } from '../misc/reason/built-in/abort-reason';
@@ -314,7 +314,7 @@ export async function testTaskAsyncIterable() {
     }
   }
 
-  const task = logTask(taskFromIterator(run(urls.map(_ => noCORS(_)))));
+  const task = logTask(taskFromIterable(run(urls.map(_ => noCORS(_)))));
 
   generateTaskControlButton(task);
 
@@ -369,8 +369,8 @@ export async function testTaskFromPromise() {
 // // }
 
 export async function testTask() {
-  await testTaskFetch();
-  // await testTaskAsyncIterable();
+  // await testTaskFetch();
+  await testTaskAsyncIterable();
   // await testTaskFromPromise();
   // await testMultiTasks();
 }

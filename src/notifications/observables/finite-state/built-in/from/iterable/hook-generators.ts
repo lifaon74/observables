@@ -4,19 +4,11 @@ import {
   TFromIterableObservableCreateCallbackContext, TFromIterableObservableFinalState, TFromIterableObservableMode
 } from './types';
 import {
-  TInferSyncOrAsyncIterableGenerator, TInferSyncOrAsyncIterableIterator, TInferSyncOrAsyncIterableValueType,
-  TSyncOrAsyncIterable
+  TInferSyncOrAsyncIterableValueType, TSyncOrAsyncIterable
 } from '../../../../../../misc/helpers/iterators/interfaces';
-import { IsAsyncIterable } from '../../../../../../misc/helpers/iterators/is/is-async-iterable';
+import { IPausableIteration, PausableIteration } from '../../../../../../misc/helpers/iterators/pausable-iteration';
 
 /** TYPES **/
-
-
-export type TGenerateFiniteStateObservableHookFromIterableWithPauseWorkflowResumeFunction<TIterable extends TSyncOrAsyncIterable<any>> = TIterable extends Iterable<any>
-  ? () => void
-  : TIterable extends AsyncIterable<any>
-    ? () => Promise<void>
-    : never;
 
 type TGenerateFiniteStateObservableHookFromIterableWithPauseWorkflowInstance<TIterable extends TSyncOrAsyncIterable<any>> = IFiniteStateObservable<TInferSyncOrAsyncIterableValueType<TIterable>, TFromIterableObservableFinalState, TFromIterableObservableMode, IFromIterableObservableKeyValueMap<TIterable>>;
 
@@ -31,83 +23,36 @@ type TGenerateFiniteStateObservableHookFromIterableWithPauseWorkflowInstance<TIt
  */
 export function GenerateFiniteStateObservableHookFromIterableWithPauseWorkflow<TIterable extends TSyncOrAsyncIterable<any>>(
   iterable: TIterable,
-  isAsync: boolean = IsAsyncIterable(iterable),
+  isAsync?: boolean,
 ): TFromIterableObservableCreateCallback<TIterable> {
-
-  type TValue = TInferSyncOrAsyncIterableValueType<TIterable>;
-
   return function (context: TFromIterableObservableCreateCallbackContext<TIterable>) {
-    let iterator: TInferSyncOrAsyncIterableIterator<TIterable>;
-    let state: 'paused' | 'iterating' | 'complete' = 'paused';
-
-    const pause = (): void => {
-      if (state === 'iterating') {
-        state = 'paused';
-      }
-    };
-
-    const generator: () => TInferSyncOrAsyncIterableGenerator<TIterable> = iterable[isAsync ? Symbol.asyncIterator : Symbol.iterator];
-
-    let resume: TGenerateFiniteStateObservableHookFromIterableWithPauseWorkflowResumeFunction<TIterable>;
-
-    if (isAsync) {
-      resume = (async () => {
-        if (state === 'paused') {
-          state = 'iterating';
-          let result: IteratorResult<TValue>;
-          try {
-            while ((state === 'iterating') && !(result = await (iterator as AsyncIterator<TValue>).next()).done) {
-              context.next(result.value);
-            }
-            if (state === 'iterating') {
-              context.complete();
-            }
-          } catch (error) {
-            context.error(error);
-          }
-
-          if (state === 'iterating') {
-            state = 'complete';
-          }
-        }
-      }) as TGenerateFiniteStateObservableHookFromIterableWithPauseWorkflowResumeFunction<TIterable>;
-    } else {
-      resume = (() => {
-        if (state === 'paused') {
-          state = 'iterating';
-          let result: IteratorResult<TValue>;
-          try {
-            while ((state === 'iterating') && !(result = (iterator as Iterator<TValue>).next()).done) {
-              context.next(result.value);
-            }
-            if (state === 'iterating') {
-              context.complete();
-            }
-          } catch (error) {
-            context.error(error);
-          }
-
-          if (state === 'iterating') {
-            state = 'complete';
-          }
-        }
-      }) as TGenerateFiniteStateObservableHookFromIterableWithPauseWorkflowResumeFunction<TIterable>;
-    }
-
+    let iteration: IPausableIteration;
 
     return {
       onObserved(): void {
         const instance: TGenerateFiniteStateObservableHookFromIterableWithPauseWorkflowInstance<TIterable> = this as TGenerateFiniteStateObservableHookFromIterableWithPauseWorkflowInstance<TIterable>;
         if (
-          (iterator === void 0)
+          (iteration === void 0)
           && (instance.observers.length === 1) // optional check
           && (instance.state === 'next') // optional check
         ) {
-          iterator = generator.call(iterable);
+          iteration = PausableIteration<TIterable>(
+            iterable,
+            (value: any) => {
+              context.next(value);
+            },
+            () => {
+              context.complete();
+            },
+            (reason: any) => {
+              context.error(reason);
+            },
+            isAsync
+          );
         }
 
         if (instance.observers.length > 0) { // optional check
-          resume();
+          iteration.resume();
         }
       },
       onUnobserved(): void {
@@ -116,7 +61,7 @@ export function GenerateFiniteStateObservableHookFromIterableWithPauseWorkflow<T
           (!instance.observed)
           && (instance.state === 'next') // optional check
         ) {
-          pause();
+          iteration.pause();
         }
       },
     };
