@@ -1,4 +1,4 @@
-import { TTaskFromIteratorReturn } from '../../../notifications/observables/task/built-in/from/iterable';
+import { TTaskFromIterableReturn } from '../../../notifications/observables/task/built-in/from/iterable';
 import { TInferSyncOrAsyncIterableValueType, TSyncOrAsyncIterable } from './interfaces';
 import { IsAsyncIterable } from './is/is-async-iterable';
 
@@ -51,7 +51,7 @@ export function PausableAsyncIteration<TValue>(
         await untilRunning();
       }
 
-      let result: IteratorResult<TTaskFromIteratorReturn<TValue>>;
+      let result: IteratorResult<TTaskFromIterableReturn<TValue>>;
 
       try {
         result = await iterator.next();
@@ -101,7 +101,7 @@ export function PausableSyncIteration<TValue>(
     }
   };
 
-  let result: IteratorResult<TTaskFromIteratorReturn<TValue>> | any;
+  let result: IteratorResult<TTaskFromIterableReturn<TValue>> | any;
   let resultState: 'awaiting' | 'error' | 'value' = 'awaiting';
 
   const resume = (): void => {

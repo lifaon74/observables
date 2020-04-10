@@ -3,7 +3,7 @@ import { ITask } from '../notifications/observables/task/interfaces';
 import { IFromReadableStreamObservable } from '../notifications/observables/finite-state/built-in/from/readable-stream/interfaces';
 import { FromReadableStreamObservable } from '../notifications/observables/finite-state/built-in/from/readable-stream/implementation';
 import { IProgress } from '../misc/progress/interfaces';
-import { ITaskFromIteratorValue, taskFromIterable } from '../notifications/observables/task/built-in/from/iterable';
+import { ITaskFromIterableValue, taskFromIterable } from '../notifications/observables/task/built-in/from/iterable';
 import { Progress } from '../misc/progress/implementation';
 import { taskFromPromise, taskFromPromiseFactory } from '../notifications/observables/task/built-in/from/promise';
 import { AbortReason } from '../misc/reason/built-in/abort-reason';
@@ -303,7 +303,7 @@ export async function testTaskFetch() {
 
 export async function testTaskAsyncIterable() {
 
-  async function * run(urls: string[]): AsyncIterableIterator<ITaskFromIteratorValue<Blob>> {
+  async function * run(urls: string[]): AsyncIterableIterator<ITaskFromIterableValue<Blob>> {
     for (let i = 0, l = urls.length; i < l; i++) {
       const response: Response = await fetch(urls[i]);
       if (response.ok) {
