@@ -5,7 +5,7 @@ import { ITask } from '../../interfaces';
 export interface IBasicTaskHandlers {
   run: () => void; // called when the task is running (after 'start' or 'resume')
   pause: () => void; // called when the task is paused (after 'pause')
-  finished: () => void; // called when the task is finished (after 'complete', 'error' or 'abort') => task.state to know the state
+  done: () => void; // called when the task is finished (after 'complete', 'error' or 'abort') => task.state to know the state
 }
 
 
@@ -26,7 +26,7 @@ export function LinkTaskWithBasicHandlers<TValue>(
     options.pause();
   };
 
-  const finished = () => {
+  const done = () => {
     taskStartListener.deactivate();
     taskPauseListener.deactivate();
     taskResumeListener.deactivate();
@@ -35,16 +35,16 @@ export function LinkTaskWithBasicHandlers<TValue>(
     taskErrorListener.deactivate();
     taskAbortListener.deactivate();
 
-    options.finished();
+    options.done();
   };
 
   const taskStartListener = task.addListener('start', run);
   const taskPauseListener = task.addListener('pause', pause);
   const taskResumeListener = task.addListener('resume', run);
 
-  const taskCompleteListener = task.addListener('complete', finished);
-  const taskErrorListener = task.addListener('error', finished);
-  const taskAbortListener = task.addListener('abort', finished);
+  const taskCompleteListener = task.addListener('complete', done);
+  const taskErrorListener = task.addListener('error', done);
+  const taskAbortListener = task.addListener('abort', done);
 
   taskStartListener.activate();
   taskPauseListener.activate();

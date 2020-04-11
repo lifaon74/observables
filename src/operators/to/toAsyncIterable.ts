@@ -226,7 +226,7 @@ function BuildObservableToStoppableAsyncIterableStopFunction<TStrategy extends T
 }
 
 function BuildFiniteStateMapValueFunction<TNotification extends INotification<string, any>, TValue>(
-  finished: () => void = () => {
+  done: () => void = () => {
   }
 ) {
   return (notification: TNotification): TGenericObservableToStoppableAsyncIterableMapFunctionReturn<TValue, TAbortObservableToAsyncIterableStrategy> => {
@@ -237,12 +237,12 @@ function BuildFiniteStateMapValueFunction<TNotification extends INotification<st
           value: notification.value
         };
       case 'complete':
-        finished();
+        done();
         return {
           action: 'throw',
         };
       case 'error':
-        finished();
+        done();
         return {
           action: 'throw',
           reason: notification.value

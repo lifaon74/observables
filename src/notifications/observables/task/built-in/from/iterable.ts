@@ -39,7 +39,7 @@ function taskFromIterableInternal<TIterable extends TSyncOrAsyncIterable<TTaskFr
       pause: () => {
         iteration.pause();
       },
-      finished: () => {
+      done: () => {
         iteration.pause();
       },
     }
