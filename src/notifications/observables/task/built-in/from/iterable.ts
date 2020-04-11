@@ -4,61 +4,95 @@ import { Task } from '../../implementation';
 import { ITaskContext } from '../../context/interfaces';
 import {
   TInferSyncOrAsyncGeneratorFunctionValueType, TInferSyncOrAsyncGeneratorValueType, TInferSyncOrAsyncIterableValueType,
-  TSyncOrAsyncGenerator, TSyncOrAsyncIterable
+  TSyncOrAsyncIterable
 } from '../../../../../misc/helpers/iterators/interfaces';
-import { IsAsyncIterable } from '../../../../../misc/helpers/iterators/is/is-async-iterable';
-import { IPausableIteration, PausableIteration } from '../../../../../misc/helpers/iterators/pausable-iteration';
 import { TTaskCreateCallback } from '../../types';
+import { LinkTaskWithBasicHandlers } from '../helpers/link-task-with-basic-handlers';
+import { IPausableIteration } from '../../../../../misc/helpers/iterators/pausable-iteration/interfaces';
+import { PausableIteration } from '../../../../../misc/helpers/iterators/pausable-iteration/implementation';
 
 
 function taskFromIterableInternal<TIterable extends TSyncOrAsyncIterable<TTaskFromIterableReturn<any>>>(
   context: ITaskContext<TInferSyncOrAsyncIterableValueType<TIterable>>,
   iterable: TIterable,
-  isAsync: boolean = IsAsyncIterable(iterable),
 ): void {
-  const iteration: IPausableIteration = PausableIteration<TIterable>(
-    iterable,
-    (value: any) => {
-      context.next(value);
-    },
-    () => {
-      clear();
-      context.complete();
-    },
-    (reason: any) => {
-      clear();
-      context.error(reason);
-    },
-    isAsync
+  type TValue = TInferSyncOrAsyncIterableValueType<TIterable>;
+  const iteration: IPausableIteration<TValue> = new PausableIteration<TValue>({
+      iterable: iterable as TSyncOrAsyncIterable<TValue>,
+      next: (value: TValue) => {
+        context.next(value);
+      },
+      complete: () => {
+        context.complete();
+      },
+      error: (reason: any) => {
+        context.error(reason);
+      }
+    });
+
+  LinkTaskWithBasicHandlers(
+    context.task,
+    {
+      run: () => {
+        iteration.run();
+      },
+      pause: () => {
+        iteration.pause();
+      },
+      finished: () => {
+        iteration.pause();
+      },
+    }
   );
-
-  const clear = () => {
-    iteration.pause();
-    startListener.deactivate();
-    resumeListener.deactivate();
-    pauseListener.deactivate();
-    abortListener.deactivate();
-  };
-
-  const run = () => {
-    iteration.resume();
-  };
-
-  const pause = () => {
-    iteration.pause();
-  };
-
-  const startListener = context.task.addListener('start', run);
-  const resumeListener = context.task.addListener('resume', run);
-  const pauseListener = context.task.addListener('pause', pause);
-  const abortListener = context.task.addListener('abort', clear);
-
-  startListener.activate();
-  resumeListener.activate();
-  pauseListener.activate();
-  abortListener.activate();
 }
 
+// function taskFromIterableInternal<TIterable extends TSyncOrAsyncIterable<TTaskFromIterableReturn<any>>>(
+//   context: ITaskContext<TInferSyncOrAsyncIterableValueType<TIterable>>,
+//   iterable: TIterable,
+//   isAsync: boolean = IsAsyncIterable(iterable),
+// ): void {
+//   const iteration: IPausableIteration = PausableIteration<TIterable>(
+//     iterable,
+//     (value: any) => {
+//       context.next(value);
+//     },
+//     () => {
+//       clear();
+//       context.complete();
+//     },
+//     (reason: any) => {
+//       clear();
+//       context.error(reason);
+//     },
+//     isAsync
+//   );
+//
+//   const clear = () => {
+//     startListener.deactivate();
+//     resumeListener.deactivate();
+//     pauseListener.deactivate();
+//     abortListener.deactivate();
+//   };
+//
+//   const run = () => {
+//     iteration.resume();
+//   };
+//
+//   const startListener = context.task.addListener('start', run);
+//   const resumeListener = context.task.addListener('resume', run);
+//   const pauseListener = context.task.addListener('pause', () => {
+//     iteration.pause();
+//   });
+//   const abortListener = context.task.addListener('abort', () => {
+//     iteration.pause();
+//     clear();
+//   });
+//
+//   startListener.activate();
+//   resumeListener.activate();
+//   pauseListener.activate();
+//   abortListener.activate();
+// }
 
 /** ITERABLE **/
 
@@ -76,11 +110,10 @@ export type TTaskFromIterableReturn<T> = ITaskFromIterableValue<T> | void | neve
  */
 export function taskFromIterable<TIterable extends TSyncOrAsyncIterable<TTaskFromIterableReturn<any>>>(
   iterable: TIterable,
-  isAsync?: boolean,
 ): ITask<TInferSyncOrAsyncIterableValueType<TIterable>> {
   type TValue = TInferSyncOrAsyncIterableValueType<TIterable>;
   return new Task<TValue>((context: ITaskContext<TValue>) => {
-    taskFromIterableInternal(context, iterable, isAsync);
+    taskFromIterableInternal(context, iterable);
   });
 }
 

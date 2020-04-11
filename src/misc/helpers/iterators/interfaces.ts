@@ -1,8 +1,8 @@
-import { ITask } from '../../../notifications/observables/task/interfaces';
-
 /** ITERATOR **/
 
-export type TSyncOrAsyncIterator<T = any, TReturn = any, TNext = undefined> = Iterator<T, TReturn, TNext> | AsyncIterator<T, TReturn, TNext>;
+export type TSyncOrAsyncIterator<T = any, TReturn = any, TNext = undefined> =
+  Iterator<T, TReturn, TNext>
+  | AsyncIterator<T, TReturn, TNext>;
 
 export type TInferSyncOrAsyncIteratorValueType<TIterator extends TSyncOrAsyncIterator> = TIterator extends Iterator<infer TValue>
   ? TValue
@@ -36,7 +36,9 @@ export type TInferSyncOrAsyncIterableGenerator<TIterable extends TSyncOrAsyncIte
 
 /** GENERATOR **/
 
-export type TSyncOrAsyncGenerator<T = unknown, TReturn = any, TNext = unknown> = Generator<T, TReturn, TNext> | AsyncGenerator<T, TReturn, TNext>;
+export type TSyncOrAsyncGenerator<T = unknown, TReturn = any, TNext = unknown> =
+  Generator<T, TReturn, TNext>
+  | AsyncGenerator<T, TReturn, TNext>;
 
 export type TInferSyncOrAsyncGeneratorValueType<TGenerator extends TSyncOrAsyncGenerator> = TGenerator extends Generator<infer TValue>
   ? TValue

@@ -82,7 +82,7 @@ async function debugFetchTask() {
 
 async function debugWrapTask() {
   await debugTaskInSequence();
-  await debugTaskInParallel();
+  // await debugTaskInParallel();
 }
 
 async function debugTaskInSequence() {
@@ -120,6 +120,6 @@ async function debugTaskInParallel() {
 /*--------------------------*/
 
 export async function debugTask() {
-  await debugFetchTask();
-  // await debugWrapTask();
+  // await debugFetchTask();
+  await debugWrapTask();
 }

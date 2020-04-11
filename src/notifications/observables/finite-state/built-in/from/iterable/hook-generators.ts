@@ -6,7 +6,8 @@ import {
 import {
   TInferSyncOrAsyncIterableValueType, TSyncOrAsyncIterable
 } from '../../../../../../misc/helpers/iterators/interfaces';
-import { IPausableIteration, PausableIteration } from '../../../../../../misc/helpers/iterators/pausable-iteration';
+import { IPausableIteration } from '../../../../../../misc/helpers/iterators/pausable-iteration/interfaces';
+import { PausableIteration } from '../../../../../../misc/helpers/iterators/pausable-iteration/implementation';
 
 /** TYPES **/
 
@@ -23,10 +24,9 @@ type TGenerateFiniteStateObservableHookFromIterableWithPauseWorkflowInstance<TIt
  */
 export function GenerateFiniteStateObservableHookFromIterableWithPauseWorkflow<TIterable extends TSyncOrAsyncIterable<any>>(
   iterable: TIterable,
-  isAsync?: boolean,
 ): TFromIterableObservableCreateCallback<TIterable> {
   return function (context: TFromIterableObservableCreateCallbackContext<TIterable>) {
-    let iteration: IPausableIteration;
+    let iteration: IPausableIteration<TIterable>;
 
     return {
       onObserved(): void {
@@ -36,23 +36,22 @@ export function GenerateFiniteStateObservableHookFromIterableWithPauseWorkflow<T
           && (instance.observers.length === 1) // optional check
           && (instance.state === 'next') // optional check
         ) {
-          iteration = PausableIteration<TIterable>(
+          iteration = new PausableIteration<TIterable>({
             iterable,
-            (value: any) => {
+            next: (value: any) => {
               context.next(value);
             },
-            () => {
+            complete: () => {
               context.complete();
             },
-            (reason: any) => {
+            error: (reason: any) => {
               context.error(reason);
             },
-            isAsync
-          );
+          });
         }
 
         if (instance.observers.length > 0) { // optional check
-          iteration.resume();
+          iteration.run();
         }
       },
       onUnobserved(): void {

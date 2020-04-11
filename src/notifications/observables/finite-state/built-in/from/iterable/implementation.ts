@@ -41,7 +41,7 @@ export function PureFromIterableObservableFactory<TBase extends Constructor<IFin
       const [iterable, options]: TFromIterableObservableConstructorArgs<TIterable> = args[0];
       const normalizedArgs: IFromIterableObservableNormalizedArguments<TIterable> = NormalizeFromIterableObservableOptionsAndIterable<TIterable>(iterable, options);
       super(...setSuperArgs(args.slice(1), [
-        GenerateFiniteStateObservableHookFromIterableWithPauseWorkflow<TIterable>(iterable, normalizedArgs.isAsync),
+        GenerateFiniteStateObservableHookFromIterableWithPauseWorkflow<TIterable>(iterable),
         normalizedArgs
       ]));
       ConstructFromIterableObservable<TIterable>(this, normalizedArgs);

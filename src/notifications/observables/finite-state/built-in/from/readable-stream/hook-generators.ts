@@ -26,5 +26,5 @@ export function GenerateFiniteStateObservableHookFromReadableStreamReaderWithPau
     while (!(result = await reader.read()).done) {
       yield (result as ReadableStreamReadValueResult<TValue>).value;
     }
-  })(), true);
+  })());
 }

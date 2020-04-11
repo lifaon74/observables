@@ -1,10 +1,7 @@
-import { ITask } from '../interfaces';
-import { HasOwnProperty, HasProperty } from '../../../../misc/helpers/object/has-property';
-import { IProgress } from '../../../../misc/progress/interfaces';
+import { HasOwnProperty, HasProperty } from '../../../../../misc/helpers/object/has-property';
+import { IProgress } from '../../../../../misc/progress/interfaces';
+import { ITask } from '../../interfaces';
 
-
-// export type TWrappedTaskMethodNames = 'start' | 'pause' | 'resume' | 'abort';
-// export type TWrappedTaskMethodNames = Extract<keyof ITaskKeyValueMap<any>, 'start' | 'pause' | 'resume' | 'abort'>;
 export type TWrappedTaskMethodNames = Extract<keyof ITask<any>, 'start' | 'pause' | 'resume' | 'abort'>;
 
 /**
@@ -40,7 +37,6 @@ export function ReplaceNativeMethod<TInstance extends object, TMethodName extend
   return undo;
 }
 
-
 export interface IWrapTaskHandlers<TWrappedTaskValue> {
   onNext?(value: TWrappedTaskValue): void,
 
@@ -49,10 +45,13 @@ export interface IWrapTaskHandlers<TWrappedTaskValue> {
 
 /**
  * Links a task with another:
- *  - transfers the 'start', 'abort', 'resume' and 'pause' from the wrapping to the wrapped task
- *    -> until the wrapped task is done ('errored', 'complete', or aborted by wrapping class)
+ *  - transfers the 'start', 'abort', 'resume' and 'pause' method calls of 'wrappingTask' to 'wrappedTask'
+ *  - disable 'start', 'abort', 'resume' and 'pause' methods of 'wrappedTask'
+ *  - DOESN'T finish ('complete', 'error' or 'abort') 'wrappingTask' if/when 'wrappedTask' is done
+ *  - properly rollbacks changes if/when 'wrappedTask' is done
+ *  - INFO: doesnt use BuildBasicTask for better resource release
  */
-export function WrapTask<TWrappedTaskValue>(
+export function WrapTaskWithAnother<TWrappedTaskValue>(
   wrappingTask: ITask<any>,
   wrappedTask: ITask<TWrappedTaskValue>,
   options: IWrapTaskHandlers<TWrappedTaskValue> = {}
@@ -130,4 +129,3 @@ export function WrapTask<TWrappedTaskValue>(
     throw new Error(`Wrapped task must be in an 'await' state`);
   }
 }
-

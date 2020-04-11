@@ -25,7 +25,7 @@ export function ConstructObservable<T>(
   );
 }
 
-export function IsObservable(value: any): value is IObservable<any> {
+export function IsObservable<T = any>(value: any): value is IObservable<T> {
   return IsObject(value)
     && value.hasOwnProperty(OBSERVABLE_PRIVATE as symbol);
 }

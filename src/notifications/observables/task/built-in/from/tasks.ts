@@ -2,7 +2,7 @@ import { ITask } from '../../interfaces';
 import { Task } from '../../implementation';
 import { ITaskContext } from '../../context/interfaces';
 import { Progress } from '../../../../../misc/progress/implementation';
-import { WrapTask } from '../helpers';
+import { WrapTaskWithAnother } from '../helpers/wrap-task-with-another';
 
 export function taskFromTasksInSequence(
   tasks: ITask<any>[],
@@ -13,7 +13,7 @@ export function taskFromTasksInSequence(
       const task: ITask<any> = tasks[i];
       promise = promise
         .then(() => {
-          WrapTask(context.task, task);
+          WrapTaskWithAnother(context.task, task);
           return task.toPromise({ abortStrategy: 'never' })
             .then(() => {
               context.progressUntilRun(new Progress({ loaded: i + 1, total: l, name: 'count' }));
@@ -38,7 +38,7 @@ export function taskFromTasksInParallel(
     let total: number = tasks.length;
     Promise.all(
       tasks.map((task: ITask<any>) => {
-        WrapTask(context.task, task);
+        WrapTaskWithAnother(context.task, task);
 
         const errorListener = context.task.addListener('error', (error?: any) => {
           task.abort(error);

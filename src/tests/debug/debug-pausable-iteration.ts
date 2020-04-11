@@ -1,5 +1,5 @@
 import { $delay } from '../../promises/cancellable-promise/snipets';
-import { PausableAsyncIteration, PausableSyncIteration } from '../../misc/helpers/iterators/pausable-iteration';
+import { PausableIteration } from '../../misc/helpers/iterators/pausable-iteration/implementation';
 
 
 export async function debugPausableAsyncIteration() {
@@ -13,33 +13,32 @@ export async function debugPausableAsyncIteration() {
     }
   };
 
-
-  const iteration = PausableAsyncIteration(
-    generator(),
-    (value: any) => {
+  const iteration = new PausableIteration({
+    iterable: generator(),
+    next: (value: any) => {
       console.log('next', value);
       if (value > 5) {
         iteration.pause();
         setTimeout(() => {
-          iteration.resume();
+          iteration.run();
         }, 3000);
       }
     },
-    () => {
+    complete: () => {
       console.log('complete');
     },
-    (reason: any) => {
+    error: (reason: any) => {
       console.log('error', reason);
     },
-  );
+  });
 
-  iteration.resume();
+  iteration.run();
 
   setTimeout(() => {
     iteration.pause();
 
     setTimeout(() => {
-      iteration.resume();
+      iteration.run();
     }, 3000);
   }, 1600);
 }
@@ -55,26 +54,26 @@ export async function debugPausableSyncIteration() {
   };
 
 
-  const iteration = PausableSyncIteration(
-    generator(),
-    (value: any) => {
+  const iteration = new PausableIteration({
+    iterable: generator(),
+    next: (value: any) => {
       console.log('next', value);
       if (value > 5) {
         iteration.pause();
         setTimeout(() => {
-          iteration.resume();
+          iteration.run();
         }, 3000);
       }
     },
-    () => {
+    complete: () => {
       console.log('complete');
     },
-    (reason: any) => {
+    error: (reason: any) => {
       console.log('error', reason);
     },
-  );
+  });
 
-  iteration.resume();
+  iteration.run();
 }
 
 export async function debugPausableIteration() {

@@ -14,6 +14,7 @@ import { INotificationsObservable } from '../../../../core/notifications-observa
 /**
  * Creates a Task form a FiniteStateObservable
  *  - INFO: every values emitted by the FiniteStateObservable MUST be cached per observer
+ *  - INFO: doesnt use BuildBasicTask for better resource release
  */
 export function taskFromFiniteStateObservable<TValue,
   TFinalState extends TFinalStateConstraint<TFinalState>,
