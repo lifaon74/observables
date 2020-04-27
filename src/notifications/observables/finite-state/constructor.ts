@@ -64,9 +64,9 @@ export function IsFiniteStateObservable(value: any): value is TFiniteStateObserv
     && value.hasOwnProperty(FINITE_STATE_OBSERVABLE_PRIVATE as symbol);
 }
 
-export const IS_COMPLETE_STATE_OBSERVABLE_CONSTRUCTOR = Symbol('is-from-observable-constructor');
+export const IS_FINITE_STATE_OBSERVABLE_CONSTRUCTOR = Symbol('is-finite-state-observable-constructor');
 
 export function IsFiniteStateObservableConstructor(value: any): boolean {
   return (typeof value === 'function')
-    && HasFactoryWaterMark(value, IS_COMPLETE_STATE_OBSERVABLE_CONSTRUCTOR);
+    && HasFactoryWaterMark(value, IS_FINITE_STATE_OBSERVABLE_CONSTRUCTOR);
 }

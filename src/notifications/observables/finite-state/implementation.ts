@@ -22,7 +22,7 @@ import {
   TFiniteStateObservableKeyValueMapGeneric, TFiniteStateObservableMode, TFiniteStateObservableModeConstraint,
   TFiniteStateObservableState
 } from './types';
-import { ConstructFiniteStateObservable, IS_COMPLETE_STATE_OBSERVABLE_CONSTRUCTOR } from './constructor';
+import { ConstructFiniteStateObservable, IS_FINITE_STATE_OBSERVABLE_CONSTRUCTOR } from './constructor';
 import {
   IsFiniteStateObservableCachingValuesPerObserverMode, IsFiniteStateObservableFinalState,
   IsFiniteStateObservableNextState
@@ -156,7 +156,7 @@ export function FiniteStateObservableFactory<TBase extends Constructor<INotifica
   return MakeFactory<IFiniteStateObservableTypedConstructor<TValue, TFinalState, TMode, TKVMap>, [], TBase>(PureFiniteStateObservableFactory, [], superClass, {
     name: 'FiniteStateObservable',
     instanceOf: FiniteStateObservable,
-    waterMarks: [IS_COMPLETE_STATE_OBSERVABLE_CONSTRUCTOR],
+    waterMarks: [IS_FINITE_STATE_OBSERVABLE_CONSTRUCTOR],
   });
 }
 
@@ -176,13 +176,13 @@ export function FiniteStateObservableBaseFactory<TBase extends Constructor,
     {
       name: 'FiniteStateObservable',
       instanceOf: FiniteStateObservable,
-      waterMarks: [IS_COMPLETE_STATE_OBSERVABLE_CONSTRUCTOR],
+      waterMarks: [IS_FINITE_STATE_OBSERVABLE_CONSTRUCTOR],
     }
   );
 }
 
 
-FiniteStateObservable = class AFiniteStateObservable extends FiniteStateObservableBaseFactory<IBaseClassConstructor,
+FiniteStateObservable = class FiniteStateObservable extends FiniteStateObservableBaseFactory<IBaseClassConstructor,
   unknown,
   TFiniteStateObservableFinalState,
   TFiniteStateObservableMode,
