@@ -36,6 +36,10 @@ export type KeyValueMap<TKVMap extends object> = {
   [K in Extract<keyof TKVMap, string>]: TKVMap[K];
 };
 
+export type KeyValueMapClone<TKVMap extends object> = {
+  [K in keyof TKVMap]: TKVMap[K];
+};
+
 export type KeyValueMapConstraint<TKVMap extends object, TKVMapRef extends object> = KeyValueMap<TKVMap> extends TKVMap
   ? [KeyValueMapNonStrict<TKVMap>] extends [TKVMapRef]
     //? KeyValueMap<TKVMap> extends TKVMapRef
@@ -43,6 +47,14 @@ export type KeyValueMapConstraint<TKVMap extends object, TKVMapRef extends objec
     ? KeyValueMap<TKVMap>
     : never
   : never;
+
+// export type KeyValueMapConstraint<TKVMap extends object, TKVMapRef extends object> = KeyValueMap<TKVMap> extends KeyValueMapClone<TKVMap>
+//   ? [KeyValueMapNonStrict<TKVMap>] extends [TKVMapRef]
+//     //? KeyValueMap<TKVMap> extends TKVMapRef
+//     // ? Clone<TKVMap> extends TKVMapRef
+//     ? KeyValueMap<TKVMap>
+//     : never
+//   : never;
 
 export type KeyValueMapKeys<TKVMap extends object> = TKVMap extends never ? never : Extract<keyof TKVMap, string>;
 export type KeyValueMapValues<TKVMap extends object> = TKVMap extends never ? never : TKVMap[KeyValueMapKeys<TKVMap>];
