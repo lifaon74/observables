@@ -101,6 +101,6 @@
     "uglify-es": "^3.3.9"
   },
   "dependencies": {
-    "@lifaon/class-factory": "1.0.2"
+    "@lifaon/class-factory": "1.1.1"
   }
 }
