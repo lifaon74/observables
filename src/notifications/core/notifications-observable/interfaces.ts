@@ -1,6 +1,5 @@
 import { IObservable, IObservableConstructor, IObservableTypedConstructor } from '../../../core/observable/interfaces';
 import { INotificationsObserver } from '../notifications-observer/interfaces';
-import { KeyValueMapGenericConstraint, KeyValueMapKeys, KVRecord } from '../interfaces';
 import { IObserver } from '../../../core/observer/interfaces';
 import { IObservableObserver } from '../../../core/observable-observer/interfaces';
 import {
@@ -12,15 +11,16 @@ import {
   INotificationsObservableMatchOptions, KeyValueMapToNotifications, TNotificationsObservableHook,
   TNotificationsObservablePipeThroughResult, TNotificationsObservablePipeToObserverResult
 } from './types';
+import { KeyValueMap, KeyValueMapKeys } from '../types';
 
 
 /** INTERFACES **/
 
 export interface INotificationsObservableConstructor extends Omit<IObservableConstructor, 'new'> {
-  new<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(create?: (context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)): INotificationsObservable<TKVMap>;
+  new<TKVMap extends KeyValueMap>(create?: (context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)): INotificationsObservable<TKVMap>;
 }
 
-export interface INotificationsObservableTypedConstructor<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> extends Omit<IObservableTypedConstructor<KeyValueMapToNotifications<TKVMap>>, 'new'> {
+export interface INotificationsObservableTypedConstructor<TKVMap extends KeyValueMap> extends Omit<IObservableTypedConstructor<KeyValueMapToNotifications<TKVMap>>, 'new'> {
   new(create?: (context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)): INotificationsObservable<TKVMap>;
 }
 
@@ -29,7 +29,7 @@ export interface INotificationsObservableTypedConstructor<TKVMap extends KeyValu
  * A NotificationsObservable is an Observable emitting some Notifications.
  * It provides some shortcut functions to create Observers.
  */
-export interface INotificationsObservable<TKVMap extends KeyValueMapGenericConstraint<TKVMap>> extends IObservable<KeyValueMapToNotifications<TKVMap>> {
+export interface INotificationsObservable<TKVMap extends KeyValueMap> extends IObservable<KeyValueMapToNotifications<TKVMap>> {
 
   pipeTo<NO extends INotificationsObserver<any, any>>(observer: NO): TNotificationsObservablePipeToObserverResult<NO, TKVMap>;
 
@@ -72,8 +72,8 @@ export interface INotificationsObservable<TKVMap extends KeyValueMapGenericConst
   // matches(name: string, callback?: (value: any) => void): IterableIterator<KeyValueMapToNotificationsObservers<TKVMap>>;
 }
 
-export interface IBaseNotificationsObservable<TName extends string, TValue> extends INotificationsObservable<KVRecord<TName, TValue>> {
-  observedBy<O extends TObserverOrCallback<any>[]>(...observers: O): TObservableObservedByResultNonCyclic<O, KeyValueMapToNotifications<KVRecord<TName, TValue>>, this>; // returns this
+export interface IBaseNotificationsObservable<TName extends string, TValue> extends INotificationsObservable<Record<TName, TValue>> {
+  observedBy<O extends TObserverOrCallback<any>[]>(...observers: O): TObservableObservedByResultNonCyclic<O, KeyValueMapToNotifications<Record<TName, TValue>>, this>; // returns this
 }
 
 

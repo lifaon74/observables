@@ -14,7 +14,9 @@ import {
   TObserverOrCallback
 } from './types';
 import { IsObserver } from '../observer/constructor';
-import { BaseClass, Constructor, IBaseClassConstructor, MakeFactory } from '@lifaon/class-factory';
+import {
+  BaseClass, Constructor, IBaseClassConstructor, MakeFactory, OwnArguments, SuperArguments
+} from '@lifaon/class-factory';
 
 /** METHODS **/
 
@@ -65,8 +67,8 @@ function PureObservableFactory<TBase extends Constructor>(superClass: TBase) {
 
   return class Observable extends superClass implements IObservable<T> {
     constructor(...args: any[]) {
-      const [create]: TObservableConstructorArgs<T> = args[0];
-      super(...args.slice(1));
+      const [create]: TObservableConstructorArgs<T> = OwnArguments<TObservableConstructorArgs<T>>(args);
+      super(...SuperArguments(args));
       ConstructObservable<T>(this, create);
     }
 

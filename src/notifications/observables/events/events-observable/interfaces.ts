@@ -1,5 +1,5 @@
 import { INotificationsObservable } from '../../../core/notifications-observable/interfaces';
-import { KeyValueMapKeys } from '../../../core/interfaces';
+import { KeyValueMapKeys } from '../../../core/types';
 import { Targets } from '../events-listener/from/event-target/target-to-event-map';
 import { IEventsListener } from '../events-listener/interfaces';
 import { CastTargetToEventsObservable, EventKeyValueMapConstraint } from './types';
@@ -28,14 +28,14 @@ export interface IEventsObservable<TKVMap extends EventKeyValueMapConstraint<TKV
 
 /*-------------*/
 
-// const a: IEventsObservableConstructor = null;
+// const a: IEventsObservableConstructor = null as any;
 // const b = new a(window);
 //
-// new a(new FileReader())
-//   .on('load', () => {
-//   })
-//   .on('resize', () => {
-//   });
+// const c = new a(new FileReader());
+// .on('load', () => {
+// })
+// .on('resize', () => {
+// });
 
 // const a: AbortSignalEventMap extends { [key: string]: Event } ? true : false;
 // const b: IEventsObservable<AbortSignalEventMap> = null;

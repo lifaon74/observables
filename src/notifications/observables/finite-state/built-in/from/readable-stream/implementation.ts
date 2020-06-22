@@ -14,8 +14,10 @@ import {
 } from './types';
 import { ConstructFromReadableStreamObservable, IS_FROM_READABLE_STREAM_CONSTRUCTOR } from './constructor';
 import {
-  BaseClass, Constructor, GetSetSuperArgsFunction, IBaseClassConstructor, IsFactoryClass, MakeFactory
+  BaseClass, Constructor, GenerateOverrideSuperArgumentsFunction, IBaseClassConstructor, MakeFactory, OwnArguments,
+  SuperArguments
 } from '@lifaon/class-factory';
+import { TFiniteStateObservableConstructorArgs } from '../../../types';
 
 
 /** CLASS AND FACTORY **/
@@ -25,12 +27,17 @@ export function PureFromReadableStreamObservableFactory<TBase extends Constructo
   if (!IsFiniteStateObservableConstructor(superClass)) {
     throw new TypeError(`Expected FiniteStateObservableConstructor as superClass`);
   }
-  const setSuperArgs = GetSetSuperArgsFunction(IsFactoryClass(superClass));
+
+  const overrideFiniteStateObservableArguments = GenerateOverrideSuperArgumentsFunction<TFiniteStateObservableConstructorArgs<T, TFromReadableStreamObservableFinalState, TFromReadableStreamObservableMode, IFromReadableStreamObservableKeyValueMap<T>>>(
+    superClass,
+    IsFiniteStateObservableConstructor
+  );
+
 
   return class FromReadableStreamObservable extends superClass implements IFromReadableStreamObservable<T> {
     constructor(...args: any[]) {
-      const [reader, options]: TFromReadableStreamObservableConstructorArgs<T> = args[0];
-      super(...setSuperArgs(args.slice(1), [
+      const [reader, options]: TFromReadableStreamObservableConstructorArgs<T> = OwnArguments<TFromReadableStreamObservableConstructorArgs<T>>(args);
+      super(...overrideFiniteStateObservableArguments(SuperArguments(args), () => [
         GenerateFiniteStateObservableHookFromReadableStreamReaderWithPauseWorkflow<T>(reader),
         options
       ]));

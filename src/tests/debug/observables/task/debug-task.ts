@@ -6,6 +6,7 @@ import { promisePipe } from '../../../../operators/pipes/promisePipe';
 import {
   taskFromTasksInParallel, taskFromTasksInSequence
 } from '../../../../notifications/observables/task/built-in/from/tasks';
+import { taskFromGeneratorFunction } from '../../../../notifications/observables/task/built-in/from/iterable';
 
 // function fetchTask(input: RequestInfo, init?: RequestInit): ITask<Response> {
 //   const options: IFiniteStateObservableGenericOptions = { mode: 'cache-per-observer' };
@@ -117,9 +118,24 @@ async function debugTaskInParallel() {
   console.log('promise', await seqTask.toPromise());
 }
 
+/*--*/
+
+async function debugTaskToPromise() {
+  const task = taskFromGeneratorFunction(function * () {
+   for (let i = 0; i < 10; i++) {
+     yield 10;
+   }
+  });
+
+  logTask(task);
+  task.start();
+  console.log('promise', await task.toPromise());
+}
+
 /*--------------------------*/
 
 export async function debugTask() {
   // await debugFetchTask();
-  await debugWrapTask();
+  // await debugWrapTask();
+  await debugTaskToPromise();
 }

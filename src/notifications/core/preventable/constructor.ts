@@ -10,7 +10,7 @@ export function ConstructPreventable<N extends string>(instance: IPreventable<N>
   (instance as IPreventableInternal<N>)[PREVENTABLE_PRIVATE].prevented = new Set<N>();
 }
 
-export function IsPreventable(value: any): value is IPreventable<string> {
+export function IsPreventable<N extends string = string>(value: any): value is IPreventable<N> {
   return IsObject(value)
     && value.hasOwnProperty(PREVENTABLE_PRIVATE as symbol);
 }

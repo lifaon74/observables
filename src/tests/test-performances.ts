@@ -423,7 +423,7 @@ export function testPerformances8() {
   const { time: time1, result: result1 } = timeExecution(() => {
     sum = 0;
     rxObservable
-      .subscribe((v) => (sum += v));
+      .subscribe((v: number) => (sum += v));
     return sum;
   });
 

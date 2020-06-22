@@ -5,7 +5,7 @@ import {
 import { INotificationsObserver } from '../../../../core/notifications-observer/interfaces';
 import { EventsObservable } from '../implementation';
 import { CyclicTypedVectorArray } from '../../../../../classes/cyclic/CyclicTypedVectorArray';
-import { KeyValueMapKeys, KeyValueMapValues } from '../../../../core/interfaces';
+import { KeyValueMapKeys, KeyValueMapValues } from '../../../../core/types';
 import { IObserver } from '../../../../../core/observer/interfaces';
 import { OBSERVABLE_PRIVATE } from '../../../../../core/observable/privates';
 import { INotificationsObservableInternal } from '../../../../core/notifications-observable/privates';

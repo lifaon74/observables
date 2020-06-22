@@ -932,20 +932,19 @@ We may use Observables to emit Notifications and Observers to filter them by nam
 
 [sources](./src/notifications/core/notifications-observable/interfaces.ts)
 
+TODO update
+
 ***KeyValueMap***
 
 First you need to know that NotificationsObservable are typed with a `KeyValueMap`.
 It is simply an interface where the keys are the notifications' name; and the values, the associated value's type for this name.
 
 ```ts
-type KeyValueMap<TKVMap, T> = {
-  [K in KeyValueMapKeys<TKVMap>]: T;
-};
-
+export type KeyValueMap = object;
 type KeyValueMapKeys<TKVMap> = Extract<keyof TKVMap, string>;
 type KeyValueMapValues<TKVMap> = TKVMap[KeyValueMapKeys<TKVMap>];
 
-type KeyValueMapGeneric = KeyValueMap<{ [key: string]: any }, any>;
+type KeyValueMapGeneric = { [key: string]: any };
 ```
 
 As an example:
@@ -967,7 +966,7 @@ interface INotificationsObservableMatchOptions {
 }
 
 interface INotificationsObservableConstructor {
-  new<TKVMap extends KeyValueMapGeneric>(create?: (context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)): INotificationsObservable<TKVMap>;
+  new<TKVMap extends KeyValueMap>(create?: (context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)): INotificationsObservable<TKVMap>;
 }
 
 interface INotificationsObservable<TKVMap extends KeyValueMapGeneric> extends IObservable<KeyValueMapToNotifications<TKVMap>> {
@@ -992,7 +991,7 @@ interface INotificationsObservable<TKVMap extends KeyValueMapGeneric> extends IO
 ```
 
 ```ts
-interface INotificationsObservableContext<TKVMap extends KeyValueMapGeneric> extends IObservableContextBase<KeyValueMapToNotifications<TKVMap>> {
+interface INotificationsObservableContext<TKVMap extends KeyValueMap> extends IObservableContextBase<KeyValueMapToNotifications<TKVMap>> {
   readonly observable: INotificationsObservable<TKVMap>;
   emit(value: KeyValueMapToNotifications<TKVMap>): void;
   dispatch<K extends KeyValueMapKeys<TKVMap>>(name: K, value?: TKVMap[K]): void;
@@ -1005,7 +1004,7 @@ Moreover, it exposes some useful methods as shortcuts, and it is particularly ef
 
 ###### Construct
 ```ts
-new<TKVMap extends KeyValueMapGeneric>(create?: (context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)): INotificationsObservable<TKVMap>;
+new<TKVMap extends KeyValueMap>(create?: (context: INotificationsObservableContext<TKVMap>) => (TNotificationsObservableHook<TKVMap> | void)): INotificationsObservable<TKVMap>;
 ```
 The constructor is the same as the one for an Observable, but `context` is slightly different:
 it implements a `dispatch<K extends KeyValueMapKeys<TKVMap>>(name: K, value?: TKVMap[K]): void;` function which simply emits a Notification composed of `name` and `value`.
@@ -1137,6 +1136,8 @@ new EventsObservable<WindowEventMap>(window)
 #### EventsObservable
 
 [sources](./src/notifications/observables/events/events-observable/interfaces.ts)
+
+TODO update
 
 ```ts
 type EventKeyValueMap<TKVMap> = KeyValueMap<TKVMap, any>;

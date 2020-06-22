@@ -15,8 +15,10 @@ import { DISTINCT_ASYNC_VALUE_OBSERVABLE_PRIVATE, IAsyncDistinctValueObservableI
 import { ConstructAsyncDistinctValueObservable, IS_ASYNC_VALUE_OBSERVABLE_CONSTRUCTOR } from './constructor';
 import { TAsyncDistinctValueObservableConstructorArgs } from './types';
 import {
-  BaseClass, Constructor, GetSetSuperArgsFunction, IBaseClassConstructor, IsFactoryClass, MakeFactory
+  BaseClass, Constructor, GenerateOverrideSuperArgumentsFunction, IBaseClassConstructor, MakeFactory, OwnArguments,
+  SuperArguments
 } from '@lifaon/class-factory';
+import { TDistinctValueObservableConstructorArgs } from '../sync/types';
 
 
 /** CONSTRUCTOR FUNCTIONS **/
@@ -33,16 +35,21 @@ export function AsyncDistinctValueObservableOnUnobserved<T>(instance: IAsyncDist
 
 function PureAsyncDistinctValueObservableFactory<TBase extends Constructor<IDistinctValueObservable<any>>>(superClass: TBase) {
   type T = any;
+
   if (!IsDistinctValueObservableConstructor(superClass)) {
     throw new TypeError(`Expected DistinctValueObservables' constructor as superClass`);
   }
-  const setSuperArgs = GetSetSuperArgsFunction(IsFactoryClass(superClass));
+
+  const overrideDistinctValueObservableArguments = GenerateOverrideSuperArgumentsFunction<TDistinctValueObservableConstructorArgs<T>>(
+    superClass,
+    IsDistinctValueObservableConstructor
+  );
 
   return class AsyncDistinctValueObservable extends superClass implements IAsyncDistinctValueObservable<T> {
     constructor(...args: any[]) {
-      const [create]: TAsyncDistinctValueObservableConstructorArgs<T> = args[0];
+      const [create]: TAsyncDistinctValueObservableConstructorArgs<T> = OwnArguments<TAsyncDistinctValueObservableConstructorArgs<T>>(args);
       let context: IDistinctValueObservableContext<T>;
-      super(...setSuperArgs(args.slice(1), [
+      super(...overrideDistinctValueObservableArguments(SuperArguments(args), () => [
         (_context: IDistinctValueObservableContext<T>) => {
           context = _context;
           return {

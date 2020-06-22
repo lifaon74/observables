@@ -46,7 +46,7 @@ export const IS_OBSERVABLE_LIKE_CONSTRUCTOR = Symbol('is-observable-constructor'
 /**
  * Returns true if value is an ObservableConstructor (direct or indirect) and accepts same arguments than an Observable
  */
-export function IsObservableLikeConstructor(value: any, direct?: boolean): value is IObservableConstructor {
+export function IsObservableLikeConstructor(value: any, direct?: boolean): boolean {
   return (typeof value === 'function')
     && HasFactoryWaterMark(value, IS_OBSERVABLE_LIKE_CONSTRUCTOR, direct)
     && HasFactoryWaterMark(value, IS_OBSERVABLE_CONSTRUCTOR, false);

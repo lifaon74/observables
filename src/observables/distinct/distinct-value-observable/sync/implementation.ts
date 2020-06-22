@@ -14,8 +14,10 @@ import { TDistinctValueObservableConstructorArgs } from './types';
 import { IDistinctValueObservableContext } from './context/interfaces';
 import { ConstructDistinctValueObservable, IS_VALUE_OBSERVABLE_CONSTRUCTOR } from './constructor';
 import {
-  BaseClass, Constructor, GetSetSuperArgsFunction, IBaseClassConstructor, IsFactoryClass, MakeFactory
+  BaseClass, Constructor, GenerateOverrideSuperArgumentsFunction, IBaseClassConstructor, MakeFactory, OwnArguments,
+  SuperArguments
 } from '@lifaon/class-factory';
+import { TObservableConstructorArgs } from '../../../../core/observable/types';
 
 
 /** CONSTRUCTOR FUNCTIONS **/
@@ -46,16 +48,21 @@ export function DistinctValueObservableOnUnobserved<T>(instance: IDistinctValueO
 
 export function PureDistinctValueObservableFactory<TBase extends Constructor<IObservable<any>>>(superClass: TBase) {
   type T = any;
+
   if (!IsObservableLikeConstructor(superClass)) {
     throw new TypeError(`Expected Observables' constructor as superClass`);
   }
-  const setSuperArgs = GetSetSuperArgsFunction(IsFactoryClass(superClass));
+
+  const overrideObservableArguments = GenerateOverrideSuperArgumentsFunction<TObservableConstructorArgs<T>>(
+    superClass,
+    IsObservableLikeConstructor
+  );
 
   return class DistinctValueObservable extends superClass implements IDistinctValueObservable<T> {
     constructor(...args: any[]) {
-      const [create]: TDistinctValueObservableConstructorArgs<T> = args[0];
+      const [create]: TDistinctValueObservableConstructorArgs<T> = OwnArguments<TDistinctValueObservableConstructorArgs<T>>(args);
       let context: IObservableContext<T>;
-      super(...setSuperArgs(args.slice(1), [
+      super(...overrideObservableArguments(SuperArguments(args), () => [
         (_context: IObservableContext<T>) => {
           context = _context;
           return {

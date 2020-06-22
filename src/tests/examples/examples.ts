@@ -11,7 +11,7 @@ import { INotificationsObservable } from '../../notifications/core/notifications
 import { IObservableObserver } from '../../core/observable-observer/interfaces';
 import { IObservable } from '../../core/observable/interfaces';
 import { TimerObservable } from '../../observables/timer-observable/implementation';
-import { KeyValueMapKeys, KeyValueMapValues } from '../../notifications/core/interfaces';
+import { KeyValueMapKeys, KeyValueMapValues } from '../../notifications/core/types';
 import { INotification } from '../../notifications/core/notification/interfaces';
 import { INotificationsObserver } from '../../notifications/core/notifications-observer/interfaces';
 import { FunctionObservable } from '../../observables/distinct/function-observable/sync/implementation';
@@ -123,7 +123,7 @@ function observeTimerObservable(): void {
 function createEventNotificationsObservable<TKVMap extends EventKeyValueMapConstraint<TKVMap>>(target: EventTarget, name: KeyValueMapKeys<TKVMap>): INotificationsObservable<TKVMap> {
   return new NotificationsObservable<TKVMap>((context: NotificationsObservableContext<TKVMap>) => {
     const listener = (event: Event) => {
-      context.dispatch(event.type as KeyValueMapKeys<TKVMap>, event as KeyValueMapValues<TKVMap>);
+      context.dispatch(event.type as KeyValueMapKeys<TKVMap>, event as unknown as KeyValueMapValues<TKVMap>);
     };
     return {
       onObserved() {

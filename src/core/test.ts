@@ -4,7 +4,19 @@ export function typeTest(): void {
   type c = 'a';
   type d = 'd';
 
+  type a1 = 'a' & 'b';
+  type b1 = 'a' & 'b' & 'c';
+
   const v: unknown = null;
+
+  // const _z0: (a extends b ? true : false) = null as any; // true
+  // const _z1: (b extends a ? true : false) = null as any; // false
+  // const _z2: (Record<a, any> extends Record<b, any> ? true : false) = null as any; // false
+  // const _z3: (Record<b, any> extends Record<a, any> ? true : false) = null as any; // true
+  // const _z4: (a1 extends b1 ? true : false) = null as any; // true
+  // const _z5: (b1 extends a1 ? true : false) = null as any; // true
+  // const _z6: ([a] extends [b] ? true : false) = null as any; // true
+  // const _z7: ([b] extends [a] ? true : false) = null as any; // false
 
   // (v as IObservable<a>).pipeTo(v as IObserver<a>).activated;
   // (v as IObservable<a>).pipeTo(v as IObserver<b>).activated;
@@ -13,8 +25,8 @@ export function typeTest(): void {
   // (v as IObservable<a>).pipeTo(v as IObserver<string>).activated;
   // (v as IObservable<a>).pipeTo(v as IObserver<number>).activated; // should fail
   // (v as IObservable<string>).pipeTo(v as IObserver<a>).activated; // should fail
-  //
-  //
+
+
   // (v as IObservable<a>).pipeTo(v as (_: a) => void).activated;
   // (v as IObservable<a>).pipeTo(v as (_: b) => void).activated;
   // (v as IObservable<a>).pipeTo(v as (_: c) => void).activated; // should fail

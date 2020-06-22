@@ -83,7 +83,7 @@ export type TObservableObservedByResultNonCyclic<TObservers extends TObserverOrC
   }[keyof TObservers] ? never : TReturn;
 
 
-export type TObservableCreateFunction<T>= (context: IObservableContext<T>) => (IObservableHook<T> | void);
+export type TObservableCreateFunction<T> = (context: IObservableContext<T>) => (IObservableHook<T> | void);
 
 export type TObservableConstructorArgs<T> = [TObservableCreateFunction<T>?];
 

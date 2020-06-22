@@ -10,6 +10,7 @@ import { TTaskCreateCallback } from '../../types';
 import { LinkTaskWithBasicHandlers } from '../helpers/link-task-with-basic-handlers';
 import { IPausableIteration } from '../../../../../misc/helpers/iterators/pausable-iteration/interfaces';
 import { PausableIteration } from '../../../../../misc/helpers/iterators/pausable-iteration/implementation';
+import { IsAsyncIterable } from '../../../../../misc/helpers/iterators/is/is-async-iterable';
 
 
 function taskFromIterableInternal<TIterable extends TSyncOrAsyncIterable<TTaskFromIterableReturn<any>>>(
@@ -18,23 +19,33 @@ function taskFromIterableInternal<TIterable extends TSyncOrAsyncIterable<TTaskFr
 ): void {
   type TValue = TInferSyncOrAsyncIterableValueType<TIterable>;
   const iteration: IPausableIteration<TValue> = new PausableIteration<TValue>({
-      iterable: iterable as TSyncOrAsyncIterable<TValue>,
-      next: (value: TValue) => {
-        context.next(value);
-      },
-      complete: () => {
-        context.complete();
-      },
-      error: (reason: any) => {
-        context.error(reason);
-      }
-    });
+    iterable: iterable as TSyncOrAsyncIterable<TValue>,
+    next: (value: TValue) => {
+      context.next(value);
+    },
+    complete: () => {
+      context.complete();
+    },
+    error: (reason: any) => {
+      context.error(reason);
+    }
+  });
+
+  let started: boolean = false;
+  const isSyncIterable: boolean = !IsAsyncIterable(iterable);
 
   LinkTaskWithBasicHandlers(
     context.task,
     {
       run: () => {
-        iteration.run();
+        if (isSyncIterable) {
+          if (!started) {
+            started = false;
+            setImmediate(() => iteration.run());
+          }
+        } else {
+          iteration.run();
+        }
       },
       pause: () => {
         iteration.pause();
@@ -120,7 +131,8 @@ export function taskFromIterable<TIterable extends TSyncOrAsyncIterable<TTaskFro
 /** GENERATOR **/
 
 
-export type TTaskFromSyncOrAsyncGeneratorFunction<T = unknown, TReturn = any, TNext = unknown> = ((...args: Parameters<TTaskCreateCallback<T>>) => Generator<T, TReturn, TNext>)
+export type TTaskFromSyncOrAsyncGeneratorFunction<T = unknown, TReturn = any, TNext = unknown> =
+  ((...args: Parameters<TTaskCreateCallback<T>>) => Generator<T, TReturn, TNext>)
   | ((...args: Parameters<TTaskCreateCallback<T>>) => AsyncGenerator<T, TReturn, TNext>);
 
 export function taskFromGeneratorFunction<TGeneratorFunction extends TTaskFromSyncOrAsyncGeneratorFunction<TTaskFromIterableReturn<any>>>(
@@ -129,7 +141,7 @@ export function taskFromGeneratorFunction<TGeneratorFunction extends TTaskFromSy
   type TGenerator = ReturnType<TGeneratorFunction>;
   type TValue = TInferSyncOrAsyncGeneratorValueType<TGenerator>;
 
-  return new Task<TValue>(function(context: ITaskContext<TValue>) {
+  return new Task<TValue>(function (context: ITaskContext<TValue>) {
     taskFromIterableInternal<TGenerator>(context as ITaskContext<any>, generatorFunction.call(this, context));
   });
 }

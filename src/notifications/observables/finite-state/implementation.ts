@@ -10,7 +10,9 @@ import { IObserver } from '../../../core/observer/interfaces';
 import { ObservableFactory } from '../../../core/observable/implementation';
 import { IsNotificationsObservableConstructor } from '../../core/notifications-observable/constructor';
 import { INotificationsObservableContext } from '../../core/notifications-observable/context/interfaces';
-import { KeyValueMapToNotifications } from '../../core/notifications-observable/types';
+import {
+  KeyValueMapToNotifications, TNotificationsObservableConstructorArgs
+} from '../../core/notifications-observable/types';
 import { INotificationsObserverLike } from '../../core/notifications-observer/types';
 import { ExtractObserverNameAndCallback } from '../../core/notifications-observer/functions';
 import {
@@ -28,8 +30,8 @@ import {
   IsFiniteStateObservableNextState
 } from './functions';
 import {
-  BaseClass, Constructor, GetSetSuperArgsFunction, IBaseClassConstructor, IsFactoryClass, MakeFactory,
-  TMakeFactoryCreateSuperClass
+  BaseClass, Constructor, GenerateOverrideSuperArgumentsFunction, IBaseClassConstructor, MakeFactory, OwnArguments,
+  SuperArguments, TMakeFactoryCreateSuperClass
 } from '@lifaon/class-factory';
 
 
@@ -112,13 +114,17 @@ function PureFiniteStateObservableFactory<TBase extends Constructor<INotificatio
   if (!IsNotificationsObservableConstructor(superClass)) {
     throw new TypeError(`Expected NotificationsObservable constructor as superClass`);
   }
-  const setSuperArgs = GetSetSuperArgsFunction(IsFactoryClass(superClass));
+
+  const overrideNotificationObservableArguments = GenerateOverrideSuperArgumentsFunction<TNotificationsObservableConstructorArgs<TKVMap>>(
+    superClass,
+    IsNotificationsObservableConstructor
+  );
 
   return class FiniteStateObservable extends superClass implements IFiniteStateObservable<TValue, TFinalState, TMode, TKVMap> {
     constructor(...args: any[]) {
-      const [create, options]: TFiniteStateObservableConstructorArgs<TValue, TFinalState, TMode, TKVMap> = args[0];
+      const [create, options]: TFiniteStateObservableConstructorArgs<TValue, TFinalState, TMode, TKVMap> = OwnArguments<TFiniteStateObservableConstructorArgs<TValue, TFinalState, TMode, TKVMap>>(args);
       let context: INotificationsObservableContext<TKVMap>;
-      super(...setSuperArgs(args.slice(1), [
+      super(...overrideNotificationObservableArguments(SuperArguments(args), () => [
         (_context: INotificationsObservableContext<TKVMap>) => {
           context = _context;
           return {

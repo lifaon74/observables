@@ -119,7 +119,7 @@ export async function debugFiniteStateObservable() {
   // await debugFiniteStateObservableToPromise();
   // await debugFiniteStateObservableToAsyncIterator();
   // await debugFiniteStateObservableFromPromiseObservable();
-  // await debugFiniteStateObservableParallel();
-  await debugFiniteStateObservableSequential();
+  await debugFiniteStateObservableParallel();
+  // await debugFiniteStateObservableSequential();
   // await debugFiniteStateObservableLikeItWasTasks();
 }

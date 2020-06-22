@@ -1,7 +1,7 @@
 import { NotificationsObservable } from '../../../core/notifications-observable/implementation';
 import { IEventsObservable, IEventsObservableConstructor } from './interfaces';
 import { Notification } from '../../../core/notification/implementation';
-import { KeyValueMapKeys, KeyValueMapValues } from '../../../core/interfaces';
+import { KeyValueMapKeys, KeyValueMapValues } from '../../../core/types';
 import { IObserver } from '../../../../core/observer/interfaces';
 import { IEventsListener } from '../events-listener/interfaces';
 import { IEventLike } from '../events-listener/event-like/interfaces';
@@ -24,11 +24,11 @@ export function EventsObservableOnObserved<TKVMap extends EventKeyValueMapConstr
     if (name === null) {
       throw new TypeError(`Cannot observe an EventsObservable without a name (null), with a standard Observer (use a NotificationsObserver instead).`);
     } else {
-      const listener = (event: IEventLike) => {
-        observer.emit(new Notification<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>(name, event as KeyValueMapValues<TKVMap>) as KeyValueMapToNotifications<TKVMap>);
+      const listener = (event: KeyValueMapValues<TKVMap>) => {
+        observer.emit(new Notification<KeyValueMapKeys<TKVMap>, KeyValueMapValues<TKVMap>>(name, event) as KeyValueMapToNotifications<TKVMap>);
       };
       privates.observerListenerMap.set(observer, listener);
-      privates.target.addEventListener(name, listener);
+      privates.target.addEventListener(name, listener as unknown as ((event: IEventLike) => void));
     }
   } else {
     if ((privates.name !== null) && (nameAndCallback.name !== name)) {
@@ -36,7 +36,7 @@ export function EventsObservableOnObserved<TKVMap extends EventKeyValueMapConstr
     } else {
       privates.target.addEventListener(
         nameAndCallback.name,
-        nameAndCallback.callback as ((event: IEventLike) => void)
+        nameAndCallback.callback as unknown as ((event: IEventLike) => void)
       );
     }
   }
@@ -52,7 +52,7 @@ export function EventsObservableOnUnobserved<TKVMap extends EventKeyValueMapCons
     } else {
       privates.target.removeEventListener(
         name,
-        privates.observerListenerMap.get(observer) as (event: IEventLike) => void
+        privates.observerListenerMap.get(observer) as unknown as ((event: IEventLike) => void)
       );
       privates.observerListenerMap.delete(observer);
     }
@@ -62,7 +62,7 @@ export function EventsObservableOnUnobserved<TKVMap extends EventKeyValueMapCons
     } else {
       privates.target.removeEventListener(
         nameAndCallback.name,
-        nameAndCallback.callback as ((event: IEventLike) => void)
+        nameAndCallback.callback as unknown as ((event: IEventLike) => void)
       );
     }
   }
@@ -91,7 +91,7 @@ export function EventsObservableGetName<TKVMap extends EventKeyValueMapConstrain
  *  When a listened event occurs (ex: though "addListener"), a Notification is dispatched.
  * @Example:
  *  const mouseMoveListener = new EventsObservable(window)
- *    .addListener<MouseEvent>('mousemove', (event: MouseEvent) => {
+ *    .addListener('mousemove', (event: MouseEvent) => {
  *      console.log(event.clientX);
  *    }).activate();
  */
@@ -119,4 +119,3 @@ export const EventsObservable: IEventsObservableConstructor = class EventsObserv
     return EventsObservableGetName<TKVMap, TTarget>(this);
   }
 } as IEventsObservableConstructor;
-

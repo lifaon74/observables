@@ -130,7 +130,6 @@ export function PausableIterationPause<TValue>(instance: IPausableIteration<TVal
 }
 
 
-
 /** FUNCTIONS **/
 
 /* ASYNC */

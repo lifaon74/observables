@@ -45,7 +45,7 @@ export async function debugCancellableContext1() {
   // ctx.registerCancellablePromise('debug1', createFactory('debug1-f3'), { mode: 'warn' });
   // ctx.registerCancellablePromise('debug1', createFactory('debug1-f4'), { mode: 'throw' });
   // ctx.registerCancellablePromise('debug1', createFactory('debug1-f5'), { mode: 'queue' });
-  //
+
   // ctx.registerCancellablePromise('debug2', createFactory('debug2-f1'));
   // ctx.registerCancellablePromise('debug2', createFactory('debug2-f2'), { mode: 'replace' });
   //

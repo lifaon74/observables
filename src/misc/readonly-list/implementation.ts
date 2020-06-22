@@ -74,7 +74,7 @@ export class ReadonlyList<T> extends ReadonlyTuple<T[]> implements IReadonlyList
   }
 
   flat<U>(depth?: number): U[] {
-    return ((this as unknown) as IReadonlyListInternal<T>)[READONLY_TUPLE_PRIVATE].items.flat<U>(depth);
+    return ((this as unknown) as IReadonlyListInternal<T>)[READONLY_TUPLE_PRIVATE].items.flat(depth) as unknown as U[];
   }
 
 }

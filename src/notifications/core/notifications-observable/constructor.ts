@@ -1,5 +1,5 @@
 import { INotificationsObservable } from './interfaces';
-import { KeyValueMapGeneric, KeyValueMapGenericConstraint, KeyValueMapKeys } from '../interfaces';
+import { KeyValueMapGeneric, KeyValueMapKeys } from '../types';
 import { IsObject } from '../../../helpers';
 import {
   INotificationsObservableInternal, INotificationsObservablePrivate, NOTIFICATIONS_OBSERVABLE_PRIVATE
@@ -16,7 +16,7 @@ import { ConstructClassWithPrivateMembers, HasFactoryWaterMark } from '@lifaon/c
 /**
  * Constructs a NotificationsObservable
  */
-export function ConstructNotificationsObservable<TKVMap extends KeyValueMapGenericConstraint<TKVMap>>(
+export function ConstructNotificationsObservable<TKVMap extends object>(
   instance: INotificationsObservable<TKVMap>,
   context: IObservableContext<KeyValueMapToNotifications<TKVMap>>,
   create?: (context: INotificationsObservableContext<TKVMap>) => TNotificationsObservableHook<TKVMap> | void

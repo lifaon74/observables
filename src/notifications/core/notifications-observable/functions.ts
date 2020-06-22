@@ -1,6 +1,6 @@
 import { INotificationsObservableMatchOptions, KeyValueMapToNotificationsObservers } from './types';
 import { IsObject } from '../../../helpers';
-import { KeyValueMapGenericConstraint, KeyValueMapKeys } from '../interfaces';
+import { KeyValueMap, KeyValueMapKeys } from '../types';
 import { INotificationsObservable } from './interfaces';
 import { INotification } from '../notification/interfaces';
 import {
@@ -29,7 +29,7 @@ export function NormalizeNotificationsObservableMatchOptions(options: INotificat
 /**
  * Dispatches a Notification with 'name' and 'value' for all the observers observing this instance
  */
-export function NotificationsObservableDispatch<TKVMap extends KeyValueMapGenericConstraint<TKVMap>, K extends KeyValueMapKeys<TKVMap>>(
+export function NotificationsObservableDispatch<TKVMap extends KeyValueMap, K extends KeyValueMapKeys<TKVMap>>(
   instance: INotificationsObservable<TKVMap>,
   name: K,
   value: TKVMap[K],

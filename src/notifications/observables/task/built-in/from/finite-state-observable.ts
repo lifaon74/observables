@@ -8,8 +8,8 @@ import {
 } from '../../../finite-state/types';
 import { IFiniteStateObservable } from '../../../finite-state/interfaces';
 import { TAbortObservableToAsyncIterableStrategy } from '../../../../../operators/to/toAsyncIterable';
-import { KeyValueMapGeneric } from '../../../../core/interfaces';
 import { INotificationsObservable } from '../../../../core/notifications-observable/interfaces';
+import { KeyValueMapGeneric } from '../../../../core/types';
 
 /**
  * Creates a Task form a FiniteStateObservable

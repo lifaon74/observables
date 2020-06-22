@@ -1,6 +1,7 @@
 import {
-  KeyValueMapGenericConstraint, KeyValueMapKeys, KeyValueMapValues, KVRecord
-} from '../../notifications/core/interfaces';
+  KeyValueMap,
+  KeyValueMapKeys, KeyValueMapValues
+} from '../../notifications/core/types';
 import { IObserver } from '../../core/observer/interfaces';
 import { IBaseNotificationsObservable } from '../../notifications/core/notifications-observable/interfaces';
 import { Observer } from '../../core/observer/public';
@@ -17,10 +18,10 @@ import { INotificationsObservableContext } from '../../notifications/core/notifi
  * @param inNames
  * @param outName
  */
-export function mapNotificationsPipe<TKVMapIn extends KeyValueMapGenericConstraint<TKVMapIn>, TKeyOut extends string>(inNames: Iterable<KeyValueMapKeys<TKVMapIn>> | null = null, outName: TKeyOut): IPipe<IObserver<KeyValueMapToNotifications<TKVMapIn>>, IBaseNotificationsObservable<TKeyOut, KeyValueMapValues<TKVMapIn>>> { // Record<TKeyOut, KeyValueMapValues<TKVMapIn>>
+export function mapNotificationsPipe<TKVMapIn extends KeyValueMap, TKeyOut extends string>(inNames: Iterable<KeyValueMapKeys<TKVMapIn>> | null = null, outName: TKeyOut): IPipe<IObserver<KeyValueMapToNotifications<TKVMapIn>>, IBaseNotificationsObservable<TKeyOut, KeyValueMapValues<TKVMapIn>>> { // Record<TKeyOut, KeyValueMapValues<TKVMapIn>>
   type TKeysIn = KeyValueMapKeys<TKVMapIn>;
   type TValuesOut = KeyValueMapValues<TKVMapIn>;
-  type TKVOut = KVRecord<TKeyOut, TValuesOut>;
+  type TKVOut = Record<TKeyOut, TValuesOut>;
   type TKeysOut = KeyValueMapKeys<TKVOut>;
   type TNotificationsIn = KeyValueMapToNotifications<TKVMapIn>;
 
@@ -30,7 +31,7 @@ export function mapNotificationsPipe<TKVMapIn extends KeyValueMapGenericConstrai
     return {
       observer: new Observer<TNotificationsIn>((notification: TNotificationsIn) => {
         if ((inNamesSet === null) || inNamesSet.has(notification.name as TKeysIn)) {
-          context.dispatch(outName as TKeysOut, notification.value);
+          context.dispatch(outName as TKeysOut, notification.value as unknown as TValuesOut);
         }
       }),
       observable: new NotificationsObservable<TKVOut>((_context: INotificationsObservableContext<TKVOut>) => {

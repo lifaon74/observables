@@ -24,6 +24,8 @@ export interface IPausableIterationConstructor {
 
 export interface IPausableIteration<TValue> {
   readonly state: TPausableIterableState;
+
   run(): this;
+
   pause(): this;
 }

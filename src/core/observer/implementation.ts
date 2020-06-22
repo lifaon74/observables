@@ -7,7 +7,9 @@ import { LinkObservableAndObserver, UnLinkObservableAndObserver } from '../obser
 import { IObserverInternal, IObserverPrivate, OBSERVER_PRIVATE } from './privates';
 import { ConstructObserver } from './constructor';
 import { TObserverConstructorArgs, TObserverObserveResultNonCyclic, TObserverUnObserveResultNonCyclic } from './types';
-import { BaseClass, Constructor, IBaseClassConstructor, MakeFactory } from '@lifaon/class-factory';
+import {
+  BaseClass, Constructor, IBaseClassConstructor, MakeFactory, OwnArguments, SuperArguments
+} from '@lifaon/class-factory';
 
 /** METHODS **/
 
@@ -142,8 +144,8 @@ function PureObserverFactory<TBase extends Constructor>(superClass: TBase) {
 
   return class Observer extends superClass implements IObserver<T> {
     constructor(...args: any[]) {
-      const [onEmit]: TObserverConstructorArgs<T> = args[0];
-      super(...args.slice(1));
+      const [onEmit]: TObserverConstructorArgs<T> = OwnArguments<TObserverConstructorArgs<T>>(args);
+      super(...SuperArguments(args));
       ConstructObserver<T>(this, onEmit);
     }
 

@@ -35,21 +35,7 @@ export type TTaskCreateCallback<TValue> = (this: ITask<TValue>, context: ITaskCo
 
 export interface ITaskToPromiseOptions {
   abortStrategy?: TAbortStrategy;
-  lastOnly?: boolean; // (default: false)
 }
-
-export type ITaskToPromiseOptionsNotLastOnly = ITaskToPromiseOptions & { lastOnly?: false };
-export type ITaskToPromiseOptionsLastOnly = ITaskToPromiseOptions & { lastOnly: true };
-
-export type InferTaskToPromiseReturnedValue<TValue, TOptions extends ITaskToPromiseOptions> = TOptions extends { lastOnly: true }
-  ? TValue
-  : TValue[];
-
 
 export interface ITaskToCancellablePromiseOptions extends ICancellablePromiseOptions {
-  lastOnly?: boolean; // (default: false)
 }
-
-export type ITaskToCancellablePromiseOptionsNotLastOnly = ITaskToPromiseOptions & { lastOnly?: false };
-export type ITaskToCancellablePromiseOptionsLastOnly = ITaskToPromiseOptions & { lastOnly: true };
-

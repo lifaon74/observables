@@ -8,7 +8,7 @@ import { NotificationsObservableContext } from '../../../core/notifications-obse
 import {
   KeyValueMapToNotifications, KeyValueMapToNotificationsGeneric
 } from '../../../core/notifications-observable/types';
-import { KeyValueMapKeys, KeyValueMapValues } from '../../../core/interfaces';
+import { KeyValueMapKeys, KeyValueMapValues } from '../../../core/types';
 import { Notification } from '../../../core/notification/implementation';
 import { FiniteStateObservableClearCache, FiniteStateObservableOnEmit } from '../functions';
 
@@ -51,11 +51,11 @@ export class FiniteStateObservableContext<TValue,
   }
 
   next(value: TValue): void {
-    this.dispatch('next' as KeyValueMapKeys<TKVMap>, value as KeyValueMapValues<TKVMap>);
+    this.dispatch('next' as KeyValueMapKeys<TKVMap>, value as unknown as KeyValueMapValues<TKVMap>);
   }
 
   complete(): void {
-    this.dispatch('complete' as KeyValueMapKeys<TKVMap>, void 0 as KeyValueMapValues<TKVMap>);
+    this.dispatch('complete' as KeyValueMapKeys<TKVMap>, void 0 as unknown as KeyValueMapValues<TKVMap>);
   }
 
   error(error?: any): void {

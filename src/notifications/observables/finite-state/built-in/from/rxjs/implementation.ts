@@ -13,9 +13,10 @@ import { GenerateFiniteStateObservableHookFromRXJS } from './hook-generators';
 import { ObservableFactory } from '../../../../../../core/observable/implementation';
 import { IsFiniteStateObservableConstructor } from '../../../constructor';
 import {
-  BaseClass, ConstructClassWithPrivateMembers, Constructor, GetSetSuperArgsFunction, HasFactoryWaterMark,
-  IBaseClassConstructor, IsFactoryClass, MakeFactory
+  BaseClass, ConstructClassWithPrivateMembers, Constructor, GenerateOverrideSuperArgumentsFunction, HasFactoryWaterMark,
+  IBaseClassConstructor, MakeFactory, OwnArguments, SuperArguments
 } from '@lifaon/class-factory';
+import { TFiniteStateObservableConstructorArgs } from '../../../types';
 
 
 export const FROM_RXJS_OBSERVABLE_PRIVATE = Symbol('from-rxjs-observable-private');
@@ -48,15 +49,20 @@ export function IsFromRXJSObservableConstructor(value: any): boolean {
 
 export function PureFromRXJSObservableFactory<TBase extends Constructor<IFiniteStateObservable<any, TFromRXJSObservableFinalState, TFromRXJSObservableMode, FromRXJSObservableKeyValueMap<any>>>>(superClass: TBase) {
   type T = any;
+
   if (!IsFiniteStateObservableConstructor(superClass)) {
     throw new TypeError(`Expected FiniteStateObservableConstructor as superClass`);
   }
-  const setSuperArgs = GetSetSuperArgsFunction(IsFactoryClass(superClass));
+
+  const overrideFiniteStateObservableArguments = GenerateOverrideSuperArgumentsFunction<TFiniteStateObservableConstructorArgs<T, TFromRXJSObservableFinalState, TFromRXJSObservableMode, FromRXJSObservableKeyValueMap<T>>>(
+    superClass,
+    IsFiniteStateObservableConstructor
+  );
 
   return class FromRXJSObservable extends superClass implements IFromRXJSObservable<T> {
     constructor(...args: any[]) {
-      const [rxObservable, options]: TFromRXJSObservableConstructorArgs<T> = args[0];
-      super(...setSuperArgs(args.slice(1), [
+      const [rxObservable, options]: TFromRXJSObservableConstructorArgs<T> = OwnArguments<TFromRXJSObservableConstructorArgs<T>>(args);
+      super(...overrideFiniteStateObservableArguments(SuperArguments(args), () => [
         GenerateFiniteStateObservableHookFromRXJS<T>(rxObservable),
         options
       ]));

@@ -17,7 +17,8 @@ import { ObservableFactory } from '../../../core/observable/implementation';
 import { IsNotificationsObservableConstructor } from '../../../notifications/core/notifications-observable/constructor';
 import { KeyValueMapToNotifications } from '../../../notifications/core/notifications-observable/types';
 import {
-  BaseClass, ConstructClassWithPrivateMembers, Constructor, HasFactoryWaterMark, IBaseClassConstructor, MakeFactory
+  BaseClass, ConstructClassWithPrivateMembers, Constructor, HasFactoryWaterMark, IBaseClassConstructor, MakeFactory,
+  OwnArguments, SuperArguments
 } from '@lifaon/class-factory';
 
 
@@ -73,8 +74,8 @@ function PureInputOutputFactory<TBase extends Constructor<IInputOutputSuperClass
 
   return class InputOutput extends superClass implements IInputOutput<TKVMap, TObservable, TObserver> {
     constructor(...args: any[]) {
-      const [observable, observer]: TInputOutputConstructorArgs<TKVMap, TObservable, TObserver> = args[0];
-      super(...args.slice(1));
+      const [observable, observer]: TInputOutputConstructorArgs<TKVMap, TObservable, TObserver> = OwnArguments<TInputOutputConstructorArgs<TKVMap, TObservable, TObserver>>(args);
+      super(...SuperArguments(args));
       ConstructInputOutput<TKVMap, TObservable, TObserver>(this, observable, observer);
     }
 

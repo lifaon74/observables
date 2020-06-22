@@ -6,7 +6,7 @@ export type TargetToEventMap =
   | [AudioBufferSourceNode, AudioScheduledSourceNodeEventMap]
   | [AudioContext, BaseAudioContextEventMap]
   | [AudioScheduledSourceNode, AudioScheduledSourceNodeEventMap]
-  | [AudioTrackList, AudioTrackListEventMap]
+  // | [AudioTrackList, AudioTrackListEventMap]
   | [AudioWorkletNode, AudioWorkletNodeEventMap]
   | [BaseAudioContext, BaseAudioContextEventMap]
   | [BroadcastChannel, BroadcastChannelEventMap]
@@ -18,7 +18,7 @@ export type TargetToEventMap =
   | [FileReader, FileReaderEventMap]
   | [GlobalEventHandlers, GlobalEventHandlersEventMap] // -
   | [HTMLElement, HTMLElementEventMap]
-  | [HTMLVideoElement, HTMLVideoElementEventMap]
+  | [HTMLVideoElement, HTMLMediaElementEventMap]
   | [IDBDatabase, IDBDatabaseEventMap]
   | [IDBOpenDBRequest, IDBOpenDBRequestEventMap]
   | [IDBRequest, IDBRequestEventMap]
@@ -58,7 +58,7 @@ export type TargetToEventMap =
   | [TextTrackCue, TextTrackCueEventMap]
   | [TextTrackList, TextTrackListEventMap]
   | [VTTCue, TextTrackCueEventMap]
-  | [VideoTrackList, VideoTrackListEventMap]
+  // | [VideoTrackList, VideoTrackListEventMap]
   | [WebSocket, WebSocketEventMap]
   | [typeof window, WindowEventMap]
   | [WindowEventHandlers, WindowEventHandlersEventMap] // -

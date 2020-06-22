@@ -45,7 +45,7 @@ export function taskFromTasksInParallel(
         });
         errorListener.activate();
 
-        return task.toCancellablePromise({ abortStrategy: 'never' })
+        return task.toCancellablePromise()
           .finally(() => {
             errorListener.deactivate();
           })

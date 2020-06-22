@@ -1,7 +1,5 @@
-import {
-  KeyValueMapToNotifications, KeyValueMapToNotificationsSoft, TNotificationsObservableHook
-} from '../../core/notifications-observable/types';
-import { KeyValueMapConstraint } from '../../core/interfaces';
+import { KeyValueMapToNotifications, TNotificationsObservableHook } from '../../core/notifications-observable/types';
+import { KeyValueMapConstraint } from '../../core/types';
 import { IFiniteStateObservable } from './interfaces';
 import { IFiniteStateObservableContext } from './context/interfaces';
 import { IObserver } from '../../../core/observer/interfaces';
@@ -62,7 +60,7 @@ export type TFiniteStateObservableKeyValueMapGeneric<TValue, TFinalState extends
 export type TFiniteStateKeyValueMapConstraint<TValue, TFinalState extends TFinalStateConstraint<TFinalState>, TKVMap extends object> = KeyValueMapConstraint<TKVMap, TFiniteStateObservableKeyValueMapGeneric<TValue, TFinalState>>;
 
 // what should emit an Observable with a similar behaviour of a FiniteStateObservable
-export type TFiniteStateObservableLikeNotifications<TValue, TFinalState extends TFinalStateConstraint<TFinalState>> = KeyValueMapToNotificationsSoft<TFiniteStateObservableKeyValueMapGeneric<TValue, TFinalState>>;
+export type TFiniteStateObservableLikeNotifications<TValue, TFinalState extends TFinalStateConstraint<TFinalState>> = KeyValueMapToNotifications<TFiniteStateObservableKeyValueMapGeneric<TValue, TFinalState>>;
 
 
 // callback with context provided to the FiniteStateObservable constructor

@@ -20,6 +20,7 @@ import {
   NormalizeAdvancedAbortSignal, NormalizeAdvancedAbortSignalWrapPromiseOptionsStrategy
 } from '../../misc/advanced-abort-controller/advanced-abort-signal/helpers';
 import { IsObject } from '../../helpers';
+import { KeyValueMapValues } from '../../notifications/core/types';
 
 
 /** DEFINITIONS **/
@@ -212,7 +213,7 @@ export function finiteStateObservableToPromise<TValue,
   ) => {
     switch (notification.name) {
       case 'next':
-        values.push(notification.value);
+        values.push(notification.value as unknown as TValue);
         break;
       case 'complete':
         resolve(values, observer);

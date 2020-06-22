@@ -32,5 +32,5 @@ export interface IReadonlyList<T> extends IReadonlyTuple<T[]> {
 
   flatMap<U>(callback: (value: T, index: number, array: T[]) => U | ReadonlyArray<U>, thisArg?: any): U[];
 
-  flat<U>(depth?: number): U[];
+  flat<U>(depth?: number): U[]; // TODO may improve definition
 }

@@ -18,10 +18,14 @@ import { KeyValueMapToNotifications } from '../../../../../core/notifications-ob
 import {
   IFromIterableObservableNormalizedArguments, NormalizeFromIterableObservableOptionsAndIterable
 } from './functions';
-import { TSyncOrAsyncIterable } from '../../../../../../misc/helpers/iterators/interfaces';
 import {
-  BaseClass, Constructor, GetSetSuperArgsFunction, IBaseClassConstructor, IsFactoryClass, MakeFactory
+  TInferSyncOrAsyncIterableValueType, TSyncOrAsyncIterable
+} from '../../../../../../misc/helpers/iterators/interfaces';
+import {
+  BaseClass, Constructor, GenerateOverrideSuperArgumentsFunction, IBaseClassConstructor, MakeFactory, OwnArguments,
+  SuperArguments
 } from '@lifaon/class-factory';
+import { TFiniteStateObservableConstructorArgs } from '../../../types';
 
 
 /** CLASS AND FACTORY **/
@@ -34,13 +38,16 @@ export function PureFromIterableObservableFactory<TBase extends Constructor<IFin
     throw new TypeError(`Expected FiniteStateObservableConstructor as superClass`);
   }
 
-  const setSuperArgs = GetSetSuperArgsFunction(IsFactoryClass(superClass));
+  const overrideFiniteStateObservableArguments = GenerateOverrideSuperArgumentsFunction<TFiniteStateObservableConstructorArgs<TInferSyncOrAsyncIterableValueType<TIterable>, TFromIterableObservableFinalState, TFromIterableObservableMode, IFromIterableObservableKeyValueMap<TIterable>>>(
+    superClass,
+    IsFiniteStateObservableConstructor
+  );
 
   return class FromIterableObservable extends superClass implements IFromIterableObservable<TIterable> {
     constructor(...args: any[]) {
-      const [iterable, options]: TFromIterableObservableConstructorArgs<TIterable> = args[0];
+      const [iterable, options]: TFromIterableObservableConstructorArgs<TIterable> = OwnArguments<TFromIterableObservableConstructorArgs<TIterable>>(args);
       const normalizedArgs: IFromIterableObservableNormalizedArguments<TIterable> = NormalizeFromIterableObservableOptionsAndIterable<TIterable>(iterable, options);
-      super(...setSuperArgs(args.slice(1), [
+      super(...overrideFiniteStateObservableArguments(SuperArguments(args), () => [
         GenerateFiniteStateObservableHookFromIterableWithPauseWorkflow<TIterable>(iterable),
         normalizedArgs
       ]));

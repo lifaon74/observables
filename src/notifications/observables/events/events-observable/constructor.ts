@@ -1,6 +1,6 @@
 import { IEventsObservable } from './interfaces';
 import { IEventsListener } from '../events-listener/interfaces';
-import { KeyValueMapKeys, KeyValueMapValues } from '../../../core/interfaces';
+import { KeyValueMapKeys, KeyValueMapValues } from '../../../core/types';
 import { EVENTS_OBSERVABLE_PRIVATE, IEventsObservableInternal, IEventsObservablePrivate } from './privates';
 import { IObserver } from '../../../../core/observer/interfaces';
 import { KeyValueMapToNotifications } from '../../../core/notifications-observable/types';
