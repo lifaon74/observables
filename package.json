@@ -46,7 +46,7 @@
     "compile_dist_types": "tsc -p ./tsconfig/tsconfig.types.json",
     "copy_sources": "mkdirp dist && shx cp -r ./src/ ./dist/src",
     "generate_packages": "node tools/make-packages.js",
-    "publish_package": "yarn publish ./dist/package --access public",
+    "publish_package": "yarn publish ./dist/package --access public --tag beta",
 
     "dev_browser": "npm-run-all clean_dev_browser watch_dev_browser",
     "watch_dev_browser": "npm-run-all -p tsc_watch_dev_browser serve_dev_browser",
