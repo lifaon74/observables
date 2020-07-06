@@ -12,6 +12,55 @@ The key **MUST** be a string, and the constraint enforced it. Sadly, it is no mo
 
 As long as your `KeyValueMap`s only contain string keys, you won't see any differences.
 
+#### Add protection against recursive calls of the same Observable's context.emit function
+
+```ts
+let context: IObservableContext<any>;
+const observable = new Observable<any>((_context: IObservableContext<any>) => {
+  context = _context;
+  setTimeout(() => {
+    context.emit(1);
+  }, 100);
+});
+
+observable
+  .pipeTo((value: any) => {
+    if (value === 1) {
+      console.log('next 1', value);
+      context.emit(2); // recursive call, because we call context.emit before the first emit has finished
+    }
+  }).activate();
+
+observable
+  .pipeTo((value: any) => {
+    console.log('next 2', value);
+  }).activate();
+```
+
+Before v3.0.0, calling `context.emit(value)`, while another one was executing for the same Observable,
+"paused/interrupted" the current dispatched value (because of the recursive call on `emit`).
+So the output was:
+
+```
+> 'next 1', 1
+> 'next 2', 2
+> 'next 2', 1
+```
+
+With version 3.0.0, calling `context.emit(value)` in the same context, will check first if a dispatch is pending.
+If yes, then the dispatch is delayed until the current dispatched value is fully dispatched to all the Observers.
+This ensures a more coherent comportment of the 'emit' function.
+So the output is:
+
+```
+> 'next 1', 1
+> 'next 2', 1
+> 'next 2', 2
+```
+
+This "issue" is fixed too for the NotificationsObservable where we were able to receive events in a strange order.
+
+A [note](./examples/00-notes.md) explains this in details.
 
 ### Minor changes
 

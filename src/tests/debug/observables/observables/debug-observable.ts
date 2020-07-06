@@ -13,7 +13,7 @@ export async function debugObservableCyclicEmit() {
   });
 
   observable
-    .pipeTo((value: any) => { // (1)
+    .pipeTo((value: any) => {
       if (value === 1) {
         console.log('next 1', value);
         context.emit(2);
@@ -21,7 +21,7 @@ export async function debugObservableCyclicEmit() {
     }).activate();
 
   observable
-    .pipeTo((value: any) => { // (1)
+    .pipeTo((value: any) => {
       console.log('next 2', value);
     }).activate();
 }

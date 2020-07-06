@@ -194,6 +194,7 @@ In summary:
 So performances should be taken in consideration in this case only on big projects which critical requirements.
 
 </p>
+</details>
 
 ---
 
