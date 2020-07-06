@@ -157,7 +157,7 @@ async function debugTaskInParallel() {
 async function debugTaskToPromise() {
   const task = taskFromGeneratorFunction(function * () {
    for (let i = 0; i < 10; i++) {
-     yield 10;
+     yield i;
    }
   });
 
@@ -170,6 +170,6 @@ async function debugTaskToPromise() {
 
 export async function debugTask() {
   // await debugFetchTask();
-  // await debugWrapTask();
-  await debugTaskToPromise();
+  await debugWrapTask();
+  // await debugTaskToPromise();
 }

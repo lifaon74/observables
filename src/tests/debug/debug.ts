@@ -6,6 +6,6 @@ export async function runDebug() {
   // await debugFiniteStateObservable();
   // await debugCancellableContext();
   // await debugPausableIteration();
-  // await debugTask();
-  await debugObservable();
+  await debugTask();
+  // await debugObservable();
 }

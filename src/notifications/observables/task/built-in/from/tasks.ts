@@ -6,6 +6,7 @@ import { WrapTaskWithAnother } from '../helpers/wrap-task-with-another';
 
 export function taskFromTasksInSequence(
   tasks: ITask<any>[],
+  progressName: string = 'count',
 ): ITask<void> {
   return new Task<void>((context: ITaskContext<void>) => {
     let promise: Promise<void> = Promise.resolve();
@@ -16,7 +17,7 @@ export function taskFromTasksInSequence(
           WrapTaskWithAnother(context.task, task);
           return task.toPromise({ abortStrategy: 'never' })
             .then(() => {
-              context.progressUntilRun(new Progress({ loaded: i + 1, total: l, name: 'count' }));
+              context.progressUntilRun(new Progress({ loaded: i + 1, total: l, name: progressName }));
             });
         });
     }
@@ -32,6 +33,7 @@ export function taskFromTasksInSequence(
 
 export function taskFromTasksInParallel(
   tasks: ITask<any>[],
+  progressName: string = 'count',
 ): ITask<void> {
   return new Task<void>((context: ITaskContext<void>) => {
     let loaded: number = 0;
@@ -51,7 +53,7 @@ export function taskFromTasksInParallel(
           })
           .then(() => {
             loaded++;
-            context.progressUntilRun(new Progress({ loaded, total, name: 'count' }));
+            context.progressUntilRun(new Progress({ loaded, total, name: progressName }));
           });
       })
     )

@@ -10,7 +10,6 @@ import { TTaskCreateCallback } from '../../types';
 import { LinkTaskWithBasicHandlers } from '../helpers/link-task-with-basic-handlers';
 import { IPausableIteration } from '../../../../../misc/helpers/iterators/pausable-iteration/interfaces';
 import { PausableIteration } from '../../../../../misc/helpers/iterators/pausable-iteration/implementation';
-import { IsAsyncIterable } from '../../../../../misc/helpers/iterators/is/is-async-iterable';
 
 
 function taskFromIterableInternal<TIterable extends TSyncOrAsyncIterable<TTaskFromIterableReturn<any>>>(
@@ -31,21 +30,11 @@ function taskFromIterableInternal<TIterable extends TSyncOrAsyncIterable<TTaskFr
     }
   });
 
-  let started: boolean = false;
-  const isSyncIterable: boolean = !IsAsyncIterable(iterable);
-
   LinkTaskWithBasicHandlers(
     context.task,
     {
       run: () => {
-        if (isSyncIterable) {
-          if (!started) {
-            started = false;
-            setImmediate(() => iteration.run());
-          }
-        } else {
-          iteration.run();
-        }
+        iteration.run();
       },
       pause: () => {
         iteration.pause();
