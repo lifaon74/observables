@@ -46,32 +46,25 @@ function createDirectory(path) {
     });
 }
 
-function copyDirectory(source, destination) {
+function copyDirectory(source, destination, filter = () => true) {
   return exploreDirectory(source, (sourcePath, entry) => {
     if (entry.isFile()) {
       // console.log('\n');
       // console.log(sourcePath);
       // console.log($path.join(destination, $path.relative(source, sourcePath)));
       // console.log('\n');
-      const _destination = $path.join(destination, $path.relative(source, sourcePath));
-      return createDirectory($path.dirname(_destination))
-        .then(() => $fs.copyFile(sourcePath, _destination));
+      const destinationPath = $path.join(destination, $path.relative(source, sourcePath));
+
+      if (filter(sourcePath, destinationPath, entry)) {
+        return copyFile(sourcePath, destinationPath);
+      }
     }
   });
-  // return createDirectory(destination)
-  //   .then(() => {
-  //     return exploreDirectory(source, (sourcePath, entry) => {
-  //       if (entry.isFile()) {
-  //         // console.log('\n');
-  //         // console.log(sourcePath);
-  //         // console.log($path.join(destination, $path.relative(source, sourcePath)));
-  //         // console.log('\n');
-  //         const _destination = $path.join(destination, $path.relative(source, sourcePath));
-  //         return createDirectory($path.dirname(_destination))
-  //           .then(() => $fs.copyFile(sourcePath, _destination));
-  //       }
-  //     });
-  //   });
+}
+
+function copyFile(source, destination) {
+  return createDirectory($path.dirname(destination))
+    .then(() => $fs.copyFile(source, destination));
 }
 
 module.exports = {

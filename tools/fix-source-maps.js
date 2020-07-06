@@ -2,7 +2,7 @@ const $fsh = require('./fs-helpers');
 const $fs = require('fs').promises;
 const $path = require('path');
 
-module.exports = async function fixSourceMap(mapRoot, sourcesRoot) {
+module.exports = function fixSourceMap(mapRoot, sourcesRoot) {
   return $fsh.exploreDirectory(mapRoot, (path, entry) => {
     if (entry.isFile() && path.endsWith('.js.map')) {
       return $fs.readFile(path)

@@ -15,6 +15,18 @@ function mapValues(input, mapper) {
     }, {});
 }
 
+function getImportMeta(url) {
+  return `((function() {
+    var meta = { url: ${url} };
+    try {
+      return Object.assign({}, eval('import.meta'), meta);
+    } catch (e) {
+      return meta;
+    }
+  })())`;
+
+}
+
 module.exports = function rollupBundle(options) {
   const dest = options.dest;
   const sourcemapFullFile = dest + '.map';
@@ -32,6 +44,32 @@ module.exports = function rollupBundle(options) {
           return ['tslib', key];
         }),
       }),
+      {
+        resolveImportMeta(prop, { moduleId }) {
+          moduleId = $path.resolve(process.cwd(), moduleId);
+          const destinationFolder = $path.dirname($path.resolve(process.cwd(), dest));
+          const relativePath = $path.relative(destinationFolder, moduleId);
+          // console.log('------------------------------');
+          // console.log('moduleId', moduleId);
+          // console.log('dest', dest);
+          // console.log('relativePath', relativePath, relativePath.replace('\\', '/'));
+
+          const path = relativePath.replace('\\', '/');
+          const url = `new URL(${JSON.stringify(path)}, window.origin).href`;
+          if (prop === 'url') {
+            return url;
+          }
+
+          // also handle just `import.meta`
+          if (prop === null) {
+            return getImportMeta(url);
+            // return `Object.assign({}, import.meta, { url: ${url} })`;
+          }
+
+          // use the default behaviour for all other props
+          return null;
+        }
+      }
     ],
   })
     .then((bundle) => {
