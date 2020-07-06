@@ -31,7 +31,7 @@ You may also use unpkg: `https://unpkg.com/@lifaon/observables`
 [CHANGELOG](./CHANGELOG.md)
 
 As comparision the rxjs core is: ![npm bundle size](https://img.shields.io/bundlephobia/minzip/rxjs.svg)
-(almost 4 times bigger than this core), and the full bundle <span style="color: #1062A4">**27KB**</span>.
+(more than 3 times bigger than this core), and the full bundle <span style="color: #1062A4">**27KB**</span>.
 The comparision may only focus on the core, because this implementation provide far fewer operators, but far more classes and helpers.
 
  
