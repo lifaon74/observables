@@ -975,8 +975,6 @@ We may use Observables to emit Notifications and Observers to filter them by nam
 
 [sources](./src/notifications/core/notifications-observable/interfaces.ts)
 
-TODO update
-
 ***KeyValueMap***
 
 First you need to know that NotificationsObservable are typed with a `KeyValueMap`.
@@ -1179,8 +1177,6 @@ new EventsObservable<WindowEventMap>(window)
 #### EventsObservable
 
 [sources](./src/notifications/observables/events/events-observable/interfaces.ts)
-
-TODO update
 
 ```ts
 type EventKeyValueMap<TKVMap> = KeyValueMap<TKVMap, any>;
