@@ -1,5 +1,7 @@
 # FiniteStateObservable
 
+First let's start with some typing. You may skip it if it's too complex, as it is there only to explain the `IFiniteStateObservable` interface.
+
 ```ts
 type TFiniteStateObservableFinalState = 'complete' | 'error';
 
@@ -77,7 +79,7 @@ interface IFiniteStateObservableContext<TValue, TFinalState extends FinalStateCo
 ```
 
 A FiniteStateObservable is simply an Observable with a final state (at least *complete* or *error*), just like the RXJS's Observables. 
-It is an helper to build Observables having a final state and should be used with care.
+**It is a helper to build Observables having a final state and should be used with care.**
 
 It extends `NotificationsObservable` with the minimum 3 following *'events'*:
 - `next: TValue`: the emitted values
@@ -88,8 +90,9 @@ It works with *Generic* types:
 - `TValue` represents the type of the value emitted though `next`
 - `TFinalState` represents the list (as union of strings) of the final states of the FiniteStateObservable. At least it must contain `TFiniteStateObservableFinalState` (`complete` and `error`).
 - `TMode` represents the mode (as union of strings) supported by the FiniteStateObservable. At least it must contain `TFiniteStateObservableMode`.
-- `TKVMap` represents the KeyValueMap used by NotificationsObservable, meaning than more events than just `next`, `complete` and `error` may be emitted.
+- `TKVMap` represents the KeyValueMap used by NotificationsObservable, meaning that more events than just `next`, `complete` and `error` may be emitted.
 
+**INFO:** FiniteStateObservable looks a lot like the RXJS's Observables, and for a good reason: they do the bridge between the both worlds. But it's not a reason to abuse of them.
 
 #### Construct
 ```ts
@@ -109,12 +112,12 @@ You may provide a second argument: `options`:
 Its `mode` defines some useful behaviours:
 - `once` (default): does not cache any values => after the final state (`TFinalState`), no observers will ever receive a value (`next`)
 - `uniq`: does not cache any values => after the final state, throws an error if a new observer observes `next` or `TFinalState`.
-- `cache`: caches own notifications (`next` and `TFinalState`). Every observer will receive the whole list of own emitted notifications
-- `cache-final-state`: caches `TFinalState` notification. Every observer will receive this final state notification
-- `cache-all`: caches all notifications (including ones with a different name than `next` and `TFinalState`). Every observer will receive the whole list of all emitted notifications
+- `cache`: caches own notifications (`next` and `TFinalState`). Every observer will receive the whole list of own emitted notifications.
+- `cache-final-state`: caches `TFinalState` notification. Every observer will receive this final state notification.
+- `cache-all`: caches all notifications (including ones with a different name than `next` and `TFinalState`). Every observer will receive the whole list of all emitted notifications.
 
 `finalStates?: Iterable<TFinalState>` represents the list of the final states of this FiniteStateObservable.
-For example, the PromiseObservable has an `abort` state too as its final state.
+For example, the PromiseObservable has an additional `abort` state as final state.
 
 `modes?: Iterable<TMode>;` represents the list of the available modes of this FiniteStateObservable.
 For example, the PromiseObservable has an extra `every` mode.
@@ -193,6 +196,7 @@ fromReadableStream((response.body as ReadableStream<Uint8Array>).getReader())
 ```
 
 Same but shorter and simpler implementation using `FromAsyncIterableObservable`:
+
 ```ts
 function fromReadableStreamUsingFromAsyncIterableObservable<T>(reader: ReadableStreamReader<T>): IFiniteStateObservable<T, TFiniteStateObservableFinalState, TFiniteStateObservableMode, IFiniteStateObservableKeyValueMapGeneric<T, TFiniteStateObservableFinalState>> {
   return new FromAsyncIterableObservable((async function * () {
@@ -205,6 +209,7 @@ function fromReadableStreamUsingFromAsyncIterableObservable<T>(reader: ReadableS
 ```
 
 **WARN:** For better performances you should use `FromReadableStreamObservable` instead:
+
 ```ts
 new FromReadableStreamObservable((response.body as ReadableStream<Uint8Array>).getReader())
   .on('next', (chunk: Uint8Array) => {

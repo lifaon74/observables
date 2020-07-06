@@ -39,6 +39,40 @@ function responseToBlobTask(task: ITask<Response>): ITask<Blob> {
   );
 }
 
+// function copyFileExample() {
+//   const copyTask: ITask<void> = copyDirectory('/a/b/c');
+//
+//   copyTask
+//     .on('start', () => {
+//       console.log('start');
+//     })
+//     .on('complete', () => {
+//       console.log('complete');
+//     })
+//     .on('error', (error: any) => {
+//       console.log('error', error);
+//     })
+//     .on('abort', (error: any) => {
+//       console.log('abort', error);
+//     })
+//     .on('progress', (progress: IProgress) => {
+//       console.log('progress', progress.toString());
+//     })
+//   ;
+//
+//   // button to pause / resume task
+//   const observable = new EventsObservable<HTMLElementEventMap>(button)
+//     .on('click', (event: MouseEvent) => {
+//       if (copyTask.state === 'await') {
+//         copyTask.start();
+//       } else if (copyTask.state === 'run') {
+//         copyTask.pause();
+//       } else if (copyTask.state === 'pause') {
+//         copyTask.resume();
+//       }
+//     });
+// }
+
 /*-------------------------------*/
 
 function noCORS(url: string): string {

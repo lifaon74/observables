@@ -21,14 +21,19 @@ npm i @lifaon/observables --save
 
 Entry point: `index.js`, others may contain some private or garbage experiment code. I recommend you to use rollup to import/bundle the package,
 but you may use an already bundled version in `bundles/`.
-The minified, gzipped, esnext version of <span style="color: #1062A4">**the core is around 3KB !**</span>
+
+The code is extremely optimized for tree shacking and minification: the minified, gzipped, esnext version of <span style="color: #1062A4">**the core is around 3KB !**</span>
 
 You may also use unpkg: `https://unpkg.com/@lifaon/observables`
 
 [SOME EXAMPLES HERE](./examples/README.md)
 
+[CHANGELOG](./CHANGELOG.md)
+
 As comparision the rxjs core is: ![npm bundle size](https://img.shields.io/bundlephobia/minzip/rxjs.svg)
- (almost 4 times bigger than this core), and the full bundle <span style="color: #1062A4">**27KB**</span>. Of course less operators are available in this project.
+(almost 4 times bigger than this core), and the full bundle <span style="color: #1062A4">**27KB**</span>.
+The comparision may only focus on the core, because this implementation provide far fewer operators, but far more classes and helpers.
+
  
 ### Quick example: Observing Keyboard Events ###
 Using the *Observable* constructor, we can create a function which returns an observable stream of events with a specific type for any EventTarget.
@@ -78,6 +83,8 @@ it is a little reductive for some special cases (ex: *aborted*, *cancelled*, *cl
 We can do better. That's why after many weeks of experimentation,
 I came to another, more generic and more accurate definition of what is an Observable.
  
+**INFO:**: I'll use Observable and Observer for this implementation, and will prefix them by RX for the RXJS's implementation (RX.Observable)
+ 
 ### Definitions ###
 
 - **An Observable is a push source:**
@@ -114,27 +121,27 @@ To compare with RXJS, an Observer is both a RX.Observer and a RX.Subscription.
 ### Main differences between this spec and RXJS ###
 
 **Here, Observables haven't any state: exit the *'complete'* and *'error'* state of the RXJS's Observables**
-- Why ? Because for some "observables" (like timers, events or mqtt subscriptions), there is never a 'complete' or 'error' state. Just a stream a values which never end. 
-- For "observables" with a final state (like promises or iterables), we may use a notifications system instead, emitting both
+- Why ? Because for some "observables" (like timers, events or mqtt subscriptions), there is never a 'complete' or 'error' state. Just a stream of values which never end. 
+- For "observables" with a final state (like promises or iterables), we may use a "notifications" system instead, emitting both
 a value and its type (further explanations later). Moreover, it allows us to emit extra states if required (ex: 'aborted', 'pending', etc...)
 
 **RXJS's Observer and a RXJS's Subscription are joined in one entity: Observer.**
 - Only one reference (on the Observer) is required to subscribe/unsubscribe to the stream of data =>
-  less variables for the user, easier return for the functions (one observer vs the tuple [observable, subscription])
-- With an Observer we may subscribe/unsubscribe many times with the same object where the RXJS's Subscription is unique.
+  fewer variables for the user, easier return for the functions (one observer vs the tuple [observable, subscription])
+- With an Observer we may subscribe/unsubscribe many times with the same object where the RXJS's Subscription is uniq.
 
 **RXJS promotes a lot its operators, where this spec try to limit their usage**
-- The amount of RXJS's operators is extremely huge: it confuse new users and may discourage them.
-- A pipe consumes a lot of CPU and memory usage: it requires to create underlying Observable and Observer (sophisticated classes and structures).
+- The amount of RXJS's operators is extremely huge: it confuses new users and may discourage them.
+- A pipe consumes a lot of CPU and memory usage: it requires creating underlying Observable and Observer (sophisticated classes and structures).
   Creating these objects consumes memory and forces data to pass though complex and longer code.
-  For production environment with thousand if not millions of Observables and pipes, this is not optimal.
+  For production environment with thousands if not millions of Observables and pipes, this is not optimal.
 - Solution ? Use native code inside the functions receiving the values:
   - instead of `filter`, use `if`.
   - instead of `map`, transform the incoming value to a different one.
   - etc...
 
 Most of the RXJS operators are just syntax sugar with important impact on the performance.
-*it's an computationally inefficient manner to use the pipes*, where [cpu budget is a thing](https://www.google.com/search?q=js%20cpu%20budget) (ex: [The cost of javascript](https://medium.com/@addyosmani/the-cost-of-javascript-in-2018-7d8950fbb5d4)).
+*it's a computationally inefficient manner to use the pipes*, where [cpu budget is a thing](https://www.google.com/search?q=js%20cpu%20budget) (ex: [The cost of javascript](https://medium.com/@addyosmani/the-cost-of-javascript-in-2018-7d8950fbb5d4)).
 
 You may easily replace them with far faster native code in 99% of the cases:
 
@@ -152,6 +159,41 @@ source
     }
   });
 ```
+
+**INFO:** notice this is my philosophy. Some developers prefer readability or predictability to performances (ex: functional programming, immutability, pipes and operators, etc...).
+On my point of view, if I may sacrifice just a few of readability to gain a lot of performances, meaning a better user experience, I'll prefer this option.
+
+#### A few words about performances
+
+[here you can check and run the performance tests](./src/tests/test-performances.ts)
+
+<details>
+<summary>show</summary>
+<p>
+
+This implementation, ensures all the arguments provided to the constructors or methods are valid (or throws an Error).
+This choice has been made because this library aims to set a standard for the Observables, like some native libraries (URL, Map, Promise, etc...) which check every input arguments.
+Moreover, the private properties are hidden instead of prefixed (ex: `_property`). This allows safe inheritance and only public properties are exposed.
+It results in reduced performances when creating new instances, but safer type checking.
+
+Comparing to RXJS:
+
+- creating new instance of Observable or Observer is slower (up to x10) => so avoids very large data structure creating and destroying frequently millions of Observables. 
+- emitting values is generally a few faster (x1.3 ~ x4)
+- values passing through Pipes are slower (x2), but faster (min x2) when using pure pipes (the more pipes are used, the more performances will be impacted) => see example just over
+- subscribing/unsubscribing is faster (x2)
+
+In summary:
+
+- RXJS's Observables are faster if: you plan to create/destroy a lot of them frequently, use a few pipes only, and subscribe only once to each of them.
+  => ex: for a continuous stream of data, like a lot of xhr requests
+- these Observables are faster if: you use pure pipes (or avoid them simply), and plan to do a many subscriptions/unsubscriptions per Observable.
+  => ex: usually the case for events, or pausable streams
+
+**INFO:** Lets keep in mind that in any case, millions of operations can be done per second.
+So performances should be taken in consideration in this case only on big projects which critical requirements.
+
+</p>
 
 ---
 
@@ -346,7 +388,7 @@ interface SmartElectricOutlet {
 
 ### API ###
 
-Every methods and attributes are commented on the source files, in case you require more details.
+Every method and attribute are commented on the source files, in case you require more details.
 
 #### Observable
 
@@ -444,8 +486,8 @@ function createTimerObservable(period: number) {
 }
 ```
 
-**INFO:** You're strongly encouraged to start your work as soon as one Observer register.
-And stop/clean when no more Observer is observing the Observable. You'll gain in global performance and CPU time optimization.
+**INFO:** You're strongly encouraged to start your work as soon as one Observer register,
+and stop/clean when no more Observer is observing the Observable. You'll gain in global performance and CPU time optimization.
 
 **AVOID:**
 ```ts
@@ -477,8 +519,8 @@ observable
   .activate() // by default an Observer is in a 'deactivated' state, so activate it
 ```
 
-**INFO:** Most of the methods of Observables and Observers return themself or the first argument passed to it.
-This ensure simple and chainable calls.
+**INFO:** Most of the methods of Observables and Observers return themself, or the first argument passed to it.
+This ensures simple and chainable calls.
 
 
 ##### pipeThrough
@@ -752,7 +794,7 @@ function map<Tin, Tout>(transform: (value: Tin) => Tout): IObservableObserver<IO
   }
 }
 ```
-**INFO**: Do not use this code as it doesnt self activate/deactivate ! For this, use Pipes.
+**INFO**: Do not use this code as it doesn't self activate/deactivate ! For this, use Pipes.
 
 #### Pipe
 
@@ -793,7 +835,7 @@ interface IPipeHook<TObserver extends IObserver<any>, TObservable extends IObser
 }
 ```
 
-A Pipe is an helper of type ObservableObserver which self activate/deactivate.
+A Pipe is a helper of type ObservableObserver which self activate/deactivate.
 
 ##### Construct
 ```ts
@@ -833,7 +875,7 @@ activate(mode?: TObservableObserverActivateMode): this;
 deactivate(mode?: TObservableObserverActivateMode): this;
 ```
 
-By default a Pipe self activates if at least one observer observes it,
+By default, a Pipe self activates if at least one observer observes it,
 and self deactivates when no one observes it.
 
 Calling `activate`:
@@ -1114,8 +1156,8 @@ interface INotificationsObserver<TName extends string, TValue> extends IObserver
 }
 ```
 
-A NotificationsObserver is a Observer which filters its incoming values (`INotification<N, T>`) by name:
-If the notification has the same name than the Observer, the `callback` is called with the Notification's value.
+A NotificationsObserver is an Observer which filters its incoming values (`INotification<N, T>`) by name:
+If the notification has the same name as the Observer, the `callback` is called with the Notification's value.
 
 *Example:* Listening to *click* and *mousemove* events on *window* (see previous example)
 ```ts
@@ -1207,7 +1249,7 @@ when creating a new `EventsObservable`.
 
 ##### EventLike - abstract
 
-An `EventLike` (abstract class) is too another *optional* wrapper looking like an `Event`,
+An `EventLike` (abstract class) is another *optional* wrapper looking like an `Event`,
 used for the same reasons as explained upper.
 
 ```ts
@@ -1274,7 +1316,7 @@ setTimeout(() => {
 // declare an interface
 interface ClientRequestEventMap {
   // because NodeJS doesnt return an Event,
-  // the incomming values are automatically wrapped in a GenericEvent
+  // the incoming values are automatically wrapped in a GenericEvent
   'response': IGenericEvent<IncomingMessage>;
 }
 
@@ -1302,7 +1344,7 @@ It extends `NotificationsObservable` with the minimum following 3 *'events'*:
 - `complete: void`: when the Observable has no more data to emit
 - `error: any`: when the Observable errored
 
-Because FiniteStateObservable is pretty complex, I wont give more details here but if interested [you can read the documentation](./examples/05-more-details-about-finite-state-observable.md).
+Because FiniteStateObservable is pretty complex, I won't give more details here but if interested [you can read the documentation](./examples/05-more-details-about-finite-state-observable.md).
 
 #### PromiseObservable
 
@@ -1338,7 +1380,7 @@ controller.signal.addListener('abort', (error: any) => {
 controller.abort(new Error('Promise cancelled'));
 ```
 
-Promises don't have any 'cancelled' state or a way to dispatch/handle it natively.
+Promises don't have any 'cancelled' state, or a way to dispatch/handle it natively.
 For this reason an AdvancedAbortController/AdvancedAbortSignal may be used and **MUST** be checked in every then/catch to avoid unnecessary work.
 
 ***AdvancedAbortController***
@@ -1365,7 +1407,7 @@ toAbortController(): AbortController;
 ```
 Creates an AbortController aborted if/when this signal is aborted.
 
-*Example:* Abort a fetch promise with an AdvancedAbortController
+*Example:* Abort a "fetch" promise with an AdvancedAbortController
 ```ts
 function doFetch(url: string, signal: IAdvancedAbortSignal) {
   return fetch(url, { signal: signal.toAbortController().signal });

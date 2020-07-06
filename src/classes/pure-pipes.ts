@@ -34,9 +34,6 @@ export const noop: TDestination<any> = () => void 0;
 
 /**
  * Emits transformed data with 'transform' into 'destination'.
- * @param {TDestination<Tout>} destination
- * @param {TTransform<Tin, Tout>} transform
- * @return {TDestination<Tin>}
  */
 export function map<Tin, Tout>(destination: TDestination<Tout>, transform: TTransform<Tin, Tout>): TDestination<Tin> {
   return (a: Tin) => destination(transform(a));
@@ -44,8 +41,6 @@ export function map<Tin, Tout>(destination: TDestination<Tout>, transform: TTran
 
 /**
  * Clones a callback
- * @param {TDestination<Tin>} destination
- * @return {TDestination<Tin>}
  */
 export function clone<Tin>(destination: TDestination<Tin>): TDestination<Tin> {
   // return transform(callback, _ => _);
@@ -56,8 +51,6 @@ export function clone<Tin>(destination: TDestination<Tin>): TDestination<Tin> {
 /**
  * Merges many destinations: calling the result's function will emit in all destinations.
  * Opposite of split.
- * @param {TDestination<Tin>[]} destinations
- * @return {TDestination<Tin>}
  */
 export function merge<Tin>(destinations: TDestination<Tin>[]): TDestination<Tin> {
   return (a: Tin) => {
@@ -76,9 +69,6 @@ export function mergeTwo<Tin>(d1: TDestination<Tin>, d2: TDestination<Tin>): TDe
 
 /**
  * Merges two destinations. One of the destinations may be void.
- * @param {TDestination<Tin> | void} d1
- * @param {TDestination<Tin>} d2
- * @return {TDestination<Tin>}
  */
 export function safeMergeTwo<Tin>(d1: TDestination<Tin> | void, d2: TDestination<Tin> | void): TDestination<Tin> {
   if (d1 === void 0) {
@@ -100,9 +90,6 @@ export type ExtractDestinationTypes<T> = {
  * @Example
  *   join([_ => console.log('0', _), _ => console.log('1', _)])([0, 1]);
  *   => '0' 0, '0' 1 (first destination will receive 0, the second will receive 1)
- *
- * @param {T} destinations
- * @return {TDestination<ExtractDestinationTypes<T extends TDestination<any>[]>>}
  */
 export function join<T extends TDestination<any>[]>(...destinations: T): TDestination<ExtractDestinationTypes<T>> {
   return (a: any[]) => {
@@ -115,9 +102,6 @@ export function join<T extends TDestination<any>[]>(...destinations: T): TDestin
 /**
  * Splits one destination: calling one of the result's functions will emit in destination.
  * Opposite of merge.
- * @param {TDestination<Tin>} destination
- * @param {number} number
- * @return {TDestination<Tin>[]}
  */
 export function split<Tin>(destination: TDestination<Tin>, number: number = 2): TDestination<Tin>[] {
   return CreateArray<TDestination<Tin>>(number, () => destination);
@@ -125,9 +109,6 @@ export function split<Tin>(destination: TDestination<Tin>, number: number = 2): 
 
 /**
  * Like split but clones destination for each entry
- * @param {TDestination<Tin>} destination
- * @param {number} number
- * @return {TDestination<Tin>[]}
  */
 export function splitClones<Tin>(destination: TDestination<Tin>, number: number = 2): TDestination<Tin>[] {
   return CreateArray<TDestination<Tin>>(number, () => ((a: Tin) => destination(a)));
@@ -141,9 +122,6 @@ export function splitClones<Tin>(destination: TDestination<Tin>, number: number 
  *   a.emit(0); // [0, undefined]
  *   b.emit(1); // [0, 1]
  *   b.emit(2); // [2, 1]
- * @param {TDestination<Tin[]>} destination
- * @param {number} number
- * @return {TDestination<Tin>[]}
  */
 export function disjoin<T extends TDestination<any>[]>(destination: TDestination<ExtractDestinationTypes<T>>, number: number = 2): T {
   const data: any[] = new Array(number).fill(void 0);
@@ -172,9 +150,6 @@ export function race<Tin>(destination: TDestination<Tin>, number: number = 2): T
 
 /**
  * Emits data into 'destination' if 'predicate' is satisfied.
- * @param {TDestination<Tin>} destination
- * @param {(value: Tin) => boolean} predicate
- * @return {TDestination<Tin>}
  */
 export function filter<Tin>(destination: TDestination<Tin>, predicate: (value: Tin) => boolean): TDestination<Tin> {
   return (a: Tin) => {
@@ -186,9 +161,6 @@ export function filter<Tin>(destination: TDestination<Tin>, predicate: (value: T
 
 /**
  * Emits only distinct values.
- * @param {TDestination<Tin>} destination
- * @param {boolean} previousValue
- * @return {TDestination<Tin>}
  */
 export function distinct<Tin>(destination: TDestination<Tin>, previousValue: Tin): TDestination<Tin> {
   return (a: Tin) => {
@@ -201,9 +173,6 @@ export function distinct<Tin>(destination: TDestination<Tin>, previousValue: Tin
 
 /**
  * Catches errors in 'destination' and emits them in 'caught'
- * @param {TDestination<Tin>} destination
- * @param {TDestination<TError>} caught
- * @return {TDestination<Tin>}
  */
 export function catchError<Tin, TError = any>(destination: TDestination<Tin>, caught: TDestination<TError>): TDestination<Tin> {
   return (a: Tin) => {
@@ -222,9 +191,6 @@ export function catchError<Tin, TError = any>(destination: TDestination<Tin>, ca
  *  - if 'condition' emits true, cached data is emitted immediately in destination and next data will be normally emitted
  * -> 'source' is where to emit data
  * -> 'condition' is an emitter, which will enable/disable emits in 'destination'
- * @param {TDestination<Tin>} destination
- * @param {boolean} defaultState
- * @return {[TDestination<Tin> , TDestination<boolean>]}
  */
 export function condition<Tin>(destination: TDestination<Tin>, defaultState: boolean = true): [TDestination<Tin>, TDestination<boolean>] {
   let data: Tin;
@@ -324,9 +290,6 @@ export function wait<Tin>(destination: TDestination<Tin>, predicate: (value: Tin
 
 /**
  * Emits a value only after a particular time span determined by the function 'period' has passed without another source emission.
- * @param {TDestination<Tin>} destination
- * @param {(a: Tin) => number} period
- * @return {TDestination<Tin>}
  */
 export function debounce<Tin>(destination: TDestination<Tin>, period: (a: Tin) => number): TDestination<Tin> {
   let timer: any | null = null;
@@ -347,8 +310,6 @@ export function debounceTime<Tin>(destination: TDestination<Tin>, period: number
 
 /**
  * Emits the last value received inside an requestAnimationFrame.
- * @param {TDestination<Tin>} destination
- * @return {TDestination<Tin>}
  */
 export function debounceFrame<Tin>(destination: TDestination<Tin>): TDestination<Tin> {
   let id: number | null = null;
@@ -366,9 +327,6 @@ export function debounceFrame<Tin>(destination: TDestination<Tin>): TDestination
 
 /**
  * Emits a value, then ignores subsequent source values for a duration determined by 'period'
- * @param {TDestination<Tin>} destination
- * @param {(a: Tin) => number} period
- * @return {TDestination<Tin>}
  */
 export function throttle<Tin>(destination: TDestination<Tin>, period: (a: Tin) => number): TDestination<Tin> {
   let timer: any | null = null;
@@ -406,8 +364,6 @@ export function throttleFrame<Tin>(destination: TDestination<Tin>): TDestination
 /**
  * Emits a value, then, for a duration determined by 'period', if a value is received, cache it and trigger it at the end of the timer.
  * As result, a value if emitted evey 'period' ms at the best, and the last emitted value if always transmitted.
- * @param destination
- * @param _period
  */
 export function period<Tin>(destination: TDestination<Tin>, _period: (a: Tin) => number): TDestination<Tin> {
   let timer: any | null = null;
@@ -451,9 +407,6 @@ export function periodFrame<Tin>(destination: TDestination<Tin>): TDestination<T
 
 /**
  * Delays the emission of the values.
- * @param {TDestination<Tin>} destination
- * @param {(a: Tin) => number} period
- * @return {TDestination<Tin>}
  */
 export function delay<Tin>(destination: TDestination<Tin>, period: (a: Tin) => number): TDestination<Tin> {
   return (a: Tin) => {
@@ -469,8 +422,6 @@ export function delayTime<Tin>(destination: TDestination<Tin>, period: number): 
 
 /**
  * Calls 'destination' in a requestAnimationFrame
- * @param {TDestination<Tin>} destination
- * @return {TDestination<Tin>}
  */
 export function frame<Tin>(destination: TDestination<Tin>): TDestination<Tin> {
   return (a: Tin) => {

@@ -9,7 +9,7 @@ Imagine this example:
 
 ```ts
 function loadNews(page: number): Promise<void> {
-  return fetch(`https://my-domain/api/news?page${page}`)
+  return fetch(`https://my-domain/api/news?page${ page }`)
     .then(_ => _.json())
     .then((news: INews) => {
       // render news in DOM for example
@@ -26,9 +26,9 @@ document.querySelector('button')
 
 This has some problems if the user clicks many times on the button:
 - the previous requests are no more required, as consequence they should be aborted.
-- the UI should not be rendered/updated for the previous calls or we could potentially see page 0 being rendered after page 1:
-  1) (at time 0) user clicks on button, first request starts and will take 1000ms
-  2) (at time 100ms) user clicks on button (another time), first request is not finished, second request starts and will take 200ms (faster than the previous one)
+- the UI should not be rendered/updated for the previous calls, or we could potentially see page 0 being rendered after page 1:
+  1) (at time 0) user clicks on the button, first request starts and will take 1000ms
+  2) (at time 100ms) user clicks on the button (another time), first request is not finished, second request starts and will take 200ms (faster than the previous one)
   3) (at time 300ms) second request finishes and is rendered into the DOM (page 1)
   4) (at time 1000ms) first request finishes and is rendered into the DOM (page 0) => UNWANTED BEHAVIOUR !
 
@@ -61,20 +61,7 @@ let controller: IAdvancedAbortController;
   });
 ```
 
-Or even better, using the *wrap* methods:
-```ts
-function loadNews(page: number, signal: IAdvancedAbortSignal): Promise<void> {
-  return signal.wrapPromise(fetch(`https://my-domain/api/news?page=${page}`, { signal: signal.toAbortController().signal }))
-    .then(signal.wrapFunction((response: Response) => {
-      return response.json();
-    }))
-    .then(signal.wrapFunction((news: any) => {
-      // render news in DOM for example
-    }));
-}
-```
-
-Or if you prefer to use the provided CancellablePromise:
+Or if you prefer to use the provided CancellablePromise (easier and less error prone):
 ```ts
 function loadNews(page: number, signal: IAdvancedAbortSignal): Promise<void> {
   return new CancellablePromise(fetch(`https://my-domain/api/news?page=${page}`, { signal: signal.toAbortController().signal }), { signal })
@@ -84,7 +71,7 @@ function loadNews(page: number, signal: IAdvancedAbortSignal): Promise<void> {
     .then((news: any) => {
       // render news in DOM for example
     })
-        .promise; // optional
+        .toPromise(); // optional
 }
 ```
 
@@ -93,17 +80,17 @@ function loadNews(page: number, signal: IAdvancedAbortSignal): Promise<void> {
 *Another example - assuming a payment mobile app:*
 
 1) (t = 0s) user click on a "pay" button
-    1) an http request starts in the background to verify the order and will take 10s (assuming the server is very slow). User navigation is not blocked.
+    1) a http request starts in the background to verify the order and will take 10s (assuming the server is very slow). User navigation is not blocked.
     The server expects a valid user's session during the whole time.
     2) at the end a "choose a payment method" popup is displayed
 2) (t = 5s) user expected a change, but nothing append (5s remaining for the request), so user decides to logout.
-    1) *the first request must de cancelled, to avoid to display the "choose a payment method" popup after the user reached the logout page*
+    1) *the first request must de cancelled, to avoid displaying the "choose a payment method" popup after the user reached the logout page*
     2) a logout request is done. The server clear the user session.
     3) the user is redirected to the login page
     4) the server detects that the session is no more valid for the first request, and returns a 401 error.
 
-This king of pattern occurs extremely frequently: a call to the server after a click on a button, followed by a success/error popup.
-Sadly, by laziness or time constraint, developers tend to forgot the *cancel* part (and the error part too ;) ), where AdvancedAbortController/AdvancedAbortSignal simplifies the work.
+This king of pattern occurs extremely frequently: a request to the server after a click on a button, followed by a success/error popup.
+Sadly, by laziness or time constraint, developers tend to forget the *cancel* part (and the error part too ;) ), where AdvancedAbortController/AdvancedAbortSignal simplifies the work.
 
 ### Simple cancellable http request example
 
@@ -114,7 +101,7 @@ Sadly, by laziness or time constraint, developers tend to forgot the *cancel* pa
 function createHttpRequest(url: string, signal?: IAdvancedAbortSignal): Promise<string> {
   const controller: IAdvancedAbortController = AdvancedAbortController.fromAbortSignals(signal);
   return new Promise<string>((resolve, reject) => {
-    const request = new XMLHttpRequest(); // create an XMLHttpRequest
+    const request = new XMLHttpRequest(); // create a XMLHttpRequest
     new EventsObservable<XMLHttpRequestEventMap>(request) // creates an EventsObservable for this request
       .on('load', () => { // when the request is finished, resolve the promise
         resolve(request.responseText);
@@ -160,7 +147,7 @@ The PromiseObservable is constructed like this:
 new<T>(promiseFactory: (signal: IAdvancedAbortSignal) => Promise<T>, options?: IPromiseObservableOptions): IPromiseObservable<T>;
 ```
 
-The `promiseFactory` is a function returning a Promise. It is called once if mode is different than `every`, else it is called for each Observers.
+The `promiseFactory` is a function returning a Promise. It is called once if mode is different from `every`, else it is called for each Observer.
 The AdvancedAbortSignal provided in this function must be used to abort/cancel unnecessary work as seen previously (used in `then` for example).
 
 This signal is aborted by the PromiseObservable in certain circumstances: for example, if it has no more observers,
@@ -180,7 +167,7 @@ interface IPromiseNotificationKeyValueMap<T> {
 ```
 
 When the Promise fulfils, a `next` Notification followed by a `complete` Notification are emitted.
-If it rejects, a `error` Notification is send. And finally if it is aborted, a `abort` Notification is triggered.
+If it rejects, an `error` Notification is send. Finally, if it is aborted, an `abort` Notification is triggered.
 
 ---
 
@@ -207,7 +194,7 @@ const observable = http(url)
 
 For a simpler and safer implementation, FetchObservable is available: the arguments are the same as the `fetch` function.
 
-It will properly handles the send/abort for you when the Observable is observed/unobserved.
+It will properly handle "send" and "abort" for you when the Observable is observed/unobserved.
 
 ```ts
 new FetchObservable(url)

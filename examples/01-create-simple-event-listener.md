@@ -8,7 +8,7 @@ This example show you how to create a simple Observable which listen incoming ev
 
 ### 1) Create an Observable emitting events
 
-First, we'll create a function which takes an EventTarget (ex: `window`) and an event's type (ex: `'click'`) as input,
+First, we'll create a function which takes an EventTarget (ex: `window`), and an event's type (ex: `'click'`) as input,
 and returns an Observable:
 
 ```ts
@@ -19,7 +19,7 @@ function createEventObservable<T extends Event>(target: EventTarget, name: strin
 const observable = createEventObservable<MouseEvent>(window, 'click');
 ```
 
-When constructing an Observable, we just have to provide a function giving us an access to a context:
+When constructing an Observable, we just have to provide a function giving us access to a context:
 ```ts
 // construct an Observable which emits only data of type 'Event'
 new Observable<Event>((context: IObservableContext<Event>) => {

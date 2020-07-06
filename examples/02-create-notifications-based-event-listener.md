@@ -1,9 +1,10 @@
 # How to create a notifications based event listener ?
 
 In the first chapter, we saw how to emit Events though an Observable.
-Now we'll try to do the same but we will emit Notifications instead of Events.
+Now we'll try to do the same, but we will emit Notifications instead of Events.
 
 ### Notification ?
+
 A Notification is simply an object with a name and an optional value.
 
 We may create one like this:
@@ -13,13 +14,14 @@ const notification = new Notification<'click', MouseEvent>('click', new MouseEve
 ```
 
 Because Notifications and Events are similar, we can create a Notification from an Event using:
+
 ```ts
 const notification = Notification.fromEvent<'click', MouseEvent>(new MouseEvent('click'));
 ```
 
 A NotificationsObservable is an Observable which emits Notifications, and provides some useful shortcut methods.
 
-And, a NotificationsObserver is an Observer which receives Notifications only matching its name.
+A NotificationsObserver is an Observer which receives Notifications only matching its name.
 
 More details are available on the [home page](../README.md#notifications).
 
@@ -88,7 +90,7 @@ const observable = createEventNotificationsObservable(window, 'mousedown')
   .on('mousedown', (event: MouseEvent) => { // great way to chain listeners
     console.log(`mousedown => y: ${event.clientY}`);
   }); // INFO: the observers are automatically activated with 'on'
-  // note that if we use 'on' we need to deactivate the observers though observable.observers when releasing some resources !
+  // note that if we use 'on' we need to deactivate the observers using observable.clearObservers() when releasing some resources !
 ```
 
 

@@ -53,12 +53,13 @@ function filter<T>(filter: (value: T) => boolean): IObservableObserver<IObserver
 const someObserver = someObservable
   .pipeThough(filter(_ => ((_ % 2) === 0)))
   .pipeTo(_ => console.log(_));
-// note than 'observable'.onObserved was trigerred even if 'observer' is not activated
+// note than 'observable'.onObserved was triggered even if 'observer' is not activated
 someObserver.activate();
 ```
 
 **INFO:** As you may see, there is a downside in this example: the *onObserved* and *onUnobserved* are **NOT** handled by `observable`,
 which means that `observer` will remains activated forever and `someObservable` will never receive a *onObserved* and *onUnobserved*.
+It's an issue because we potentially don't free some resources like an aborted xhr request, or a cancelled setInterval.
 
 A better code would be:
 
@@ -75,11 +76,13 @@ function filter<T>(filter: (value: T) => boolean): IObservableObserver<IObserver
     context = _context;
     return {
       onObserved() {
+        // 'observer' is only activated when at least one Observer observes our 'observable'
         if (context.observable.observers.length >= 1) {
           observer.activate();
         }
       },
       onUnobserved() {
+        // 'observer' is deactivated when our 'observable' is no more observed
         if (!context.observable.observed) {
           observer.deactivate();
         }
@@ -94,7 +97,7 @@ function filter<T>(filter: (value: T) => boolean): IObservableObserver<IObserver
 }
 ```
 
-This previous code is "long" and error prone if we manually deactivate the observer. Hopefully, a simple alternative exists: the *Pipes*
+This previous code is a little "long" and error prone if we manually deactivate the observer. Hopefully, a simple alternative exists: the *Pipes*
 
 # Pipe ?
 
@@ -102,7 +105,6 @@ A Pipe is a class implementing the ObservableObserver interface which self activ
 
 ```ts
 function filter<T>(filter: (value: T) => boolean): IPipe<IObserver<T>, IObservable<T>> {
-  let context: IObservableContext<Tout>;
   return new Pipe<IObserver<T>, IObservable<T>>(() => {
     let context: IObservableContext<T>;
     return {
@@ -124,7 +126,7 @@ and a `onUnobserved` 'event' as soon as the *pipe*'s observable is no more obser
 
 **INFO:** Pipes should always be used when you need to pipe (transform, filter, whatever) data from an observable to another.
 
-Simple Pipes using only Observer and Observable (not an EventsObservable for example) may be created using the `create` function. Like this:
+If you plan to only use an Observer and Observable (not an EventsObservable for example), you may use the static `create` function instead:
 
 ```ts
 function filter<T>(filter: (value: T) => boolean): IPipe<IObserver<T>, IObservable<T>> {
@@ -140,9 +142,9 @@ function filter<T>(filter: (value: T) => boolean): IPipe<IObserver<T>, IObservab
 }
 ```
 
-# How to reproduce the first example with array ?
+# How to reproduce the first example with an array ?
 
-Observables comes with a bunch of operators: they are pipes or helpers around Observables/Observers, and are located into `./operators`.
+Observables come with a bunch of operators: they are pipes or helpers around Observables/Observers, and are located into `./operators`.
 
 ```ts
 /*
@@ -153,19 +155,19 @@ Observables comes with a bunch of operators: they are pipes or helpers around Ob
 */
 
 from<number>([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) // converts an Iterable to an Observable
-  .pipeThough(filterPipe<number>(_ => ((_ % 2) === 0))) // filters incomming values
-  .pipeThough(mapPipe<number, number>(_ => (_ * 2))) // transforms incomming values (multiplied by 2)
+  .pipeThough(filterPipe<number>(_ => ((_ % 2) === 0))) // filters incoming values
+  .pipeThough(mapPipe<number, number>(_ => (_ * 2))) // transforms incoming values (multiplied by 2)
   .pipeTo(_ => console.log(_))
   .activate();
 ```
 
 ## WARNING
-Using `filterPipe` or `mapPipe`, and in a general manner any ObservableObserver without thinking of the side effects
+Using `filterPipe` or `mapPipe`, and in general any ObservableObserver without thinking of the side effects
 (just like RXJS is doing in most of the cases) is a bad behaviour !
 
-Why ? Because you're basically using complex classes and structures (well optimized, but it doesnt matter) instead of a simple `if` and transform in some cases.
-Such an usage add more complexity layers, meaning longer CPU execution time, where things should be simpler:
-*it's an computationally inefficient manner to use the pipes*, where [cpu budget is a thing](https://www.google.com/search?q=js%20cpu%20budget) (ex: [The cost of javascript](https://medium.com/@addyosmani/the-cost-of-javascript-in-2018-7d8950fbb5d4))
+Why ? Because you're basically using complex classes and structures (well optimized, but it doesn't matter) instead of a simple `if` and transform in some cases.
+Such a usage add more complexity layers, meaning longer CPU execution time, where things should be simpler:
+*it's a computationally inefficient manner to use the pipes*, where [cpu budget is a thing](https://www.google.com/search?q=js%20cpu%20budget) (ex: [The cost of javascript](https://medium.com/@addyosmani/the-cost-of-javascript-in-2018-7d8950fbb5d4))
 
 A better implementation would be:
 
@@ -178,8 +180,8 @@ from<number>([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
   })
 ```
 
-**Remember this simple rule:** the only acceptable case using Pipe is when you already have an Observable (ex: coming from a tier lib, from an function argument, ...),
-want to apply some operations from the incoming data and return another Observable.
+**Remember this simple rule:** the only acceptable case using Pipe is when you already have an Observable (ex: coming from a tier lib, from a function argument, ...),
+want to apply some operations on the incoming data, and return another Observable.
 
 Something like:
 ```ts
@@ -203,7 +205,7 @@ function filterMapPipeBetter() {
 ```
 
 *Final words:* always prefer to use "native" code instead of Observable's pipes (for RXJS too !), you'll gain in overall performance !
-Its not because their are bad optimized, but because simple native code is always faster !
+It's not because they are bad optimized, but because simple native code is always faster !
 
 ---
 - [CHAPTERS](README.md)

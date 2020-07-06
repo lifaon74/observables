@@ -8,6 +8,7 @@
 
 ---
 
+- [notes](00-notes.md)
 - [wot-temperature-example](wot-temperature-example.md)
 
 ---
