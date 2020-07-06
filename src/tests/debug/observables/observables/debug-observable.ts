@@ -1,7 +1,33 @@
 import { INotificationsObservableContext } from '../../../../notifications/core/notifications-observable/context/interfaces';
 import { NotificationsObservable } from '../../../../notifications/core/notifications-observable/public';
+import { IObservableContext } from '../../../../core/observable/context/interfaces';
+import { Observable } from '../../../../core/observable/public';
 
 export async function debugObservableCyclicEmit() {
+  let context: IObservableContext<any>;
+  const observable = new Observable<any>((_context: IObservableContext<any>) => {
+    context = _context;
+    setTimeout(() => {
+      context.emit(1);
+    }, 100);
+  });
+
+  observable
+    .pipeTo((value: any) => { // (1)
+      if (value === 1) {
+        console.log('next 1', value);
+        context.emit(2);
+      }
+    }).activate();
+
+  observable
+    .pipeTo((value: any) => { // (1)
+      console.log('next 2', value);
+    }).activate();
+}
+
+
+export async function debugNotificationsObservableCyclicEmit() {
   type EventsMap = {
     'next': any;
     'complete': void;
@@ -39,6 +65,8 @@ export async function debugObservableCyclicEmit() {
     });
 }
 
+
 export async function debugObservable() {
-  debugObservableCyclicEmit();
+  // debugObservableCyclicEmit();
+  debugNotificationsObservableCyclicEmit();
 }

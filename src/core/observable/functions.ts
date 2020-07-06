@@ -30,6 +30,20 @@ export function UnLinkObservableAndObserver<T>(instance: IObservable<T>, observe
 }
 
 export function ObservableEmitAll<T>(instance: IObservable<T>, value: T): void {
+  const privates: IObservablePrivate<T> = (instance as IObservableInternal<T>)[OBSERVABLE_PRIVATE];
+  if (privates.emitting) {
+    privates.pendingEmit.push(value);
+  } else {
+    privates.emitting = true;
+    ObservableEmitAllUnsafe<T>(instance, value);
+    while (privates.pendingEmit.length > 0) {
+      ObservableEmitAllUnsafe<T>(instance, privates.pendingEmit.shift() as T);
+    }
+    privates.emitting = false;
+  }
+}
+
+function ObservableEmitAllUnsafe<T>(instance: IObservable<T>, value: T): void {
   const observers: IObserver<T>[] = (instance as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.slice(); // shallow copy in case observers mutate
   for (let i = 0, l = observers.length; i < l; i++) {
     (observers[i] as IObserverInternal<T>)[OBSERVER_PRIVATE].onEmit(value, instance);

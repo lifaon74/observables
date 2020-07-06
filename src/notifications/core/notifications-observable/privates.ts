@@ -14,6 +14,8 @@ export interface INotificationsObservablePrivate<TKVMap extends KeyValueMapGener
   context: IObservableContext<KeyValueMapToNotifications<TKVMap>>;
   observersMap: Map<KeyValueMapKeys<TKVMap>, KeyValueMapToNotificationsObservers<TKVMap>[]>; // map from a name to a list of observers
   othersObservers: IObserver<KeyValueMapToNotifications<TKVMap>>[]; // observers which are not of type NotificationsObserver
+  pendingEmit: KeyValueMapToNotifications<TKVMap>[];
+  emitting: boolean;
 }
 
 export interface INotificationsObservablePrivatesInternal<TKVMap extends KeyValueMapGeneric> extends IObservablePrivatesInternal<KeyValueMapToNotifications<TKVMap>> {

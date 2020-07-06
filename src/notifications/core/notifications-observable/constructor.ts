@@ -27,6 +27,8 @@ export function ConstructNotificationsObservable<TKVMap extends object>(
   privates.context = context;
   privates.observersMap = new Map<KeyValueMapKeys<TKVMap>, KeyValueMapToNotificationsObservers<TKVMap>[]>();
   privates.othersObservers = [];
+  privates.pendingEmit = [];
+  privates.emitting = false;
 
   InitObservableHook(
     instance,

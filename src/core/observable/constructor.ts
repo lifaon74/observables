@@ -16,6 +16,8 @@ export function ConstructObservable<T>(
   ConstructClassWithPrivateMembers(instance, OBSERVABLE_PRIVATE);
   const privates: IObservablePrivate<T> = (instance as IObservableInternal<T>)[OBSERVABLE_PRIVATE];
   privates.observers = [];
+  privates.pendingEmit = [];
+  privates.emitting = false;
 
   InitObservableHook(
     instance,

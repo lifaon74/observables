@@ -10,6 +10,8 @@ export const OBSERVABLE_PRIVATE = Symbol('observable-private');
 export interface IObservablePrivate<T> extends IObservableHookPrivate<T> {
   observers: IObserver<T>[];
   readOnlyObservers: IReadonlyList<IObserver<T>>;
+  pendingEmit: T[];
+  emitting: boolean;
 }
 
 export interface IObservablePrivatesInternal<T> {

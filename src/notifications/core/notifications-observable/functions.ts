@@ -1,4 +1,6 @@
-import { INotificationsObservableMatchOptions, KeyValueMapToNotificationsObservers } from './types';
+import {
+  INotificationsObservableMatchOptions, KeyValueMapToNotifications, KeyValueMapToNotificationsObservers
+} from './types';
 import { IsObject } from '../../../helpers';
 import { KeyValueMap, KeyValueMapKeys } from '../types';
 import { INotificationsObservable } from './interfaces';
@@ -30,6 +32,33 @@ export function NormalizeNotificationsObservableMatchOptions(options: INotificat
  * Dispatches a Notification with 'name' and 'value' for all the observers observing this instance
  */
 export function NotificationsObservableDispatch<TKVMap extends KeyValueMap, K extends KeyValueMapKeys<TKVMap>>(
+  instance: INotificationsObservable<TKVMap>,
+  name: K,
+  value: TKVMap[K],
+  notification?: INotification<K, TKVMap[K]>
+): void {
+  const privates: INotificationsObservablePrivate<TKVMap> = (instance as INotificationsObservableInternal<TKVMap>)[NOTIFICATIONS_OBSERVABLE_PRIVATE];
+  if (privates.emitting) {
+    privates.pendingEmit.push(
+      (
+        (notification === void 0)
+          ? new Notification<K, TKVMap[K]>(name, value)
+          : notification
+      ) as unknown as KeyValueMapToNotifications<TKVMap>
+    );
+  } else {
+    privates.emitting = true;
+    NotificationsObservableDispatchUnsafe<TKVMap, K>(instance, name, value, notification);
+    while (privates.pendingEmit.length > 0) {
+      const notification: INotification<K, TKVMap[K]> = privates.pendingEmit.shift() as unknown as INotification<K, TKVMap[K]>;
+      NotificationsObservableDispatchUnsafe<TKVMap, K>(instance, notification.name, notification.value, notification);
+    }
+    privates.emitting = false;
+  }
+}
+
+
+function NotificationsObservableDispatchUnsafe<TKVMap extends KeyValueMap, K extends KeyValueMapKeys<TKVMap>>(
   instance: INotificationsObservable<TKVMap>,
   name: K,
   value: TKVMap[K],
