@@ -12,7 +12,7 @@ import {
 } from './types';
 import { ApplyOnAbortCallback, LinkAdvancedAbortSignalWithFetchArgumentsSpread, RaceAborted } from './functions';
 import { IsPromiseLikeBase, PromiseTry } from '../../../promises/types/helpers';
-import { clearImmediate, setImmediate } from '../../../classes/set-immediate';
+import { clearImmediate, setImmediate } from '../../helpers/event-loop/set-immediate';
 import { TInferNativePromiseLikeOrValue, TNativePromiseLikeOrValue } from '../../../promises/types/native';
 import {
   IAdvancedAbortSignalWrapPromiseNormalizedOptions, NormalizeAdvancedAbortSignalWrapPromiseOptions

@@ -5,6 +5,7 @@ import { TExpressionFactory } from './types';
 import { EXPRESSION_PRIVATE, IExpressionInternal, IExpressionPrivate } from './privates';
 import { ConstructExpression } from './constructor';
 import { ExpressionUpdate } from './functions';
+import { cancelIdleCallback } from '../../../misc/helpers/event-loop/request-idle-callback';
 
 
 /** CONSTRUCTOR FUNCTIONS **/
@@ -18,7 +19,7 @@ export function ExpressionOnObserved<T>(instance: IExpression<T>): void {
 export function ExpressionOnUnobserved<T>(instance: IExpression<T>): void {
   if (!instance.observed) {
     const privates: IExpressionPrivate<T> = (instance as IExpressionInternal<T>)[EXPRESSION_PRIVATE];
-    (window as any).cancelIdleCallback(privates.requestIdleTimer);
+    cancelIdleCallback(privates.requestIdleTimer);
     privates.requestIdleTimer = null;
   }
 }

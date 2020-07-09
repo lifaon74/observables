@@ -1,6 +1,6 @@
 import { IFiniteStateObservable } from '../../../interfaces';
 import { Observable as RXObservable, Subscription as RXSubscription } from 'rxjs';
-import { setImmediate } from '../../../../../../classes/set-immediate';
+import { setImmediate } from '../../../../../../misc/helpers/event-loop/set-immediate';
 import { UntilDefined } from '../../../../../../helpers';
 import { FromRXJSObservableKeyValueMap, TFromRXJSObservableFinalState } from './interfaces';
 import {

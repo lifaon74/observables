@@ -1,4 +1,4 @@
-import { setImmediate } from './classes/set-immediate';
+import { setImmediate } from './misc/helpers/event-loop/set-immediate';
 
 export function noop() {
 }

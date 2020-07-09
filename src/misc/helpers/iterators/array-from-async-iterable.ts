@@ -1,8 +1,13 @@
-export async function ArrayFromAsyncIterator<T>(iterator: AsyncIterator<T>): Promise<T[]> {
+export async function ArrayFromAsyncIterator<T>(
+  iterator: AsyncIterator<T>,
+  maxLength: number = Number.POSITIVE_INFINITY
+): Promise<T[]> {
   const values: T[] = [];
   let result: IteratorResult<T>;
-  while (!(result = await iterator.next()).done) {
+  let i: number = 0;
+  while ((i < maxLength) && !(result = await iterator.next()).done) {
     values.push(result.value);
+    i++;
   }
   return values;
 }

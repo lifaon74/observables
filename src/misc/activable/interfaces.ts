@@ -35,6 +35,8 @@ export interface IActivable extends IActivableLike {
 
   deactivate(): Promise<void>;
 
+  toggle(activate?: boolean): Promise<void>;
+
   addStateListener(listener: TActivableSateListener): () => void;
 
   // removeStateListener(listener: (state: TActivableState) => void): void;

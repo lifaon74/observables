@@ -103,6 +103,12 @@ export function ActivableDeactivate(instance: IActivable): Promise<void> {
   return privates.promise;
 }
 
+export function ActivableToggle(instance: IActivable, activate: boolean = !instance.activated): Promise<void> {
+  return activate
+    ? instance.activate()
+    : instance.deactivate();
+}
+
 function ActivableSetState(instance: IActivable, activated: boolean): void {
   const privates: IActivablePrivate = (instance as IActivableInternal)[ACTIVABLE_PRIVATE];
   if (activated !== privates.activated) { // should be an optional check => must always be true
@@ -156,6 +162,10 @@ function PureActivableFactory<TBase extends Constructor>(superClass: TBase) {
 
     deactivate(): Promise<void> {
       return ActivableDeactivate(this);
+    }
+
+    toggle(activate?: boolean): Promise<void> {
+      return ActivableToggle(this, activate);
     }
 
     addStateListener(listener: TActivableSateListener): () => void {
