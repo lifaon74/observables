@@ -58,20 +58,22 @@ So the output is:
 > 'next 2', 2
 ```
 
-This "issue" is fixed too for the NotificationsObservable where we were able to receive events in a strange order.
+This new behaviour has been reflected too on the NotificationsObservable where we were able to receive events in a strange order.
 
 A [note](./examples/00-notes.md) explains this in details.
 
 ### Minor changes
 
 - upgrade class factory version + support
+- add some new $shortcuts => comparision and $eval
+- add 'toggle' on Activable
 
 ### Bux fix
 
 - Fix various missing exports for: FiniteStateObservable, NotificationsObservable
 - Fix various issues resulting to typescript upgrade
 
-## 2020-10-04  v2.1.3
+## 2.1.3 (2020-10-04)
 
 ### Notable Changes
 
