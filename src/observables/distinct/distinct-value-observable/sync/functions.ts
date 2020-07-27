@@ -6,6 +6,8 @@ import { ObservableEmitAll } from '../../../../core/observable/functions';
 
 /** FUNCTIONS **/
 
+/* INTERNAL */
+
 export function DistinctValueObservableEmit<T>(instance: IDistinctValueObservable<T>, value: T): void {
   const privates: IDistinctValueObservablePrivate<T> = (instance as IDistinctValueObservableInternal<T>)[DISTINCT_VALUE_OBSERVABLE_PRIVATE];
   if (value !== privates.value) {

@@ -1,9 +1,13 @@
-import { IObservable } from './interfaces';
+import { IObservable, IObservableTypedConstructor } from './interfaces';
 import { IObservableInternal, IObservablePrivate, OBSERVABLE_PRIVATE } from './privates';
 import { IObserver } from '../observer/interfaces';
 import { IObserverInternal, OBSERVER_PRIVATE } from '../observer/privates';
+import { IObservableHook } from './hook/interfaces';
+import { IObservableContext } from './context/interfaces';
 
 /** FUNCTIONS **/
+
+/* PUBLIC */
 
 export function ObservableIsFreshlyObserved<T>(instance: IObservable<T>): boolean {
   return (instance as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length === 1;
@@ -16,6 +20,31 @@ export function ObservableIsObserved<T>(instance: IObservable<T>): boolean {
 export function ObservableIsNotObserved<T>(instance: IObservable<T>): boolean {
   return (instance as IObservableInternal<T>)[OBSERVABLE_PRIVATE].observers.length === 0;
 }
+
+/* PUBLIC HELPERS */
+
+export type TCreateObservableEmitterTuple<GObservableConstructor extends IObservableTypedConstructor<any>> =
+  GObservableConstructor extends new(create?: (context: infer GContext) => (IObservableHook<any> | void)) => infer GObservable
+    ? (
+      GContext extends IObservableContext<any>
+        ? [GObservable, GContext]
+        : never
+      )
+    : never;
+
+export function CreateObservableEmitter<GObservableConstructor extends IObservableTypedConstructor<any>>(
+  ctor: GObservableConstructor
+): TCreateObservableEmitterTuple<GObservableConstructor> {
+  let context: IObservableContext<any>;
+  const observable = new ctor((_context: IObservableContext<any>) => {
+    context = _context;
+  });
+  // @ts-ignore
+  return [observable, context] as TCreateObservableEmitterTuple<GObservableConstructor>;
+}
+
+
+/* INTERNAL */
 
 export function LinkObservableAndObserver<T>(instance: IObservable<T>, observer: IObserver<T>): void {
   const privates: IObservablePrivate<T> = (instance as IObservableInternal<T>)[OBSERVABLE_PRIVATE];

@@ -1,9 +1,6 @@
 import { ObservableContextBase } from '../../../../../core/observable/context/base/implementation';
 import { IDistinctValueObservableContext, IDistinctValueObservableContextConstructor } from './interfaces';
 import { IDistinctValueObservable } from '../interfaces';
-import {
-  IObservableContextBaseInternal, OBSERVABLE_CONTEXT_BASE_PRIVATE
-} from '../../../../../core/observable/context/base/privates';
 import { AllowObservableContextBaseConstruct } from '../../../../../core/observable/context/base/constructor';
 import { DistinctValueObservableEmit } from '../functions';
 
@@ -18,13 +15,6 @@ export function NewDistinctValueObservableContext<T>(observable: IDistinctValueO
 
 /** METHODS **/
 
-/* GETTERS/SETTERS */
-
-export function DistinctValueObservableGetObservable<T>(instance: IDistinctValueObservableContext<T>): IDistinctValueObservable<T> {
-  return (instance as IObservableContextBaseInternal<T>)[OBSERVABLE_CONTEXT_BASE_PRIVATE].observable;
-}
-
-/* METHODS */
 
 export function DistinctValueObservableContextEmit<T>(instance: IDistinctValueObservableContext<T>, value: T): void {
   DistinctValueObservableEmit<T>(instance.observable, value);
@@ -38,7 +28,8 @@ export class DistinctValueObservableContext<T> extends ObservableContextBase<T> 
   }
 
   get observable(): IDistinctValueObservable<T> {
-    return DistinctValueObservableGetObservable<T>(this);
+    // @ts-ignore
+    return super.observable as IDistinctValueObservable<T>;
   }
 
   emit(value: T): void {

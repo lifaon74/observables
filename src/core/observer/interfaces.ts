@@ -1,7 +1,7 @@
 import { IReadonlyList } from '../../misc/readonly-list/interfaces';
 import { IObservable } from '../observable/interfaces';
 import { TObserverObserveResultNonCyclic } from './types';
-import { IActivable, IActivableLike } from '../../misc/activable/interfaces';
+import { IActivableLike } from '../../misc/activable/interfaces';
 
 
 /** INTERFACES **/

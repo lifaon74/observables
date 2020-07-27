@@ -71,12 +71,12 @@ export function ObserverDeactivate<T>(instance: IObserver<T>): void {
   }
 }
 
-export function ObserverToggle<T>(instance: IObserver<T>,  activate: boolean = !instance.activated): void {
- if (activate) {
-   ObserverActivate<T>(instance);
- } else {
-   ObserverDeactivate<T>(instance);
- }
+export function ObserverToggle<T>(instance: IObserver<T>, activate: boolean = !instance.activated): void {
+  if (activate) {
+    ObserverActivate<T>(instance);
+  } else {
+    ObserverDeactivate<T>(instance);
+  }
 }
 
 /**
