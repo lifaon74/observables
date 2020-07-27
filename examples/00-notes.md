@@ -5,7 +5,7 @@
 While receiving a value (through the callback given to `new Observer(callback)`),
 the code should not impact, modify or trigger any of the parents Observables, nor the other Observers for these Observables.
 
-Knowing developers sometimes make errors, or do on purpose not recommended actions,
+Knowing developers sometimes do errors, or bypass on purpose not recommended actions,
 most functions of this library are resilient to this kind of cyclic / recursive function calls (a function is still executing while you trigger it another time).
 However, this should not be abused !
 
