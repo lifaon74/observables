@@ -71,6 +71,14 @@ export function ObserverDeactivate<T>(instance: IObserver<T>): void {
   }
 }
 
+export function ObserverToggle<T>(instance: IObserver<T>,  activate: boolean = !instance.activated): void {
+ if (activate) {
+   ObserverActivate<T>(instance);
+ } else {
+   ObserverDeactivate<T>(instance);
+ }
+}
+
 /**
  * Links an Observer with an Observable
  */
@@ -172,6 +180,11 @@ function PureObserverFactory<TBase extends Constructor>(superClass: TBase) {
 
     deactivate(): this {
       ObserverDeactivate<T>(this);
+      return this;
+    }
+
+    toggle(activate?: boolean): this {
+      ObserverToggle<T>(this);
       return this;
     }
 

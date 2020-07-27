@@ -1,6 +1,6 @@
 {
   "name": "@lifaon/observables",
-  "version": "3.0.0-beta.0",
+  "version": "3.0.0-beta.1",
   "description": "Better observables for everyone",
   "main": "index.js",
   "scripts": {
@@ -47,7 +47,6 @@
     "copy_sources": "mkdirp dist && shx cp -r ./src/ ./dist/src",
     "generate_packages": "node tools/make-packages.js",
     "publish_package": "yarn publish ./dist/package --access public --tag beta",
-
     "dev_browser": "npm-run-all clean_dev_browser watch_dev_browser",
     "watch_dev_browser": "npm-run-all -p tsc_watch_dev_browser serve_dev_browser",
     "tsc_watch_dev_browser": "tsc-watch -p ./tsconfig/tsconfig.dev.browser.json --onSuccess \"npm run build_dev_browser\"",
@@ -57,14 +56,12 @@
     "build_scss_dev_browser": "node tools/build-scss.js browser",
     "serve_dev_browser": "browser-sync start --config bs-config.js",
     "clean_dev_browser": "shx rm -rf ./dist/browser",
-
     "dev_nodejs": "npm-run-all clean_dev_nodejs watch_dev_nodejs",
     "watch_dev_nodejs": "npm-run-all -p tcs_watch_dev_nodejs nodemon_dev_bodejs",
     "tcs_watch_dev_nodejs": "tsc-watch -p ./tsconfig/tsconfig.dev.nodejs.json",
     "clean_dev_nodejs": "npm run clean_dist_cjs",
     "prenodemon_dev_bodejs": "wait-on ./dist/cjs/app.js",
     "nodemon_dev_bodejs": "nodemon --delay 1500ms \"./dist/cjs/app.js\"",
-
     "toc": "markdown-toc README.md"
   },
   "repository": {
@@ -87,9 +84,9 @@
     "rxjs": "6.5.3"
   },
   "devDependencies": {
-    "@types/node": "^14.0.13",
-    "browser-sync": "^2.26.7",
-    "escodegen": "^1.14.2",
+    "@types/node": "^14.0.26",
+    "browser-sync": "^2.26.12",
+    "escodegen": "^1.14.3",
     "esprima": "^4.0.1",
     "estraverse": "^4.3.0",
     "http-server": "^0.12.3",
@@ -98,17 +95,17 @@
     "node-sass": "^4.14.1",
     "nodemon": "^2.0.4",
     "npm-run-all": "^4.1.5",
-    "rollup": "^2.10.9",
+    "rollup": "^2.23.0",
     "rollup-plugin-alias": "^2.2.0",
     "rollup-plugin-inject": "^3.0.2",
     "rollup-plugin-node-resolve": "^5.2.0",
     "shx": "^0.3.2",
-    "terser": "^4.7.0",
-    "tsc-watch": "^4.2.8",
+    "terser": "^4.8.0",
+    "tsc-watch": "^4.2.9",
     "tslib": "^2.0.0",
-    "typescript": "3.9.3",
+    "typescript": "^4.0.0-dev.20200727",
     "typescript-tuple": "^2.2.1",
-    "wait-on": "^5.0.0"
+    "wait-on": "^5.1.0"
   },
   "dependencies": {
     "@lifaon/class-factory": "1.1.1"

@@ -1,6 +1,7 @@
 import { IReadonlyList } from '../../misc/readonly-list/interfaces';
 import { IObservable } from '../observable/interfaces';
 import { TObserverObserveResultNonCyclic } from './types';
+import { IActivable, IActivableLike } from '../../misc/activable/interfaces';
 
 
 /** INTERFACES **/
@@ -16,7 +17,7 @@ export interface IObserverTypedConstructor<T> {
 /**
  * A Observer is a push destination: it receives data though 'emit'
  */
-export interface IObserver<T> {
+export interface IObserver<T> extends IActivableLike {
   // true if Observer is activated
   readonly activated: boolean;
   // list of Observables observed by this Observer
@@ -33,6 +34,7 @@ export interface IObserver<T> {
   // deactivates the Observer
   deactivate(): this
 
+  toggle(activate?: boolean): this;
 
   // observes a list of Observables
   observe<O extends IObservable<any>[]>(...observables: O): TObserverObserveResultNonCyclic<O, T, this>; // returns this

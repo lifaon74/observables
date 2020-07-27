@@ -19,6 +19,8 @@ export interface IActivableLike {
 
   deactivate(): any;
 
+  toggle?(activate?: boolean): any;
+
   addStateListener?(listener: TActivableSateListener): () => void;
 }
 
