@@ -202,7 +202,7 @@ export async function testMisc(): Promise<void> {
   );
 
   await assertObservableEmits(
-    $function((a: number, b: number) => (a + b), [$expression(() => 1), $source(2)]),
+    $function((a: number, b: number) => (a + b), [$expression<number>(() => 1), $source(2)]),
     [Number.NaN, 3]
   );
 

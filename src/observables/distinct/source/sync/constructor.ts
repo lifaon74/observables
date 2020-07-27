@@ -1,12 +1,12 @@
 import { ISource } from './interfaces';
 import { IsObject } from '../../../../helpers';
 import { ISourceInternal, SOURCE_PRIVATE } from './privates';
-import { IObservableContext } from '../../../../core/observable/context/interfaces';
 import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
+import { IDistinctValueObservableContext } from '../../distinct-value-observable/sync/context/interfaces';
 
 /** CONSTRUCTOR **/
 
-export function ConstructSource<T>(instance: ISource<T>, context: IObservableContext<T>): void {
+export function ConstructSource<T>(instance: ISource<T>, context: IDistinctValueObservableContext<T>): void {
   ConstructClassWithPrivateMembers(instance, SOURCE_PRIVATE);
   (instance as ISourceInternal<T>)[SOURCE_PRIVATE].context = context;
 }

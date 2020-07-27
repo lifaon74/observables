@@ -19,13 +19,6 @@ export function NewAsyncDistinctValueObservableContext<T>(observable: IAsyncDist
 
 /** METHODS **/
 
-/* GETTERS/SETTERS */
-
-export function AsyncDistinctValueObservableGetObservable<T>(instance: IAsyncDistinctValueObservableContext<T>): IAsyncDistinctValueObservable<T> {
-  return (instance as IObservableContextBaseInternal<T>)[OBSERVABLE_CONTEXT_BASE_PRIVATE].observable;
-}
-
-/* METHODS */
 
 export function AsyncDistinctValueObservableContextEmit<T>(context: IAsyncDistinctValueObservableContext<T>, factory: TAsyncDistinctValueObservableContextEmitFactory<T>): Promise<T> {
   return AsyncDistinctValueObservableEmit<T>(context.observable, factory);
@@ -39,7 +32,8 @@ export class AsyncDistinctValueObservableContext<T> extends ObservableContextBas
   }
 
   get observable(): IAsyncDistinctValueObservable<T> {
-    return AsyncDistinctValueObservableGetObservable<T>(this);
+    // @ts-ignore
+    return super.observable as IAsyncDistinctValueObservable<T>;
   }
 
   emit(factory: TAsyncDistinctValueObservableContextEmitFactory<T>): Promise<T> {
