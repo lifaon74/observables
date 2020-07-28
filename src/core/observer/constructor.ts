@@ -22,7 +22,7 @@ export function ConstructObserver<T>(instance: IObserver<T>, onEmit: (value: T, 
 /**
  * Returns true if 'value' is an Observer
  */
-export function IsObserver(value: any): value is IObserver<any> {
+export function IsObserver<G>(value: any): value is IObserver<G> {
   return IsObject(value)
     && value.hasOwnProperty(OBSERVER_PRIVATE as symbol);
 }

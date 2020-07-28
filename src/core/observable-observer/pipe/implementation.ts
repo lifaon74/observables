@@ -69,29 +69,29 @@ export function PipeDeactivate<TObserver extends IObserver<any>, TObservable ext
 
 /* STATIC METHODS */
 
-export function PipeStaticCreate<TValueObserver, TDistinctValueObservable>(
+export function PipeStaticCreate<TValueObserver, TValueObservable>(
   constructor: IPipeConstructor,
-  create: (context: IPipeContext<IObserver<TValueObserver>, IObservable<TDistinctValueObservable>>) => (IPipeHook<IObserver<TValueObserver>, IObservable<TDistinctValueObservable>> | void) = noop
-): IPipe<IObserver<TValueObserver>, IObservable<TDistinctValueObservable>> {
+  create: (context: IPipeContext<IObserver<TValueObserver>, IObservable<TValueObservable>>) => (IPipeHook<IObserver<TValueObserver>, IObservable<TValueObservable>> | void) = noop
+): IPipe<IObserver<TValueObserver>, IObservable<TValueObservable>> {
 
   type TObserver = IObserver<TValueObserver>;
-  type TObservable = IObservable<TDistinctValueObservable>;
+  type TObservable = IObservable<TValueObservable>;
 
   if (typeof create === 'function') {
-    const context: IPipeContext<IObserver<TValueObserver>, IObservable<TDistinctValueObservable>> = NewPipeContext<TObserver, TObservable>(null as any); // force 'pipe' to null because it will be set later
+    const context: IPipeContext<IObserver<TValueObserver>, IObservable<TValueObservable>> = NewPipeContext<TObserver, TObservable>(null as any); // force 'pipe' to null because it will be set later
     let hook: IPipeHook<TObserver, TObservable> | void = create(context);
     if (hook === void 0) {
       hook = {};
     }
     if (IsObject(hook)) {
-      const pipe = new constructor<IObserver<TValueObserver>, IObservable<TDistinctValueObservable>>(() => {
+      const pipe = new constructor<IObserver<TValueObserver>, IObservable<TValueObservable>>(() => {
         return {
           observer: new Observer(
             ((hook as IPipeHook<TObserver, TObservable>).onEmit === void 0)
               ? context.emit.bind(context)
               : (hook as IPipeHook<TObserver, TObservable>).onEmit
           ),
-          observable: new Observable<TDistinctValueObservable>(() => hook),
+          observable: new Observable<TValueObservable>(() => hook),
         };
       });
       (context as IPipeContextInternal<TObserver, TObservable>)[PIPE_CONTEXT_PRIVATE].pipe = pipe;
@@ -108,10 +108,10 @@ export function PipeStaticCreate<TValueObserver, TDistinctValueObservable>(
 /** CLASS **/
 
 export class Pipe<TObserver extends IObserver<any>, TObservable extends IObservable<any>> implements IPipe<TObserver, TObservable> {
-  static create<TValueObserver, TDistinctValueObservable = TValueObserver>(
-    create?: (context: IPipeContext<IObserver<TValueObserver>, IObservable<TDistinctValueObservable>>) => (IPipeHook<IObserver<TValueObserver>, IObservable<TDistinctValueObservable>> | void)
-  ): IPipe<IObserver<TValueObserver>, IObservable<TDistinctValueObservable>> {
-    return PipeStaticCreate<TValueObserver, TDistinctValueObservable>(this, create);
+  static create<TValueObserver, TValueObservable = TValueObserver>(
+    create?: (context: IPipeContext<IObserver<TValueObserver>, IObservable<TValueObservable>>) => (IPipeHook<IObserver<TValueObserver>, IObservable<TValueObservable>> | void)
+  ): IPipe<IObserver<TValueObserver>, IObservable<TValueObservable>> {
+    return PipeStaticCreate<TValueObserver, TValueObservable>(this, create);
   }
 
   constructor(create: () => IObservableObserver<TObserver, TObservable>) {

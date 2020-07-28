@@ -9,6 +9,8 @@ import { ObservableType } from '../../observable/types';
 import { IPipe } from './interfaces';
 import { PipeUpdateAutoActivate, PipeUpdateAutoDeactivate } from './functions';
 import { ConstructClassWithPrivateMembers } from '@lifaon/class-factory';
+import { IsObserver } from '../../observer/constructor';
+import { IsObservable } from '../../observable/constructor';
 
 /** CONSTRUCTOR **/
 
@@ -26,13 +28,13 @@ export function ConstructPipe<TObserver extends IObserver<any>, TObservable exte
 
     if (IsObject(result)) {
 
-      if (result.observer.hasOwnProperty(OBSERVER_PRIVATE)) {
+      if (IsObserver(result.observer)) {
         privates.observer = result.observer;
       } else {
         throw new TypeError(`Expected property observer of type Observer in return of Pipe's create function`);
       }
 
-      if (result.observable.hasOwnProperty(OBSERVABLE_PRIVATE)) {
+      if (IsObservable(result.observable)) {
         privates.observable = result.observable;
         type TDistinctValueObservable = ObservableType<TObservable>;
         const observablePrivates: IObservablePrivate<TDistinctValueObservable> = ((privates.observable as IObservable<TDistinctValueObservable>) as IObservableInternal<TDistinctValueObservable>)[OBSERVABLE_PRIVATE];
