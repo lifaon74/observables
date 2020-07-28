@@ -18,8 +18,8 @@ export interface IFunctionObservablePrivate<TFactory extends TFunctionObservable
   args: TFunctionObservableParameters<TFactory>;
   readonlyArguments: IReadonlyTuple<TFunctionObservableParameters<TFactory>>;
   argumentsObserver: IObserver<TFunctionObservableParametersUnion<TFactory>>;
-  argumentsObserverCount: number;
-  argumentsObserverPauseCount: number;
+  argumentsObserverCount: number; // count number of changes in the arguments
+  argumentsObserverPauseCount: number; // stores 'argumentsObserverCount' when paused (or -1), to remember when we paused the observable
   values: TFunctionObservableFactoryParameters<TFactory>;
 }
 

@@ -5,6 +5,9 @@ import { FUNCTION_OBSERVABLE_PRIVATE, IFunctionObservableInternal, IFunctionObse
 
 /** FUNCTIONS **/
 
+/**
+ * Stores 'value' on the correct place in 'privates.values' depending on 'argObservable' place
+ */
 export function FunctionObservableSetObservableValue<TFactory extends TFunctionObservableFactory>(
   instance: IFunctionObservable<TFactory>,
   argObservable: IObservable<TFunctionObservableParametersUnion<TFactory>>,

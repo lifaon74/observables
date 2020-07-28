@@ -22,8 +22,6 @@ export interface IDistinctValueObservableTypedConstructor<T> extends IDistinctVa
  * - A new value is emitted only if it is different than the previous one.
  */
 export interface IDistinctValueObservable<T> extends IObservable<T> {
-  readonly value: T; // last emitted value
-  valueOf(): T;
 }
 
 

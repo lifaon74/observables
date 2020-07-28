@@ -8,9 +8,7 @@ import { FUNCTION_OBSERVABLE_PRIVATE, IFunctionObservableInternal, IFunctionObse
 import { Observer } from '../../../../core/observer/implementation';
 import { IObservable } from '../../../../core/observable/interfaces';
 import { IsObject } from '../../../../helpers';
-import { DISTINCT_VALUE_OBSERVABLE_PRIVATE } from '../../distinct-value-observable/sync/privates';
 import { FunctionObservableCallFactory, FunctionObservableSetObservableValue } from './functions';
-import { ReadonlyTuple } from '../../../../misc/readonly-tuple/implementation';
 import { ConstructClassWithPrivateMembers, HasFactoryWaterMark } from '@lifaon/class-factory';
 
 /** CONSTRUCTOR **/
@@ -26,7 +24,7 @@ export function ConstructFunctionObservable<TFactory extends TFunctionObservable
   privates.context = context;
   privates.factory = factory;
   privates.args = Array.from(args) as TFunctionObservableParameters<TFactory>;
-  privates.readonlyArguments = new ReadonlyTuple<TFunctionObservableParameters<TFactory>>(privates.args);
+  // privates.readonlyArguments = new ReadonlyTuple<TFunctionObservableParameters<TFactory>>(privates.args);
 
   privates.values = Array.from({ length: privates.args.length }, () => void 0) as TFunctionObservableFactoryParameters<TFactory>;
 
@@ -48,7 +46,7 @@ export function ConstructFunctionObservable<TFactory extends TFunctionObservable
 
 export function IsFunctionObservable(value: any): value is IFunctionObservable<any> {
   return IsObject(value)
-    && value.hasOwnProperty(DISTINCT_VALUE_OBSERVABLE_PRIVATE as symbol);
+    && value.hasOwnProperty(FUNCTION_OBSERVABLE_PRIVATE as symbol);
 }
 
 const IS_FUNCTION_OBSERVABLE_CONSTRUCTOR = Symbol('is-function-observable-constructor');

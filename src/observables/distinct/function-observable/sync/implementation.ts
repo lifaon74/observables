@@ -9,6 +9,7 @@ import { FUNCTION_OBSERVABLE_PRIVATE, IFunctionObservableInternal, IFunctionObse
 import { ConstructFunctionObservable } from './constructor';
 import { FunctionObservableCallFactory } from './functions';
 import { IReadonlyTuple } from '../../../../misc/readonly-tuple/interfaces';
+import { ReadonlyTuple } from '../../../../misc/readonly-tuple/implementation';
 
 /** CONSTRUCTOR FUNCTIONS **/
 
@@ -34,7 +35,11 @@ export function FunctionObservableGetFactory<TFactory extends TFunctionObservabl
 }
 
 export function FunctionObservableGetArguments<TFactory extends TFunctionObservableFactory>(instance: IFunctionObservable<TFactory>): IReadonlyTuple<TFunctionObservableParameters<TFactory>> {
-  return (instance as IFunctionObservableInternal<TFactory>)[FUNCTION_OBSERVABLE_PRIVATE].readonlyArguments;
+  const privates: IFunctionObservablePrivate<TFactory> = (instance as IFunctionObservableInternal<TFactory>)[FUNCTION_OBSERVABLE_PRIVATE];
+  if (privates.readonlyArguments === void 0) {
+    privates.readonlyArguments = new ReadonlyTuple<TFunctionObservableParameters<TFactory>>(privates.args);
+  }
+  return privates.readonlyArguments;
 }
 
 /* METHODS */

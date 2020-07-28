@@ -44,21 +44,6 @@ export function DistinctValueObservableOnUnobserved<T>(instance: IDistinctValueO
 }
 
 
-/** METHODS **/
-
-/* GETTERS/SETTERS */
-
-export function DistinctValueObservableGetValue<T>(instance: IDistinctValueObservable<T>): T {
-  return (instance as IDistinctValueObservableInternal<T>)[DISTINCT_VALUE_OBSERVABLE_PRIVATE].value;
-}
-
-/* METHODS */
-
-export function DistinctValueObservableValueOf<T>(instance: IDistinctValueObservable<T>): T {
-  return instance.value;
-}
-
-
 /** CLASS AND FACTORY **/
 
 export function PureDistinctValueObservableFactory<TBase extends Constructor<IObservable<any>>>(superClass: TBase) {
@@ -92,14 +77,6 @@ export function PureDistinctValueObservableFactory<TBase extends Constructor<IOb
       ]));
       // @ts-ignore
       ConstructDistinctValueObservable<T>(this, context, create);
-    }
-
-    get value(): T {
-      return DistinctValueObservableGetValue<T>(this);
-    }
-
-    valueOf(): T {
-      return DistinctValueObservableValueOf<T>(this);
     }
   };
 }
