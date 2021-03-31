@@ -437,7 +437,27 @@ const parts = [
 
 
 const BONUS_RUNES: number = 2.041e18;
-const LIMIT: number = 24000;
+const LIMIT: number = 36700;
+
+
+
+
+
+// setTimeout(async () => {
+//   function readFile(file){
+//     return new Promise((resolve, reject) => {
+//       const fr = new FileReader();
+//       fr.onload = () => resolve(fr.result);  // CHANGE to whatever function you want which would eventually call resolve
+//       fr.readAsText(file);
+//     });
+//   }
+//
+//   const items = await navigator.clipboard.read();
+//   const blob = await items[0].getType("text/html");
+//   const html = await readFile(blob);
+//
+//   console.log(html);
+// }, 1000)
 
 
 const initialPartsLvl: number[] = [ // lifaon
